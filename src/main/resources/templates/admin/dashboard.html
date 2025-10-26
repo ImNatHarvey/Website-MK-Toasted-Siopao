@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Admin Dashboard - MK Toasted Siopao</title>
+</head>
+<body>
+
+	<main class="container my-4">
+		<h2 class="section-title mb-4 text-center">Admin Dashboard</h2>
+
+		<!-- Stats Cards -->
+		<div class="row justify-content-center">
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card text-center py-4">
+					<div class="card-body">
+						<h5 class="card-title">Daily Orders</h5>
+						<div class="stats-value">0</div>
+						<div class="stats-change text-muted">+12% from yesterday</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card text-center py-4">
+					<div class="card-body">
+						<h5 class="card-title">Daily Revenue</h5>
+						<div class="stats-value">₱0</div>
+						<div class="stats-change text-muted">+8% from yesterday</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card text-center py-4">
+					<div class="card-body">
+						<h5 class="card-title">Daily Sales</h5>
+						<div class="stats-value">0</div>
+						<div class="stats-change text-muted">+6% from yesterday</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Recent Orders Table -->
+		<div class="row justify-content-center">
+			<div class="col-12 mt-4">
+				<div class="card">
+					<div class="card-header text-center">
+						<h5 class="mb-0">Recent Orders</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle text-center">
+								<thead>
+									<tr>
+										<th>Order ID</th>
+										<th>Customer</th>
+										<th>Amount</th>
+										<th>Status</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td>#ORD-1025</td>
+										<td>Ariel Alberto Jr.</td>
+										<td>₱245</td>
+										<td><span class="badge bg-success">Completed</span></td>
+										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
+									</tr>
+									<tr>
+										<td>#ORD-1024</td>
+										<td>Ivan Caparros</td>
+										<td>₱189</td>
+										<td><span class="badge bg-danger">Rejected</span></td>
+										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
+									</tr>
+									<tr>
+										<td>#ORD-1023</td>
+										<td>CJ Flores</td>
+										<td>₱320</td>
+										<td><span class="badge bg-warning text-dark">Accepted</span></td>
+										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div class="text-center">
+							<a href="#" class="btn btn-custom mt-3">View All Orders</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Quick Navigation -->
+		<div class="container mt-5">
+			<h3 class="section-title mb-4 text-center">Quick Navigation</h3>
+			<div class="row justify-content-center text-center g-4">
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">📦</div>
+						<h4>Order Management</h4>
+						<p>View and manage customer orders</p>
+						<a href="#" class="btn btn-custom mt-2">Manage Orders</a>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">👥</div>
+						<h4>Customer Management</h4>
+						<p>Manage customer accounts and data</p>
+						<a href="#" class="btn btn-custom mt-2">Manage Customers</a>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">🍔</div>
+						<h4>Product Management</h4>
+						<p>Update menu items and pricing</p>
+						<a href="#" classs="btn btn-custom mt-2">Manage Products</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+</body>
+</html>

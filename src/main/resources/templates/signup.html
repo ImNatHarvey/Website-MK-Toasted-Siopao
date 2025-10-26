@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{base :: layout(~{::main})}">
+<head>
+<meta charset="UTF-8">
+<title>Sign Up - MK Toasted Siopao</title>
+</head>
+<body>
+	<main class="container my-5">
+		<section class="auth-section py-5">
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-5">
+					<!-- Using the auth-card style from styles.css -->
+					<div class="card shadow-sm p-4 auth-card">
+						<h2 class="text-center mb-3 section-title">Create Your
+							Account</h2>
+						<p class="text-center text-muted mb-4">Join us for delicious
+							toasted siopao!</p>
+
+						<form id="signupForm">
+							<!-- Name Fields -->
+							<div class="row mb-3">
+								<div class="col">
+									<label for="firstName" class="form-label">First Name</label> <input
+										type="text" class="form-control" id="firstName"
+										name="firstName" required>
+								</div>
+								<div class="col">
+									<label for="lastName" class="form-label">Last Name</label> <input
+										type="text" class="form-control" id="lastName" name="lastName"
+										required>
+								</div>
+							</div>
+
+							<!-- Username & Phone -->
+							<div class="mb-3">
+								<label for="username" class="form-label">Username</label> <input
+									type="text" class="form-control" id="username" name="username"
+									required>
+							</div>
+							<div class="mb-3">
+								<label for="phone" class="form-label">Phone Number</label> <input
+									type="tel" class="form-control" id="phone" name="phone"
+									required>
+							</div>
+
+							<!-- Location Details -->
+							<h5 class="mt-4">Location Details</h5>
+							<div class="row g-2 mb-3">
+								<div class="col">
+									<input type="text" class="form-control" placeholder="House No."
+										id="houseNo" name="houseNo">
+								</div>
+								<div class="col">
+									<input type="text" class="form-control" placeholder="Lot No."
+										id="lotNo" name="lotNo">
+								</div>
+								<div class="col">
+									<input type="text" class="form-control" placeholder="Block No."
+										id="blockNo" name="blockNo">
+								</div>
+							</div>
+							<div class="mb-3">
+								<input type="text" class="form-control"
+									placeholder="Street / Subdivision" id="street" name="street"
+									required>
+							</div>
+							<div class="row g-2 mb-3">
+								<div class="col">
+									<input type="text" class="form-control" placeholder="Barangay"
+										id="barangay" name="barangay" required>
+								</div>
+								<div class="col">
+									<input type="text" class="form-control"
+										placeholder="Municipality" id="municipality"
+										name="municipality" required>
+								</div>
+							</div>
+							<div class="mb-3">
+								<input type="text" class="form-control" placeholder="Province"
+									id="province" name="province" required>
+							</div>
+
+							<!-- Password -->
+							<div class="mb-3">
+								<label for="password" class="form-label">Password</label> <input
+									type="password" class="form-control" id="password"
+									name="password" required>
+							</div>
+							<div class="mb-3">
+								<label for="confirmPassword" class="form-label">Confirm
+									Password</label> <input type="password" class="form-control"
+									id="confirmPassword" name="confirmPassword" required>
+							</div>
+
+							<!-- Terms Checkbox -->
+							<div class="mb-3 form-check">
+								<input type="checkbox" class="form-check-input" id="terms"
+									name="terms" required> <label class="form-check-label"
+									for="terms"> I agree to the <a href="#">Terms of
+										Service</a> and <a href="#">Privacy Policy</a>
+								</label>
+							</div>
+
+							<!-- Submit Button -->
+							<div class="d-grid">
+								<button type="submit" class="btn btn-custom">Create
+									Account</button>
+							</div>
+						</form>
+
+						<p class="text-center mt-3">
+							Already have an account? <a th:href="@{/login}">Log in here</a>
+						</p>
+					</div>
+				</div>
+			</div>
+		</section>
+	</main>
+</body>
+</html>

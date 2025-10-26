@@ -1,0 +1,309 @@
+:root {
+	--light: #fffdf5;
+	--dark: #213448;
+	--primary: #113F67;
+	--secondary: #fdf5aa;
+	--accent: #ffc374;
+}
+
+/* Base */
+body {
+	background-color: var(--light);
+	color: var(--dark);
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ================= Navbar ================= */
+.navbar-custom {
+	background-color: var(--primary);
+}
+
+.navbar-brand {
+	font-weight: bold;
+	color: var(--secondary);
+}
+
+.navbar-brand span {
+	font-weight: normal;
+}
+
+.nav-link {
+	color: var(--light);
+	margin: 0 10px;
+	transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+	color: var(--secondary) !important;
+}
+
+.nav-link.active {
+	font-weight: bold;
+	border-bottom: 2px solid var(--secondary);
+}
+
+.navbar-toggler {
+	background-color: var(--secondary);
+	color: var(--primary);
+}
+
+/* Navbar Buttons */
+.btn-custom {
+	background-color: var(--accent);
+	color: var(--primary);
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	margin-left: 10px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: 0.3s ease;
+}
+
+.btn-custom:hover {
+	background-color: var(--light);
+	color: var(--primary);
+}
+
+@media ( max-width : 991px) {
+	#navbarNav {
+		text-align: center;
+	}
+	#navbarNav .navbar-nav {
+		margin: 0 auto;
+	}
+	#navbarNav .d-flex {
+		justify-content: center;
+		margin-top: 10px;
+	}
+}
+
+/* ================= Primary Content ================= */
+/* Promo Banner */
+.promo-banner {
+	background-color: var(--secondary);
+	border-radius: 20px;
+	padding: 30px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.promo-banner h4 {
+	color: var(--primary);
+	font-weight: bold;
+}
+
+.promo-banner p {
+	margin: 0;
+	color: var(--dark);
+}
+
+/* Section Title */
+.section-title {
+	color: var(--primary);
+	font-weight: bold;
+}
+
+/* Call to Action */
+.cta-section {
+	background-color: var(--secondary);
+	padding: 50px 20px;
+}
+
+.cta-section h4 {
+	color: var(--primary);
+	font-weight: bold;
+}
+
+/* ================= Menu Page ================= */
+/* Category Filter */
+.category-btn, .btn-outline-primary {
+	background-color: var(--secondary);
+	color: var(--primary);
+	border-color: var(--secondary);
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-weight: bold;
+	transition: 0.3s ease;
+}
+
+.category-btn.active, .btn-outline-primary.active, .btn-outline-primary:hover
+	{
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+/* Search */
+.input-group .form-control {
+	border-radius: 20px 0 0 20px;
+	border: 2px solid var(--secondary);
+	padding: 10px 15px;
+	transition: all 0.2s ease;
+}
+
+.input-group .btn {
+	border-radius: 0 20px 20px 0;
+	border: 2px solid var(--secondary);
+	background-color: var(--secondary);
+	color: var(--primary);
+	font-weight: bold;
+	transition: all 0.2s ease;
+}
+
+.input-group:hover .form-control, .input-group:hover .btn {
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.input-group:hover .form-control::placeholder {
+	color: var(--light);
+	opacity: 1;
+}
+
+/* Menu Cards */
+.card {
+	background-color: var(--secondary);
+	border: none;
+	border-radius: 15px;
+	overflow: hidden;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+	height: 180px;
+	object-fit: cover;
+}
+
+.card-title {
+	font-weight: bold;
+	color: var(--primary);
+}
+
+.price {
+	color: var(--dark);
+	font-size: 1rem;
+}
+
+/* Order Buttons */
+.btn-order, .btn-warning {
+	background-color: var(--accent);
+	color: var(--dark);
+	font-weight: bold;
+	border-radius: 20px;
+	padding: 6px 16px;
+	transition: 0.3s ease;
+}
+
+.btn-order:hover, .btn-warning:hover {
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--light);
+}
+
+/* Order Summary */
+.order-summary {
+	background-color: var(--secondary);
+	border-radius: 15px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.order-title {
+	font-weight: bold;
+	color: var(--primary);
+}
+
+.total-price {
+	font-size: 1.1rem;
+	color: var(--primary);
+}
+
+.btn-checkout {
+	background-color: var(--accent);
+	color: var(--primary);
+	font-weight: bold;
+	border-radius: 25px;
+	padding: 10px;
+	transition: 0.3s ease;
+}
+
+.btn-checkout:hover {
+	background-color: var(--primary);
+	color: var(--light);
+}
+
+/* ================= Sticky Order Summary ================= */
+.sticky-order-summary {
+	background: #fff;
+	border-top: 2px solid #ddd;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+	padding: 15px 20px;
+	margin-top: 40px;
+}
+
+.sticky-order-summary .summary-content {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	max-width: 1200px;
+	margin: 0 auto;
+}
+
+.sticky-order-summary strong {
+	font-size: 1.1rem;
+}
+
+#footer-total {
+	font-weight: bold;
+	font-size: 1.2rem;
+	color: var(--dark);
+	margin-left: 8px;
+}
+
+.sticky-order-summary button {
+	min-width: 160px;
+	padding: 10px 20px;
+	font-weight: 500;
+}
+
+/* ================= Order Page ================= */
+.order-page {
+	background-color: var(--light);
+	padding: 50px 20px;
+}
+
+.order-page h2 {
+	color: var(--primary);
+	font-weight: bold;
+	margin-bottom: 30px;
+}
+
+/* ================= Login / Auth Pages ================= */
+
+/* This centers the auth card on a page */
+.auth-page-body {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	padding-top: 0; /* Override body padding */
+}
+
+/* This is the card for login/signup */
+.auth-card {
+	background-color: var(--secondary);
+	border: none;
+	border-radius: 15px;
+}
+
+/* ================= Footer ================= */
+footer {
+	background-color: var(--primary);
+	color: var(--light);
+	text-align: center;
+	padding: 20px;
+}

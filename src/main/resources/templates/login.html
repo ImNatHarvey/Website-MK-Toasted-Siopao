@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{base :: layout(~{::main})}">
+<head>
+<meta charset="UTF-8">
+<title>Log In - MK Toasted Siopao</title>
+</head>
+<body>
+	<main class="container my-5">
+		<div class="row justify-content-center">
+			<div class="col-md-6 col-lg-5">
+				<!-- Using the auth-card style from styles.css -->
+				<div class="card shadow-sm p-4 mt-5 auth-card">
+					<h2 class="text-center mb-3 section-title">Welcome Back!</h2>
+					<p class="text-center text-muted mb-4">Log in to your account
+						to continue.</p>
+
+					<form id="loginForm">
+						<div class="mb-3">
+							<label for="username" class="form-label">Username</label> <input
+								type="text" class="form-control" id="username" name="username"
+								required>
+						</div>
+
+						<div class="mb-3">
+							<label for="loginPassword" class="form-label">Password</label> <input
+								type="password" class="form-control" id="loginPassword"
+								name="password" required>
+							<div class="text-end mt-1">
+								<a href="#" class="small text-decoration-none">Forgot your
+									password?</a>
+							</div>
+						</div>
+
+						<div class="form-check mb-3">
+							<input type="checkbox" class="form-check-input" id="remember"
+								name="remember"> <label for="remember"
+								class="form-check-label">Remember me</label>
+						</div>
+
+						<button type="submit" class="btn btn-custom w-100 mb-3">Log
+							In</button>
+					</form>
+
+					<p class="text-center">
+						Don't have an account? <a th:href="@{/signup}">Sign up here</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

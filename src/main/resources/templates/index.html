@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{base :: layout(~{::main})}">
+<head>
+<meta charset="UTF-8">
+<title>Home - MK Toasted Siopao</title>
+</head>
+<body>
+
+	<main>
+		<div id="carouselExampleSlidesOnly" class="carousel slide"
+			data-bs-ride="carousel">
+			<div class="carousel-inner">
+				<div class="carousel-item active">
+					<img th:src="@{/img/carousel1.jpg}" class="d-block w-100"
+						alt="Siopao Carousel Image 1"
+						style="height: 500px; object-fit: cover;">
+				</div>
+				<div class="carousel-item">
+					<img th:src="@{/img/carousel2.jpg}" class="d-block w-100"
+						alt="Siopao Carousel Image 2"
+						style="height: 500px; object-fit: cover;">
+				</div>
+				<div class="carousel-item">
+					<img th:src="@{/img/carousel3.jpg}" class="d-block w-100"
+						alt="Siopao Carousel Image 3"
+						style="height: 500px; object-fit: cover;">
+				</div>
+			</div>
+		</div>
+
+		<div class="container my-5">
+			<h2 class="text-center mb-4 section-title">Our Featured Products</h2>
+			<div class="row row-cols-1 row-cols-md-4 g-4">
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{/img/favorites.jpg}" class="card-img-top"
+							alt="Favorite" style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title">Favorite</h5>
+							<p class="card-text">Our best-selling toasted siopao flavors,
+								loved by everyone.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{/img/combo.jpg}" class="card-img-top" alt="Combo"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title">Combo</h5>
+							<p class="card-text">Perfectly paired combos with siopao,
+								drinks, and more.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{/img/siopao.jpg}" class="card-img-top" alt="Siopao"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title">Siopao</h5>
+							<p class="card-text">Freshly made toasted siopao, crispy
+								outside, soft inside.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{/img/drinks.jpeg}" class="card-img-top"
+							alt="Drinks" style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title">Drinks</h5>
+							<p class="card-text">Refreshing drinks to pair with your
+								favorite siopao.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container my-5">
+			<div class="promo-banner text-center">
+				<h4>Special Promo!</h4>
+				<p>Get 2 Toasted Siopao + 1 Drink for only ₱99</p>
+			</div>
+		</div>
+
+		<div class="container my-5">
+			<div class="row align-items-center">
+				<div class="col-md-8">
+					<h4 class="section-title">Why Toasted Siopao?</h4>
+					<p>Crispy outside, savory inside! Perfect for your cravings —
+						delicious, filling, and budget-friendly.</p>
+				</div>
+				<div class="col-md-4 text-end">
+					<img th:src="@{/img/siopao.jpg}" class="feature-img"
+						alt="Toasted Siopao"
+						style="width: 70%; height: auto; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+				</div>
+			</div>
+		</div>
+
+		<div class="cta-section text-center">
+			<h4>Order Now & Taste the Difference!</h4>
+			<a th:href="@{/menu}" class="btn btn-custom">Order Now</a>
+		</div>
+	</main>
+
+</body>
+</html>

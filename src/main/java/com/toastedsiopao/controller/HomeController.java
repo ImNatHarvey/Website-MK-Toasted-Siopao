@@ -35,4 +35,9 @@ public class HomeController {
     public String signup() {
         return "signup";
     }
+    
+    @GetMapping("/access-denied")
+    public String accessDenied() {
+        return "access-denied";
+    }
 }

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Transaction History - MK Admin Portal</title>
+</head>
+<body>
+	<main class="container my-4">
+		<h2 class="section-title mb-4 text-center">Transaction History</h2>
+
+		<!-- Filters -->
+		<div class="card mb-4">
+			<div class="card-body text-center">
+				<form class="row g-3 justify-content-center align-items-center">
+					<div class="col-auto">
+						<label for="start-date" class="col-form-label">From:</label>
+					</div>
+					<div class="col-auto">
+						<input type="date" id="start-date" class="form-control">
+					</div>
+					<div class="col-auto">
+						<label for="end-date" class="col-form-label">To:</label>
+					</div>
+					<div class="col-auto">
+						<input type="date" id="end-date" class="form-control">
+					</div>
+					<div class="col-auto">
+						<button type="button" class="btn btn-custom">Apply</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Stats Cards -->
+		<div class="row justify-content-center mb-4">
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card text-center py-3">
+					<h5>Total Transactions</h5>
+					<div class="fs-4 fw-bold">1,158</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card text-center py-3">
+					<h5>Total Revenue</h5>
+					<div class="fs-4 fw-bold">₱145,820</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card text-center py-3">
+					<h5>Average Order Value</h5>
+					<div class="fs-4 fw-bold">₱126</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card text-center py-3">
+					<h5>Refunds</h5>
+					<div class="fs-4 fw-bold">₱2,450</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Transactions Table -->
+		<div class="card mb-4">
+			<div class="card-header text-center">
+				<h5 class="mb-0">Recent Transactions</h5>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle text-center">
+						<thead>
+							<tr>
+								<th>Transaction ID</th>
+								<th>Date</th>
+								<th>Customer</th>
+								<th>Amount</th>
+								<th>Payment Method</th>
+								<th>Status</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>#TXN-45892</td>
+								<td>Oct 26, 2025 14:30</td>
+								<td>Juan Dela Cruz</td>
+								<td>₱150</td>
+								<td>GCash</td>
+								<td><span class="badge bg-success">Completed</span></td>
+								<td><a href="#" class="btn btn-sm btn-custom">View</a> <a
+									href="#" class="btn btn-sm btn-outline-secondary">Receipt</a></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Manage Inventory - MK Admin Portal</title>
+</head>
+<body>
+	<main class="container my-4">
+		<!-- Page Header -->
+		<div
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
+			<div class="d-flex gap-2">
+				<button class="btn btn-primary">Add Item</button>
+				<button class="btn btn-warning">Low Stock Report</button>
+			</div>
+		</div>
+
+		<div class="input-group mb-4">
+			<input type="text" class="form-control"
+				placeholder="Search inventory items...">
+			<button class="btn btn-outline-secondary" type="button">Search</button>
+		</div>
+
+		<!-- Inventory Stats -->
+		<div class="row g-3 mb-4">
+			<div class="col-md-3">
+				<div class="stats-card card text-center shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Items</h5>
+						<p class="fs-4 fw-bold">48</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card card text-center shadow-sm border-warning">
+					<div class="card-body">
+						<h5 class="card-title">Low Stock Items</h5>
+						<p class="fs-4 fw-bold text-warning">7</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card card text-center shadow-sm border-danger">
+					<div class="card-body">
+						<h5 class="card-title">Out of Stock</h5>
+						<p class="fs-4 fw-bold text-danger">3</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="stats-card card text-center shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Inventory Value</h5>
+						<p class="fs-4 fw-bold">₱12,580</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Inventory Table -->
+		<div class="table-responsive shadow-sm">
+			<table class="table table-bordered align-middle">
+				<thead class="table-light">
+					<tr>
+						<th>Item Name</th>
+						<th>Category</th>
+						<th>Current Stock</th>
+						<th>Unit</th>
+						<th>Low Stock Threshold</th>
+						<th>Status</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td>Flour</td>
+						<td>Dry Ingredients</td>
+						<td>25 kg</td>
+						<td>kg</td>
+						<td>5 kg</td>
+						<td><span class="badge bg-success">OK</span></td>
+						<td>
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</td>
+					</tr>
+					<tr>
+						<td>Pork</td>
+						<td>Meat</td>
+						<td>8 kg</td>
+						<td>kg</td>
+						<td>10 kg</td>
+						<td><span class="badge bg-warning text-dark">Low</span></td>
+						<td>
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Pagination -->
+		<div
+			class="d-flex justify-content-between align-items-center mt-4 mb-5">
+			<button class="btn btn-outline-secondary">Previous</button>
+			<span>Page 1 of 4</span>
+			<button class="btn btn-outline-secondary">Next</button>
+		</div>
+	</main>
+</body>
+</html>

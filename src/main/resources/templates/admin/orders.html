@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Manage Orders - MK Admin Portal</title>
+</head>
+<body>
+	<main class="container my-4">
+		<h2 class="mb-4 text-center section-title">Order Management</h2>
+
+		<!-- Search & Filter -->
+		<div class="input-group mb-4">
+			<input type="text" class="form-control"
+				placeholder="Search orders by ID, customer name...">
+			<button class="btn btn-outline-secondary" type="button">Search</button>
+		</div>
+
+		<!-- Status Filters -->
+		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
+			<button class="btn btn-outline-primary active">All Orders</button>
+			<button class="btn btn-outline-success">Accepted</button>
+			<button class="btn btn-outline-danger">Rejected</button>
+			<button class="btn btn-outline-secondary">Completed</button>
+		</div>
+
+		<!-- Orders Table -->
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0">Orders List</h5>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle text-center">
+						<thead class="table-light">
+							<tr>
+								<th>Order ID</th>
+								<th>Customer</th>
+								<th>Items</th>
+								<th>Total</th>
+								<th>Date</th>
+								<th>Status</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>#ORD-1025</td>
+								<td>Juan Dela Cruz</td>
+								<td>2 Toasted Siopao, 1 Fries</td>
+								<td>₱150</td>
+								<td>Oct 26, 2025</td>
+								<td><span class="badge bg-success">Accepted</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+								</td>
+							</tr>
+							<tr>
+								<td>#ORD-1024</td>
+								<td>Maria Santos</td>
+								<td>3 Toasted Siopao, 2 Drinks</td>
+								<td>₱240</td>
+								<td>Oct 26, 2025</td>
+								<td><span class="badge bg-warning text-dark">Pending</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-success">Accept</button>
+									<button class="btn btn-sm btn-outline-danger">Reject</button>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+								</td>
+							</tr>
+							<tr>
+								<td>#ORD-1023</td>
+								<td>Robert Lim</td>
+								<td>1 Burger, 1 Fries</td>
+								<td>₱120</td>
+								<td>Oct 25, 2025</td>
+								<td><span class="badge bg-secondary">Completed</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+								</td>
+							</tr>
+							<tr>
+								<td>#ORD-1022</td>
+								<td>Anna Reyes</td>
+								<td>4 Toasted Siopao</td>
+								<td>₱200</td>
+								<td>Oct 25, 2025</td>
+								<td><span class="badge bg-danger">Rejected</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<!-- Pagination -->
+				<div class="d-flex justify-content-between align-items-center mt-3">
+					<button class="btn btn-outline-secondary btn-sm">Previous</button>
+					<span>Page 1 of 5</span>
+					<button class="btn btn-outline-secondary btn-sm">Next</button>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

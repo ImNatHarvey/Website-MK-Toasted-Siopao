@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Manage Customers - MK Admin Portal</title>
+</head>
+<body>
+	<main class="container my-4">
+		<h2 class="mb-4 text-center section-title">Customer Management</h2>
+
+		<!-- Header Actions -->
+		<div class="input-group mb-4">
+			<input type="text" class="form-control"
+				placeholder="Search customers by name, username, phone...">
+			<button class="btn btn-outline-secondary" type="button">Search</button>
+		</div>
+
+		<!-- Customer Stats -->
+		<div class="row text-center mb-4">
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Customers</h5>
+						<p class="display-6 fw-bold">1,245</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">New This Month</h5>
+						<p class="display-6 fw-bold">86</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Active Customers</h5>
+						<p class="display-6 fw-bold">892</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Customers Table -->
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0">Customers List</h5>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle text-center">
+						<thead class="table-light">
+							<tr>
+								<th>Customer ID</th>
+								<th>Name</th>
+								<th>Username</th>
+								<th>Phone</th>
+								<th>Orders</th>
+								<th>Last Order</th>
+								<th>Status</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>001</td>
+								<td>Juan Dela Cruz</td>
+								<td>Juan_Dela</td>
+								<td>+63 912 345 6789</td>
+								<td>15</td>
+								<td>Oct 26, 2025</td>
+								<td><span class="badge bg-success">Active</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+									<button class="btn btn-sm btn-outline-warning">Edit</button>
+								</td>
+							</tr>
+							<tr>
+								<td>002</td>
+								<td>Maria Santos</td>
+								<td>maria.santos</td>
+								<td>+63 917 890 1234</td>
+								<td>8</td>
+								<td>Oct 25, 2025</td>
+								<td><span class="badge bg-success">Active</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+									<button class="btn btn-sm btn-outline-warning">Edit</button>
+								</td>
+							</tr>
+							<tr>
+								<td>003</td>
+								<td>Robert Lim</td>
+								<td>robert123</td>
+								<td>+63 918 765 4321</td>
+								<td>23</td>
+								<td>Oct 24, 2025</td>
+								<td><span class="badge bg-secondary">Inactive</span></td>
+								<td>
+									<button class="btn btn-sm btn-outline-primary">View</button>
+									<button class="btn btn-sm btn-outline-warning">Edit</button>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<!-- Pagination -->
+				<div class="d-flex justify-content-between align-items-center mt-3">
+					<button class="btn btn-outline-secondary btn-sm">Previous</button>
+					<span>Page 1 of 8</span>
+					<button class="btn btn-outline-secondary btn-sm">Next</button>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

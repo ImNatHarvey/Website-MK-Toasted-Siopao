@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Manage Products - MK Admin Portal</title>
+</head>
+<body>
+	<main class="container my-4">
+		<!-- Page Header -->
+		<div
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
+			<div class="d-flex gap-2">
+				<button class="btn btn-primary">Add Product</button>
+			</div>
+		</div>
+
+		<!-- Category Filters -->
+		<div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
+			<button class="btn btn-outline-primary active">All</button>
+			<button class="btn btn-outline-primary">Favorites</button>
+			<button class="btn btn-outline-primary">Combo</button>
+			<button class="btn btn-outline-primary">Siopao</button>
+			<button class="btn btn-outline-primary">Drinks</button>
+		</div>
+
+		<div class="input-group mb-4">
+			<input type="text" class="form-control"
+				placeholder="Search products...">
+			<button class="btn btn-outline-secondary" type="button">Search</button>
+		</div>
+
+		<!-- Products Grid -->
+		<div class="row g-4">
+			<!-- Product Card -->
+			<div class="col-md-4">
+				<div class="card h-100 shadow-sm">
+					<img th:src="@{/img/siopao.jpg}" class="card-img-top"
+						alt="Toasted Siopao">
+					<div class="card-body">
+						<h5 class="card-title">Toasted Siopao</h5>
+						<p class="mb-1">
+							<strong>₱60</strong>
+						</p>
+						<p class="mb-1 text-muted">Category: Siopao</p>
+						<p class="text-success">In Stock</p>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Product Card -->
+			<div class="col-md-4">
+				<div class="card h-100 shadow-sm">
+					<img th:src="@{/img/combo.jpg}" class="card-img-top"
+						alt="Classic Siopao">
+					<div class="card-body">
+						<h5 class="card-title">Siopao Combo Meal</h5>
+						<p class="mb-1">
+							<strong>₱99.0</strong>
+						</p>
+						<p class="mb-1 text-muted">Category: Combo</p>
+						<p class="text-success">In Stock</p>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Product Card -->
+			<div class="col-md-4">
+				<div class="card h-100 shadow-sm">
+					<img th:src="@{/img/favorites.jpg}" class="card-img-top"
+						alt="Classic Burger">
+					<div class="card-body">
+						<h5 class="card-title">Classic Siopao</h5>
+						<p class="mb-1">
+							<strong>₱70</strong>
+						</p>
+						<p class="mb-1 text-muted">Category: Favorites</p>
+						<p class="text-warning">Low Stock</p>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Product Card -->
+			<div class="col-md-4">
+				<div class="card h-100 shadow-sm">
+					<img th:src="@{/img/drinks.jpeg}" class="card-img-top"
+						alt="Iced Tea">
+					<div class="card-body">
+						<h5 class="card-title">Iced Tea</h5>
+						<p class="mb-1">
+							<strong>₱30</strong>
+						</p>
+						<p class="mb-1 text-muted">Category: Drinks</p>
+						<p class="text-success">In Stock</p>
+						<div class="d-flex gap-2">
+							<button class="btn btn-sm btn-warning">Edit</button>
+							<button class="btn btn-sm btn-danger">Delete</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<!-- Pagination -->
+		<div class="d-flex justify-content-between align-items-center mt-4">
+			<button class="btn btn-outline-secondary">Previous</button>
+			<span>Page 1 of 3</span>
+			<button class="btn btn-outline-secondary">Next</button>
+		</div>
+	</main>
+</body>
+</html>

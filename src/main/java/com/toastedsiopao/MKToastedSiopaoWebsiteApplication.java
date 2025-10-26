@@ -33,32 +33,45 @@ public class MKToastedSiopaoWebsiteApplication {
 	@Bean
 	CommandLineRunner initDatabase() {
 		return args -> {
+			// --- Admin User ---
 			String adminUsername = "mktoastedadmin";
-			String adminPassword = "mktoasted123"; // The password we want to set
-
-			// Try to find the admin user
+			String adminPassword = "mktoasted123";
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
-
-			if (existingAdminOptional.isPresent()) {
-				log.info(">>> Admin user '{}' found. Forcing password update...", adminUsername);
-				User adminUser = existingAdminOptional.get();
-				// Re-encode and set the password
-				adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				userRepository.save(adminUser); // Save the updated user
-				log.info(">>> Password for admin user '{}' has been reset/updated.", adminUsername);
-
-			} else {
-				log.info(">>> No admin user '{}' found, creating one...", adminUsername);
+			if (existingAdminOptional.isEmpty()) {
+				log.info(">>> Creating admin user '{}'", adminUsername);
 				User adminUser = new User();
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
 				adminUser.setRole("ROLE_ADMIN");
-				adminUser.setFirstName("Admin");
+				adminUser.setFirstName("Admin"); // Add first/last names
 				adminUser.setLastName("User");
-				adminUser.setPhone("0000000000");
-
 				userRepository.save(adminUser);
-				log.info(">>> Admin user '{}' created successfully with password '{}'", adminUsername, adminPassword);
+				log.info(">>> Admin user created.");
+			} else {
+				log.info(">>> Admin user '{}' already exists.", adminUsername);
+				// Optional: Force password update if needed for testing
+				// User adminUser = existingAdminOptional.get();
+				// adminUser.setPassword(passwordEncoder.encode(adminPassword));
+				// userRepository.save(adminUser);
+				// log.info(">>> Password for admin user '{}' updated.", adminUsername);
+			}
+
+			// --- Test Customer User ---
+			String customerUsername = "testcustomer";
+			String customerPassword = "password123";
+			Optional<User> existingCustomerOptional = userRepository.findByUsername(customerUsername);
+			if (existingCustomerOptional.isEmpty()) {
+				log.info(">>> Creating test customer user '{}'", customerUsername);
+				User customerUser = new User();
+				customerUser.setUsername(customerUsername);
+				customerUser.setPassword(passwordEncoder.encode(customerPassword));
+				customerUser.setRole("ROLE_CUSTOMER");
+				customerUser.setFirstName("Test"); // Add first/last names
+				customerUser.setLastName("Customer");
+				userRepository.save(customerUser);
+				log.info(">>> Test customer user created.");
+			} else {
+				log.info(">>> Test customer user '{}' already exists.", customerUsername);
 			}
 		};
 	}

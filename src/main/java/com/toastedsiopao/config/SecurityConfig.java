@@ -53,14 +53,14 @@ public class SecurityConfig {
 				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
 						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true) // Ensure session is
 																							// invalidated
+						.clearAuthentication(true) // <--- ADD THIS LINE
 						.deleteCookies("JSESSIONID") // Ensure cookie is deleted
 						.permitAll())
 				// --- Access Denied Handling ---
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
-				// --- ADD CACHE CONTROL ---
+				// --- Cache Control ---
 				.headers(headers -> headers.cacheControl(cache -> cache.disable()) // Disable caching for secured pages
 				);
-		// --- END CACHE CONTROL ---
 
 		// --- CSRF Disable (Temporary for testing) ---
 		http.csrf(csrf -> csrf.disable());

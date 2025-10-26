@@ -25,6 +25,15 @@
 						<div th:if="${param.logout}" class="alert alert-success"
 							role="alert">You have been logged out.</div>
 
+						<!-- Success Message after Signup -->
+						<div th:if="${successMessage}"
+							class="alert alert-success alert-dismissible fade show col-md-6 col-lg-5 mx-auto"
+							role="alert">
+							<span th:text="${successMessage}"></span>
+							<button type="button" class="btn-close" data-bs-dismiss="alert"
+								aria-label="Close"></button>
+						</div>
+
 						<!-- UPDATED FORM TAG -->
 						<form id="loginForm" method="post" th:action="@{/login}">
 							<div class="mb-3">

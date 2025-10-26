@@ -2,124 +2,262 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	th:replace="~{admin/base :: layout(~{::main})}">
 <head>
-<title>Manage Products - MK Admin Portal</title>
+<title>Product Management - MK Admin</title>
 </head>
 <body>
-	<main class="container my-4">
-		<!-- Page Header -->
+	<main class="container mt-4"
+		th:data-show-category-modal="${showCategoryModal}"
+		th:data-show-add-product-modal="${showAddProductModal}">
+
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-primary">Add Product</button>
+				<button class="btn btn-primary" type="button" data-bs-toggle="modal"
+					data-bs-target="#addProductModal">
+					<i class="fa-solid fa-plus me-1"></i> Add Product
+				</button>
+				<button class="btn btn-secondary" type="button"
+					data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
+					<i class="fa-solid fa-tags me-1"></i> Manage Categories
+				</button>
 			</div>
 		</div>
 
-		<!-- Category Filters -->
-		<div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-			<button class="btn btn-outline-primary active">All</button>
-			<button class="btn btn-outline-primary">Favorites</button>
-			<button class="btn btn-outline-primary">Combo</button>
-			<button class="btn btn-outline-primary">Siopao</button>
-			<button class="btn btn-outline-primary">Drinks</button>
+		<div th:if="${productSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${productSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
 		</div>
-
-		<div class="input-group mb-4">
-			<input type="text" class="form-control"
-				placeholder="Search products...">
-			<button class="btn btn-outline-secondary" type="button">Search</button>
+		<div th:if="${productError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${productError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
 		</div>
+		<div th:if="${categorySuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${categorySuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${categoryError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${categoryError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<form th:action="@{/admin/products}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="row g-3 align-items-end">
+				<div class="col-md-5">
+					<label for="keyword" class="form-label">Search by Name</label> <input
+						type="text" class="form-control" id="keyword" name="keyword"
+						placeholder="Enter product name..." th:value="${keyword}">
+				</div>
+				<div class="col-md-5">
+					<label for="category" class="form-label">Filter by Category</label>
+					<select class="form-select" id="category" name="category">
+						<option value="">-- All Categories --</option>
+						<option th:each="cat : ${categories}" th:value="${cat.id}"
+							th:text="${cat.name}"
+							th:selected="${selectedCategoryId != null && selectedCategoryId == cat.id}">
+							Category Name</option>
+					</select>
+				</div>
+				<div class="col-md-2 d-flex justify-content-end">
+					<button type="submit" class="btn btn-info me-2">
+						<i class="fa-solid fa-search me-1"></i> Filter / Search
+					</button>
+					<a th:href="@{/admin/products}" class="btn btn-outline-secondary"
+						title="Clear Filters"> <i class="fa-solid fa-times"></i>
+					</a>
+				</div>
+			</div>
+		</form>
+		<div th:if="${#lists.isEmpty(products)}"
+			class="alert alert-warning text-center" role="alert">No
+			products found matching your criteria.</div>
 
-		<!-- Products Grid -->
-		<div class="row g-4">
-			<!-- Product Card -->
-			<div class="col-md-4">
-				<div class="card h-100 shadow-sm">
-					<img th:src="@{/img/siopao.jpg}" class="card-img-top"
-						alt="Toasted Siopao">
-					<div class="card-body">
-						<h5 class="card-title">Toasted Siopao</h5>
-						<p class="mb-1">
-							<strong>₱60</strong>
+		<div th:unless="${#lists.isEmpty(products)}"
+			class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+			<div class="col" th:each="product : ${products}">
+				<div class="card h-100 shadow-sm product-card-admin">
+					<img
+						th:src="${product.imageUrl != null && !product.imageUrl.isBlank() ? product.imageUrl : '/img/placeholder.jpg'}"
+						class="card-img-top admin-product-img" th:alt="${product.name}"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					<div class="card-body d-flex flex-column">
+						<h5 class="card-title" th:text="${product.name}">Product Name</h5>
+						<p class="mb-1 text-muted small"
+							th:text="${product.category.name}">Category</p>
+						<p class="mb-2">
+							<strong>₱<span
+								th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">0.00</span></strong>
 						</p>
-						<p class="mb-1 text-muted">Category: Siopao</p>
-						<p class="text-success">In Stock</p>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-warning">Edit</button>
-							<button class="btn btn-sm btn-danger">Delete</button>
+						<p class="card-text small mb-3 flex-grow-1"
+							th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">
+							Short product description...</p>
+
+						<div class="mt-auto d-flex justify-content-between gap-2">
+							<button type="button" class="btn btn-sm btn-warning flex-fill"
+								data-bs-toggle="modal"
+								th:data-bs-target="'#editProductModal-' + ${product.id}">
+								<i class="fa-solid fa-pencil me-1"></i> Edit
+							</button>
+							<form
+								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
+								method="post" class="d-inline flex-fill"
+								onsubmit="return confirm('Are you sure you want to delete this product?');">
+								<button type="submit" class="btn btn-sm btn-danger w-100">
+									<i class="fa-solid fa-trash me-1"></i> Delete
+								</button>
+							</form>
 						</div>
 					</div>
 				</div>
+				<div class="modal fade" th:id="'editProductModal-' + ${product.id}"
+					tabindex="-1" aria-hidden="true"></div>
 			</div>
-
-			<!-- Product Card -->
-			<div class="col-md-4">
-				<div class="card h-100 shadow-sm">
-					<img th:src="@{/img/combo.jpg}" class="card-img-top"
-						alt="Classic Siopao">
-					<div class="card-body">
-						<h5 class="card-title">Siopao Combo Meal</h5>
-						<p class="mb-1">
-							<strong>₱99.0</strong>
-						</p>
-						<p class="mb-1 text-muted">Category: Combo</p>
-						<p class="text-success">In Stock</p>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-warning">Edit</button>
-							<button class="btn btn-sm btn-danger">Delete</button>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Product Card -->
-			<div class="col-md-4">
-				<div class="card h-100 shadow-sm">
-					<img th:src="@{/img/favorites.jpg}" class="card-img-top"
-						alt="Classic Burger">
-					<div class="card-body">
-						<h5 class="card-title">Classic Siopao</h5>
-						<p class="mb-1">
-							<strong>₱70</strong>
-						</p>
-						<p class="mb-1 text-muted">Category: Favorites</p>
-						<p class="text-warning">Low Stock</p>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-warning">Edit</button>
-							<button class="btn btn-sm btn-danger">Delete</button>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<!-- Product Card -->
-			<div class="col-md-4">
-				<div class="card h-100 shadow-sm">
-					<img th:src="@{/img/drinks.jpeg}" class="card-img-top"
-						alt="Iced Tea">
-					<div class="card-body">
-						<h5 class="card-title">Iced Tea</h5>
-						<p class="mb-1">
-							<strong>₱30</strong>
-						</p>
-						<p class="mb-1 text-muted">Category: Drinks</p>
-						<p class="text-success">In Stock</p>
-						<div class="d-flex gap-2">
-							<button class="btn btn-sm btn-warning">Edit</button>
-							<button class="btn btn-sm btn-danger">Delete</button>
-						</div>
-					</div>
-				</div>
-			</div>
-
 		</div>
 
-		<!-- Pagination -->
-		<div class="d-flex justify-content-between align-items-center mt-4">
-			<button class="btn btn-outline-secondary">Previous</button>
-			<span>Page 1 of 3</span>
-			<button class="btn btn-outline-secondary">Next</button>
+
+		<div class="modal fade" id="addProductModal" tabindex="-1"
+			aria-labelledby="addProductModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<form th:action="@{/admin/products/add}" method="post"
+						th:object="${productDto}" id="addProductForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="addProductModalLabel">Add New
+								Product</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="mb-3">
+								<label for="productName" class="form-label">Product Name</label>
+								<input type="text" class="form-control" th:field="*{name}"
+									id="productName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name
+									Error</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="productCategory" class="form-label">Category</label>
+								<select class="form-select" th:field="*{categoryId}"
+									id="productCategory" th:errorclass="is-invalid">
+									<option value="">-- Select a Category --</option>
+									<option th:each="cat : ${categories}" th:value="${cat.id}"
+										th:text="${cat.name}">Category</option>
+								</select>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('categoryId')}"
+									th:errors="*{categoryId}">Category Error</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="productPrice" class="form-label">Price</label>
+								<div class="input-group">
+									<span class="input-group-text">₱</span> <input type="number"
+										step="0.01" min="0" class="form-control" th:field="*{price}"
+										id="productPrice" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('price')}" th:errors="*{price}">Price
+										Error</div>
+								</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="productDescription" class="form-label">Description
+									(Optional)</label>
+								<textarea class="form-control" th:field="*{description}"
+									id="productDescription" rows="3" th:errorclass="is-invalid"></textarea>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('description')}"
+									th:errors="*{description}">Description Error</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="productImageUrl" class="form-label">Image
+									URL (Optional)</label> <input type="text" class="form-control"
+									th:field="*{imageUrl}" id="productImageUrl"
+									placeholder="e.g., /img/my-product.jpg or https://...">
+							</div>
+
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Save
+								Product</button>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
+
+		<div class="modal fade" id="manageCategoriesModal" tabindex="-1"
+			aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageCategoriesModalLabel">Manage
+							Categories</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form th:action="@{/admin/products/categories/add}" method="post"
+							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
+							<h5 class="mb-3">Add New Category</h5>
+							<div class="input-group">
+								<input type="text" class="form-control"
+									placeholder="New category name..." th:field="*{name}"
+									th:errorclass="is-invalid">
+								<button class="btn btn-primary" type="submit">Add</button>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name
+									Error</div>
+							</div>
+						</form>
+
+						<hr>
+
+						<h5 class="mb-3">Existing Categories</h5>
+						<div th:if="${#lists.isEmpty(categories)}" class="text-muted">
+							No categories created yet.</div>
+						<ul class="list-group" th:unless="${#lists.isEmpty(categories)}">
+							<li th:each="cat : ${categories}"
+								class="list-group-item d-flex justify-content-between align-items-center">
+								<span th:text="${cat.name}">Category Name</span>
+								<form
+									th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
+									method="post"
+									onsubmit="return confirm('Are you sure you want to delete this category? This cannot be undone.');">
+
+									<button type="submit" class="btn btn-sm btn-outline-danger"
+										title="Delete Category">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</form>
+							</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 	</main>
 </body>
 </html>

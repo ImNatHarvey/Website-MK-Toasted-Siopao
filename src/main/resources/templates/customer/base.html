@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:fragment="layout(content)">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MK Toasted Siopao</title>
+
+<!-- Bootstrap CSS -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	xintegrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+	crossorigin="anonymous">
+
+<!-- Bootstrap Icons (Used by customer pages) -->
+<link rel="stylesheet"
+	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<!-- Font Awesome -->
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css"
+	xintegrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw=="
+	crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<!-- Your Custom CSS -->
+<link rel="stylesheet" th:href="@{/css/styles.css}">
+</head>
+<body class="d-flex flex-column min-vh-100 customer-body">
+
+	<!-- Customer Navbar (from your customer-navbar.html) -->
+	<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+		<div class="container">
+			<!-- Brand -->
+			<a class="navbar-brand" th:href="@{/u/dashboard}"> <span
+				style="font-weight: bold;">MK</span> Toasted Siopao
+			</a>
+
+			<!-- Mobile Toggle -->
+			<button class="navbar-toggler" type="button"
+				data-bs-toggle="collapse" data-bs-target="#customerNavbar"
+				aria-controls="customerNavbar" aria-expanded="false"
+				aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<!-- Navbar Links -->
+			<div class="collapse navbar-collapse" id="customerNavbar">
+				<ul class="navbar-nav mx-auto text-center">
+					<li class="nav-item"><a class="nav-link"
+						th:href="@{/u/dashboard}">Home</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/u/menu}">Menu</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/u/order}">My
+							Orders</a></li>
+					<li class="nav-item"><a class="nav-link"
+						th:href="@{/u/history}">My History</a></li>
+					<li class="nav-item"><a class="nav-link"
+						th:href="@{/u/profile}">My Profile</a></li>
+				</ul>
+
+				<!-- User Menu with Dropdown -->
+				<div class="d-flex justify-content-center">
+					<div class="dropdown">
+						<button class="btn btn-custom dropdown-toggle" type="button"
+							id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+							<i class="bi bi-person-circle me-1"></i> My Account
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end"
+							aria-labelledby="userDropdown">
+							<li><a class="dropdown-item" th:href="@{/u/profile}">Edit
+									Profile</a></li>
+							<li><a class="dropdown-item" th:href="@{/u/history}">Order
+									History</a></li>
+							<li><hr class="dropdown-divider"></li>
+							<li><a class="dropdown-item" th:href="@{/}">Log Out</a></li>
+							<!-- We will make this /logout later -->
+						</ul>
+					</div>
+				</div>
+			</div>
+		</div>
+	</nav>
+	<!-- End Navbar -->
+
+	<!-- This is where page-specific content will be injected -->
+	<main class="flex-grow-1 mt-5 pt-3">
+		<div th:replace="${content}"></div>
+	</main>
+
+	<!-- Footer -->
+	<footer class="footer mt-auto">
+		<div class="container">
+			<p class="mb-0">© 2025 MK Toasted Siopao | All Rights Reserved</p>
+		</div>
+	</footer>
+	<!-- End Footer -->
+
+	<!-- Bootstrap JS Bundle -->
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+		xintegrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+		crossorigin="anonymous"></script>
+</body>
+</html>

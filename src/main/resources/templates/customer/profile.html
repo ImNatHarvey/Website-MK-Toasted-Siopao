@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{customer/base :: layout(~{::main})}">
+<head>
+<title>My Profile - MK Toasted Siopao</title>
+</head>
+<body>
+	<main>
+		<!-- Page Content -->
+		<div class="container mt-4">
+			<h2 class="section-title mb-4">My Profile</h2>
+
+			<!-- Personal Information -->
+			<div class="profile-card">
+				<h4 class="mb-4">Personal Information</h4>
+				<form id="profileForm">
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="fullName" class="form-label">Full Name</label> <input
+								type="text" class="form-control" id="fullName" required>
+						</div>
+						<div class="col-md-6">
+							<label for="username" class="form-label">Username</label> <input
+								type="text" class="form-control" id="username" required>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="contactNumber" class="form-label">Contact
+								Number</label> <input type="tel" class="form-control" id="contactNumber"
+								required>
+						</div>
+						<div class="col-md-6">
+							<label for="email" class="form-label">Email Address</label> <input
+								type="email" class="form-control" id="email" required>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="deliveryAddress" class="form-label">Delivery
+							Address</label>
+						<textarea class="form-control" id="deliveryAddress" rows="3"
+							required></textarea>
+					</div>
+					<button type="submit" class="btn btn-custom">Save Changes</button>
+				</form>
+			</div>
+
+			<!-- Change Password -->
+			<div class="profile-card">
+				<h4 class="mb-4">Change Password</h4>
+				<form id="passwordForm">
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="currentPassword" class="form-label">Current
+								Password</label> <input type="password" class="form-control"
+								id="currentPassword" required>
+						</div>
+					</div>
+					<div class="row mb-3">
+						<div class="col-md-6">
+							<label for="newPassword" class="form-label">New Password</label>
+							<input type="password" class="form-control" id="newPassword"
+								required>
+						</div>
+						<div class="col-md-6">
+							<label for="confirmPassword" class="form-label">Confirm
+								New Password</label> <input type="password" class="form-control"
+								id="confirmPassword" required>
+						</div>
+					</div>
+					<button type="submit" class="btn btn-custom">Update
+						Password</button>
+				</form>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

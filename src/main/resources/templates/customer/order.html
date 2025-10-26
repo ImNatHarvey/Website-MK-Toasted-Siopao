@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{customer/base :: layout(~{::main})}">
+<head>
+<title>Checkout - MK Toasted Siopao</title>
+</head>
+<body>
+	<main>
+		<!-- Page Content -->
+		<div class="container my-5">
+			<div class="row">
+				<!-- Order Form -->
+				<div class="col-lg-8">
+					<h2 class="mb-4 mt-4">Delivery Details</h2>
+					<form>
+						<div class="row g-3">
+							<div class="col-md-6">
+								<label for="first-name" class="form-label">First Name</label> <input
+									type="text" class="form-control" id="first-name"
+									placeholder="Ivan" required>
+							</div>
+							<div class="col-md-6">
+								<label for="last-name" class="form-label">Last Name</label> <input
+									type="text" class="form-control" id="last-name"
+									placeholder="Flores" required>
+							</div>
+							<div class="col-md-6">
+								<label for="phone" class="form-label">Phone Number</label> <input
+									type="tel" class="form-control" id="phone"
+									placeholder="09123456789" required>
+							</div>
+							<div class="col-md-6">
+								<label for="location" class="form-label">Location</label> <input
+									type="text" class="form-control" id="location"
+									placeholder="Street, Barangay" required>
+							</div>
+							<!-- More form fields... -->
+							<div class="col-12">
+								<label for="notes" class="form-label">Notes to
+									Store/Rider</label>
+								<textarea class="form-control" id="notes" rows="6"
+									placeholder="Leave a note..."></textarea>
+							</div>
+						</div>
+
+						<h4 class="mt-4">Payment Method</h4>
+						<div class="form-check">
+							<input class="form-check-input" type="radio" name="payment"
+								id="gcash" value="gcash" checked> <label
+								class="form-check-label" for="gcash">GCash</label>
+						</div>
+						<div class="form-check mb-4">
+							<input class="form-check-input" type="radio" name="payment"
+								id="cod" value="cod"> <label class="form-check-label"
+								for="cod">Cash on Delivery</label>
+						</div>
+					</form>
+				</div>
+
+				<!-- Order Summary Sidebar -->
+				<div class="col-lg-4">
+					<div
+						class="order-summary sticky-top p-4 rounded shadow-sm mt-4 mt-lg-0"
+						style="top: 80px;">
+						<h3 class="order-title mb-4">My Order</h3>
+						<div class="empty-order">
+							<p class="text-muted">Your bag is empty.</p>
+						</div>
+						<div class="order-items d-none"></div>
+						<div class="mt-4 pt-3 border-top">
+							<div
+								class="d-flex justify-content-between align-items-center mb-3">
+								<h5 class="mb-0">Total:</h5>
+								<span class="total-price fw-bold">₱0.00</span>
+							</div>
+							<div class="d-flex justify-content-center">
+								<a href="#" class="btn btn-checkout px-4">Place Order</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{customer/base :: layout(~{::main})}">
+<head>
+<title>Menu - MK Toasted Siopao</title>
+</head>
+<body>
+	<main>
+		<!-- Page Content -->
+		<div class="container my-5">
+			<div class="row">
+				<!-- Menu Section -->
+				<div class="col-lg-8">
+					<h2 class="mb-4 mt-4">Our Menu</h2>
+
+					<!-- Category Filters -->
+					<div class="d-flex flex-wrap gap-2 mb-4">
+						<button class="btn btn-sm btn-outline-primary active">All</button>
+						<button class="btn btn-sm btn-outline-primary">Favorites</button>
+						<button class="btn btn-sm btn-outline-primary">Combo</button>
+						<button class="btn btn-sm btn-outline-primary">Siopao</button>
+						<button class="btn btn-sm btn-outline-primary">Drinks</button>
+					</div>
+
+					<div class="input-group mb-4">
+						<input type="text" class="form-control"
+							placeholder="Search menu items...">
+						<button class="btn btn-outline-secondary" type="button">Search</button>
+					</div>
+
+					<!-- Menu Items -->
+					<div class="row row-cols-1 row-cols-md-2 g-4">
+						<!-- Toasted Siopao -->
+						<div class="col">
+							<div class="card h-100 shadow-sm">
+								<img th:src="@{/img/siopao.jpg}" class="card-img-top"
+									alt="Toasted Siopao">
+								<div class="card-body">
+									<h5 class="card-title">Toasted Siopao</h5>
+									<p class="card-text">Delicious toasted siopao with filling.</p>
+									<div class="d-flex justify-content-between align-items-center">
+										<span class="price fw-bold">₱35.00</span>
+										<button class="btn btn-sm btn-warning">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- Other cards... -->
+						<div class="col">
+							<div class="card h-100 shadow-sm">
+								<img th:src="@{/img/combo.jpg}" class="card-img-top"
+									alt="Siopao Combo Meal">
+								<div class="card-body">
+									<h5 class="card-title">Siopao Combo Meal</h5>
+									<p class="card-text">Toasted siopao with drink and side.</p>
+									<div class="d-flex justify-content-between align-items-center">
+										<span class="price fw-bold">₱99.00</span>
+										<button class="btn btn-sm btn-warning">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col">
+							<div class="card h-100 shadow-sm">
+								<img th:src="@{/img/favorites.jpg}" class="card-img-top"
+									alt="Classic Siopao">
+								<div class="card-body">
+									<h5 class="card-title">Classic Siopao</h5>
+									<p class="card-text">Juicy beef fillings with fresh
+										vegetables.</p>
+									<div class="d-flex justify-content-between align-items-center">
+										<span class="price fw-bold">₱55.00</span>
+										<button class="btn btn-sm btn-warning">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="col">
+							<div class="card h-100 shadow-sm">
+								<img th:src="@{/img/drinks.jpeg}" class="card-img-top"
+									alt="Iced Tea">
+								<div class="card-body">
+									<h5 class="card-title">Iced Tea</h5>
+									<p class="card-text">Refreshing iced tea perfect with any
+										meal.</p>
+									<div class="d-flex justify-content-between align-items-center">
+										<span class="price fw-bold">₱25.00</span>
+										<button class="btn btn-sm btn-warning">Order</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Order Summary -->
+				<div class="col-lg-4">
+					<div
+						class="order-summary sticky-top p-4 rounded shadow-sm mt-4 mt-lg-0"
+						style="top: 80px;">
+						<h3 class="order-title mb-4">My Order</h3>
+						<div class="empty-order">
+							<p class="text-muted">Your bag is empty.</p>
+						</div>
+						<div class="order-items d-none">
+							<!-- Order items will appear here -->
+						</div>
+						<div class="mt-4 pt-3 border-top">
+							<div
+								class="d-flex justify-content-between align-items-center mb-3">
+								<h5 class="mb-0">Total:</h5>
+								<span class="total-price fw-bold">₱0.00</span>
+							</div>
+							<div class="d-flex justify-content-center">
+								<a th:href="@{/u/order}" class="btn btn-checkout px-4">Proceed
+									to Checkout</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

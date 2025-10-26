@@ -10,97 +10,168 @@
 		<section class="auth-section py-5">
 			<div class="row justify-content-center">
 				<div class="col-md-6 col-lg-5">
-					<!-- Using the auth-card style from styles.css -->
+					<!-- Using the auth-card style -->
 					<div class="card shadow-sm p-4 auth-card">
 						<h2 class="text-center mb-3 section-title">Create Your
 							Account</h2>
 						<p class="text-center text-muted mb-4">Join us for delicious
 							toasted siopao!</p>
 
-						<form id="signupForm">
+						<!-- Display generic error messages from redirect -->
+						<div th:if="${errorMessage}"
+							class="alert alert-danger alert-dismissible fade show"
+							role="alert">
+							<span th:text="${errorMessage}"></span>
+							<button type="button" class="btn-close" data-bs-dismiss="alert"
+								aria-label="Close"></button>
+						</div>
+
+						<!-- Use th:object to bind the form to the DTO -->
+						<form id="signupForm" method="post" th:action="@{/signup}"
+							th:object="${userDto}">
+
 							<!-- Name Fields -->
 							<div class="row mb-3">
+								<!-- CORRECTED THIS LINE -->
 								<div class="col">
-									<label for="firstName" class="form-label">First Name</label> <input
-										type="text" class="form-control" id="firstName"
-										name="firstName" required>
+									<label for="firstName" class="form-label">First Name</label>
+									<!-- Use th:field for binding -->
+									<input type="text" class="form-control" th:field="*{firstName}"
+										th:errorclass="is-invalid">
+									<!-- Display errors for this field -->
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('firstName')}"
+										th:errors="*{firstName}">First Name Error</div>
 								</div>
 								<div class="col">
 									<label for="lastName" class="form-label">Last Name</label> <input
-										type="text" class="form-control" id="lastName" name="lastName"
-										required>
+										type="text" class="form-control" th:field="*{lastName}"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lastName')}"
+										th:errors="*{lastName}">Last Name Error</div>
 								</div>
 							</div>
 
 							<!-- Username & Phone -->
 							<div class="mb-3">
 								<label for="username" class="form-label">Username</label> <input
-									type="text" class="form-control" id="username" name="username"
-									required>
+									type="text" class="form-control" th:field="*{username}"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">Username Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="phone" class="form-label">Phone Number</label> <input
-									type="tel" class="form-control" id="phone" name="phone"
-									required>
+									type="tel" class="form-control" th:field="*{phone}"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Phone
+									Error</div>
 							</div>
 
 							<!-- Location Details -->
-							<h5 class="mt-4">Location Details</h5>
+							<h5 class="mt-4">Location Details (Optional)</h5>
 							<div class="row g-2 mb-3">
 								<div class="col">
-									<input type="text" class="form-control" placeholder="House No."
-										id="houseNo" name="houseNo">
+									<label for="houseNo" class="form-label visually-hidden">House
+										No.</label> <input type="text" class="form-control"
+										placeholder="House No." th:field="*{houseNo}"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('houseNo')}" th:errors="*{houseNo}">House
+										No. Error</div>
 								</div>
 								<div class="col">
-									<input type="text" class="form-control" placeholder="Lot No."
-										id="lotNo" name="lotNo">
+									<label for="lotNo" class="form-label visually-hidden">Lot
+										No.</label> <input type="text" class="form-control"
+										placeholder="Lot No." th:field="*{lotNo}"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}">Lot
+										No. Error</div>
 								</div>
 								<div class="col">
-									<input type="text" class="form-control" placeholder="Block No."
-										id="blockNo" name="blockNo">
+									<label for="blockNo" class="form-label visually-hidden">Block
+										No.</label> <input type="text" class="form-control"
+										placeholder="Block No." th:field="*{blockNo}"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('blockNo')}" th:errors="*{blockNo}">Block
+										No. Error</div>
 								</div>
 							</div>
 							<div class="mb-3">
+								<label for="street" class="form-label visually-hidden">Street</label>
 								<input type="text" class="form-control"
-									placeholder="Street / Subdivision" id="street" name="street"
-									required>
+									placeholder="Street / Subdivision" th:field="*{street}"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('street')}" th:errors="*{street}">Street
+									Error</div>
 							</div>
 							<div class="row g-2 mb-3">
 								<div class="col">
+									<label for="barangay" class="form-label visually-hidden">Barangay</label>
 									<input type="text" class="form-control" placeholder="Barangay"
-										id="barangay" name="barangay" required>
+										th:field="*{barangay}" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('barangay')}"
+										th:errors="*{barangay}">Barangay Error</div>
 								</div>
 								<div class="col">
+									<label for="municipality" class="form-label visually-hidden">Municipality</label>
 									<input type="text" class="form-control"
-										placeholder="Municipality" id="municipality"
-										name="municipality" required>
+										placeholder="Municipality" th:field="*{municipality}"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('municipality')}"
+										th:errors="*{municipality}">Municipality Error</div>
 								</div>
 							</div>
 							<div class="mb-3">
+								<label for="province" class="form-label visually-hidden">Province</label>
 								<input type="text" class="form-control" placeholder="Province"
-									id="province" name="province" required>
+									th:field="*{province}" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('province')}"
+									th:errors="*{province}">Province Error</div>
 							</div>
 
 							<!-- Password -->
 							<div class="mb-3">
 								<label for="password" class="form-label">Password</label> <input
-									type="password" class="form-control" id="password"
-									name="password" required>
+									type="password" class="form-control" th:field="*{password}"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('password')}"
+									th:errors="*{password}">Password Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="confirmPassword" class="form-label">Confirm
 									Password</label> <input type="password" class="form-control"
-									id="confirmPassword" name="confirmPassword" required>
+									th:field="*{confirmPassword}" th:errorclass="is-invalid">
+								<!-- Specific error for password mismatch -->
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('confirmPassword')}"
+									th:errors="*{confirmPassword}">Confirm Password Error</div>
 							</div>
 
 							<!-- Terms Checkbox -->
-							<div class="mb-3 form-check">
-								<input type="checkbox" class="form-check-input" id="terms"
-									name="terms" required> <label class="form-check-label"
-									for="terms"> I agree to the <a href="#">Terms of
-										Service</a> and <a href="#">Privacy Policy</a>
+							<div class="mb-3 form-check"
+								th:classappend="${#fields.hasErrors('terms')} ? 'is-invalid' : ''">
+								<input type="checkbox" class="form-check-input"
+									th:field="*{terms}" th:errorclass="is-invalid"> <label
+									class="form-check-label" for="terms"> <!-- Ensure 'for' matches 'id' -->
+									I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy
+										Policy</a>
 								</label>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('terms')}" th:errors="*{terms}">Terms
+									Error</div>
 							</div>
+
 
 							<!-- Submit Button -->
 							<div class="d-grid">
@@ -119,3 +190,4 @@
 	</main>
 </body>
 </html>
+

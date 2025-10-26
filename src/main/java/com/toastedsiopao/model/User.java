@@ -12,9 +12,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "users") // Specify the table name
-@Data // Lombok annotation for getters, setters, toString, equals, hashCode
-@NoArgsConstructor // Lombok annotation for no-args constructor
+@Table(name = "users")
+@Data
+@NoArgsConstructor
 public class User {
 
 	@Id
@@ -27,14 +27,13 @@ public class User {
 	private String username;
 
 	@NotBlank(message = "Password cannot be blank")
-	@Column(nullable = false, length = 68) // Length accommodates BCrypt hashes
+	@Column(nullable = false, length = 68) // BCrypt hash length
 	private String password;
 
 	@NotBlank(message = "Role cannot be blank")
 	@Column(nullable = false, length = 20)
-	private String role; // Examples: "ROLE_CUSTOMER", "ROLE_ADMIN"
+	private String role; // "ROLE_CUSTOMER", "ROLE_ADMIN"
 
-	// Optional fields based on your signup form
 	@Column(length = 50)
 	private String firstName;
 
@@ -44,13 +43,33 @@ public class User {
 	@Column(length = 20)
 	private String phone;
 
-	// We can add address fields later if needed
+	// --- NEW ADDRESS FIELDS ---
+	@Column(length = 50, nullable = true) // Optional fields
+	private String houseNo;
 
-	// Constructor for convenience (optional, Lombok handles NoArgsConstructor)
+	@Column(length = 50, nullable = true)
+	private String lotNo;
+
+	@Column(length = 50, nullable = true)
+	private String blockNo;
+
+	@Column(length = 100, nullable = true) // Made nullable, adjust if street is required
+	private String street;
+
+	@Column(length = 100, nullable = true) // Made nullable, adjust if barangay is required
+	private String barangay;
+
+	@Column(length = 100, nullable = true) // Made nullable, adjust if municipality is required
+	private String municipality;
+
+	@Column(length = 100, nullable = true) // Made nullable, adjust if province is required
+	private String province;
+	// --- END NEW ADDRESS FIELDS ---
+
+	// Constructor for convenience (still useful for initial user creation)
 	public User(String username, String password, String role) {
 		this.username = username;
 		this.password = password;
 		this.role = role;
 	}
-
 }

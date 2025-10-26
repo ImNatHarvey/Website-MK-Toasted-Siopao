@@ -3,6 +3,7 @@ package com.toastedsiopao.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+// Removed @Order import
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,8 +12,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler; // Correct import if using interface
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+// Kept CustomerAuthenticationSuccessHandler import
 
 @Configuration
 @EnableWebSecurity
@@ -21,53 +22,50 @@ public class SecurityConfig {
 	@Autowired
 	private UserDetailsService userDetailsService;
 
+	// Inject only the Customer/RoleBased handler
 	@Autowired
-	private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler; // Use the concrete class
+	private CustomerAuthenticationSuccessHandler customerAuthenticationSuccessHandler;
+	// Removed AdminAuthenticationSuccessHandler injection
 
 	@Bean
 	public static PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
+	// --- SINGLE Security Filter Chain ---
 	@Bean
+	// Removed @Order annotation
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
 		http
-				// --- Authorization Rules ---
+				// No securityMatcher needed - applies to all requests
 				.authorizeHttpRequests(auth -> auth
-						// Public access rules MUST come first
+						// Public access rules (CSS, images, public pages, logout)
 						.requestMatchers("/css/**", "/img/**", "/", "/menu", "/about", "/order", "/login", "/signup",
-								"/admin/login", "/access-denied")
+								"/access-denied", "/logout")
 						.permitAll()
 						// Role rules for protected areas
 						.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/u/**").hasRole("CUSTOMER")
-						// Any other request must be authenticated
+						// Any other request requires authentication
 						.anyRequest().authenticated())
-				// --- SINGLE Login Configuration ---
-				.formLogin(form -> form.loginPage("/login") // Use /login as the single entry point
+				.formLogin(form -> form // SINGLE login config
+						.loginPage("/login") // Use /login as the single entry point
 						.loginProcessingUrl("/login") // Spring handles POST to /login
-						.failureUrl("/login?error=true").successHandler(customAuthenticationSuccessHandler) // Use our
-																											// handler
-						.permitAll())
-				// --- Logout Configuration ---
-				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true) // Ensure session is
-																							// invalidated
-						.clearAuthentication(true) // <--- ADD THIS LINE
-						.deleteCookies("JSESSIONID") // Ensure cookie is deleted
-						.permitAll())
-				// --- Access Denied Handling ---
+						// Use the CUSTOMER/RoleBased success handler
+						.successHandler(customerAuthenticationSuccessHandler) // <--- Use the remaining handler
+						.failureUrl("/login?error=true").permitAll())
+				.logout(logout -> logout // SINGLE logout config
+						.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+						.logoutSuccessUrl("/login?logout=true") // Go back to customer login page
+						.invalidateHttpSession(true).deleteCookies("JSESSIONID").clearAuthentication(true))
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
-				// --- Cache Control ---
-				.headers(headers -> headers.cacheControl(cache -> cache.disable()) // Disable caching for secured pages
-				);
-
-		// --- CSRF Disable (Temporary for testing) ---
-		http.csrf(csrf -> csrf.disable());
+				.headers(headers -> headers.cacheControl(cache -> cache.disable()) // Keep cache control
+				).csrf(csrf -> csrf.disable()); // Keep disabled for testing
 
 		return http.build();
 	}
+	// --- REMOVED adminSecurityFilterChain Bean ---
 
+	// --- Authentication Manager Configuration (remains the same) ---
 	@Bean
 	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
 		AuthenticationManagerBuilder authenticationManagerBuilder = http

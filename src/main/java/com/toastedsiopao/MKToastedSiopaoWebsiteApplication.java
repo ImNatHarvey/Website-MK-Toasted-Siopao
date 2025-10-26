@@ -43,17 +43,12 @@ public class MKToastedSiopaoWebsiteApplication {
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
 				adminUser.setRole("ROLE_ADMIN");
-				adminUser.setFirstName("Admin"); // Add first/last names
+				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
 				userRepository.save(adminUser);
 				log.info(">>> Admin user created.");
 			} else {
 				log.info(">>> Admin user '{}' already exists.", adminUsername);
-				// Optional: Force password update if needed for testing
-				// User adminUser = existingAdminOptional.get();
-				// adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				// userRepository.save(adminUser);
-				// log.info(">>> Password for admin user '{}' updated.", adminUsername);
 			}
 
 			// --- Test Customer User ---
@@ -66,7 +61,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				customerUser.setUsername(customerUsername);
 				customerUser.setPassword(passwordEncoder.encode(customerPassword));
 				customerUser.setRole("ROLE_CUSTOMER");
-				customerUser.setFirstName("Test"); // Add first/last names
+				customerUser.setFirstName("Test");
 				customerUser.setLastName("Customer");
 				userRepository.save(customerUser);
 				log.info(">>> Test customer user created.");

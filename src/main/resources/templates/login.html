@@ -6,48 +6,66 @@
 <title>Log In - MK Toasted Siopao</title>
 </head>
 <body>
-	<main class="container my-5">
-		<div class="row justify-content-center">
-			<div class="col-md-6 col-lg-5">
-				<!-- Using the auth-card style from styles.css -->
-				<div class="card shadow-sm p-4 mt-5 auth-card">
-					<h2 class="text-center mb-3 section-title">Welcome Back!</h2>
-					<p class="text-center text-muted mb-4">Log in to your account
-						to continue.</p>
 
-					<form id="loginForm">
-						<div class="mb-3">
-							<label for="username" class="form-label">Username</label> <input
-								type="text" class="form-control" id="username" name="username"
-								required>
-						</div>
+	<main class="login-page-content">
+		<!-- Use class for consistent styling if needed -->
+		<div class="container my-5">
+			<div class="row justify-content-center">
+				<div class="col-md-6 col-lg-5">
+					<div class="card shadow-sm p-4 mt-5 auth-card">
+						<!-- Use auth-card class -->
+						<h2 class="text-center mb-3 section-title">Welcome Back!</h2>
+						<p class="text-center text-muted mb-4">Log in to your account
+							to continue.</p>
 
-						<div class="mb-3">
-							<label for="loginPassword" class="form-label">Password</label> <input
-								type="password" class="form-control" id="loginPassword"
-								name="password" required>
-							<div class="text-end mt-1">
-								<a href="#" class="small text-decoration-none">Forgot your
-									password?</a>
+						<!-- Display error message if login fails -->
+						<div th:if="${param.error}" class="alert alert-danger"
+							role="alert">Invalid username or password.</div>
+						<!-- Display message if logged out -->
+						<div th:if="${param.logout}" class="alert alert-success"
+							role="alert">You have been logged out.</div>
+
+						<!-- UPDATED FORM TAG -->
+						<form id="loginForm" method="post" th:action="@{/login}">
+							<div class="mb-3">
+								<label for="username" class="form-label">Username</label>
+								<!-- Spring Security expects name="username" -->
+								<input type="text" class="form-control" id="username"
+									name="username" required>
 							</div>
-						</div>
 
-						<div class="form-check mb-3">
-							<input type="checkbox" class="form-check-input" id="remember"
-								name="remember"> <label for="remember"
-								class="form-check-label">Remember me</label>
-						</div>
+							<div class="mb-3">
+								<label for="password" class="form-label">Password</label>
+								<!-- Spring Security expects name="password" -->
+								<input type="password" class="form-control" id="password"
+									name="password" required>
+								<div class="text-end mt-1">
+									<a href="#" class="small text-decoration-none">Forgot your
+										password?</a>
+									<!-- Link placeholder -->
+								</div>
+							</div>
 
-						<button type="submit" class="btn btn-custom w-100 mb-3">Log
-							In</button>
-					</form>
+							<div class="form-check mb-3">
+								<!-- Spring Security can handle remember-me if configured -->
+								<input type="checkbox" class="form-check-input" id="remember-me"
+									name="remember-me"> <label for="remember-me"
+									class="form-check-label">Remember me</label>
+							</div>
 
-					<p class="text-center">
-						Don't have an account? <a th:href="@{/signup}">Sign up here</a>
-					</p>
+							<button type="submit" class="btn btn-custom w-100 mb-3">Log
+								In</button>
+						</form>
+
+						<p class="text-center">
+							Don't have an account? <a th:href="@{/signup}">Sign up here</a>
+						</p>
+					</div>
 				</div>
 			</div>
 		</div>
 	</main>
+
 </body>
 </html>
+

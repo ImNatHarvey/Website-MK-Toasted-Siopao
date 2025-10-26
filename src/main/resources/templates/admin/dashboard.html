@@ -2,10 +2,9 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	th:replace="~{admin/base :: layout(~{::main})}">
 <head>
-<title>Admin Dashboard - MK Toasted Siopao</title>
+<title>Admin Dashboard - MK Admin Portal</title>
 </head>
 <body>
-
 	<main class="container my-4">
 		<h2 class="section-title mb-4 text-center">Admin Dashboard</h2>
 
@@ -16,7 +15,7 @@
 					<div class="card-body">
 						<h5 class="card-title">Daily Orders</h5>
 						<div class="stats-value">0</div>
-						<div class="stats-change text-muted">+12% from yesterday</div>
+						<div class="stats-change">+12% from yesterday</div>
 					</div>
 				</div>
 			</div>
@@ -24,8 +23,8 @@
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
 						<h5 class="card-title">Daily Revenue</h5>
-						<div class="stats-value">₱0</div>
-						<div class="stats-change text-muted">+8% from yesterday</div>
+						<div class="stats-value">P0</div>
+						<div class="stats-change">+8% from yesterday</div>
 					</div>
 				</div>
 			</div>
@@ -34,7 +33,7 @@
 					<div class="card-body">
 						<h5 class="card-title">Daily Sales</h5>
 						<div class="stats-value">0</div>
-						<div class="stats-change text-muted">+6% from yesterday</div>
+						<div class="stats-change">+6% from yesterday</div>
 					</div>
 				</div>
 			</div>
@@ -85,7 +84,8 @@
 							</table>
 						</div>
 						<div class="text-center">
-							<a href="#" class="btn btn-custom mt-3">View All Orders</a>
+							<a th:href="@{/admin/orders}" class="btn btn-custom mt-3">View
+								All Orders</a>
 						</div>
 					</div>
 				</div>
@@ -101,7 +101,8 @@
 						<div class="nav-icon fs-1 mb-2">📦</div>
 						<h4>Order Management</h4>
 						<p>View and manage customer orders</p>
-						<a href="#" class="btn btn-custom mt-2">Manage Orders</a>
+						<a th:href="@{/admin/orders}" class="btn btn-custom mt-2">Manage
+							Orders</a>
 					</div>
 				</div>
 				<div class="col-md-4">
@@ -109,7 +110,8 @@
 						<div class="nav-icon fs-1 mb-2">👥</div>
 						<h4>Customer Management</h4>
 						<p>Manage customer accounts and data</p>
-						<a href="#" class="btn btn-custom mt-2">Manage Customers</a>
+						<a th:href="@{/admin/customers}" class="btn btn-custom mt-2">Manage
+							Customers</a>
 					</div>
 				</div>
 				<div class="col-md-4">
@@ -117,12 +119,42 @@
 						<div class="nav-icon fs-1 mb-2">🍔</div>
 						<h4>Product Management</h4>
 						<p>Update menu items and pricing</p>
-						<a href="#" classs="btn btn-custom mt-2">Manage Products</a>
+						<a th:href="@{/admin/products}" class="btn btn-custom mt-2">Manage
+							Products</a>
 					</div>
 				</div>
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">🧾</div>
+						<h4>Inventory Management</h4>
+						<p>Track and manage ingredient stock</p>
+						<a th:href="@{/admin/inventory}" class="btn btn-custom mt-2">Manage
+							Inventory</a>
+					</div>
+				</div>
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">💰</div>
+						<h4>Transaction History</h4>
+						<p>View all transaction records</p>
+						<a th:href="@{/admin/transactions}" class="btn btn-custom mt-2">View
+							Transactions</a>
+					</div>
+				</div>
+				<!-- THIS IS THE CORRECTED BLOCK -->
+				<div class="col-md-4">
+					<div class="quick-nav-card p-4">
+						<div class="nav-icon fs-1 mb-2">⚙️</div>
+						<h4>Site Management</h4>
+						<p>Configure website settings</p>
+						<a th:href="@{/admin/settings}" class="btn btn-custom mt-2">Site
+							Settings</a>
+					</div>
+				</div>
+				<!-- END OF CORRECTION -->
 			</div>
 		</div>
 	</main>
-
 </body>
 </html>
+

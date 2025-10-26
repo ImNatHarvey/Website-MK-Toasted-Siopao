@@ -15,6 +15,11 @@ public class HomeController {
     public String menu() {
         return "menu";
     }
+    
+    @GetMapping("/order")
+    public String order() {
+        return "order";
+    }
 
     @GetMapping("/about")
     public String about() {

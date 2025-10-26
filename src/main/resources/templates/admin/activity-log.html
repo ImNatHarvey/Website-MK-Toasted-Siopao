@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::main})}">
+<head>
+<title>Activity Log - MK Admin Portal</title>
+</head>
+<body>
+	<main>
+		<div class="container mt-4">
+			<h2 class="section-title mb-4 text-center">Admin Activity Log</h2>
+
+			<div class="card shadow-sm">
+				<div class="card-header">
+					<h5 class="mb-0">Recent Activities</h5>
+				</div>
+				<div class="card-body">
+					<div class="table-responsive">
+						<table class="table table-hover align-middle">
+							<thead class="table-light">
+								<tr>
+									<th>Timestamp</th>
+									<th>Admin User</th>
+									<th>Action</th>
+									<th>Details</th>
+								</tr>
+							</thead>
+							<tbody>
+								<!-- Loop through log entries passed from controller -->
+								<tr th:each="logEntry : ${activityLogs}">
+									<!-- Format timestamp nicely -->
+									<td
+										th:text="${#temporals.format(logEntry.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+									<td th:text="${logEntry.username}"></td>
+									<td th:text="${logEntry.action}"></td>
+									<td th:text="${logEntry.details}"></td>
+								</tr>
+								<!-- Show message if no logs exist -->
+								<tr th:if="${#lists.isEmpty(activityLogs)}">
+									<td colspan="4" class="text-center text-muted">No activity
+										recorded yet.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<!-- Optional: Add pagination later if the log gets very long -->
+				</div>
+			</div>
+			<div class="text-center mt-3">
+				<a th:href="@{/admin/settings}" class="btn btn-secondary">Back
+					to Site Management</a>
+			</div>
+		</div>
+	</main>
+</body>
+</html>

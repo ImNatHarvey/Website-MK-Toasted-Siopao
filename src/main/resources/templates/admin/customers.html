@@ -5,31 +5,73 @@
 <title>Manage Customers - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4">
-		<h2 class="mb-4 text-center section-title">Customer Management</h2>
+	<main class="container my-4"
+		th:data-show-manage-admins-modal="${showManageAdminsModal}"
+		th:data-show-add-customer-modal="${showAddCustomerModal}">
 
-		<!-- Header Actions -->
-		<div class="input-group mb-4">
-			<input type="text" class="form-control"
-				placeholder="Search customers by name, username, phone...">
-			<button class="btn btn-outline-secondary" type="button">Search</button>
+		<div
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+			<h1 class="mb-3 mb-md-0 section-title">User Management</h1>
+			<div class="d-flex gap-2">
+				<button class="btn btn-primary" type="button" data-bs-toggle="modal"
+					data-bs-target="#addCustomerModal">
+					<i class="fa-solid fa-plus me-1"></i> Add Customer
+				</button>
+				<button class="btn btn-info" type="button" data-bs-toggle="modal"
+					data-bs-target="#manageAdminsModal">
+					<i class="fa-solid fa-user-shield me-1"></i> Manage Admins
+				</button>
+			</div>
 		</div>
 
-		<!-- Customer Stats -->
+		<div th:if="${customerSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${customerSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${customerError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${customerError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+
+		<form th:action="@{/admin/customers}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="row g-3 align-items-end">
+				<div class="col-md-10">
+					<label for="keyword" class="form-label">Search by Name,
+						Username, Phone</label> <input type="text" class="form-control"
+						id="keyword" name="keyword" th:value="${keyword}"
+						placeholder="Enter search term...">
+				</div>
+				<div class="col-md-2 d-flex justify-content-end">
+					<button type="submit" class="btn btn-info me-2">
+						<i class="fa-solid fa-search me-1"></i> Search
+					</button>
+					<a th:href="@{/admin/customers}" class="btn btn-outline-secondary"
+						title="Clear Filters"> <i class="fa-solid fa-times"></i>
+					</a>
+				</div>
+			</div>
+		</form>
 		<div class="row text-center mb-4">
 			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Customers</h5>
-						<p class="display-6 fw-bold">1,245</p>
+						<p class="display-6 fw-bold" th:text="${#lists.size(customers)}">0</p>
 					</div>
 				</div>
 			</div>
 			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class="card-title">New This Month</h5>
-						<p class="display-6 fw-bold">86</p>
+						<h5 class="card-title">Total Admins</h5>
+						<p class="display-6 fw-bold" th:text="${#lists.size(admins)}">0</p>
 					</div>
 				</div>
 			</div>
@@ -37,13 +79,12 @@
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Active Customers</h5>
-						<p class="display-6 fw-bold">892</p>
+						<p class="display-6 fw-bold text-muted">?</p>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Customers Table -->
 		<div class="card">
 			<div class="card-header">
 				<h5 class="mb-0">Customers List</h5>
@@ -53,68 +94,276 @@
 					<table class="table table-hover align-middle text-center">
 						<thead class="table-light">
 							<tr>
-								<th>Customer ID</th>
+								<th>ID</th>
 								<th>Name</th>
 								<th>Username</th>
 								<th>Phone</th>
-								<th>Orders</th>
-								<th>Last Order</th>
+								<th>Address</th>
 								<th>Status</th>
 								<th>Actions</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td>001</td>
-								<td>Juan Dela Cruz</td>
-								<td>Juan_Dela</td>
-								<td>+63 912 345 6789</td>
-								<td>15</td>
-								<td>Oct 26, 2025</td>
+							<tr th:each="customer : ${customers}"
+								th:data-name="${customer.firstName + ' ' + customer.lastName}"
+								th:data-username="${customer.username}"
+								th:data-phone="${customer.phone != null ? customer.phone : 'N/A'}"
+								th:data-address-line1="${(customer.houseNo != null ? customer.houseNo : '') + ' ' + (customer.street != null ? customer.street : '')}"
+								th:data-address-line2="${(customer.barangay != null ? customer.barangay : '') + ', ' + (customer.municipality != null ? customer.municipality : '') + ', ' + (customer.province != null ? customer.province : '')}">
+
+								<td th:text="${customer.id}">001</td>
+								<td th:text="${customer.firstName + ' ' + customer.lastName}">Juan
+									Dela Cruz</td>
+								<td th:text="${customer.username}">Juan_Dela</td>
+								<td th:text="${customer.phone != null ? customer.phone : 'N/A'}">N/A</td>
+								<td
+									th:text="${customer.street != null ? (customer.street + ', ' + customer.barangay) : 'N/A'}">N/A</td>
 								<td><span class="badge bg-success">Active</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-									<button class="btn btn-sm btn-outline-warning">Edit</button>
+
+								<td class="d-flex justify-content-center gap-2">
+									<button class="btn btn-sm btn-outline-primary"
+										data-bs-toggle="modal" data-bs-target="#viewCustomerModal">View</button>
+									<a th:href="@{/admin/customers/edit/{id}(id=${customer.id})}"
+									class="btn btn-sm btn-outline-warning">Edit</a>
+									<form
+										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"
+										method="post"
+										onsubmit="return confirm('Are you sure you want to delete this customer?');">
+										<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+									</form>
 								</td>
 							</tr>
-							<tr>
-								<td>002</td>
-								<td>Maria Santos</td>
-								<td>maria.santos</td>
-								<td>+63 917 890 1234</td>
-								<td>8</td>
-								<td>Oct 25, 2025</td>
-								<td><span class="badge bg-success">Active</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-									<button class="btn btn-sm btn-outline-warning">Edit</button>
-								</td>
-							</tr>
-							<tr>
-								<td>003</td>
-								<td>Robert Lim</td>
-								<td>robert123</td>
-								<td>+63 918 765 4321</td>
-								<td>23</td>
-								<td>Oct 24, 2025</td>
-								<td><span class="badge bg-secondary">Inactive</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-									<button class="btn btn-sm btn-outline-warning">Edit</button>
-								</td>
+							<tr th:if="${#lists.isEmpty(customers)}">
+								<td colspan="7" class="text-center text-muted"
+									th:text="${keyword != null ? 'No customers found matching your search.' : 'No customers found.'}">
+									No customers found.</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
 
-				<!-- Pagination -->
 				<div class="d-flex justify-content-between align-items-center mt-3">
-					<button class="btn btn-outline-secondary btn-sm">Previous</button>
-					<span>Page 1 of 8</span>
-					<button class="btn btn-outline-secondary btn-sm">Next</button>
+					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
+					<span>Page 1 of 1</span>
+					<button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
 				</div>
 			</div>
 		</div>
+
+
+		<div class="modal fade" id="manageAdminsModal" tabindex="-1"
+			aria-labelledby="manageAdminsModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageAdminsModalLabel">Manage
+							Admin Accounts</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+
+						<h5 class="mb-3">Existing Admins</h5>
+						<div class="table-responsive mb-4">
+							<table class="table table-sm table-hover align-middle">
+								<thead class="table-light">
+									<tr>
+										<th>Name</th>
+										<th>Username</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="admin : ${admins}"
+										th:if="${admin.username != currentUsername}">
+										<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
+											User</td>
+										<td th:text="${admin.username}">admin_user</td>
+										<td class="d-flex gap-2"><a
+											th:href="@{/admin/customers/admin/edit/{id}(id=${admin.id})}"
+											class="btn btn-sm btn-outline-warning">Edit</a>
+											<form
+												th:action="@{/admin/customers/admin/delete/{id}(id=${admin.id})}"
+												method="post"
+												onsubmit="return confirm('Are you sure you want to delete this admin?');">
+												<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+											</form></td>
+									</tr>
+									<tr th:if="${#lists.size(admins) <= 1}">
+										<td colspan="3" class="text-center text-muted">No other
+											admin accounts.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<hr class="my-4">
+
+						<h5 class="mb-3">Add New Admin</h5>
+						<form th:action="@{/admin/customers/add-admin}" method="post"
+							th:object="${adminUserDto}" id="addAdminForm">
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminFirstName" class="form-label">First
+										Name</label> <input type="text" class="form-control"
+										th:field="*{firstName}" id="adminFirstName"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('firstName')}"
+										th:errors="*{firstName}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminLastName" class="form-label">Last Name</label>
+									<input type="text" class="form-control" th:field="*{lastName}"
+										id="adminLastName" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lastName')}"
+										th:errors="*{lastName}">Error</div>
+								</div>
+							</div>
+							<div class="mb-3">
+								<label for="adminUsername" class="form-label">Username</label> <input
+									type="text" class="form-control" th:field="*{username}"
+									id="adminUsername" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">Error</div>
+							</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminPassword" class="form-label">Password</label>
+									<input type="password" class="form-control"
+										th:field="*{password}" id="adminPassword"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('password')}"
+										th:errors="*{password}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminConfirmPassword" class="form-label">Confirm
+										Password</label> <input type="password" class="form-control"
+										th:field="*{confirmPassword}" id="adminConfirmPassword"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('confirmPassword')}"
+										th:errors="*{confirmPassword}">Error</div>
+								</div>
+							</div>
+							<div class="d-flex justify-content-end">
+								<button type="submit" class="btn btn-primary">Create
+									Admin</button>
+							</div>
+						</form>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="addCustomerModal" tabindex="-1"
+			aria-labelledby="addCustomerModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/customers/add-customer}" method="post"
+						th:object="${customerUserDto}" id="addCustomerForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="addCustomerModalLabel">Add New
+								Customer User</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div class="mb-3">
+								<label for="custFirstName" class="form-label">First Name</label>
+								<input type="text" class="form-control" th:field="*{firstName}"
+									id="custFirstName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('firstName')}"
+									th:errors="*{firstName}">Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="custLastName" class="form-label">Last Name</label> <input
+									type="text" class="form-control" th:field="*{lastName}"
+									id="custLastName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('lastName')}"
+									th:errors="*{lastName}">Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="custUsername" class="form-label">Username</label> <input
+									type="text" class="form-control" th:field="*{username}"
+									id="custUsername" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="custPassword" class.="form-label">Password</label> <input
+									type="password" class="form-control" th:field="*{password}"
+									id="custPassword" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('password')}"
+									th:errors="*{password}">Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="custConfirmPassword" class="form-label">Confirm
+									Password</label> <input type="password" class="form-control"
+									th:field="*{confirmPassword}" id="custConfirmPassword"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('confirmPassword')}"
+									th:errors="*{confirmPassword}">Error</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Create
+								Customer</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="viewCustomerModal" tabindex="-1"
+			aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewCustomerModalLabel">Customer
+							Details</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<h5 id="viewCustomerName" class="mb-3">Customer Name</h5>
+						<p>
+							<strong>Username:</strong> <span id="viewCustomerUsername"></span>
+						</p>
+						<p>
+							<strong>Phone:</strong> <span id="viewCustomerPhone"></span>
+						</p>
+						<hr>
+						<p class="mb-1">
+							<strong>Address:</strong>
+						</p>
+						<address class="mb-0 ms-3">
+							<span id="viewCustomerAddress1" class="d-block"></span> <span
+								id="viewCustomerAddress2" class="d-block"></span>
+						</address>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
 	</main>
 </body>
 </html>

@@ -1,24 +1,40 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.dto.AdminAdminUpdateDto;
+import com.toastedsiopao.dto.AdminCustomerUpdateDto;
+import com.toastedsiopao.dto.AdminUserCreateDto;
 import com.toastedsiopao.dto.UserDto;
 import com.toastedsiopao.model.User;
 
+import java.util.List;
+import java.util.Optional;
+
 public interface UserService {
-	/**
-	 * Saves a new customer user based on the signup DTO. Includes password encoding
-	 * and role assignment.
-	 * 
-	 * @param userDto Data from the signup form.
-	 * @return The newly saved User entity.
-	 * @throws IllegalArgumentException if username already exists.
-	 */
+
 	User saveCustomer(UserDto userDto);
 
-	/**
-	 * Finds a user by their username.
-	 * 
-	 * @param username The username to search for.
-	 * @return The User entity if found, null otherwise.
-	 */
 	User findByUsername(String username);
+
+	List<User> findAllCustomers();
+
+	Optional<User> findUserById(Long id);
+
+	User saveAdminUser(AdminUserCreateDto userDto, String role);
+
+	User updateCustomer(AdminCustomerUpdateDto userDto);
+
+	List<User> findAllAdmins();
+
+	void deleteUserById(Long id);
+
+	User updateAdmin(AdminAdminUpdateDto userDto);
+
+	// --- NEW METHOD ---
+	/**
+	 * Searches for customers based on a keyword matching name, username, or phone.
+	 * * @param keyword The search term.
+	 * 
+	 * @return A list of matching customer User entities.
+	 */
+	List<User> searchCustomers(String keyword);
 }

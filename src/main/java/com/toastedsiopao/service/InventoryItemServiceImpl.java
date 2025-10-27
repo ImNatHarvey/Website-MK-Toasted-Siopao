@@ -3,10 +3,14 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
+import com.toastedsiopao.model.RecipeIngredient; // NEW
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.repository.InventoryCategoryRepository;
 import com.toastedsiopao.repository.InventoryItemRepository;
+import com.toastedsiopao.repository.RecipeIngredientRepository; // NEW
 import com.toastedsiopao.repository.UnitOfMeasureRepository;
+import org.slf4j.Logger; // NEW
+import org.slf4j.LoggerFactory; // NEW
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,14 +24,19 @@ import java.util.Optional;
 @Transactional
 public class InventoryItemServiceImpl implements InventoryItemService {
 
+	// --- NEW ---
+	private static final Logger log = LoggerFactory.getLogger(InventoryItemServiceImpl.class);
+
 	@Autowired
 	private InventoryItemRepository itemRepository;
-
 	@Autowired
 	private InventoryCategoryRepository categoryRepository;
-
 	@Autowired
 	private UnitOfMeasureRepository unitRepository;
+
+	// --- NEWLY INJECTED ---
+	@Autowired
+	private RecipeIngredientRepository recipeIngredientRepository;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -92,11 +101,21 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.save(item);
 	}
 
+	// --- MODIFIED: deleteById method ---
 	@Override
 	public void deleteById(Long id) {
-		// Add check later: Prevent deletion if item is used in a recipe
+		InventoryItem item = itemRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
+
+		// Check if this item is used in any recipes
+		List<RecipeIngredient> recipes = recipeIngredientRepository.findByInventoryItem(item);
+		if (!recipes.isEmpty()) {
+			throw new RuntimeException("Cannot delete item. It is used in " + recipes.size() + " product recipe(s).");
+		}
+
 		itemRepository.deleteById(id);
 	}
+	// --- END MODIFIED ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -138,17 +157,25 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.findOutOfStockItems();
 	}
 
-	// --- Stock Adjustment (Placeholder) ---
-	/*
-	 * @Override public void adjustStock(Long itemId, BigDecimal quantityChange,
-	 * String reason) { InventoryItem item = itemRepository.findById(itemId)
-	 * .orElseThrow(() -> new RuntimeException("Inventory Item not found with id: "
-	 * + itemId));
-	 * 
-	 * BigDecimal newStock = item.getCurrentStock().add(quantityChange); if
-	 * (newStock.compareTo(BigDecimal.ZERO) < 0) { throw new
-	 * IllegalArgumentException("Stock cannot go below zero."); }
-	 * item.setCurrentStock(newStock); itemRepository.save(item); // Add logging for
-	 * stock adjustment (reason, user, timestamp, etc.) }
-	 */
+	// --- NEW: Implemented adjustStock method ---
+	@Override
+	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
+		InventoryItem item = itemRepository.findById(itemId)
+				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
+
+		BigDecimal newStock = item.getCurrentStock().add(quantityChange);
+		if (newStock.compareTo(BigDecimal.ZERO) < 0) {
+			throw new IllegalArgumentException("Stock cannot go below zero. Current stock: " + item.getCurrentStock()
+					+ ", Change: " + quantityChange);
+		}
+
+		item.setCurrentStock(newStock);
+		InventoryItem savedItem = itemRepository.save(item);
+
+		log.info("Stock adjusted for Inventory ID {}: Change={}, New Stock={}, Reason={}", itemId, quantityChange,
+				newStock, reason);
+
+		return savedItem;
+	}
+	// --- END NEW ---
 }

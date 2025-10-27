@@ -8,8 +8,8 @@
 	<main class="container my-4"
 		th:data-show-add-item-modal="${showAddItemModal}"
 		th:data-show-manage-categories-modal="${showManageCategoriesModal}"
-		th:data-show-manage-units-modal="${showManageUnitsModal}">
-
+		th:data-show-manage-units-modal="${showManageUnitsModal}"
+		th:data-show-adjust-stock-modal="${showAdjustStockModal}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
@@ -17,6 +17,10 @@
 				<button class="btn btn-primary" data-bs-toggle="modal"
 					data-bs-target="#addItemModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Item
+				</button>
+				<button class="btn btn-success" data-bs-toggle="modal"
+					data-bs-target="#adjustStockModal">
+					<i class="fa-solid fa-boxes-stacked me-1"></i> Adjust Stock
 				</button>
 				<button class="btn btn-secondary" data-bs-toggle="modal"
 					data-bs-target="#manageCategoriesModal">
@@ -29,6 +33,20 @@
 			</div>
 		</div>
 
+		<div th:if="${stockSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${stockSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${stockError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${stockError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
 		<div th:if="${inventorySuccess}"
 			class="alert alert-success alert-dismissible fade show" role="alert">
 			<i class="fa-solid fa-check-circle me-2"></i> <span
@@ -64,7 +82,7 @@
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
 					<button type="submit" class="btn btn-info me-2">
-						<i class="fa-solid fa-search me-1"></i> Filter
+						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/inventory}" class="btn btn-outline-secondary"
 						title="Clear Filters"> <i class="fa-solid fa-times"></i>
@@ -380,6 +398,65 @@
 			</div>
 		</div>
 
+		<div class="modal fade" id="adjustStockModal" tabindex="-1"
+			aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="adjustStockModalLabel">Adjust
+							Inventory Stock</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<p class="small text-muted">Record new shipments (increase
+							stock) or wastage/corrections (decrease stock).</p>
+						<div class="table-responsive">
+							<table class="table table-sm align-middle">
+								<thead>
+									<tr>
+										<th>Item</th>
+										<th>Current Stock</th>
+										<th>Adjust Quantity</th>
+										<th>Reason</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="item : ${allInventoryItems}">
+										<form th:action="@{/admin/inventory/stock/adjust}"
+											method="post" class="stock-adjust-form">
+											<input type="hidden" name="inventoryItemId"
+												th:value="${item.id}" />
+											<td
+												th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">...</td>
+											<td
+												th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">...</td>
+											<td><input type="number" step="0.01"
+												name="quantityChange" class="form-control form-control-sm"
+												style="width: 120px;" placeholder="+/- Qty (e.g. 5 or -1.5)"
+												required /></td>
+											<td><input type="text" name="reason"
+												class="form-control form-control-sm"
+												placeholder="e.g., Shipment, Wastage" required /></td>
+											<td><button type="submit" class="btn btn-sm btn-primary">Adjust</button></td>
+										</form>
+									</tr>
+									<tr th:if="${#lists.isEmpty(allInventoryItems)}">
+										<td colspan="5" class="text-center text-muted">No
+											inventory items found.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</main>
 </body>
 </html>

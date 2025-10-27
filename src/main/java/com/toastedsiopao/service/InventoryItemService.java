@@ -2,6 +2,8 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryItem;
+
+import java.math.BigDecimal; // Import BigDecimal
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +28,14 @@ public interface InventoryItemService {
 
 	List<InventoryItem> findOutOfStockItems();
 
-	// Method to adjust stock (e.g., when ingredients are used or received)
-	// We'll implement the logic later
-	// void adjustStock(Long itemId, BigDecimal quantityChange, String reason);
+	// --- UNCOMMENTED ---
+	/**
+	 * Adjusts the stock of an inventory item.
+	 * 
+	 * @param itemId         The ID of the item
+	 * @param quantityChange The amount to add (positive) or remove (negative)
+	 * @param reason         The reason for the adjustment
+	 * @return The updated InventoryItem
+	 */
+	InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason);
 }

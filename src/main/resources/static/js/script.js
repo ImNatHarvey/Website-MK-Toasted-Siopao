@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		'manageAdminsModal': mainElement.dataset.showManageAdminsModal,
 		'addCustomerModal': mainElement.dataset.showAddCustomerModal,
 		'editCustomerModal': mainElement.dataset.showEditCustomerModal,
-		'editAdminModal': mainElement.dataset.showEditAdminModal, // <-- ADDED THIS
-		'addItemModal': mainElement.dataset.showAddItemModal, // Inventory Item Add/Edit
-		// Note: manageCategoriesModal is duplicated, ensure correct mapping if needed
+		'editAdminModal': mainElement.dataset.showEditAdminModal,
+		'editProductModal': mainElement.dataset.showEditProductModal, // <-- Flag for edit product
+		'addItemModal': mainElement.dataset.showAddItemModal,
 		'manageUnitsModal': mainElement.dataset.showManageUnitsModal,
 		'manageStockModal': mainElement.dataset.showManageStockModal
 	};
@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (modalElement) {
 				if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
 					try {
-						// Use getInstance to avoid issues if modal was already initialized
 						const modalInstance = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
 						modalInstance.show();
 					} catch (e) { console.error(`Error showing modal ${modalId}:`, e); }
@@ -36,7 +35,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for "View Customer" Modal ---
-	// ... (unchanged) ...
 	const viewCustomerModal = document.getElementById('viewCustomerModal');
 	if (viewCustomerModal) {
 		viewCustomerModal.addEventListener('show.bs.modal', function(event) {
@@ -61,22 +59,18 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for Edit Customer Modal ---
-	// ... (unchanged) ...
 	const editCustomerModal = document.getElementById('editCustomerModal');
 	if (editCustomerModal) {
 		const form = editCustomerModal.querySelector('#editCustomerForm');
 		const modalTitle = editCustomerModal.querySelector('#editCustomerModalLabel');
 
 		editCustomerModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget; // Button that triggered the modal
+			const button = event.relatedTarget;
 			if (!button || !button.classList.contains('edit-customer-btn')) {
 				return;
 			}
-
 			const dataset = button.dataset;
-
 			modalTitle.textContent = 'Edit: ' + dataset.firstName + ' ' + dataset.lastName;
-
 			form.querySelector('#id').value = dataset.id || '';
 			form.querySelector('#firstName').value = dataset.firstName || '';
 			form.querySelector('#lastName').value = dataset.lastName || '';
@@ -89,7 +83,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#barangay').value = dataset.barangay || '';
 			form.querySelector('#municipality').value = dataset.municipality || '';
 			form.querySelector('#province').value = dataset.province || '';
-
 			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 		});
 
@@ -102,35 +95,26 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- NEW: Logic for Edit Admin Modal ---
+	// --- Logic for Edit Admin Modal ---
 	const editAdminModal = document.getElementById('editAdminModal');
 	if (editAdminModal) {
 		const form = editAdminModal.querySelector('#editAdminForm');
 		const modalTitle = editAdminModal.querySelector('#editAdminModalLabel');
 
 		editAdminModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget; // Button that triggered the modal
+			const button = event.relatedTarget;
 			if (!button || !button.classList.contains('edit-admin-btn')) {
-				// Only populate if triggered by the edit button
 				return;
 			}
-
 			const dataset = button.dataset;
-
-			// Set modal title
 			modalTitle.textContent = 'Edit: ' + dataset.firstName + ' ' + dataset.lastName;
-
-			// Populate form fields (Ensure the IDs match those in the modal form)
-			form.querySelector('#id').value = dataset.id || ''; // Hidden field
+			form.querySelector('#id').value = dataset.id || '';
 			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
 			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
 			form.querySelector('#editAdminUsername').value = dataset.username || '';
-
-			// Clear any previous validation classes
 			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 		});
 
-		// Clear validation on hide, unless shown due to validation
 		editAdminModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditAdminModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -141,7 +125,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for Add/Edit Inventory Item Modal ---
-	// ... (unchanged) ...
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -156,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemCostInput = addItemModal.querySelector('#itemCost');
 
 		addItemModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget; // Button that triggered the modal
+			const button = event.relatedTarget;
 			const isEdit = button && button.classList.contains('edit-item-btn');
 
 			if (isEdit && button.dataset) {
@@ -174,19 +157,95 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (itemForm) itemForm.reset();
 				itemIdInput.value = '';
 			}
+			itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 		});
 
 		addItemModal.addEventListener('hidden.bs.modal', function() {
-			itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			if (mainElement.dataset.showAddItemModal !== 'true') {
+				itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			}
 		});
 	}
 
+	// --- Logic for Edit Product Modal ---
+	const editProductModal = document.getElementById('editProductModal');
+	if (editProductModal) {
+		const form = editProductModal.querySelector('#editProductForm');
+		const modalTitle = editProductModal.querySelector('#editProductModalLabel');
+		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
+		const ingredientTemplate = document.getElementById('ingredientRowTemplateEditModal'); // Template FOR the edit modal
+
+		editProductModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+
+			if (!button || !button.classList.contains('edit-product-btn')) {
+				return;
+			}
+
+			const dataset = button.dataset;
+			modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
+			form.querySelector('#id').value = dataset.id || '';
+			form.querySelector('#editProductNameModal').value = dataset.name || '';
+			form.querySelector('#editProductCategoryModal').value = dataset.categoryId || '';
+			form.querySelector('#editProductPriceModal').value = dataset.price || '0.00';
+			form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
+			form.querySelector('#editProductImageUrlModal').value = dataset.imageUrl || '';
+			form.querySelector('#editLowThresholdModal').value = dataset.lowStockThreshold || '0';
+			form.querySelector('#editCriticalThresholdModal').value = dataset.criticalStockThreshold || '0';
+
+			if (ingredientsContainer) {
+				ingredientsContainer.innerHTML = ''; // Clear previous rows
+			}
+
+			let ingredients = [];
+			if (dataset.ingredients && dataset.ingredients.length > 2) {
+				try {
+					ingredients = dataset.ingredients.slice(1, -1).split(',')
+						.map(item => item.trim())
+						.filter(item => item.includes(':'))
+						.map(item => {
+							const parts = item.split(':');
+							return { itemId: parts[0], quantity: parts[1] };
+						});
+				} catch (e) {
+					console.error("Error parsing ingredients data:", e);
+					ingredients = [];
+				}
+			}
+
+			if (ingredientTemplate && ingredientsContainer) {
+				ingredients.forEach((ingData, index) => {
+					addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal', ingData); // Pass data to populate
+				});
+			} else {
+				console.warn("Ingredient container or template not found for edit modal.");
+			}
+
+			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			const errorAlert = form.querySelector('.alert.alert-danger[role="alert"]:not([th\\:if*="."])');
+			if (errorAlert) errorAlert.remove();
+		});
+
+		editProductModal.addEventListener('hidden.bs.modal', function() {
+			if (mainElement.dataset.showEditProductModal !== 'true') {
+				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+				const errorAlert = form.querySelector('.alert.alert-danger');
+				if (errorAlert) errorAlert.remove();
+				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+			}
+		});
+	}
+
+
 	// --- Recipe Ingredient Management ---
-	// ... (unchanged) ...
-	function addIngredientRow(containerId, templateId) {
+	// Modified to accept optional data for population
+	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
-		if (!template || !containerDiv) return;
+		if (!template || !containerDiv) {
+			console.warn("Cannot add ingredient row: container or template not found.", containerId, templateId);
+			return;
+		}
 
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
 		const index = currentRowCount;
@@ -194,32 +253,70 @@ document.addEventListener('DOMContentLoaded', function() {
 		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true);
 		const newRowElement = fragment.querySelector('.ingredient-row');
 
-		if (!newRowElement) return;
+		if (!newRowElement) {
+			console.error("Template did not contain '.ingredient-row'");
+			return;
+		}
 
 		newRowElement.querySelectorAll('[name]').forEach(input => {
 			input.name = input.name.replace('[INDEX]', `[${index}]`);
 		});
 
+		// Populate if data is provided (used by Edit Product modal)
+		if (data) {
+			const select = newRowElement.querySelector('.ingredient-item');
+			const quantityInput = newRowElement.querySelector('.ingredient-quantity');
+			if (select) select.value = data.itemId;
+			if (quantityInput) quantityInput.value = data.quantity;
+		}
+
+
 		containerDiv.appendChild(newRowElement);
 	}
+
 
 	function removeIngredientRow(button) {
 		const rowToRemove = button.closest('.ingredient-row');
 		if (rowToRemove) {
 			rowToRemove.remove();
+			// OPTIONAL: Renumber fields if strict indexing is required by backend
+			// renumberIngredientRows(rowToRemove.parentElement);
 		}
 	}
 
+	// Optional function to renumber rows after deletion
+	function renumberIngredientRows(container) {
+		if (!container) return;
+		const rows = container.querySelectorAll('.ingredient-row');
+		rows.forEach((row, index) => {
+			row.querySelectorAll('[name]').forEach(input => {
+				input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
+			});
+		});
+	}
+
+
+	// Add Ingredient Button (Add Product Modal)
 	const addIngredientBtn = document.getElementById('addIngredientBtn');
 	if (addIngredientBtn) {
 		addIngredientBtn.addEventListener('click', () => addIngredientRow('addIngredientsContainer', 'ingredientRowTemplate'));
 	}
 
-	const addIngredientBtnEdit = document.getElementById('addIngredientBtnEdit');
-	if (addIngredientBtnEdit) {
-		addIngredientBtnEdit.addEventListener('click', () => addIngredientRow('editIngredientsContainer', 'ingredientRowTemplateEdit'));
+	// --- REMOVED OBSOLETE LISTENER ---
+	// const addIngredientBtnEdit = document.getElementById('addIngredientBtnEdit');
+	// if (addIngredientBtnEdit) {
+	// 	addIngredientBtnEdit.addEventListener('click', () => addIngredientRow('editIngredientsContainer', 'ingredientRowTemplateEdit'));
+	// }
+
+	// --- CORRECTED LISTENER FOR EDIT MODAL ---
+	const addIngredientBtnEditModal = document.getElementById('addIngredientBtnEditModal');
+	if (addIngredientBtnEditModal) {
+		// Use the correct container and template IDs for the EDIT modal
+		addIngredientBtnEditModal.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
 	}
 
+
+	// Event delegation for Remove buttons
 	document.addEventListener('click', function(event) {
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {

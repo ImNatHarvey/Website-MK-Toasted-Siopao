@@ -9,8 +9,8 @@
 		th:data-show-category-modal="${showCategoryModal}"
 		th:data-show-add-product-modal="${showAddProductModal}"
 		th:data-show-manage-stock-modal="${showManageStockModal}"
-		th:data-show-edit-product-modal="${showEditProductModal}">
-
+		th:data-show-edit-product-modal="${showEditProductModal}"
+		th:data-show-view-product-modal="${showViewProductModal}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
@@ -137,9 +137,25 @@
 						<p class="card-text small mb-3 flex-grow-1"
 							th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
 						<div class="mt-auto d-flex justify-content-between gap-1">
-							<a th:href="@{/admin/products/view/{id}(id=${product.id})}"
-								class="btn btn-sm btn-outline-info flex-fill">View</a>
-
+							<button type="button"
+								class="btn btn-sm btn-outline-info flex-fill view-product-btn"
+								data-bs-toggle="modal" data-bs-target="#viewProductModal"
+								th:data-id="${product.id}" th:data-name="${product.name}"
+								th:data-category-name="${product.category.name}"
+								th:data-price="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}"
+								th:data-description="${product.description}"
+								th:data-image-url="${product.imageUrl != null && !product.imageUrl.isBlank() ? product.imageUrl : '/img/placeholder.jpg'}"
+								th:data-stock-status="${#strings.replace(product.stockStatus, '_', ' ')}"
+								th:data-stock-status-class="${#strings.equals(product.stockStatus, 'NORMAL') ? 'bg-success' :
+                                                              #strings.equals(product.stockStatus, 'LOW') ? 'bg-warning text-dark' :
+                                                              #strings.equals(product.stockStatus, 'CRITICAL') ? 'bg-danger' :
+                                                              #strings.equals(product.stockStatus, 'NO_STOCK') ? 'bg-dark' : 'bg-secondary'}"
+								th:data-current-stock="${product.currentStock}"
+								th:data-low-stock-threshold="${product.lowStockThreshold}"
+								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
+								th:data-stock-last-updated="${product.stockLastUpdated != null ? #temporals.format(product.stockLastUpdated, 'MMM dd, yyyy HH:mm') : ''}"
+								th:attr="data-ingredients=${product.ingredients != null ? product.ingredients.![inventoryItem.name + ':' + #numbers.formatDecimal(quantityNeeded, 1, 'COMMA', 2, 'POINT') + ':' + inventoryItem.unit.abbreviation].toString() : '[]'}">
+								View</button>
 							<button type="button"
 								class="btn btn-sm btn-outline-warning flex-fill edit-product-btn"
 								data-bs-toggle="modal" data-bs-target="#editProductModal"
@@ -570,6 +586,7 @@
 				</div>
 			</div>
 		</div>
+
 		<template id="ingredientRowTemplateEditModal">
 			<div class="row ingredient-row mb-2 gx-2 align-items-center">
 				<div class="col-md-6">
@@ -599,7 +616,87 @@
 			</div>
 		</template>
 
+		<div class="modal fade" id="viewProductModal" tabindex="-1"
+			aria-labelledby="viewProductModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewProductModalLabel">Product
+							Details</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<div class="row mb-4">
+							<div class="col-md-4 text-center">
+								<img id="viewProductImage" src="/img/placeholder.jpg"
+									class="img-fluid rounded mb-2"
+									style="max-height: 250px; object-fit: contain;"
+									alt="Product Image"
+									onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+							</div>
+							<div class="col-md-8">
+								<h4 id="viewProductName">Product Name</h4>
+								<p class="text-muted mb-2" id="viewProductCategory">Category</p>
+								<p class="fs-5 fw-bold mb-2">
+									₱<span id="viewProductPrice">Price</span>
+								</p>
+								<p class="mb-2">
+									<strong>Description:</strong>
+								</p>
+								<p id="viewProductDescription">Description...</p>
 
+								<hr>
+
+								<p class="mb-1">
+									<strong>Stock Status:</strong> <span class="badge ms-2"
+										id="viewProductStockStatusBadge">Stock Status</span>
+								</p>
+								<p class="mb-1">
+									<strong>Current Stock:</strong> <span
+										id="viewProductCurrentStock">0</span> units
+								</p>
+								<p class="mb-1">
+									<strong>Low Stock Threshold:</strong> <span
+										id="viewProductLowThreshold">0</span> units
+								</p>
+								<p class="mb-1">
+									<strong>Critical Stock Threshold:</strong> <span
+										id="viewProductCriticalThreshold">0</span> units
+								</p>
+								<p class="small text-muted" id="viewProductStockLastUpdated">Stock
+									last updated: ...</p>
+							</div>
+						</div>
+
+						<hr>
+						<h5 class="mb-3">Recipe Ingredients</h5>
+						<div id="viewProductIngredientsList">
+							<p class="text-muted small">No ingredients assigned.</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+						<button type="button"
+							class="btn btn-warning edit-product-btn-from-view"
+							data-bs-dismiss="modal" data-bs-toggle="modal"
+							data-bs-target="#editProductModal">
+							<i class="fa-solid fa-pencil me-1"></i> Edit Product
+						</button>
+						<form th:action="@{/admin/products/delete}" method="post"
+							class="d-inline delete-product-form-from-view"
+							onsubmit="return confirm('Delete this product?');">
+							<input type="hidden" name="productId"
+								class="view-product-id-for-delete" value="" />
+							<button type="submit" class="btn btn-danger">
+								<i class="fa-solid fa-trash me-1"></i> Delete Product
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
 	</main>
 </body>
 </html>

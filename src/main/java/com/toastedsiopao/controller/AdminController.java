@@ -111,6 +111,9 @@ public class AdminController {
 			model.addAttribute("productUpdateDto", new ProductDto());
 		}
 
+		// Note: product details needed for the view modal are already in the
+		// productList
+
 		return "admin/products";
 	}
 
@@ -180,56 +183,6 @@ public class AdminController {
 		return "redirect:/admin/products";
 	}
 
-	// --- THIS METHOD IS NOW OBSOLETE ---
-	// @GetMapping("/products/edit/{id}")
-	// public String showEditProductForm(@PathVariable("id") Long id, Model model,
-	// RedirectAttributes redirectAttributes) {
-	//
-	// Optional<Product> productOpt = productService.findById(id);
-	//
-	// if (productOpt.isEmpty()) {
-	// redirectAttributes.addFlashAttribute("productError", "Product not found (ID:
-	// " + id + "). Cannot edit.");
-	// return "redirect:/admin/products";
-	// }
-	//
-	// Product product = productOpt.get();
-	//
-	// // Populate DTO if not already present (e.g., from a failed validation
-	// redirect)
-	// if (!model.containsAttribute("productDto")) { // Use productDto for
-	// consistency
-	// ProductDto productDto = new ProductDto();
-	// productDto.setId(product.getId());
-	// productDto.setName(product.getName());
-	// productDto.setDescription(product.getDescription());
-	// productDto.setPrice(product.getPrice());
-	// productDto.setCategoryId(product.getCategory().getId());
-	// productDto.setImageUrl(product.getImageUrl());
-	// productDto.setLowStockThreshold(product.getLowStockThreshold());
-	// productDto.setCriticalStockThreshold(product.getCriticalStockThreshold());
-	//
-	// if (product.getIngredients() != null) {
-	// productDto.setIngredients(product.getIngredients().stream().map(ingredient ->
-	// {
-	// RecipeIngredientDto dto = new RecipeIngredientDto();
-	// if (ingredient.getInventoryItem() != null) {
-	// dto.setInventoryItemId(ingredient.getInventoryItem().getId());
-	// }
-	// dto.setQuantityNeeded(ingredient.getQuantityNeeded());
-	// return dto;
-	// }).collect(Collectors.toList()));
-	// }
-	// model.addAttribute("productDto", productDto);
-	// }
-	// // Add necessary data for rendering the form
-	// model.addAttribute("product", product); // For displaying current stock
-	// model.addAttribute("categories", categoryService.findAll());
-	// model.addAttribute("inventoryItems", inventoryItemService.findAll());
-	//
-	// return "admin/edit-product"; // This file will be deleted
-	// }
-
 	@PostMapping("/products/update")
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, // Use a different
 																									// object name
@@ -241,7 +194,6 @@ public class AdminController {
 			result.reject("global", "Critical stock threshold cannot be greater than low stock threshold.");
 		}
 
-		// --- MODIFIED ERROR HANDLING ---
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result); // Match object name
@@ -252,7 +204,6 @@ public class AdminController {
 			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
 			return "redirect:/admin/products"; // Redirect back to the list page
 		}
-		// --- END MODIFICATION ---
 
 		try {
 			// Product ID MUST be present for an update
@@ -277,11 +228,6 @@ public class AdminController {
 			return "redirect:/admin/products"; // Redirect back to the list page
 		}
 	}
-
-	// ... (rest of the methods: adjustProductStock, viewProduct, addCategory,
-	// deleteCategory, etc. remain largely the same) ...
-	// --- Make sure they redirect to /admin/products and use correct flash
-	// attribute flags ---
 
 	@PostMapping("/products/stock/adjust")
 	public String adjustProductStock(@RequestParam("productId") Long productId,
@@ -322,18 +268,22 @@ public class AdminController {
 		return "redirect:/admin/products";
 	}
 
-	@GetMapping("/products/view/{id}")
-	public String viewProduct(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-		Optional<Product> productOpt = productService.findById(id);
-
-		if (productOpt.isEmpty()) {
-			redirectAttributes.addFlashAttribute("productError", "Product not found (ID: " + id + "). Cannot view.");
-			return "redirect:/admin/products";
-		}
-
-		model.addAttribute("product", productOpt.get());
-		return "admin/view-product"; // Keep view-product.html
-	}
+	// --- REMOVED VIEW PRODUCT MAPPING ---
+	// @GetMapping("/products/view/{id}")
+	// public String viewProduct(@PathVariable("id") Long id, Model model,
+	// RedirectAttributes redirectAttributes) {
+	// Optional<Product> productOpt = productService.findById(id);
+	//
+	// if (productOpt.isEmpty()) {
+	// redirectAttributes.addFlashAttribute("productError", "Product not found (ID:
+	// " + id + "). Cannot view.");
+	// return "redirect:/admin/products";
+	// }
+	//
+	// model.addAttribute("product", productOpt.get());
+	// return "admin/view-product"; // Keep view-product.html - NO, REMOVE THIS LINE
+	// }
+	// --- END REMOVAL ---
 
 	@PostMapping("/products/categories/add")
 	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
@@ -413,7 +363,7 @@ public class AdminController {
 	}
 	// --- End Order Management ---
 
-	// --- Customer/User Management (Unchanged from previous step) ---
+	// --- Customer/User Management (Unchanged) ---
 	@GetMapping("/customers")
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword) {
@@ -449,8 +399,6 @@ public class AdminController {
 		return "admin/customers";
 	}
 
-	// ... (addAdminUser, addCustomerUser, updateCustomer, updateAdmin, deleteUser,
-	// deleteAdmin remain the same as previous step) ...
 	@PostMapping("/customers/add-admin")
 	public String addAdminUser(@Valid @ModelAttribute("adminUserDto") AdminUserCreateDto userDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal) {
@@ -666,8 +614,6 @@ public class AdminController {
 		return "admin/inventory";
 	}
 
-	// ... (saveInventoryItem, deleteInventoryItem, adjustInventoryStock, add/delete
-	// InventoryCategory, add/delete UnitOfMeasure remain the same) ...
 	@PostMapping("/inventory/save")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal) {

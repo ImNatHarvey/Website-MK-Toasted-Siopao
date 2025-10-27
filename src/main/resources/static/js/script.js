@@ -14,10 +14,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		'addCustomerModal': mainElement.dataset.showAddCustomerModal,
 		'editCustomerModal': mainElement.dataset.showEditCustomerModal,
 		'editAdminModal': mainElement.dataset.showEditAdminModal,
-		'editProductModal': mainElement.dataset.showEditProductModal, // <-- Flag for edit product
+		'editProductModal': mainElement.dataset.showEditProductModal,
 		'addItemModal': mainElement.dataset.showAddItemModal,
 		'manageUnitsModal': mainElement.dataset.showManageUnitsModal,
-		'manageStockModal': mainElement.dataset.showManageStockModal
+		'manageStockModal': mainElement.dataset.showManageStockModal,
+		'viewProductModal': mainElement.dataset.showViewProductModal // Added view product
 	};
 
 	for (const modalId in modalsToReopen) {
@@ -35,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for "View Customer" Modal ---
+	// ... (remains the same) ...
 	const viewCustomerModal = document.getElementById('viewCustomerModal');
 	if (viewCustomerModal) {
 		viewCustomerModal.addEventListener('show.bs.modal', function(event) {
@@ -58,7 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+
 	// --- Logic for Edit Customer Modal ---
+	// ... (remains the same) ...
 	const editCustomerModal = document.getElementById('editCustomerModal');
 	if (editCustomerModal) {
 		const form = editCustomerModal.querySelector('#editCustomerForm');
@@ -95,7 +99,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+
 	// --- Logic for Edit Admin Modal ---
+	// ... (remains the same) ...
 	const editAdminModal = document.getElementById('editAdminModal');
 	if (editAdminModal) {
 		const form = editAdminModal.querySelector('#editAdminForm');
@@ -124,7 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+
 	// --- Logic for Add/Edit Inventory Item Modal ---
+	// ... (remains the same) ...
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -167,7 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+
 	// --- Logic for Edit Product Modal ---
+	// ... (remains the same) ...
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
 		const form = editProductModal.querySelector('#editProductForm');
@@ -178,11 +188,20 @@ document.addEventListener('DOMContentLoaded', function() {
 		editProductModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
 
-			if (!button || !button.classList.contains('edit-product-btn')) {
-				return;
+			// Handle opening from View Modal's Edit button
+			let dataset;
+			if (button && button.classList.contains('edit-product-btn-from-view')) {
+				// Find the original button that opened the view modal
+				const viewModal = document.getElementById('viewProductModal');
+				const originalButton = viewModal ? viewModal.relatedTarget : null;
+				dataset = originalButton ? originalButton.dataset : {};
+			} else if (button && button.classList.contains('edit-product-btn')) {
+				dataset = button.dataset; // Original Edit button
+			} else {
+				return; // Not triggered by a known edit button
 			}
 
-			const dataset = button.dataset;
+
 			modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 			form.querySelector('#id').value = dataset.id || '';
 			form.querySelector('#editProductNameModal').value = dataset.name || '';
@@ -205,10 +224,11 @@ document.addEventListener('DOMContentLoaded', function() {
 						.filter(item => item.includes(':'))
 						.map(item => {
 							const parts = item.split(':');
+							// The ingredient data from edit button uses IDs, adjust if needed
 							return { itemId: parts[0], quantity: parts[1] };
 						});
 				} catch (e) {
-					console.error("Error parsing ingredients data:", e);
+					console.error("Error parsing ingredients data for edit:", e, "Data:", dataset.ingredients);
 					ingredients = [];
 				}
 			}
@@ -237,8 +257,109 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 
+	// --- NEW: Logic for View Product Modal ---
+	const viewProductModal = document.getElementById('viewProductModal');
+	if (viewProductModal) {
+		viewProductModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget; // Button that triggered the modal
+			if (!button || !button.classList.contains('view-product-btn')) {
+				console.warn("View modal triggered by non-view button?");
+				return; // Exit if not triggered by the correct button
+			}
+
+			const dataset = button.dataset;
+			viewProductModal.relatedTarget = button; // Store the button for the Edit button inside the modal
+
+			// Populate basic info
+			viewProductModal.querySelector('#viewProductModalLabel').textContent = 'Details for ' + (dataset.name || 'Product');
+			viewProductModal.querySelector('#viewProductName').textContent = dataset.name || 'N/A';
+			viewProductModal.querySelector('#viewProductCategory').textContent = dataset.categoryName || 'N/A';
+			viewProductModal.querySelector('#viewProductPrice').textContent = dataset.price || '0.00';
+			viewProductModal.querySelector('#viewProductDescription').textContent = dataset.description || 'No description available.';
+			viewProductModal.querySelector('#viewProductImage').src = dataset.imageUrl || '/img/placeholder.jpg';
+
+			// Populate stock info
+			const stockBadge = viewProductModal.querySelector('#viewProductStockStatusBadge');
+			stockBadge.textContent = dataset.stockStatus || 'N/A';
+			stockBadge.className = 'badge ms-2 ' + (dataset.stockStatusClass || 'bg-secondary'); // Reset classes
+			viewProductModal.querySelector('#viewProductCurrentStock').textContent = dataset.currentStock || '0';
+			viewProductModal.querySelector('#viewProductLowThreshold').textContent = dataset.lowStockThreshold || '0';
+			viewProductModal.querySelector('#viewProductCriticalThreshold').textContent = dataset.criticalStockThreshold || '0';
+			const lastUpdatedEl = viewProductModal.querySelector('#viewProductStockLastUpdated');
+			if (dataset.stockLastUpdated) {
+				lastUpdatedEl.textContent = 'Stock last updated: ' + dataset.stockLastUpdated;
+				lastUpdatedEl.style.display = 'block';
+			} else {
+				lastUpdatedEl.style.display = 'none';
+			}
+
+			// Populate Ingredients
+			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
+			ingredientsListDiv.innerHTML = ''; // Clear previous
+			let ingredientsData = [];
+			if (dataset.ingredients && dataset.ingredients.length > 2) {
+				try {
+					// Ingredients format: '[IngredientName:Quantity:Unit, ...]'
+					ingredientsData = dataset.ingredients.slice(1, -1).split(',')
+						.map(item => item.trim())
+						.filter(item => item.includes(':'))
+						.map(item => {
+							const parts = item.split(':');
+							return { name: parts[0], quantity: parts[1], unit: parts[2] };
+						});
+				} catch (e) {
+					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredients);
+					ingredientsData = [];
+				}
+			}
+
+
+			if (ingredientsData.length > 0) {
+				const table = document.createElement('table');
+				table.className = 'table table-sm table-striped';
+				table.innerHTML = `
+                    <thead>
+                        <tr>
+                            <th>Ingredient Item</th>
+                            <th>Quantity Needed</th>
+                            <th>Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>`;
+				const tbody = table.querySelector('tbody');
+				ingredientsData.forEach(ing => {
+					const tr = document.createElement('tr');
+					tr.innerHTML = `<td>${ing.name || 'N/A'}</td><td>${ing.quantity || 'N/A'}</td><td>${ing.unit || 'N/A'}</td>`;
+					tbody.appendChild(tr);
+				});
+				ingredientsListDiv.appendChild(table);
+			} else {
+				ingredientsListDiv.innerHTML = '<p class="text-muted small">No ingredients assigned.</p>';
+			}
+
+			// Set up Edit button inside modal
+			const editButtonFromView = viewProductModal.querySelector('.edit-product-btn-from-view');
+			if (editButtonFromView) {
+				// No need to copy data attributes here, the 'show.bs.modal' listener for editProductModal will handle it
+			}
+
+			// Set up Delete form inside modal
+			const deleteForm = viewProductModal.querySelector('.delete-product-form-from-view');
+			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete');
+			if (deleteForm && deleteInput) {
+				deleteInput.value = dataset.id || '';
+				deleteForm.action = `/admin/products/delete/${dataset.id || 0}`; // Update form action
+			}
+
+
+		});
+	}
+	// --- END VIEW PRODUCT LOGIC ---
+
+
 	// --- Recipe Ingredient Management ---
-	// Modified to accept optional data for population
+	// ... (addIngredientRow, removeIngredientRow, renumberIngredientRows remain the same) ...
 	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
@@ -250,8 +371,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
 		const index = currentRowCount;
 
+		// Use template.content if available, otherwise clone the template itself
 		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true);
+		// Find the .ingredient-row within the cloned fragment/node
 		const newRowElement = fragment.querySelector('.ingredient-row');
+
 
 		if (!newRowElement) {
 			console.error("Template did not contain '.ingredient-row'");
@@ -271,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 
-		containerDiv.appendChild(newRowElement);
+		containerDiv.appendChild(newRowElement); // Append the actual .ingredient-row element
 	}
 
 
@@ -302,16 +426,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		addIngredientBtn.addEventListener('click', () => addIngredientRow('addIngredientsContainer', 'ingredientRowTemplate'));
 	}
 
-	// --- REMOVED OBSOLETE LISTENER ---
-	// const addIngredientBtnEdit = document.getElementById('addIngredientBtnEdit');
-	// if (addIngredientBtnEdit) {
-	// 	addIngredientBtnEdit.addEventListener('click', () => addIngredientRow('editIngredientsContainer', 'ingredientRowTemplateEdit'));
-	// }
 
-	// --- CORRECTED LISTENER FOR EDIT MODAL ---
+	// Add Ingredient Button (Edit Product Modal)
 	const addIngredientBtnEditModal = document.getElementById('addIngredientBtnEditModal');
 	if (addIngredientBtnEditModal) {
-		// Use the correct container and template IDs for the EDIT modal
 		addIngredientBtnEditModal.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
 	}
 
@@ -324,4 +442,4 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
-});
+}); // End DOMContentLoaded

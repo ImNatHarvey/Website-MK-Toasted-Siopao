@@ -3,89 +3,91 @@
  */
 document.addEventListener('DOMContentLoaded', function() {
 
-	// Find the main element that holds our data attributes from Thymeleaf
 	const mainElement = document.querySelector('main');
-
-	if (!mainElement) {
-		return;
-	}
+	if (!mainElement) return; // Exit if no main element found
 
 	// --- Logic to re-open modal on validation error ---
+	const modalsToReopen = {
+		'manageCategoriesModal': mainElement.dataset.showManageCategoriesModal, // Product categories
+		'addProductModal': mainElement.dataset.showAddProductModal,
+		'manageAdminsModal': mainElement.dataset.showManageAdminsModal,
+		'addCustomerModal': mainElement.dataset.showAddCustomerModal,
+		// NEW: Inventory Modals
+		'addItemModal': mainElement.dataset.showAddItemModal,
+		'manageCategoriesModal': mainElement.dataset.showManageCategoriesModal, // Inventory categories (shared ID, careful if separated later)
+		'manageUnitsModal': mainElement.dataset.showManageUnitsModal
+	};
 
-	// Check for "Manage Categories" modal trigger
-	const showCategoryModal = mainElement.dataset.showCategoryModal;
-	if (showCategoryModal === 'true') {
-		const categoryModalElement = document.getElementById('manageCategoriesModal');
-		if (categoryModalElement) {
-			const categoryModal = new bootstrap.Modal(categoryModalElement);
-			categoryModal.show();
+	for (const modalId in modalsToReopen) {
+		if (modalsToReopen[modalId] === 'true') {
+			const modalElement = document.getElementById(modalId);
+			if (modalElement) {
+				const modalInstance = new bootstrap.Modal(modalElement);
+				modalInstance.show();
+			}
 		}
 	}
 
-	// Check for "Add Product" modal trigger
-	const showAddProductModal = mainElement.dataset.showAddProductModal;
-	if (showAddProductModal === 'true') {
-		const productModalElement = document.getElementById('addProductModal');
-		if (productModalElement) {
-			const productModal = new bootstrap.Modal(productModalElement);
-			productModal.show();
-		}
-	}
 
-	// --- UPDATED: Check for "Manage Admins" modal trigger ---
-	const showManageAdminsModal = mainElement.dataset.showManageAdminsModal;
-	if (showManageAdminsModal === 'true') {
-		const adminModalElement = document.getElementById('manageAdminsModal');
-		if (adminModalElement) {
-			const adminModal = new bootstrap.Modal(adminModalElement);
-			adminModal.show();
-		}
-	}
-
-	// Check for "Add Customer" modal trigger
-	const showAddCustomerModal = mainElement.dataset.showAddCustomerModal;
-	if (showAddCustomerModal === 'true') {
-		const customerModalElement = document.getElementById('addCustomerModal');
-		if (customerModalElement) {
-			const customerModal = new bootstrap.Modal(customerModalElement);
-			customerModal.show();
-		}
-	}
-
-	// --- NEW: Logic for "View Customer" Modal ---
+	// --- Logic for "View Customer" Modal ---
 	const viewCustomerModal = document.getElementById('viewCustomerModal');
 	if (viewCustomerModal) {
 		viewCustomerModal.addEventListener('show.bs.modal', function(event) {
-			// Button that triggered the modal
 			const button = event.relatedTarget;
-
-			// Find the closest parent <tr> to get all data attributes
 			const customerRow = button.closest('tr');
+			if (!customerRow) return; // Exit if row not found
 
-			// Extract data from data-* attributes
-			const name = customerRow.dataset.name;
-			const username = customerRow.dataset.username;
-			const phone = customerRow.dataset.phone;
-			const address1 = customerRow.dataset.addressLine1;
-			const address2 = customerRow.dataset.addressLine2;
+			const name = customerRow.dataset.name || 'N/A';
+			const username = customerRow.dataset.username || 'N/A';
+			const phone = customerRow.dataset.phone || 'N/A';
+			const address1 = customerRow.dataset.addressLine1 || '';
+			const address2 = customerRow.dataset.addressLine2 || '';
 
-			// Find elements inside the modal
-			const modalTitle = viewCustomerModal.querySelector('#viewCustomerModalLabel');
-			const modalName = viewCustomerModal.querySelector('#viewCustomerName');
-			const modalUsername = viewCustomerModal.querySelector('#viewCustomerUsername');
-			const modalPhone = viewCustomerModal.querySelector('#viewCustomerPhone');
-			const modalAddress1 = viewCustomerModal.querySelector('#viewCustomerAddress1');
-			const modalAddress2 = viewCustomerModal.querySelector('#viewCustomerAddress2');
+			viewCustomerModal.querySelector('#viewCustomerModalLabel').textContent = 'Details for ' + name;
+			viewCustomerModal.querySelector('#viewCustomerName').textContent = name;
+			viewCustomerModal.querySelector('#viewCustomerUsername').textContent = username;
+			viewCustomerModal.querySelector('#viewCustomerPhone').textContent = phone;
+			viewCustomerModal.querySelector('#viewCustomerAddress1').textContent = address1.trim();
+			viewCustomerModal.querySelector('#viewCustomerAddress2').textContent = address2.trim().length > 1 ? address2.trim() : 'No address provided.';
+		});
+	}
 
-			// Update the modal's content
-			modalTitle.textContent = 'Details for ' + name;
-			modalName.textContent = name;
-			modalUsername.textContent = username;
-			modalPhone.textContent = phone;
+	// --- NEW: Logic for Add/Edit Inventory Item Modal ---
+	const addItemModal = document.getElementById('addItemModal');
+	if (addItemModal) {
+		const itemForm = addItemModal.querySelector('#itemForm');
+		const modalTitle = addItemModal.querySelector('#addItemModalLabel');
+		const itemIdInput = addItemModal.querySelector('#itemId');
+		const itemNameInput = addItemModal.querySelector('#itemName');
+		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
+		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
+		const itemStockInput = addItemModal.querySelector('#itemCurrentStock');
+		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
+		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
+		const itemCostInput = addItemModal.querySelector('#itemCost');
 
-			// Only show address lines if they have content
-			modalAddress1.textContent = (address1.trim().length > 0) ? address1 : '';
-			modalAddress2.textContent = (address2.trim().length > 1) ? address2 : 'No address provided.'; // (', ' is 2 chars)
+		addItemModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const isEdit = button && button.classList.contains('edit-item-btn');
+
+			if (isEdit) {
+				// Populate form for editing
+				modalTitle.textContent = 'Edit Inventory Item';
+				itemIdInput.value = button.dataset.id || '';
+				itemNameInput.value = button.dataset.name || '';
+				itemCategorySelect.value = button.dataset.categoryId || '';
+				itemUnitSelect.value = button.dataset.unitId || '';
+				itemStockInput.value = button.dataset.currentStock || '0.00';
+				itemLowThresholdInput.value = button.dataset.lowThreshold || '0.00';
+				itemCriticalThresholdInput.value = button.dataset.criticalThreshold || '0.00';
+				itemCostInput.value = button.dataset.cost || '';
+
+			} else {
+				// Reset form for adding
+				modalTitle.textContent = 'Add New Inventory Item';
+				itemForm.reset(); // Reset all form fields
+				itemIdInput.value = ''; // Ensure hidden ID is empty
+			}
 		});
 	}
 

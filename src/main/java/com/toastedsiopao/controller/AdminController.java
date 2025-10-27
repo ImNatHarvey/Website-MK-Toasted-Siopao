@@ -397,9 +397,13 @@ public class AdminController {
 		if (!model.containsAttribute("customerUserDto")) {
 			model.addAttribute("customerUserDto", new AdminUserCreateDto());
 		}
+
+		// This is for the *new* edit admin modal
 		if (!model.containsAttribute("adminUpdateDto")) {
 			model.addAttribute("adminUpdateDto", new AdminAdminUpdateDto());
 		}
+
+		// This is for the *new* edit customer modal
 		if (!model.containsAttribute("customerUpdateDto")) {
 			model.addAttribute("customerUpdateDto", new AdminCustomerUpdateDto());
 		}
@@ -407,60 +411,31 @@ public class AdminController {
 		return "admin/customers";
 	}
 
-	@GetMapping("/customers/edit/{id}")
-	public String showEditCustomerForm(@PathVariable("id") Long id, Model model,
-			RedirectAttributes redirectAttributes) {
-		Optional<User> userOpt = userService.findUserById(id);
+	// --- THIS METHOD IS NOW OBSOLETE ---
+	// @GetMapping("/customers/admin/edit/{id}")
+	// public String showEditAdminForm(@PathVariable("id") Long id, Model model,
+	// RedirectAttributes redirectAttributes) {
+	// Optional<User> userOpt = userService.findUserById(id);
 
-		if (userOpt.isEmpty() || !userOpt.get().getRole().equals("ROLE_CUSTOMER")) {
-			redirectAttributes.addFlashAttribute("customerError", "Customer not found (ID: " + id + ").");
-			return "redirect:/admin/customers";
-		}
+	// if (userOpt.isEmpty() || !userOpt.get().getRole().equals("ROLE_ADMIN")) {
+	// redirectAttributes.addFlashAttribute("customerError", "Admin not found (ID: "
+	// + id + ").");
+	// return "redirect:/admin/customers";
+	// }
 
-		User user = userOpt.get();
+	// User user = userOpt.get();
 
-		if (!model.containsAttribute("customerUpdateDto")) {
-			AdminCustomerUpdateDto dto = new AdminCustomerUpdateDto();
-			dto.setId(user.getId());
-			dto.setFirstName(user.getFirstName());
-			dto.setLastName(user.getLastName());
-			dto.setUsername(user.getUsername());
-			dto.setPhone(user.getPhone());
-			dto.setHouseNo(user.getHouseNo());
-			dto.setLotNo(user.getLotNo());
-			dto.setBlockNo(user.getBlockNo());
-			dto.setStreet(user.getStreet());
-			dto.setBarangay(user.getBarangay());
-			dto.setMunicipality(user.getMunicipality());
-			dto.setProvince(user.getProvince());
-			model.addAttribute("customerUpdateDto", dto);
-		}
+	// if (!model.containsAttribute("adminUpdateDto")) {
+	// AdminAdminUpdateDto dto = new AdminAdminUpdateDto();
+	// dto.setId(user.getId());
+	// dto.setFirstName(user.getFirstName());
+	// dto.setLastName(user.getLastName());
+	// dto.setUsername(user.getUsername());
+	// model.addAttribute("adminUpdateDto", dto);
+	// }
 
-		return "admin/edit-customer";
-	}
-
-	@GetMapping("/customers/admin/edit/{id}")
-	public String showEditAdminForm(@PathVariable("id") Long id, Model model, RedirectAttributes redirectAttributes) {
-		Optional<User> userOpt = userService.findUserById(id);
-
-		if (userOpt.isEmpty() || !userOpt.get().getRole().equals("ROLE_ADMIN")) {
-			redirectAttributes.addFlashAttribute("customerError", "Admin not found (ID: " + id + ").");
-			return "redirect:/admin/customers";
-		}
-
-		User user = userOpt.get();
-
-		if (!model.containsAttribute("adminUpdateDto")) {
-			AdminAdminUpdateDto dto = new AdminAdminUpdateDto();
-			dto.setId(user.getId());
-			dto.setFirstName(user.getFirstName());
-			dto.setLastName(user.getLastName());
-			dto.setUsername(user.getUsername());
-			model.addAttribute("adminUpdateDto", dto);
-		}
-
-		return "admin/edit-admin";
-	}
+	// return "admin/edit-admin"; // This file will be deleted
+	// }
 
 	@PostMapping("/customers/add-admin")
 	public String addAdminUser(@Valid @ModelAttribute("adminUserDto") AdminUserCreateDto userDto, BindingResult result,
@@ -535,11 +510,15 @@ public class AdminController {
 	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") AdminCustomerUpdateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal, Model model) {
 
+		// --- MODIFIED ERROR HANDLING ---
 		if (result.hasErrors()) {
-			model.addAttribute("customerUpdateDto", userDto);
-			// Explicitly add BindingResult for the template check
-			model.addAttribute("bindingResult", result);
-			return "admin/edit-customer";
+			// Add flash attributes for redirect
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
+					result);
+			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
+			// Add flag to re-open the *edit* modal
+			redirectAttributes.addFlashAttribute("showEditCustomerModal", true);
+			return "redirect:/admin/customers";
 		}
 
 		try {
@@ -550,30 +529,33 @@ public class AdminController {
 					"Customer '" + updatedUser.getUsername() + "' updated successfully!");
 			return "redirect:/admin/customers";
 		} catch (IllegalArgumentException e) {
+			// Handle duplicate username error
 			result.rejectValue("username", "userDto.username", e.getMessage());
-			model.addAttribute("customerUpdateDto", userDto);
-			// Explicitly add BindingResult for the template check
-			model.addAttribute("bindingResult", result);
-			return "admin/edit-customer";
-		} catch (Exception e) {
-			redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
-			// Add DTO back to flash attributes for redirect
-			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
-			return "redirect:/admin/customers/edit/" + userDto.getId();
+			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
+			redirectAttributes.addFlashAttribute("showEditCustomerModal", true);
+			return "redirect:/admin/customers";
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
+			redirectAttributes.addFlashAttribute("showEditCustomerModal", true);
+			return "redirect:/admin/customers";
 		}
+		// --- END MODIFICATION ---
 	}
 
 	@PostMapping("/customers/admin/update")
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminAdminUpdateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal, Model model) {
 
+		// --- MODIFIED ERROR HANDLING ---
 		if (result.hasErrors()) {
-			model.addAttribute("adminUpdateDto", userDto);
-			// Explicitly add BindingResult for the template check
-			model.addAttribute("bindingResult", result);
-			return "admin/edit-admin";
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
+			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
+			// Flag to re-open the *edit admin* modal
+			redirectAttributes.addFlashAttribute("showEditAdminModal", true);
+			return "redirect:/admin/customers";
 		}
 
 		try {
@@ -584,18 +566,21 @@ public class AdminController {
 					"Admin '" + updatedUser.getUsername() + "' updated successfully!");
 			return "redirect:/admin/customers";
 		} catch (IllegalArgumentException e) {
+			// Handle duplicate username
 			result.rejectValue("username", "userDto.username", e.getMessage());
-			model.addAttribute("adminUpdateDto", userDto);
-			// Explicitly add BindingResult for the template check
-			model.addAttribute("bindingResult", result);
-			return "admin/edit-admin";
-		} catch (Exception e) {
-			redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());
-			// Add DTO back to flash attributes for redirect
-			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
-			return "redirect:/admin/customers/admin/edit/" + userDto.getId();
+			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
+			redirectAttributes.addFlashAttribute("showEditAdminModal", true);
+			return "redirect:/admin/customers";
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("customerError", "Error updating admin: " + e.getMessage()); // Changed
+																												// message
+																												// key
+			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
+			redirectAttributes.addFlashAttribute("showEditAdminModal", true);
+			return "redirect:/admin/customers";
 		}
+		// --- END MODIFICATION ---
 	}
 
 	@PostMapping("/customers/delete/{id}")

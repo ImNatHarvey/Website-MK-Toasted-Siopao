@@ -12,8 +12,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		'addProductModal': mainElement.dataset.showAddProductModal,
 		'manageAdminsModal': mainElement.dataset.showManageAdminsModal,
 		'addCustomerModal': mainElement.dataset.showAddCustomerModal,
+		'editCustomerModal': mainElement.dataset.showEditCustomerModal,
+		'editAdminModal': mainElement.dataset.showEditAdminModal, // <-- ADDED THIS
 		'addItemModal': mainElement.dataset.showAddItemModal, // Inventory Item Add/Edit
-		'manageCategoriesModal': mainElement.dataset.showManageCategoriesModal, // Inventory categories (shares ID with product categories)
+		// Note: manageCategoriesModal is duplicated, ensure correct mapping if needed
 		'manageUnitsModal': mainElement.dataset.showManageUnitsModal,
 		'manageStockModal': mainElement.dataset.showManageStockModal
 	};
@@ -34,6 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for "View Customer" Modal ---
+	// ... (unchanged) ...
 	const viewCustomerModal = document.getElementById('viewCustomerModal');
 	if (viewCustomerModal) {
 		viewCustomerModal.addEventListener('show.bs.modal', function(event) {
@@ -57,7 +60,88 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// --- Logic for Edit Customer Modal ---
+	// ... (unchanged) ...
+	const editCustomerModal = document.getElementById('editCustomerModal');
+	if (editCustomerModal) {
+		const form = editCustomerModal.querySelector('#editCustomerForm');
+		const modalTitle = editCustomerModal.querySelector('#editCustomerModalLabel');
+
+		editCustomerModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget; // Button that triggered the modal
+			if (!button || !button.classList.contains('edit-customer-btn')) {
+				return;
+			}
+
+			const dataset = button.dataset;
+
+			modalTitle.textContent = 'Edit: ' + dataset.firstName + ' ' + dataset.lastName;
+
+			form.querySelector('#id').value = dataset.id || '';
+			form.querySelector('#firstName').value = dataset.firstName || '';
+			form.querySelector('#lastName').value = dataset.lastName || '';
+			form.querySelector('#username').value = dataset.username || '';
+			form.querySelector('#phone').value = dataset.phone || '';
+			form.querySelector('#houseNo').value = dataset.houseNo || '';
+			form.querySelector('#lotNo').value = dataset.lotNo || '';
+			form.querySelector('#blockNo').value = dataset.blockNo || '';
+			form.querySelector('#street').value = dataset.street || '';
+			form.querySelector('#barangay').value = dataset.barangay || '';
+			form.querySelector('#municipality').value = dataset.municipality || '';
+			form.querySelector('#province').value = dataset.province || '';
+
+			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+		});
+
+		editCustomerModal.addEventListener('hidden.bs.modal', function() {
+			if (mainElement.dataset.showEditCustomerModal !== 'true') {
+				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+				const errorAlert = form.querySelector('.alert.alert-danger');
+				if (errorAlert) errorAlert.remove();
+			}
+		});
+	}
+
+	// --- NEW: Logic for Edit Admin Modal ---
+	const editAdminModal = document.getElementById('editAdminModal');
+	if (editAdminModal) {
+		const form = editAdminModal.querySelector('#editAdminForm');
+		const modalTitle = editAdminModal.querySelector('#editAdminModalLabel');
+
+		editAdminModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget; // Button that triggered the modal
+			if (!button || !button.classList.contains('edit-admin-btn')) {
+				// Only populate if triggered by the edit button
+				return;
+			}
+
+			const dataset = button.dataset;
+
+			// Set modal title
+			modalTitle.textContent = 'Edit: ' + dataset.firstName + ' ' + dataset.lastName;
+
+			// Populate form fields (Ensure the IDs match those in the modal form)
+			form.querySelector('#id').value = dataset.id || ''; // Hidden field
+			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
+			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
+			form.querySelector('#editAdminUsername').value = dataset.username || '';
+
+			// Clear any previous validation classes
+			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+		});
+
+		// Clear validation on hide, unless shown due to validation
+		editAdminModal.addEventListener('hidden.bs.modal', function() {
+			if (mainElement.dataset.showEditAdminModal !== 'true') {
+				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+				const errorAlert = form.querySelector('.alert.alert-danger');
+				if (errorAlert) errorAlert.remove();
+			}
+		});
+	}
+
 	// --- Logic for Add/Edit Inventory Item Modal ---
+	// ... (unchanged) ...
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -73,37 +157,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		addItemModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget; // Button that triggered the modal
-			// Check if the trigger button has the 'edit-item-btn' class
 			const isEdit = button && button.classList.contains('edit-item-btn');
 
-			if (isEdit && button.dataset) { // Ensure dataset exists
-				// Populate form for editing
-				modalTitle.textContent = 'Edit Inventory Item'; // <<< SET TITLE FOR EDIT
+			if (isEdit && button.dataset) {
+				modalTitle.textContent = 'Edit Inventory Item';
 				itemIdInput.value = button.dataset.id || '';
 				itemNameInput.value = button.dataset.name || '';
 				itemCategorySelect.value = button.dataset.categoryId || '';
 				itemUnitSelect.value = button.dataset.unitId || '';
-				// Ensure correct formatting/parsing for numbers if needed
 				itemStockInput.value = button.dataset.currentStock || '0.00';
 				itemLowThresholdInput.value = button.dataset.lowThreshold || '0.00';
 				itemCriticalThresholdInput.value = button.dataset.criticalThreshold || '0.00';
 				itemCostInput.value = button.dataset.cost || '';
-
 			} else {
-				// Reset form for adding
-				modalTitle.textContent = 'Add New Inventory Item'; // <<< SET TITLE FOR ADD
+				modalTitle.textContent = 'Add New Inventory Item';
 				if (itemForm) itemForm.reset();
-				itemIdInput.value = ''; // Clear hidden ID for add operation
+				itemIdInput.value = '';
 			}
 		});
 
-		// Optional: Clear validation classes when modal is hidden
 		addItemModal.addEventListener('hidden.bs.modal', function() {
 			itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 		});
 	}
 
 	// --- Recipe Ingredient Management ---
+	// ... (unchanged) ...
 	function addIngredientRow(containerId, templateId) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);

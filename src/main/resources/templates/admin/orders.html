@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::main})}">
 <head>
 <title>Manage Orders - MK Admin Portal</title>
@@ -8,22 +9,45 @@
 	<main class="container my-4">
 		<h2 class="mb-4 text-center section-title">Order Management</h2>
 
-		<!-- Search & Filter -->
-		<div class="input-group mb-4">
-			<input type="text" class="form-control"
-				placeholder="Search orders by ID, customer name...">
-			<button class="btn btn-outline-secondary" type="button">Search</button>
-		</div>
-
-		<!-- Status Filters -->
+		<form th:action="@{/admin/orders}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="row g-3 align-items-end">
+				<div class="col-md-10">
+					<label for="keyword" class="form-label">Search by Order ID
+						or Customer Name</label> <input type="text" class="form-control"
+						id="keyword" name="keyword" th:value="${keyword}"
+						placeholder="Enter search term...">
+				</div>
+				<div class="col-md-2 d-flex justify-content-end">
+					<button type="submit" class="btn btn-info me-2">
+						<i class="fa-solid fa-search me-1"></i> Search
+					</button>
+					<a th:href="@{/admin/orders}" class="btn btn-outline-secondary"
+						title="Clear Search & Filters"> <i class="fa-solid fa-times"></i>
+					</a>
+				</div>
+				<input type="hidden" name="status" th:value="${currentStatus}" />
+			</div>
+		</form>
 		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
-			<button class="btn btn-outline-primary active">All Orders</button>
-			<button class="btn btn-outline-success">Accepted</button>
-			<button class="btn btn-outline-danger">Rejected</button>
-			<button class="btn btn-outline-secondary">Completed</button>
+			<a th:href="@{/admin/orders(keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == null ? 'active' : ''}">All
+				Orders</a> <a
+				th:href="@{/admin/orders(status='PENDING', keyword=${keyword})}"
+				class="btn btn-outline-warning text-dark"
+				th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending</a>
+			<a
+				th:href="@{/admin/orders(status='PROCESSING', keyword=${keyword})}"
+				class="btn btn-outline-info"
+				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
+			<a th:href="@{/admin/orders(status='DELIVERED', keyword=${keyword})}"
+				class="btn btn-outline-success"
+				th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
+			<a th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}"
+				class="btn btn-outline-danger"
+				th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
 		</div>
-
-		<!-- Orders Table -->
 		<div class="card">
 			<div class="card-header">
 				<h5 class="mb-0">Orders List</h5>
@@ -35,7 +59,7 @@
 							<tr>
 								<th>Order ID</th>
 								<th>Customer</th>
-								<th>Items</th>
+								<th>Items Summary</th>
 								<th>Total</th>
 								<th>Date</th>
 								<th>Status</th>
@@ -43,60 +67,40 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td>#ORD-1025</td>
-								<td>Juan Dela Cruz</td>
-								<td>2 Toasted Siopao, 1 Fries</td>
-								<td>₱150</td>
-								<td>Oct 26, 2025</td>
-								<td><span class="badge bg-success">Accepted</span></td>
+							<tr th:each="order : ${orders}">
+								<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
+								<td
+									th:text="${order.shippingFirstName + ' ' + order.shippingLastName}">Customer
+									Name</td>
+								<td><span th:each="item, iterStat : ${order.items}"
+									th:text="${item.quantity + 'x ' + item.product.name + (!iterStat.last ? ', ' : '')}">
+										Item Summary </span></td>
+								<td
+									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</td>
+								<td
+									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
+								<td><span class="badge"
+									th:classappend="${#strings.equals(order.status,'PENDING') ? 'bg-warning text-dark' :
+										                 #strings.equals(order.status,'PROCESSING') ? 'bg-info' :
+										                 #strings.equals(order.status,'DELIVERED') ? 'bg-success' :
+										                 #strings.equals(order.status,'CANCELLED') ? 'bg-danger' : 'bg-secondary'}"
+									th:text="${order.status}">Status</span></td>
 								<td>
 									<button class="btn btn-sm btn-outline-primary">View</button>
 								</td>
 							</tr>
-							<tr>
-								<td>#ORD-1024</td>
-								<td>Maria Santos</td>
-								<td>3 Toasted Siopao, 2 Drinks</td>
-								<td>₱240</td>
-								<td>Oct 26, 2025</td>
-								<td><span class="badge bg-warning text-dark">Pending</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-success">Accept</button>
-									<button class="btn btn-sm btn-outline-danger">Reject</button>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-								</td>
-							</tr>
-							<tr>
-								<td>#ORD-1023</td>
-								<td>Robert Lim</td>
-								<td>1 Burger, 1 Fries</td>
-								<td>₱120</td>
-								<td>Oct 25, 2025</td>
-								<td><span class="badge bg-secondary">Completed</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-								</td>
-							</tr>
-							<tr>
-								<td>#ORD-1022</td>
-								<td>Anna Reyes</td>
-								<td>4 Toasted Siopao</td>
-								<td>₱200</td>
-								<td>Oct 25, 2025</td>
-								<td><span class="badge bg-danger">Rejected</span></td>
-								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
-								</td>
+							<tr th:if="${#lists.isEmpty(orders)}">
+								<td colspan="7" class="text-center text-muted"
+									th:text="${(keyword != null or currentStatus != null) ? 'No orders found matching your criteria.' : 'No orders placed yet.'}">
+									No orders placed yet.</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<!-- Pagination -->
 				<div class="d-flex justify-content-between align-items-center mt-3">
-					<button class="btn btn-outline-secondary btn-sm">Previous</button>
-					<span>Page 1 of 5</span>
-					<button class="btn btn-outline-secondary btn-sm">Next</button>
+					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
+					<span>Page 1 of 1</span>
+					<button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
 				</div>
 			</div>
 		</div>

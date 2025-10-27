@@ -6,10 +6,12 @@ import com.toastedsiopao.dto.AdminUserCreateDto;
 import com.toastedsiopao.dto.CategoryDto;
 import com.toastedsiopao.dto.ProductDto;
 import com.toastedsiopao.model.Category;
+import com.toastedsiopao.model.Order; // Import Order
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CategoryService;
+import com.toastedsiopao.service.OrderService; // Import OrderService
 import com.toastedsiopao.service.ProductService;
 import com.toastedsiopao.service.UserService;
 import jakarta.validation.Valid;
@@ -41,6 +43,9 @@ public class AdminController {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+	private OrderService orderService;
 	// --- End Injection ---
 
 	@GetMapping("/dashboard")
@@ -244,31 +249,37 @@ public class AdminController {
 
 		return "redirect:/admin/products";
 	}
-
 	// --- End Product Management ---
 
+	// --- Order Management ---
 	@GetMapping("/orders")
-	public String manageOrders() {
+	public String manageOrders(Model model, @RequestParam(value = "keyword", required = false) String keyword,
+			@RequestParam(value = "status", required = false) String status) {
+
+		// Fetch orders based on keyword and status using the service
+		List<Order> orders = orderService.searchOrders(keyword, status);
+
+		model.addAttribute("orders", orders);
+		model.addAttribute("keyword", keyword); // Pass keyword back for the search input
+		model.addAttribute("currentStatus", status); // Pass status back for highlighting the active button
+
 		return "admin/orders";
 	}
+	// --- End Order Management ---
 
 	// --- Customer/User Management ---
-
-	// UPDATED: Added @RequestParam for keyword
 	@GetMapping("/customers")
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword) {
 
-		// NEW: Fetch customers based on keyword
 		List<User> customers;
 		if (StringUtils.hasText(keyword)) {
 			customers = userService.searchCustomers(keyword);
-			model.addAttribute("keyword", keyword); // Send keyword back to view
+			model.addAttribute("keyword", keyword);
 		} else {
 			customers = userService.findAllCustomers();
 		}
 		model.addAttribute("customers", customers);
-		// END NEW
 
 		model.addAttribute("admins", userService.findAllAdmins());
 		model.addAttribute("currentUsername", principal.getName());
@@ -521,6 +532,7 @@ public class AdminController {
 
 		return "redirect:/admin/customers";
 	}
+	// --- End Customer/User Management ---
 
 	// --- Other Mappings ---
 	@GetMapping("/inventory")

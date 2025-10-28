@@ -1,6 +1,8 @@
 package com.toastedsiopao.controller;
 
-// ... (imports remain the same) ...
+// ... (other imports remain the same) ...
+import com.fasterxml.jackson.core.JsonProcessingException; // Import Jackson Exception
+import com.fasterxml.jackson.databind.ObjectMapper; // Import Jackson ObjectMapper
 import com.toastedsiopao.dto.AdminAdminUpdateDto;
 import com.toastedsiopao.dto.AdminCustomerUpdateDto;
 import com.toastedsiopao.dto.AdminUserCreateDto;
@@ -30,6 +32,8 @@ import com.toastedsiopao.service.UnitOfMeasureService; // Unit of Measure
 import com.toastedsiopao.service.UserService;
 
 import jakarta.validation.Valid;
+import org.slf4j.Logger; // Import Logger
+import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -51,7 +55,11 @@ import java.util.stream.Collectors; // Added for ingredient processing
 @RequestMapping("/admin")
 public class AdminController {
 
+	// Add Logger
+	private static final Logger log = LoggerFactory.getLogger(AdminController.class);
+
 	// --- Inject Services ---
+	// ... (other services remain the same) ...
 	@Autowired
 	private ProductService productService;
 	@Autowired
@@ -70,6 +78,10 @@ public class AdminController {
 	private UnitOfMeasureService unitOfMeasureService;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	// Inject ObjectMapper
+	@Autowired
+	private ObjectMapper objectMapper;
 	// --- End Injection ---
 
 	@GetMapping("/dashboard")
@@ -105,7 +117,15 @@ public class AdminController {
 		for (InventoryItem item : inventoryItems) {
 			inventoryStockMap.put(item.getId(), item.getCurrentStock());
 		}
-		model.addAttribute("inventoryStockMap", inventoryStockMap); // Pass map to Thymeleaf/JS
+		// Convert map to JSON string
+		String inventoryStockMapJson = "{}"; // Default to empty JSON object
+		try {
+			inventoryStockMapJson = objectMapper.writeValueAsString(inventoryStockMap);
+		} catch (JsonProcessingException e) {
+			log.error("Error converting inventory stock map to JSON", e);
+			// Keep the default empty JSON object in case of error
+		}
+		model.addAttribute("inventoryStockMapJson", inventoryStockMapJson); // Pass JSON STRING to Thymeleaf/JS
 		// --- End Max Button Data Prep ---
 
 		// Add DTOs for modals if not already present (due to validation redirect)
@@ -124,6 +144,7 @@ public class AdminController {
 		return "admin/products";
 	}
 
+	// ... (rest of the controller methods remain the same) ...
 	@PostMapping("/products/add")
 	public String addProduct(@Valid @ModelAttribute("productDto") ProductDto productDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, Model model) {

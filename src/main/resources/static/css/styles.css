@@ -116,7 +116,7 @@ body {
 /* ================= Menu Page ================= */
 /* Category Filter */
 .category-btn, .btn-outline-primary {
-	background-color: var(--secondary);
+	/* Removed conflicting background/border */
 	color: var(--primary);
 	border-color: var(--secondary);
 	border-radius: 20px;
@@ -127,29 +127,29 @@ body {
 
 .category-btn.active, .btn-outline-primary.active, .btn-outline-primary:hover
 	{
-	background-color: var(--primary);
-	color: var(--light);
-	border-color: var(--primary);
+	background-color: var(--primary) !important; /* Ensure override */
+	color: var(--light) !important;
+	border-color: var(--primary) !important;
 }
 
 /* Search */
+/* Removed conflicting styles for input-group */
 .input-group .form-control {
 	border-radius: 20px 0 0 20px;
-	border: 2px solid var(--secondary);
-	padding: 10px 15px;
-	transition: all 0.2s ease;
+	/* Removed border, padding, transition */
 }
 
 .input-group .btn {
 	border-radius: 0 20px 20px 0;
-	border: 2px solid var(--secondary);
-	background-color: var(--secondary);
-	color: var(--primary);
-	font-weight: bold;
-	transition: all 0.2s ease;
+	/* Removed border, background, color, transition */
+	/* Re-add specific styles if needed, avoiding conflict */
+	border: 1px solid #ced4da; /* Default Bootstrap border */
+    background-color: #e9ecef; /* Default Bootstrap button background */
+    color: #495057; /* Default Bootstrap button text */
 }
 
-.input-group:hover .form-control, .input-group:hover .btn {
+/* Remove hover effect causing blue background */
+/* .input-group:hover .form-control, .input-group:hover .btn {
 	background-color: var(--primary);
 	color: var(--light);
 	border-color: var(--primary);
@@ -158,7 +158,8 @@ body {
 .input-group:hover .form-control::placeholder {
 	color: var(--light);
 	opacity: 1;
-}
+} */
+
 
 /* Menu Cards */
 .card {
@@ -306,4 +307,51 @@ footer {
 	color: var(--light);
 	text-align: center;
 	padding: 20px;
+}
+
+/* === Fix for Blue Inputs === */
+/* Reset background for specific input groups if necessary */
+/* Example: Target input group in Manage Categories modal */
+#addCategoryForm .input-group .form-control,
+#addCategoryForm .input-group .btn {
+    background-color: #fff; /* Bootstrap default */
+    color: #212529; /* Bootstrap default */
+    border-color: #ced4da; /* Bootstrap default */
+}
+#addCategoryForm .input-group .form-control::placeholder {
+    color: #6c757d; /* Bootstrap default */
+}
+
+/* Example: Target input group in Manage Stock modal */
+#manageStockModal .input-group .form-control,
+#manageStockModal .input-group .btn {
+    background-color: #fff; /* Bootstrap default */
+    color: #212529; /* Bootstrap default */
+    border-color: #ced4da; /* Bootstrap default */
+}
+#manageStockModal .input-group .form-control::placeholder {
+     color: #6c757d; /* Bootstrap default */
+}
+
+/* Example: Target price input in Add Product modal */
+#addProductForm #addProductPrice {
+    background-color: #fff; /* Bootstrap default */
+    color: #212529; /* Bootstrap default */
+    border-color: #ced4da; /* Bootstrap default */
+}
+
+/* Remove hover effect specifically for these inputs if the general one was removed */
+#addCategoryForm .input-group:hover .form-control,
+#addCategoryForm .input-group:hover .btn,
+#manageStockModal .input-group:hover .form-control,
+#manageStockModal .input-group:hover .btn,
+#addProductForm #addProductPrice:hover {
+     /* Explicitly prevent hover color change if needed */
+    background-color: #fff;
+    color: #212529;
+    border-color: #ced4da;
+}
+#addCategoryForm .input-group:hover .form-control::placeholder,
+#manageStockModal .input-group:hover .form-control::placeholder {
+    color: #6c757d;
 }

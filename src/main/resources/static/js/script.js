@@ -4,9 +4,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 
 	const mainElement = document.querySelector('main');
-	if (!mainElement) return;
+	if (!mainElement) {
+		console.error("Main element not found!");
+		return;
+	}
 
 	// --- Logic to re-open modal on validation error ---
+	// ... (code remains the same) ...
 	const modalsToReopen = {
 		'manageCategoriesModal': mainElement.dataset.showManageCategoriesModal,
 		'addProductModal': mainElement.dataset.showAddProductModal,
@@ -36,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for "View Customer" Modal ---
-	// ... (remains the same) ...
+	// ... (code remains the same) ...
 	const viewCustomerModal = document.getElementById('viewCustomerModal');
 	if (viewCustomerModal) {
 		viewCustomerModal.addEventListener('show.bs.modal', function(event) {
@@ -62,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 	// --- Logic for Edit Customer Modal ---
-	// ... (remains the same) ...
+	// ... (code remains the same) ...
 	const editCustomerModal = document.getElementById('editCustomerModal');
 	if (editCustomerModal) {
 		const form = editCustomerModal.querySelector('#editCustomerForm');
@@ -95,13 +99,15 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form.querySelector('.alert.alert-danger');
 				if (errorAlert) errorAlert.remove();
+			} else {
+				mainElement.removeAttribute('data-show-edit-customer-modal');
 			}
 		});
 	}
 
 
 	// --- Logic for Edit Admin Modal ---
-	// ... (remains the same) ...
+	// ... (code remains the same) ...
 	const editAdminModal = document.getElementById('editAdminModal');
 	if (editAdminModal) {
 		const form = editAdminModal.querySelector('#editAdminForm');
@@ -126,13 +132,15 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form.querySelector('.alert.alert-danger');
 				if (errorAlert) errorAlert.remove();
+			} else {
+				mainElement.removeAttribute('data-show-edit-admin-modal');
 			}
 		});
 	}
 
 
 	// --- Logic for Add/Edit Inventory Item Modal ---
-	// ... (remains the same) ...
+	// ... (code remains the same) ...
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -165,19 +173,28 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (itemForm) itemForm.reset();
 				itemIdInput.value = '';
 			}
-			itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			// Clear validation highlights only if not reopened due to server error
+			if (mainElement.dataset.showAddItemModal !== 'true') {
+				itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			}
 		});
 
 		addItemModal.addEventListener('hidden.bs.modal', function() {
+			// Clear form state only if the modal wasn't explicitly flagged to stay open (due to validation)
 			if (mainElement.dataset.showAddItemModal !== 'true') {
+				itemForm.reset();
+				itemIdInput.value = ''; // Ensure ID is cleared
 				itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				// If it was kept open due to error, reset the flag for next time
+				mainElement.removeAttribute('data-show-add-item-modal');
 			}
 		});
 	}
 
 
 	// --- Logic for Edit Product Modal ---
-	// ... (remains the same) ...
+	// ... (code remains the same) ...
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
 		const form = editProductModal.querySelector('#editProductForm');
@@ -217,21 +234,22 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			let ingredients = [];
-			if (dataset.ingredients && dataset.ingredients.length > 2) {
+			// Updated parsing logic to match th:attr format 'id:qty,id:qty'
+			if (dataset.ingredients && dataset.ingredients.length > 0) {
 				try {
-					ingredients = dataset.ingredients.slice(1, -1).split(',')
+					ingredients = dataset.ingredients.split(',')
 						.map(item => item.trim())
 						.filter(item => item.includes(':'))
 						.map(item => {
 							const parts = item.split(':');
-							// The ingredient data from edit button uses IDs, adjust if needed
-							return { itemId: parts[0], quantity: parts[1] };
+							return { itemId: parts[0], quantity: parts[1] }; // itemID and quantity
 						});
 				} catch (e) {
 					console.error("Error parsing ingredients data for edit:", e, "Data:", dataset.ingredients);
 					ingredients = [];
 				}
 			}
+
 
 			if (ingredientTemplate && ingredientsContainer) {
 				ingredients.forEach((ingData, index) => {
@@ -241,23 +259,31 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.warn("Ingredient container or template not found for edit modal.");
 			}
 
-			form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			const errorAlert = form.querySelector('.alert.alert-danger[role="alert"]:not([th\\:if*="."])');
-			if (errorAlert) errorAlert.remove();
+			// Clear validation highlights only if not reopened due to server error
+			if (mainElement.dataset.showEditProductModal !== 'true') {
+				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+				const errorAlert = form.querySelector('.alert.alert-danger[role="alert"]:not([th\\:if*="."])');
+				if (errorAlert) errorAlert.remove();
+			}
 		});
 
 		editProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditProductModal !== 'true') {
+				form.reset(); // Clear basic fields
+				form.querySelector('#id').value = ''; // Clear hidden ID
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form.querySelector('.alert.alert-danger');
 				if (errorAlert) errorAlert.remove();
-				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; // Clear ingredients
+			} else {
+				mainElement.removeAttribute('data-show-edit-product-modal');
 			}
 		});
 	}
 
 
-	// --- NEW: Logic for View Product Modal ---
+	// --- Logic for View Product Modal ---
+	// ... (code remains the same) ...
 	const viewProductModal = document.getElementById('viewProductModal');
 	if (viewProductModal) {
 		viewProductModal.addEventListener('show.bs.modal', function(event) {
@@ -293,28 +319,34 @@ document.addEventListener('DOMContentLoaded', function() {
 				lastUpdatedEl.style.display = 'none';
 			}
 
-			// Populate Ingredients
+			// Populate Ingredients (using data-ingredients-view)
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
 			ingredientsListDiv.innerHTML = ''; // Clear previous
-			let ingredientsData = [];
-			if (dataset.ingredients && dataset.ingredients.length > 2) {
+			let ingredientsDataView = [];
+			// Use the data-ingredients-view attribute now
+			if (dataset.ingredientsView && dataset.ingredientsView.length > 0) {
 				try {
-					// Ingredients format: '[IngredientName:Quantity:Unit, ...]'
-					ingredientsData = dataset.ingredients.slice(1, -1).split(',')
+					// Ingredients format: 'Name:Qty:Unit,Name:Qty:Unit'
+					ingredientsDataView = dataset.ingredientsView.split(',')
 						.map(item => item.trim())
 						.filter(item => item.includes(':'))
 						.map(item => {
 							const parts = item.split(':');
-							return { name: parts[0], quantity: parts[1], unit: parts[2] };
+							// Ensure we handle potential missing parts gracefully
+							return {
+								name: parts[0] || 'N/A',
+								quantity: parts[1] || 'N/A',
+								unit: parts[2] || 'N/A'
+							};
 						});
 				} catch (e) {
-					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredients);
-					ingredientsData = [];
+					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredientsView);
+					ingredientsDataView = [];
 				}
 			}
 
 
-			if (ingredientsData.length > 0) {
+			if (ingredientsDataView.length > 0) {
 				const table = document.createElement('table');
 				table.className = 'table table-sm table-striped';
 				table.innerHTML = `
@@ -328,9 +360,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <tbody>
                     </tbody>`;
 				const tbody = table.querySelector('tbody');
-				ingredientsData.forEach(ing => {
+				ingredientsDataView.forEach(ing => {
 					const tr = document.createElement('tr');
-					tr.innerHTML = `<td>${ing.name || 'N/A'}</td><td>${ing.quantity || 'N/A'}</td><td>${ing.unit || 'N/A'}</td>`;
+					tr.innerHTML = `<td>${ing.name}</td><td>${ing.quantity}</td><td>${ing.unit}</td>`;
 					tbody.appendChild(tr);
 				});
 				ingredientsListDiv.appendChild(table);
@@ -359,8 +391,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 	// --- Recipe Ingredient Management ---
-	// ... (addIngredientRow, removeIngredientRow, renumberIngredientRows remain the same) ...
+	// Helper function to add ingredient row (used by Add and Edit modals)
 	function addIngredientRow(containerId, templateId, data = null) {
+		// ... (function remains the same) ...
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
 		if (!template || !containerDiv) {
@@ -371,17 +404,15 @@ document.addEventListener('DOMContentLoaded', function() {
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
 		const index = currentRowCount;
 
-		// Use template.content if available, otherwise clone the template itself
 		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true);
-		// Find the .ingredient-row within the cloned fragment/node
 		const newRowElement = fragment.querySelector('.ingredient-row');
-
 
 		if (!newRowElement) {
 			console.error("Template did not contain '.ingredient-row'");
 			return;
 		}
 
+		// Update name attributes with the correct index
 		newRowElement.querySelectorAll('[name]').forEach(input => {
 			input.name = input.name.replace('[INDEX]', `[${index}]`);
 		});
@@ -390,31 +421,34 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (data) {
 			const select = newRowElement.querySelector('.ingredient-item');
 			const quantityInput = newRowElement.querySelector('.ingredient-quantity');
-			if (select) select.value = data.itemId;
-			if (quantityInput) quantityInput.value = data.quantity;
+			if (select) select.value = data.itemId; // itemID from parsed data
+			if (quantityInput) quantityInput.value = data.quantity; // quantity from parsed data
 		}
 
-
-		containerDiv.appendChild(newRowElement); // Append the actual .ingredient-row element
+		containerDiv.appendChild(newRowElement);
 	}
 
 
+	// Helper function to remove ingredient row
 	function removeIngredientRow(button) {
+		// ... (function remains the same) ...
 		const rowToRemove = button.closest('.ingredient-row');
 		if (rowToRemove) {
+			const container = rowToRemove.parentElement;
 			rowToRemove.remove();
-			// OPTIONAL: Renumber fields if strict indexing is required by backend
-			// renumberIngredientRows(rowToRemove.parentElement);
+			renumberIngredientRows(container); // Renumber after removing
 		}
 	}
 
-	// Optional function to renumber rows after deletion
+	// Helper function to renumber ingredient rows after deletion
 	function renumberIngredientRows(container) {
+		// ... (function remains the same) ...
 		if (!container) return;
 		const rows = container.querySelectorAll('.ingredient-row');
 		rows.forEach((row, index) => {
 			row.querySelectorAll('[name]').forEach(input => {
-				input.name = input.name.replace(/\[\d+\]/, `[${index}]`);
+				// Regex to replace any digits within brackets [] with the new index
+				input.name = input.name.replace(/\[\d+\]/g, `[${index}]`);
 			});
 		});
 	}
@@ -434,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 
-	// Event delegation for Remove buttons
+	// Event delegation for Remove buttons (covers both Add and Edit modals)
 	document.addEventListener('click', function(event) {
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {
@@ -442,4 +476,196 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
+	// --- REVISED AGAIN: MAX BUTTON LOGIC ---
+	document.addEventListener('click', function(event) {
+		const maxBtn = event.target.closest('.max-quantity-btn');
+		if (!maxBtn) return; // Exit if the clicked element wasn't the Max button
+
+		console.log("--- Max button clicked ---");
+
+		const row = maxBtn.closest('tr');
+		const quantityInput = row ? row.querySelector('.quantity-change-input') : null; // Check if row exists first
+
+		// Ensure mainElement exists (should always exist based on check at top)
+		if (!mainElement) {
+			console.error("Main element not found inside Max button listener.");
+			alert("Internal error: Configuration data missing.");
+			return;
+		}
+		const inventoryStockJson = mainElement.dataset.inventoryStockMap; // Expects JSON '{"id":qty, "id":qty}'
+
+		// More robust checks for elements
+		if (!row) {
+			console.error("Could not find parent table row (tr) for the Max button.");
+			alert("Internal error: Could not identify product row.");
+			return;
+		}
+		if (!quantityInput) {
+			console.error("Could not find quantity input (.quantity-change-input) within the row.");
+			alert("Internal error: Could not find quantity field.");
+			return;
+		}
+
+		const ingredientsData = row.dataset.productIngredients; // 'id:qty,id:qty'
+
+		// Log the raw data being read, *before* checking if they exist
+		console.log("Raw ingredients data from row:", ingredientsData);
+		console.log("Raw inventory stock JSON from main:", inventoryStockJson);
+
+		// Check specifically if the required data attributes exist and are not empty strings
+		if (!ingredientsData || ingredientsData.trim() === '') {
+			console.error("Missing or empty product ingredients data (data-product-ingredients attribute) on the table row:", row);
+			alert("Could not calculate maximum: Product recipe data is missing or empty.");
+			return;
+		}
+		if (!inventoryStockJson || inventoryStockJson.trim() === '') {
+			console.error("Missing or empty inventory stock map data (data-inventory-stock-map attribute) on the main element:", mainElement);
+			alert("Could not calculate maximum: Inventory stock data is missing or empty.");
+			return;
+		}
+
+
+		try {
+			// 1. Parse Product Ingredients (id:qty,id:qty)
+			console.log("Attempting to parse recipe:", ingredientsData);
+			const recipe = ingredientsData.split(',')
+				.map(item => item.trim())
+				.filter(item => item.includes(':')) // Ensure it has the separator
+				.map(item => {
+					const [idStr, qtyNeededStr] = item.split(':');
+					const parsedId = parseInt(idStr, 10);
+					const parsedQty = parseFloat(qtyNeededStr);
+					// Add more robust NaN checks
+					if (isNaN(parsedId) || isNaN(parsedQty) || parsedQty <= 0) { // Also check qty > 0 here
+						console.warn(`Invalid ingredient format skipped during parsing: id='${idStr}', qty='${qtyNeededStr}'`);
+						return null;
+					}
+					return {
+						itemId: parsedId,
+						quantityNeeded: parsedQty
+					};
+				})
+				.filter(item => item !== null); // Filter out the nulls from invalid entries
+
+			console.log("Parsed recipe:", recipe);
+
+			if (recipe.length === 0) {
+				console.warn("Product recipe resulted in 0 valid ingredients after parsing.");
+				alert("Product has no valid ingredients defined or ingredient quantities are invalid.");
+				quantityInput.value = 0; // Set to 0 if no ingredients
+				return;
+			}
+
+			// 2. Parse Inventory Stock Map (from JSON string)
+			console.log("Attempting to parse inventory stock JSON:", inventoryStockJson);
+			let inventoryStockMap = {};
+			try {
+				// Check if the string looks like a valid JSON object before parsing
+				if (!inventoryStockJson.startsWith('{') || !inventoryStockJson.endsWith('}')) {
+					console.error("Inventory stock map data is not a valid JSON object string:", inventoryStockJson);
+					throw new Error("Invalid JSON format"); // Force catch block
+				}
+				inventoryStockMap = JSON.parse(inventoryStockJson);
+				console.log("Parsed inventory stock map (raw keys):", inventoryStockMap);
+
+				// Convert string keys from JSON to numbers and ensure values are numbers
+				const numericKeyMap = {};
+				let conversionError = false;
+				for (const key in inventoryStockMap) {
+					if (inventoryStockMap.hasOwnProperty(key)) {
+						const numericKey = parseInt(key, 10);
+						const numericValue = parseFloat(inventoryStockMap[key]); // Ensure value is a number too
+						if (!isNaN(numericKey) && !isNaN(numericValue)) {
+							numericKeyMap[numericKey] = numericValue;
+						} else {
+							console.warn(`Skipping invalid key or value in inventory map: key='${key}', value='${inventoryStockMap[key]}'`);
+							conversionError = true; // Flag if any conversion failed
+						}
+					}
+				}
+				if (conversionError) {
+					console.error("Inventory map contained non-numeric keys or values.");
+					// Optionally alert the user or just proceed with valid data
+				}
+				inventoryStockMap = numericKeyMap; // Replace with the map having numeric keys and values
+				console.log("Inventory stock map (numeric keys/values):", inventoryStockMap);
+
+			} catch (jsonError) {
+				console.error("Error parsing inventory stock JSON:", jsonError, "JSON String:", inventoryStockJson);
+				alert("Could not calculate maximum: inventory data format is invalid. Check console for details.");
+				quantityInput.value = ''; // Clear input on error
+				return;
+			}
+
+			// Check if map is empty *after* successful parsing and key conversion
+			if (Object.keys(inventoryStockMap).length === 0) {
+				console.warn("Parsed inventory stock map resulted in an empty object. Original JSON:", inventoryStockJson);
+				alert("Could not calculate maximum: Inventory data appears empty or invalid after processing.");
+				quantityInput.value = 0;
+				return;
+			}
+
+
+			// 3. Calculate Max Producable Quantity
+			console.log("Calculating maximum possible units...");
+			let maxPossible = Infinity;
+			let limitingIngredientId = null; // Track which ingredient limits production
+
+			for (const ingredient of recipe) {
+				const availableStock = inventoryStockMap[ingredient.itemId];
+				console.log(`Checking ingredient ID ${ingredient.itemId}: Need ${ingredient.quantityNeeded}, Available: ${availableStock}`);
+
+				// Check if stock exists for this required ingredient
+				if (availableStock === undefined || availableStock === null || isNaN(availableStock)) {
+					console.error(`Inventory stock not found or invalid (NaN) for required ingredient ID: ${ingredient.itemId}. Cannot produce.`);
+					maxPossible = 0; // Cannot make any if a required ingredient is missing from inventory map
+					limitingIngredientId = ingredient.itemId;
+					break;
+				}
+
+				// Check if stock is sufficient (already covered by Math.floor logic, but explicit check helps)
+				if (availableStock < ingredient.quantityNeeded) {
+					console.log(`Ingredient ID ${ingredient.itemId} stock (${availableStock}) is less than needed (${ingredient.quantityNeeded}).`);
+					maxPossible = 0;
+					limitingIngredientId = ingredient.itemId;
+					break; // Not enough stock for even one unit
+				}
+
+				// Calculate how many *full* products can be made based *only* on this ingredient's stock
+				const possibleUnits = Math.floor(availableStock / ingredient.quantityNeeded);
+				console.log(`Ingredient ID ${ingredient.itemId} allows for ${possibleUnits} units.`);
+
+				// Update maxPossible only if the current ingredient is more limiting
+				if (possibleUnits < maxPossible) {
+					maxPossible = possibleUnits;
+					limitingIngredientId = ingredient.itemId;
+				}
+			}
+
+			console.log(`Calculation complete: Max Possible = ${maxPossible}, Limited by Ingredient ID = ${limitingIngredientId}`);
+
+			// 4. Update Input Field
+			if (maxPossible === Infinity) { // This happens if recipe was empty or only had invalid ingredients
+				console.warn("Max possible remained Infinity, likely due to empty/invalid recipe.");
+				quantityInput.value = 0;
+				alert("Could not determine maximum production quantity. Product recipe might be empty or invalid.");
+			} else if (maxPossible < 0) { // Should not happen with Math.floor, but safeguard
+				console.error(`Calculated max possible is negative (${maxPossible}), setting to 0.`);
+				quantityInput.value = 0;
+				alert("Calculation error resulted in negative quantity. Setting to 0.");
+			}
+			else {
+				quantityInput.value = maxPossible; // Set the calculated maximum
+				console.log(`Set quantity input to: ${maxPossible}`);
+			}
+
+		} catch (error) {
+			console.error("Unexpected error during Max button calculation process:", error);
+			alert("An unexpected error occurred while calculating the maximum quantity. Check console for details.");
+			quantityInput.value = ''; // Clear input on unexpected error
+		}
+	});
+	// --- END MAX BUTTON LOGIC REVISION ---
+
 }); // End DOMContentLoaded
+

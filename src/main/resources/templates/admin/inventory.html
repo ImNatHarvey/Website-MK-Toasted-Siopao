@@ -9,18 +9,16 @@
 		th:data-show-add-item-modal="${showAddItemModal}"
 		th:data-show-manage-categories-modal="${showManageCategoriesModal}"
 		th:data-show-manage-units-modal="${showManageUnitsModal}"
-		th:data-show-adjust-stock-modal="${showAdjustStockModal}">
+		th:data-show-manage-stock-modal="${showManageStockModal}">
+		<!-- Updated data attribute name -->
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
+			<!-- Updated Button Order and Text -->
 			<div class="d-flex gap-2">
 				<button class="btn btn-primary" data-bs-toggle="modal"
 					data-bs-target="#addItemModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Item
-				</button>
-				<button class="btn btn-success" data-bs-toggle="modal"
-					data-bs-target="#adjustStockModal">
-					<i class="fa-solid fa-boxes-stacked me-1"></i> Adjust Stock
 				</button>
 				<button class="btn btn-secondary" data-bs-toggle="modal"
 					data-bs-target="#manageCategoriesModal">
@@ -30,9 +28,16 @@
 					data-bs-target="#manageUnitsModal">
 					<i class="fa-solid fa-ruler-combined me-1"></i> Manage Units
 				</button>
+				<button class="btn btn-success" data-bs-toggle="modal"
+					data-bs-target="#manageStockModal">
+					<!-- Updated target -->
+					<i class="fa-solid fa-boxes-stacked me-1"></i> Manage Stock
+					<!-- Updated text -->
+				</button>
 			</div>
 		</div>
 
+		<!-- Alerts remain the same -->
 		<div th:if="${stockSuccess}"
 			class="alert alert-success alert-dismissible fade show" role="alert">
 			<i class="fa-solid fa-check-circle me-2"></i> <span
@@ -62,6 +67,7 @@
 				aria-label="Close"></button>
 		</div>
 
+		<!-- Search/Filter Form remains the same -->
 		<form th:action="@{/admin/inventory}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="row g-3 align-items-end">
@@ -90,6 +96,7 @@
 				</div>
 			</div>
 		</form>
+		<!-- Inventory Table remains the same -->
 		<div class="card shadow-sm mb-4">
 			<div class="card-header">
 				<h5 class="mb-0">Inventory Items</h5>
@@ -154,6 +161,7 @@
 						</tbody>
 					</table>
 				</div>
+				<!-- Pagination remains the same -->
 				<div class="d-flex justify-content-between align-items-center mt-3">
 					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
 					<span>Page 1 of 1</span>
@@ -162,7 +170,7 @@
 			</div>
 		</div>
 
-
+		<!-- Add/Edit Item Modal remains the same -->
 		<div class="modal fade" id="addItemModal" tabindex="-1"
 			aria-labelledby="addItemModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
@@ -260,6 +268,9 @@
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('criticalStockThreshold')}"
 										th:errors="*{criticalStockThreshold}">Error</div>
+									<!-- Display global error for threshold comparison -->
+									<div class="invalid-feedback d-block"
+										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
 								</div>
 							</div>
 
@@ -274,7 +285,7 @@
 			</div>
 		</div>
 
-
+		<!-- Manage Categories Modal remains the same -->
 		<div class="modal fade" id="manageCategoriesModal" tabindex="-1"
 			aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -311,7 +322,8 @@
 								<form
 									th:action="@{/admin/inventory/categories/delete/{id}(id=${cat.id})}"
 									method="post"
-									onsubmit="return confirm('Delete Category? Check if items use it first.');">
+									onsubmit="return confirm('Delete Category? This cannot be undone.');">
+									<!-- Simplified confirm message -->
 									<button type="submit" class="btn btn-sm btn-outline-danger"
 										title="Delete Category">
 										<i class="fa-solid fa-trash"></i>
@@ -328,6 +340,7 @@
 			</div>
 		</div>
 
+		<!-- Manage Units Modal remains the same -->
 		<div class="modal fade" id="manageUnitsModal" tabindex="-1"
 			aria-labelledby="manageUnitsModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -381,7 +394,8 @@
 								<form
 									th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
 									method="post"
-									onsubmit="return confirm('Delete Unit? Check if items use it first.');">
+									onsubmit="return confirm('Delete Unit? This cannot be undone.');">
+									<!-- Simplified confirm -->
 									<button type="submit" class="btn btn-sm btn-outline-danger"
 										title="Delete Unit">
 										<i class="fa-solid fa-trash"></i>
@@ -398,19 +412,24 @@
 			</div>
 		</div>
 
-		<div class="modal fade" id="adjustStockModal" tabindex="-1"
-			aria-labelledby="adjustStockModalLabel" aria-hidden="true">
+		<!-- Updated Manage Stock Modal (Removed Reason) -->
+		<div class="modal fade" id="manageStockModal" tabindex="-1"
+			aria-labelledby="manageStockModalLabel" aria-hidden="true">
+			<!-- Updated ID and Label -->
 			<div class="modal-dialog modal-lg modal-dialog-scrollable">
 				<div class="modal-content">
 					<div class="modal-header">
-						<h5 class="modal-title" id="adjustStockModalLabel">Adjust
-							Inventory Stock</h5>
+						<h5 class="modal-title" id="manageStockModalLabel">
+							Manage
+							<!-- Updated Title -->
+							Inventory Stock
+						</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal"
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<p class="small text-muted">Record new shipments (increase
-							stock) or wastage/corrections (decrease stock).</p>
+							stock) or usage/wastage/corrections (decrease stock).</p>
 						<div class="table-responsive">
 							<table class="table table-sm align-middle">
 								<thead>
@@ -418,7 +437,7 @@
 										<th>Item</th>
 										<th>Current Stock</th>
 										<th>Adjust Quantity</th>
-										<th>Reason</th>
+										<!-- Removed Reason Header -->
 										<th>Action</th>
 									</tr>
 								</thead>
@@ -436,15 +455,14 @@
 												name="quantityChange" class="form-control form-control-sm"
 												style="width: 120px;" placeholder="+/- Qty (e.g. 5 or -1.5)"
 												required /></td>
-											<td><input type="text" name="reason"
-												class="form-control form-control-sm"
-												placeholder="e.g., Shipment, Wastage" required /></td>
+											<!-- Removed Reason Input -->
 											<td><button type="submit" class="btn btn-sm btn-primary">Adjust</button></td>
 										</form>
 									</tr>
 									<tr th:if="${#lists.isEmpty(allInventoryItems)}">
-										<td colspan="5" class="text-center text-muted">No
-											inventory items found.</td>
+										<td colspan="4" class="text-center text-muted">No <!-- Updated colspan -->
+											inventory items found.
+										</td>
 									</tr>
 								</tbody>
 							</table>

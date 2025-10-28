@@ -5,8 +5,10 @@ import com.toastedsiopao.dto.RecipeIngredientDto;
 import com.toastedsiopao.model.*;
 import com.toastedsiopao.repository.CategoryRepository;
 import com.toastedsiopao.repository.InventoryItemRepository;
-import com.toastedsiopao.repository.OrderItemRepository; // This import will now work
+import com.toastedsiopao.repository.OrderItemRepository;
 import com.toastedsiopao.repository.ProductRepository;
+// Import InventoryItemService
+import com.toastedsiopao.service.InventoryItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,10 +31,13 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private CategoryRepository categoryRepository;
 	@Autowired
-	private InventoryItemRepository inventoryItemRepository;
-
+	private InventoryItemRepository inventoryItemRepository; // Keep for direct saves if needed
 	@Autowired
 	private OrderItemRepository orderItemRepository;
+
+	// Inject InventoryItemService for stock adjustments
+	@Autowired
+	private InventoryItemService inventoryItemService;
 
 	@Override
 	@Transactional(readOnly = true)
@@ -118,7 +123,9 @@ public class ProductServiceImpl implements ProductService {
 		product.setCategory(category);
 		product.setImageUrl(productDto.getImageUrl());
 
-		if (productDto.getCriticalStockThreshold() > productDto.getLowStockThreshold()) {
+		// Validate thresholds before saving
+		if (productDto.getCriticalStockThreshold() != null && productDto.getLowStockThreshold() != null
+				&& productDto.getCriticalStockThreshold() > productDto.getLowStockThreshold()) {
 			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
 		}
 		product.setLowStockThreshold(productDto.getLowStockThreshold());
@@ -127,17 +134,16 @@ public class ProductServiceImpl implements ProductService {
 		return productRepository.save(product);
 	}
 
-	// --- Overridden deleteById method ---
 	@Override
 	public void deleteById(Long id) {
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
 		// Check if product is in any order items
-		List<OrderItem> orderItems = orderItemRepository.findByProduct(product); // This line will now work
+		List<OrderItem> orderItems = orderItemRepository.findByProduct(product);
 		if (!orderItems.isEmpty()) {
-			throw new RuntimeException(
-					"Cannot delete product. It is part of " + orderItems.size() + " existing order(s).");
+			throw new RuntimeException("Cannot delete product '" + product.getName() + "'. It is part of "
+					+ orderItems.size() + " existing order(s).");
 		}
 
 		productRepository.deleteById(id);
@@ -160,62 +166,95 @@ public class ProductServiceImpl implements ProductService {
 		return productRepository.findByNameContainingIgnoreCase(keyword.trim());
 	}
 
-	// --- HEAVILY MODIFIED: adjustStock method ---
+	// --- MODIFIED: adjustStock method with Inventory Deduction ---
 	@Override
 	public Product adjustStock(Long productId, int quantityChange, String reason) {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-		// --- LOGIC FOR PRODUCTION (INCREASING STOCK) ---
+		// --- LOGIC FOR PRODUCTION (INCREASING PRODUCT STOCK) ---
 		if (quantityChange > 0) {
 			List<RecipeIngredient> ingredients = product.getIngredients();
-			if (ingredients.isEmpty()) {
-				log.warn("Product ID {} has no ingredients. Increasing stock without consuming inventory.", productId);
-			}
+			if (ingredients == null || ingredients.isEmpty()) {
+				log.warn(
+						"Product ID {} ('{}') has no ingredients defined. Increasing stock without consuming inventory.",
+						productId, product.getName());
+			} else {
+				BigDecimal productionAmount = new BigDecimal(quantityChange);
 
-			BigDecimal productionAmount = new BigDecimal(quantityChange);
+				// 1. First, check if there is enough inventory for ALL ingredients
+				for (RecipeIngredient ingredient : ingredients) {
+					InventoryItem item = ingredient.getInventoryItem();
+					if (item == null) {
+						// This shouldn't happen with proper data, but good to check
+						throw new RuntimeException("Recipe for product '" + product.getName()
+								+ "' contains an invalid ingredient reference.");
+					}
+					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
+					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+						log.warn("Skipping ingredient '{}' for product '{}': quantity needed is zero or null.",
+								item.getName(), product.getName());
+						continue; // Skip ingredients with zero or null quantity needed
+					}
 
-			// 1. First, check if there is enough inventory for ALL ingredients
-			for (RecipeIngredient ingredient : ingredients) {
-				InventoryItem item = ingredient.getInventoryItem();
-				BigDecimal amountToDecrease = ingredient.getQuantityNeeded().multiply(productionAmount);
+					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 
-				if (item.getCurrentStock().compareTo(amountToDecrease) < 0) {
-					throw new IllegalArgumentException("Insufficient inventory for " + item.getName() + ". Need "
-							+ amountToDecrease + " " + item.getUnit().getAbbreviation() + ", but only "
-							+ item.getCurrentStock() + " " + item.getUnit().getAbbreviation() + " available.");
+					// Reload item to get the latest stock, prevent stale reads
+					InventoryItem currentItemState = inventoryItemRepository.findById(item.getId())
+							.orElseThrow(() -> new RuntimeException(
+									"Inventory item '" + item.getName() + "' not found during stock check."));
+
+					if (currentItemState.getCurrentStock().compareTo(amountToDecrease) < 0) {
+						throw new IllegalArgumentException(
+								"Insufficient inventory for '" + item.getName() + "'. Need " + amountToDecrease + " "
+										+ item.getUnit().getAbbreviation() + " to produce " + quantityChange + " '"
+										+ product.getName() + "', but only " + currentItemState.getCurrentStock() + " "
+										+ item.getUnit().getAbbreviation() + " available.");
+					}
 				}
-			}
 
-			// 2. If all checks pass, deduct inventory
-			for (RecipeIngredient ingredient : ingredients) {
-				InventoryItem item = ingredient.getInventoryItem();
-				BigDecimal amountToDecrease = ingredient.getQuantityNeeded().multiply(productionAmount);
+				// 2. If all checks pass, deduct inventory using InventoryItemService
+				for (RecipeIngredient ingredient : ingredients) {
+					InventoryItem item = ingredient.getInventoryItem();
+					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
 
-				item.setCurrentStock(item.getCurrentStock().subtract(amountToDecrease));
-				inventoryItemRepository.save(item); // Save the updated inventory item
+					// Skip again if quantity is invalid
+					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) {
+						continue;
+					}
 
-				log.info("Deducted {} {} from {} for production.", amountToDecrease, item.getUnit().getAbbreviation(),
-						item.getName());
+					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
+					String deductionReason = "Production of " + quantityChange + "x " + product.getName() + " (ID: "
+							+ productId + ")";
+
+					// Use the service to adjust inventory stock (negative quantityChange)
+					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
+
+					log.info("Deducted {} {} of '{}' from inventory for production.", amountToDecrease,
+							item.getUnit().getAbbreviation(), item.getName());
+				}
 			}
 		}
 		// --- END PRODUCTION LOGIC ---
 
-		// --- LOGIC FOR ALL ADJUSTMENTS (INCREASE OR DECREASE) ---
+		// --- LOGIC FOR ALL ADJUSTMENTS (Update Product Stock) ---
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;
 
 		if (newStock < 0) {
-			throw new IllegalArgumentException(
-					"Stock cannot go below zero. Current stock: " + currentStock + ", Change: " + quantityChange);
+			// Although production logic handles ingredients, direct negative adjustments
+			// need this check
+			throw new IllegalArgumentException("Product stock cannot go below zero for '" + product.getName()
+					+ "'. Current stock: " + currentStock + ", Change: " + quantityChange);
 		}
 
 		product.setCurrentStock(newStock);
-		Product savedProduct = productRepository.save(product);
+		Product savedProduct = productRepository.save(product); // This also updates stockLastUpdated via @PreUpdate
 
-		log.info("Stock adjusted for Product ID {}: Change={}, New Stock={}, Reason={}", productId, quantityChange,
-				newStock, reason);
+		log.info("Stock adjusted for Product ID {} ('{}'): Change={}, New Stock={}, Reason='{}'", productId,
+				product.getName(), quantityChange, newStock, reason);
 
 		return savedProduct;
 	}
+	// --- END adjustStock MODIFICATION ---
 }

@@ -41,6 +41,8 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.util.HashMap; // For Max Calculation data
+import java.util.Map; // For Max Calculation data
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors; // Added for ingredient processing
@@ -96,7 +98,15 @@ public class AdminController {
 
 		model.addAttribute("products", productList);
 		model.addAttribute("categories", categoryList);
-		model.addAttribute("inventoryItems", inventoryItems); // Pass inventory items
+		model.addAttribute("inventoryItems", inventoryItems); // Pass inventory items for modals
+
+		// --- Prepare data for Max Button ---
+		Map<Long, BigDecimal> inventoryStockMap = new HashMap<>();
+		for (InventoryItem item : inventoryItems) {
+			inventoryStockMap.put(item.getId(), item.getCurrentStock());
+		}
+		model.addAttribute("inventoryStockMap", inventoryStockMap); // Pass map to Thymeleaf/JS
+		// --- End Max Button Data Prep ---
 
 		// Add DTOs for modals if not already present (due to validation redirect)
 		if (!model.containsAttribute("productDto")) {
@@ -110,9 +120,6 @@ public class AdminController {
 		if (!model.containsAttribute("productUpdateDto")) {
 			model.addAttribute("productUpdateDto", new ProductDto());
 		}
-
-		// Note: product details needed for the view modal are already in the
-		// productList
 
 		return "admin/products";
 	}
@@ -174,10 +181,11 @@ public class AdminController {
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + productName + "' deleted successfully!");
 		} catch (RuntimeException e) { // Catch specific runtime exceptions like deletion constraints
-			redirectAttributes.addFlashAttribute("productError", "Could not delete product: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("productError",
+					"Could not delete product '" + productName + "': " + e.getMessage());
 		} catch (Exception e) { // Catch broader exceptions
 			redirectAttributes.addFlashAttribute("productError",
-					"An unexpected error occurred while deleting the product.");
+					"An unexpected error occurred while deleting the product '" + productName + "'.");
 		}
 
 		return "redirect:/admin/products";
@@ -229,16 +237,15 @@ public class AdminController {
 		}
 	}
 
+	// Updated: Removed 'reason' parameter
 	@PostMapping("/products/stock/adjust")
 	public String adjustProductStock(@RequestParam("productId") Long productId,
-			@RequestParam("quantityChange") int quantityChange, @RequestParam("reason") String reason,
+			@RequestParam("quantityChange") int quantityChange,
+			// Removed @RequestParam("reason") String reason,
 			RedirectAttributes redirectAttributes, Principal principal) {
 
-		if (!StringUtils.hasText(reason)) {
-			redirectAttributes.addFlashAttribute("stockError", "Reason is required for stock adjustment.");
-			redirectAttributes.addFlashAttribute("showManageStockModal", true); // Flag for manage stock modal
-			return "redirect:/admin/products";
-		}
+		// Derive reason based on quantity change for logging/service call
+		String derivedReason = quantityChange > 0 ? "Production" : "Adjustment/Wastage";
 
 		if (quantityChange == 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
@@ -247,43 +254,31 @@ public class AdminController {
 		}
 
 		try {
-			Product updatedProduct = productService.adjustStock(productId, quantityChange, reason);
-			String action = quantityChange > 0 ? "Produced" : "Removed";
+			Product updatedProduct = productService.adjustStock(productId, quantityChange, derivedReason); // Pass
+																											// derived
+																											// reason
+			String action = quantityChange > 0 ? "Produced" : "Adjusted";
 			String details = action + " " + Math.abs(quantityChange) + " units of " + updatedProduct.getName()
-					+ " (ID: " + productId + "). Reason: " + reason;
+					+ " (ID: " + productId + "). Reason: " + derivedReason;
 
 			redirectAttributes.addFlashAttribute("stockSuccess", action + " " + Math.abs(quantityChange) + " units of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
 
+		} catch (IllegalArgumentException e) { // Catch insufficient stock specifically
+			redirectAttributes.addFlashAttribute("stockError", "Error producing product: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("showManageStockModal", true);
 		} catch (RuntimeException e) {
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("showManageStockModal", true); // Flag for manage stock modal
+			redirectAttributes.addFlashAttribute("showManageStockModal", true);
 		} catch (Exception e) {
 			redirectAttributes.addFlashAttribute("stockError", "An unexpected error occurred during stock adjustment.");
-			redirectAttributes.addFlashAttribute("showManageStockModal", true); // Flag for manage stock modal
+			redirectAttributes.addFlashAttribute("showManageStockModal", true);
 		}
 
 		return "redirect:/admin/products";
 	}
-
-	// --- REMOVED VIEW PRODUCT MAPPING ---
-	// @GetMapping("/products/view/{id}")
-	// public String viewProduct(@PathVariable("id") Long id, Model model,
-	// RedirectAttributes redirectAttributes) {
-	// Optional<Product> productOpt = productService.findById(id);
-	//
-	// if (productOpt.isEmpty()) {
-	// redirectAttributes.addFlashAttribute("productError", "Product not found (ID:
-	// " + id + "). Cannot view.");
-	// return "redirect:/admin/products";
-	// }
-	//
-	// model.addAttribute("product", productOpt.get());
-	// return "admin/view-product"; // Keep view-product.html - NO, REMOVE THIS LINE
-	// }
-	// --- END REMOVAL ---
 
 	@PostMapping("/products/categories/add")
 	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
@@ -351,7 +346,7 @@ public class AdminController {
 
 	// --- End Product Management ---
 
-	// --- Order Management (Unchanged) ---
+	// --- Order Management ---
 	@GetMapping("/orders")
 	public String manageOrders(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "status", required = false) String status) {
@@ -363,7 +358,7 @@ public class AdminController {
 	}
 	// --- End Order Management ---
 
-	// --- Customer/User Management (Unchanged) ---
+	// --- Customer/User Management ---
 	@GetMapping("/customers")
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword) {
@@ -585,7 +580,7 @@ public class AdminController {
 	}
 	// --- End Customer/User Management ---
 
-	// --- Inventory Management (Unchanged) ---
+	// --- Inventory Management ---
 	@GetMapping("/inventory")
 	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "category", required = false) Long categoryId) {
@@ -593,10 +588,11 @@ public class AdminController {
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
 
-		List<InventoryItem> allItems = inventoryItemService.findAll();
-		model.addAttribute("allInventoryItems", allItems);
+		// Get all items again specifically for the 'Manage Stock' modal
+		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll();
+		model.addAttribute("allInventoryItems", allItemsForStockModal);
 
-		model.addAttribute("inventoryItems", items);
+		model.addAttribute("inventoryItems", items); // Filtered list for the main table
 		model.addAttribute("inventoryCategories", categories);
 		model.addAttribute("unitsOfMeasure", units);
 		model.addAttribute("keyword", keyword);
@@ -618,11 +614,21 @@ public class AdminController {
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal) {
 
+		// Custom validation: critical <= low
+		if (itemDto.getCriticalStockThreshold() != null && itemDto.getLowStockThreshold() != null
+				&& itemDto.getCriticalStockThreshold().compareTo(itemDto.getLowStockThreshold()) > 0) {
+			result.rejectValue("criticalStockThreshold", "ThresholdError",
+					"Critical threshold cannot be greater than low threshold.");
+		}
+
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			redirectAttributes.addFlashAttribute("showAddItemModal", true);
+			// Pass necessary lists back for the modal
+			redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
+			redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
 			return "redirect:/admin/inventory";
 		}
 
@@ -635,10 +641,22 @@ public class AdminController {
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
+		} catch (IllegalArgumentException e) { // Catch specific validation errors like duplicate name
+			redirectAttributes.addFlashAttribute("inventoryError", "Error saving item: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto); // Send back DTO with errors
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
+					result); // Include binding result if needed
+			redirectAttributes.addFlashAttribute("showAddItemModal", true); // Reopen modal
+			// Pass necessary lists back
+			redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
+			redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
 		} catch (Exception e) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Error saving item: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			redirectAttributes.addFlashAttribute("showAddItemModal", true);
+			// Pass necessary lists back
+			redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
+			redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
 		}
 
 		return "redirect:/admin/inventory";
@@ -661,35 +679,40 @@ public class AdminController {
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
 					"Deleted inventory item: " + itemName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			redirectAttributes.addFlashAttribute("inventoryError", "Error: " + e.getMessage());
+		} catch (RuntimeException e) { // Catch constraint violation or other runtime issues
+			redirectAttributes.addFlashAttribute("inventoryError",
+					"Could not delete item '" + itemName + "': " + e.getMessage());
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("inventoryError",
+					"An unexpected error occurred while deleting item '" + itemName + "'.");
 		}
 
 		return "redirect:/admin/inventory";
 	}
 
+	// Updated: Removed 'reason' parameter
 	@PostMapping("/inventory/stock/adjust")
 	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
-			@RequestParam("quantityChange") BigDecimal quantityChange, @RequestParam("reason") String reason,
+			@RequestParam("quantityChange") BigDecimal quantityChange,
+			// Removed @RequestParam("reason") String reason,
 			RedirectAttributes redirectAttributes, Principal principal) {
+
+		// Determine a default reason based on the change for logging
+		String defaultReason = quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Manual Stock Increase"
+				: "Manual Stock Decrease/Wastage";
 
 		if (quantityChange.compareTo(BigDecimal.ZERO) == 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
-			redirectAttributes.addFlashAttribute("showAdjustStockModal", true);
-			return "redirect:/admin/inventory";
-		}
-
-		if (!StringUtils.hasText(reason)) {
-			redirectAttributes.addFlashAttribute("stockError", "Reason is required for stock adjustment.");
-			redirectAttributes.addFlashAttribute("showAdjustStockModal", true);
+			redirectAttributes.addFlashAttribute("showManageStockModal", true); // Updated modal flag name
 			return "redirect:/admin/inventory";
 		}
 
 		try {
-			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, reason);
+			// Use the determined default reason in the service call
+			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, defaultReason);
 			String action = quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Increased" : "Decreased";
 			String details = action + " stock for " + updatedItem.getName() + " (ID: " + itemId + ") by "
-					+ quantityChange.abs() + ". Reason: " + reason;
+					+ quantityChange.abs() + ". Reason: " + defaultReason; // Log the default reason
 
 			redirectAttributes.addFlashAttribute("stockSuccess", action + " stock for '" + updatedItem.getName()
 					+ "' by " + quantityChange.abs() + ". New stock: " + updatedItem.getCurrentStock());
@@ -698,7 +721,7 @@ public class AdminController {
 
 		} catch (RuntimeException e) {
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("showAdjustStockModal", true);
+			redirectAttributes.addFlashAttribute("showManageStockModal", true); // Updated modal flag name
 		}
 
 		return "redirect:/admin/inventory";
@@ -749,9 +772,12 @@ public class AdminController {
 
 		InventoryCategory category = categoryOpt.get();
 
-		if (category.getItems() != null && !category.getItems().isEmpty()) {
+		// Reload items explicitly before checking
+		List<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id); // Use search with only
+																							// category ID
+		if (!itemsInCategory.isEmpty()) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Cannot delete '" + category.getName()
-					+ "'. It is associated with " + category.getItems().size() + " inventory item(s).");
+					+ "'. It is associated with " + itemsInCategory.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
 		}
 
@@ -815,9 +841,14 @@ public class AdminController {
 
 		UnitOfMeasure unit = unitOpt.get();
 
-		if (unit.getItems() != null && !unit.getItems().isEmpty()) {
+		// Check if associated items exist - reload items to be sure
+		List<InventoryItem> itemsUsingUnit = inventoryItemService.findAll().stream()
+				.filter(item -> item.getUnit() != null && item.getUnit().getId().equals(id))
+				.collect(Collectors.toList());
+
+		if (!itemsUsingUnit.isEmpty()) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Cannot delete '" + unit.getName()
-					+ "'. It is associated with " + unit.getItems().size() + " inventory item(s).");
+					+ "'. It is associated with " + itemsUsingUnit.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
 		}
 
@@ -834,7 +865,7 @@ public class AdminController {
 	}
 	// --- End Inventory Management ---
 
-	// --- Other Mappings (Unchanged) ---
+	// --- Other Mappings ---
 	@GetMapping("/transactions")
 	public String viewTransactions() {
 		return "admin/transactions";

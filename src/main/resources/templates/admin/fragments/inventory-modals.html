@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="all-inventory-modals">
+
+		<div class="modal fade" id="addItemModal" tabindex="-1"
+			aria-labelledby="addItemModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg">
+				<div class="modal-content">
+					<form th:action="@{/admin/inventory/save}" method="post"
+						th:object="${inventoryItemDto}" id="itemForm">
+						<input type="hidden" th:field="*{id}" id="itemId">
+						<div class="modal-header">
+							<h5 class="modal-title" id="addItemModalLabel">Add New
+								Inventory Item</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('inventoryItemDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Please
+								correct the errors below.</div>
+							<div class="mb-3">
+								<label for="itemName" class="form-label">Item Name</label> <input
+									type="text" class="form-control" th:field="*{name}"
+									id="itemName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="itemCategory" class="form-label">Category</label> <select
+										class="form-select" th:field="*{categoryId}" id="itemCategory"
+										th:errorclass="is-invalid">
+										<option value="">-- Select Category --</option>
+										<option th:each="cat : ${inventoryCategories}"
+											th:value="${cat.id}" th:text="${cat.name}"></option>
+									</select>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('categoryId')}"
+										th:errors="*{categoryId}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="itemUnit" class="form-label">Unit of
+										Measure</label> <select class="form-select" th:field="*{unitId}"
+										id="itemUnit" th:errorclass="is-invalid">
+										<option value="">-- Select Unit --</option>
+										<option th:each="unit : ${unitsOfMeasure}"
+											th:value="${unit.id}"
+											th:text="${unit.name + ' (' + unit.abbreviation + ')'}"></option>
+									</select>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('unitId')}" th:errors="*{unitId}">Error</div>
+								</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="itemCurrentStock" class="form-label">Current
+										Stock</label> <input type="number" step="0.01" class="form-control"
+										th:field="*{currentStock}" id="itemCurrentStock"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('currentStock')}"
+										th:errors="*{currentStock}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="itemCost" class="form-label">Cost Per Unit
+										(Optional)</label>
+									<div class="input-group">
+										<span class="input-group-text">₱</span> <input type="number"
+											step="0.01" class="form-control" th:field="*{costPerUnit}"
+											id="itemCost" th:errorclass="is-invalid">
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('costPerUnit')}"
+											th:errors="*{costPerUnit}">Error</div>
+									</div>
+								</div>
+							</div>
+
+							<hr>
+							<h6 class="mb-3">Stock Thresholds</h6>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="itemLowThreshold" class="form-label">Low
+										Stock Threshold</label> <input type="number" step="0.01" min="0"
+										class="form-control" th:field="*{lowStockThreshold}"
+										id="itemLowThreshold" th:errorclass="is-invalid">
+									<div class="form-text">Stock is considered 'Low' (Yellow)
+										at or below this level.</div>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lowStockThreshold')}"
+										th:errors="*{lowStockThreshold}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="itemCriticalThreshold" class="form-label">Critical
+										Stock Threshold</label> <input type="number" step="0.01" min="0"
+										class="form-control" th:field="*{criticalStockThreshold}"
+										id="itemCriticalThreshold" th:errorclass="is-invalid">
+									<div class="form-text">Stock is 'Critical' (Red) at or
+										below this level. Cannot be higher than Low Threshold.</div>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('criticalStockThreshold')}"
+										th:errors="*{criticalStockThreshold}">Error</div>
+									<div class="invalid-feedback d-block"
+										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
+								</div>
+							</div>
+
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary"
+								data-bs-dismiss="modal">Close</button>
+							<button type="submit" class="btn btn-primary">Save Item</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="manageCategoriesModal" tabindex="-1"
+			aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageCategoriesModalLabel">Manage
+							Inventory Categories</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form th:action="@{/admin/inventory/categories/add}" method="post"
+							th:object="${inventoryCategoryDto}" id="addInvCategoryForm"
+							class="mb-4">
+							<h6 class="mb-3">Add New Category</h6>
+							<div class="input-group">
+								<input type="text" class="form-control"
+									placeholder="New category name..." th:field="*{name}"
+									th:errorclass="is-invalid">
+								<button class="btn btn-primary" type="submit">Add</button>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+							</div>
+						</form>
+						<hr>
+						<h6 class="mb-3">Existing Categories</h6>
+						<div th:if="${#lists.isEmpty(inventoryCategories)}"
+							class="text-muted">No categories created yet.</div>
+						<ul class="list-group"
+							th:unless="${#lists.isEmpty(inventoryCategories)}">
+							<li th:each="cat : ${inventoryCategories}"
+								class="list-group-item d-flex justify-content-between align-items-center">
+								<span th:text="${cat.name}">Category Name</span>
+								<form
+									th:action="@{/admin/inventory/categories/delete/{id}(id=${cat.id})}"
+									method="post"
+									onsubmit="return confirm('Delete Category? This cannot be undone.');">
+									<button type="submit" class="btn btn-sm btn-outline-danger"
+										title="Delete Category">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</form>
+							</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="manageUnitsModal" tabindex="-1"
+			aria-labelledby="manageUnitsModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageUnitsModalLabel">Manage
+							Units of Measure</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form th:action="@{/admin/inventory/units/add}" method="post"
+							th:object="${unitOfMeasureDto}" id="addUnitForm" class="mb-4">
+							<h6 class="mb-3">Add New Unit</h6>
+							<div class="row g-2 mb-2">
+								<div class="col-sm-7">
+									<label for="unitName" class="visually-hidden">Unit Name</label>
+									<input type="text" class="form-control"
+										placeholder="Unit name (e.g., Kilograms)" th:field="*{name}"
+										id="unitName" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</div>
+								</div>
+								<div class="col-sm-3">
+									<label for="unitAbbreviation" class="visually-hidden">Abbreviation</label>
+									<input type="text" class="form-control"
+										placeholder="Abbr (e.g., kg)" th:field="*{abbreviation}"
+										id="unitAbbreviation" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('abbreviation')}"
+										th:errors="*{abbreviation}">Error</div>
+								</div>
+								<div class="col-sm-2">
+									<button class="btn btn-primary w-100" type="submit">Add</button>
+								</div>
+							</div>
+							<div class="invalid-feedback d-block"
+								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
+								Error</div>
+						</form>
+						<hr>
+						<h6 class="mb-3">Existing Units</h6>
+						<div th:if="${#lists.isEmpty(unitsOfMeasure)}" class="text-muted">No
+							units created yet.</div>
+						<ul class="list-group"
+							th:unless="${#lists.isEmpty(unitsOfMeasure)}">
+							<li th:each="unit : ${unitsOfMeasure}"
+								class="list-group-item d-flex justify-content-between align-items-center">
+								<span><span th:text="${unit.name}">Unit Name</span> (<span
+									th:text="${unit.abbreviation}">abbr</span>)</span>
+								<form
+									th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
+									method="post"
+									onsubmit="return confirm('Delete Unit? This cannot be undone.');">
+									<button type="submit" class="btn btn-sm btn-outline-danger"
+										title="Delete Unit">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</form>
+							</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal fade" id="manageStockModal" tabindex="-1"
+			aria-labelledby="manageStockModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageStockModalLabel">Manage
+							Inventory Stock</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<p class="small text-muted">Record new shipments (increase
+							stock) or usage/wastage/corrections (decrease stock).</p>
+						<div class="table-responsive">
+							<table class="table table-sm align-middle">
+								<thead>
+									<tr>
+										<th>Item</th>
+										<th>Current Stock</th>
+										<th>Adjust Quantity</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="item : ${allInventoryItems}">
+										<form th:action="@{/admin/inventory/stock/adjust}"
+											method="post" class="stock-adjust-form">
+											<input type="hidden" name="inventoryItemId"
+												th:value="${item.id}" />
+											<td
+												th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">...</td>
+											<td
+												th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">...</td>
+											<td><input type="number" step="0.01"
+												name="quantityChange" class="form-control form-control-sm"
+												style="width: 120px;" placeholder="+/- Qty (e.g. 5 or -1.5)"
+												required /></td>
+											<td><button type="submit" class="btn btn-sm btn-primary">Adjust</button></td>
+										</form>
+									</tr>
+									<tr th:if="${#lists.isEmpty(allInventoryItems)}">
+										<td colspan="4" class="text-center text-muted">No
+											inventory items found.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

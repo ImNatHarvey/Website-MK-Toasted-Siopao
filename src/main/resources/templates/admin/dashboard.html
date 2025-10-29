@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main})}">
+	th:replace="~{admin/base :: layout(~{::main}, ~{::script})}">
 <head>
 <title>Admin Dashboard - MK Admin Portal</title>
 </head>
@@ -8,14 +8,14 @@
 	<main class="container my-4">
 		<h2 class="section-title mb-4 text-center">Admin Dashboard</h2>
 
-		<!-- Stats Cards -->
 		<div class="row justify-content-center">
 			<div class="col-md-4 mb-3">
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
 						<h5 class="card-title">Daily Orders</h5>
 						<div class="stats-value">0</div>
-						<div class="stats-change">+12% from yesterday</div>
+						<div class="stats-change text-muted small">+0% from
+							yesterday</div>
 					</div>
 				</div>
 			</div>
@@ -23,8 +23,9 @@
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
 						<h5 class="card-title">Daily Revenue</h5>
-						<div class="stats-value">P0</div>
-						<div class="stats-change">+8% from yesterday</div>
+						<div class="stats-value">₱0</div>
+						<div class="stats-change text-muted small">+0% from
+							yesterday</div>
 					</div>
 				</div>
 			</div>
@@ -33,18 +34,18 @@
 					<div class="card-body">
 						<h5 class="card-title">Daily Sales</h5>
 						<div class="stats-value">0</div>
-						<div class="stats-change">+6% from yesterday</div>
+						<div class="stats-change text-muted small">+0% from
+							yesterday</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<!-- Recent Orders Table -->
 		<div class="row justify-content-center">
 			<div class="col-12 mt-4">
 				<div class="card">
 					<div class="card-header text-center">
-						<h5 class="mb-0">Recent Orders</h5>
+						<h5 class="mb-0">Recent Orders (Placeholder Data)</h5>
 					</div>
 					<div class="card-body">
 						<div class="table-responsive">
@@ -60,25 +61,15 @@
 								</thead>
 								<tbody>
 									<tr>
-										<td>#ORD-1025</td>
-										<td>Ariel Alberto Jr.</td>
-										<td>₱245</td>
-										<td><span class="badge bg-success">Completed</span></td>
-										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
+										<td>#ORD-XXXX</td>
+										<td>Placeholder Customer</td>
+										<td>₱XXX</td>
+										<td><span class="badge bg-secondary">Status</span></td>
+										<td><a href="#" class="btn btn-sm btn-custom disabled">View</a></td>
 									</tr>
 									<tr>
-										<td>#ORD-1024</td>
-										<td>Ivan Caparros</td>
-										<td>₱189</td>
-										<td><span class="badge bg-danger">Rejected</span></td>
-										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
-									</tr>
-									<tr>
-										<td>#ORD-1023</td>
-										<td>CJ Flores</td>
-										<td>₱320</td>
-										<td><span class="badge bg-warning text-dark">Accepted</span></td>
-										<td><a href="#" class="btn btn-sm btn-custom">View</a></td>
+										<td colspan="5" class="text-center text-muted">No recent
+											orders found (or feature not implemented yet).</td>
 									</tr>
 								</tbody>
 							</table>
@@ -92,7 +83,6 @@
 			</div>
 		</div>
 
-		<!-- Quick Navigation -->
 		<div class="container mt-5">
 			<h3 class="section-title mb-4 text-center">Quick Navigation</h3>
 			<div class="row justify-content-center text-center g-4">
@@ -141,7 +131,6 @@
 							Transactions</a>
 					</div>
 				</div>
-				<!-- THIS IS THE CORRECTED BLOCK -->
 				<div class="col-md-4">
 					<div class="quick-nav-card p-4">
 						<div class="nav-icon fs-1 mb-2">⚙️</div>
@@ -151,10 +140,12 @@
 							Settings</a>
 					</div>
 				</div>
-				<!-- END OF CORRECTION -->
 			</div>
 		</div>
 	</main>
+
+	<th:block th:fragment="script">
+	</th:block>
+
 </body>
 </html>
-

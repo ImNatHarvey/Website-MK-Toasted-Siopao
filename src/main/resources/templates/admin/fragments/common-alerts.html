@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="productAlerts">
+		<div th:if="${productSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${productSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${productError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${productError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+	<div th:fragment="categoryAlerts">
+		<div th:if="${categorySuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${categorySuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${categoryError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${categoryError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+	<div th:fragment="stockAlerts">
+		<div th:if="${stockSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${stockSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${stockError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${stockError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+	<div th:fragment="inventoryAlerts">
+		<div th:if="${inventorySuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${inventorySuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${inventoryError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${inventoryError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+	<div th:fragment="unitAlerts">
+		<div th:if="${inventorySuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${inventorySuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${inventoryError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${inventoryError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+	<div th:fragment="userAlerts">
+		<div th:if="${customerSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${customerSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${customerError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${customerError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
+</body>
+</html>

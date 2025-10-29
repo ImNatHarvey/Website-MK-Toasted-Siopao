@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main})}">
+	th:replace="~{admin/base :: layout(~{::main}, ~{::script})}">
 <head>
 <title>Product Management - MK Admin</title>
 </head>
 <body>
 	<main class="container mt-4"
-		th:data-show-category-modal="${showCategoryModal}"
-		th:data-show-add-product-modal="${showAddProductModal}"
-		th:data-show-manage-stock-modal="${showManageStockModal}"
-		th:data-show-edit-product-modal="${showEditProductModal}"
-		th:data-show-view-product-modal="${showViewProductModal}"
 		th:attr="data-inventory-stock-map=${inventoryStockMapJson != null ? inventoryStockMapJson : '{}'}">
 
 		<div
@@ -32,48 +27,10 @@
 			</div>
 		</div>
 
-		<div th:if="${productSuccess}"
-			class="alert alert-success alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-check-circle me-2"></i> <span
-				th:text="${productSuccess}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
-		<div th:if="${productError}"
-			class="alert alert-danger alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
-				th:text="${productError}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
-		<div th:if="${categorySuccess}"
-			class="alert alert-success alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-check-circle me-2"></i> <span
-				th:text="${categorySuccess}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
-		<div th:if="${categoryError}"
-			class="alert alert-danger alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
-				th:text="${categoryError}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
-		<div th:if="${stockSuccess}"
-			class="alert alert-success alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-check-circle me-2"></i> <span
-				th:text="${stockSuccess}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
-		<div th:if="${stockError}"
-			class="alert alert-danger alert-dismissible fade show" role="alert">
-			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
-				th:text="${stockError}"></span>
-			<button type="button" class="btn-close" data-bs-dismiss="alert"
-				aria-label="Close"></button>
-		</div>
+		<div th:replace="~{admin/fragments/common-alerts :: productAlerts}"></div>
+		<div th:replace="~{admin/fragments/common-alerts :: categoryAlerts}"></div>
+		<div th:replace="~{admin/fragments/common-alerts :: stockAlerts}"></div>
+
 
 		<form th:action="@{/admin/products}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
@@ -187,5 +144,10 @@
 			th:replace="~{admin/fragments/product-modals :: all-product-modals}"></div>
 
 	</main>
+
+	<th:block th:fragment="script">
+		<script th:src="@{/js/admin-products.js}"></script>
+	</th:block>
+
 </body>
 </html>

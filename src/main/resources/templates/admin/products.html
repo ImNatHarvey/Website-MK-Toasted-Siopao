@@ -5,7 +5,6 @@
 <title>Product Management - MK Admin</title>
 </head>
 <body>
-	<!-- Using th:attr to explicitly set the data attribute -->
 	<main class="container mt-4"
 		th:data-show-category-modal="${showCategoryModal}"
 		th:data-show-add-product-modal="${showAddProductModal}"
@@ -13,7 +12,7 @@
 		th:data-show-edit-product-modal="${showEditProductModal}"
 		th:data-show-view-product-modal="${showViewProductModal}"
 		th:attr="data-inventory-stock-map=${inventoryStockMapJson != null ? inventoryStockMapJson : '{}'}">
-		<!-- Use th:attr -->
+
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
@@ -33,7 +32,6 @@
 			</div>
 		</div>
 
-		<!-- Alerts remain the same -->
 		<div th:if="${productSuccess}"
 			class="alert alert-success alert-dismissible fade show" role="alert">
 			<i class="fa-solid fa-check-circle me-2"></i> <span
@@ -77,7 +75,6 @@
 				aria-label="Close"></button>
 		</div>
 
-		<!-- Search Form remains the same -->
 		<form th:action="@{/admin/products}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="row g-3 align-items-end">
@@ -106,7 +103,6 @@
 			</div>
 		</form>
 
-		<!-- Empty State remains the same -->
 		<div th:if="${#lists.isEmpty(products)}"
 			class="alert alert-warning text-center" role="alert">
 			<span
@@ -114,13 +110,12 @@
 				products added yet.</span>
 		</div>
 
-		<!-- Product Cards -->
 		<div th:unless="${#lists.isEmpty(products)}"
 			class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
 			<div class="col" th:each="product : ${products}">
 				<div class="card h-100 shadow-sm product-card-admin">
 					<img
-						th:src="${product.imageUrl != null && !product.imageUrl.isBlank() ? product.imageUrl : '/img/placeholder.jpg'}"
+						th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
 						class="card-img-top admin-product-img" th:alt="${product.name}"
 						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 					<div class="card-body d-flex flex-column">
@@ -151,7 +146,7 @@
 								th:data-category-name="${product.category.name}"
 								th:data-price="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}"
 								th:data-description="${product.description}"
-								th:data-image-url="${product.imageUrl != null && !product.imageUrl.isBlank() ? product.imageUrl : '/img/placeholder.jpg'}"
+								th:data-image-url="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
 								th:data-stock-status="${#strings.replace(product.stockStatus, '_', ' ')}"
 								th:data-stock-status-class="${#strings.equals(product.stockStatus, 'NORMAL') ? 'bg-success' :
                                                               #strings.equals(product.stockStatus, 'LOW') ? 'bg-warning text-dark' :
@@ -161,7 +156,8 @@
 								th:data-low-stock-threshold="${product.lowStockThreshold}"
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
 								th:data-stock-last-updated="${product.stockLastUpdated != null ? #temporals.format(product.stockLastUpdated, 'MMM dd, yyyy HH:mm') : ''}"
-								th:attr="data-ingredients-view=${product.ingredients != null ? #strings.listJoin(product.ingredients.![inventoryItem.name + ':' + #numbers.formatDecimal(quantityNeeded, 1, 'COMMA', 2, 'POINT') + ':' + inventoryItem.unit.abbreviation], ',') : ''}, data-ingredients=${product.ingredients != null ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
+								th:attr="data-ingredients-view=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.name + ':' + #numbers.formatDecimal(quantityNeeded, 1, 'COMMA', 2, 'POINT') + ':' + inventoryItem.unit.abbreviation], ',') : ''},
+											 data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
 								View</button>
 							<button type="button"
 								class="btn btn-sm btn-outline-warning flex-fill edit-product-btn"
@@ -173,7 +169,7 @@
 								th:data-image-url="${product.imageUrl}"
 								th:data-low-stock-threshold="${product.lowStockThreshold}"
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
-								th:attr="data-ingredients=${product.ingredients != null ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
+								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
 								Edit</button>
 							<form
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
@@ -187,544 +183,9 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- Add Product Modal remains the same -->
-		<div class="modal fade" id="addProductModal" tabindex="-1"
-			aria-labelledby="addProductModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<form th:action="@{/admin/products/add}" method="post"
-						th:object="${productDto}" id="addProductForm">
-						<div class="modal-header">
-							<h5 class="modal-title" id="addProductModalLabel">Add New
-								Product</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal"
-								aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div class="mb-3">
-								<label for="addProductName" class="form-label">Product
-									Name</label> <input type="text" class="form-control" th:field="*{name}"
-									id="addProductName" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
-							</div>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="addProductCategory" class="form-label">Category</label>
-									<select class="form-select" th:field="*{categoryId}"
-										id="addProductCategory" th:errorclass="is-invalid">
-										<option value="">-- Select a Category --</option>
-										<option th:each="cat : ${categories}" th:value="${cat.id}"
-											th:text="${cat.name}">Category</option>
-									</select>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('categoryId')}"
-										th:errors="*{categoryId}">...</div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="addProductPrice" class="form-label">Price</label>
-									<div class="input-group">
-										<span class="input-group-text">₱</span> <input type="number"
-											step="0.01" min="0" class="form-control" th:field="*{price}"
-											id="addProductPrice" th:errorclass="is-invalid">
-										<div class="invalid-feedback"
-											th:if="${#fields.hasErrors('price')}" th:errors="*{price}">...</div>
-									</div>
-								</div>
-							</div>
-							<div class="mb-3">
-								<label for="addProductDescription" class="form-label">Description
-									(Optional)</label>
-								<textarea class="form-control" th:field="*{description}"
-									id="addProductDescription" rows="2" th:errorclass="is-invalid"></textarea>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('description')}"
-									th:errors="*{description}">...</div>
-							</div>
-							<div class="mb-3">
-								<label for="addProductImageUrl" class="form-label">Image
-									URL (Optional)</label> <input type="text" class="form-control"
-									th:field="*{imageUrl}" id="addProductImageUrl"
-									placeholder="e.g., /img/my-product.jpg or https://...">
-							</div>
-							<hr class="my-4">
-							<h5 class="mb-3">Initial Stock Thresholds</h5>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="addLowThreshold" class="form-label">Low
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{lowStockThreshold}"
-										id="addLowThreshold" th:errorclass="is-invalid">
-									<div class="form-text">Status: Low at/below this level.</div>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('lowStockThreshold')}"
-										th:errors="*{lowStockThreshold}"></div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="addCriticalThreshold" class="form-label">Critical
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{criticalStockThreshold}"
-										id="addCriticalThreshold" th:errorclass="is-invalid">
-									<div class="form-text">Status: Critical at/below this
-										level.</div>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('criticalStockThreshold')}"
-										th:errors="*{criticalStockThreshold}"></div>
-									<div class="invalid-feedback d-block"
-										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
-								</div>
-							</div>
-
-							<hr class="my-4">
-							<h5 class="mb-3">Recipe Ingredients</h5>
-							<div id="addIngredientsContainer">
-								<div th:each="ing, iterStat : *{ingredients}"
-									class="row ingredient-row mb-2 gx-2 align-items-center">
-									<div class="col-md-6">
-										<select class="form-select form-select-sm ingredient-item"
-											th:field="*{ingredients[__${iterStat.index}__].inventoryItemId}"
-											required>
-											<option value="">-- Select Ingredient --</option>
-											<option th:each="invItem : ${inventoryItems}"
-												th:value="${invItem.id}"
-												th:text="${invItem.name + ' (' + invItem.unit.abbreviation + ')'}"></option>
-										</select>
-									</div>
-									<div class="col-md-4">
-										<input type="number" step="0.01" min="0.01"
-											class="form-control form-control-sm ingredient-quantity"
-											th:field="*{ingredients[__${iterStat.index}__].quantityNeeded}"
-											placeholder="Qty" required>
-									</div>
-									<div class="col-md-2 text-end">
-										<button type="button"
-											class="btn btn-sm btn-outline-danger remove-ingredient-btn"
-											title="Remove Ingredient">
-											<i class="fa-solid fa-times"></i>
-										</button>
-									</div>
-								</div>
-								<div th:if="${#fields.hasErrors('ingredients*')}"
-									class="alert alert-danger small p-2 mt-2">Errors in
-									ingredients list. Please check items and quantities.</div>
-							</div>
-							<button type="button" class="btn btn-sm btn-outline-success mt-2"
-								id="addIngredientBtn">
-								<i class="fa-solid fa-plus me-1"></i> Add Ingredient
-							</button>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
-								data-bs-dismiss="modal">Close</button>
-							<button type="submit" class="btn btn-primary">Save
-								Product</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<!-- Manage Categories Modal remains the same -->
-		<div class="modal fade" id="manageCategoriesModal" tabindex="-1"
-			aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="manageCategoriesModalLabel">Manage
-							Product Categories</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<form th:action="@{/admin/products/categories/add}" method="post"
-							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
-							<h6 class="mb-3">Add New Category</h6>
-							<div class="input-group">
-								<input type="text" class="form-control"
-									placeholder="New category name..." th:field="*{name}"
-									th:errorclass="is-invalid">
-								<button class="btn btn-primary" type="submit">Add</button>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
-							</div>
-						</form>
-						<hr>
-						<h6 class="mb-3">Existing Categories</h6>
-						<div th:if="${#lists.isEmpty(categories)}" class="text-muted">No
-							categories created yet.</div>
-						<ul class="list-group" th:unless="${#lists.isEmpty(categories)}">
-							<li th:each="cat : ${categories}"
-								class="list-group-item d-flex justify-content-between align-items-center">
-								<span th:text="${cat.name}">Category Name</span>
-								<form
-									th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
-									method="post"
-									onsubmit="return confirm('Delete Category? Check if products use it first.');">
-									<button type="submit" class="btn btn-sm btn-outline-danger"
-										title="Delete Category">
-										<i class="fa-solid fa-trash"></i>
-									</button>
-								</form>
-							</li>
-						</ul>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-bs-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Ingredient Row Templates remain the same -->
-		<template id="ingredientRowTemplate">
-			<div class="row ingredient-row mb-2 gx-2 align-items-center">
-				<div class="col-md-6">
-					<label class="visually-hidden">Ingredient</label> <select
-						class="form-select form-select-sm ingredient-item"
-						name="ingredients[INDEX].inventoryItemId" required>
-						<option value="">-- Select Ingredient --</option>
-						<option th:each="invItem : ${inventoryItems}"
-							th:value="${invItem.id}"
-							th:text="${invItem.name + ' (' + invItem.unit.abbreviation + ')'}">
-							Inventory Item Name (unit)</option>
-					</select>
-				</div>
-				<div class="col-md-4">
-					<label class="visually-hidden">Quantity</label> <input
-						type="number" step="0.01" min="0.01"
-						class="form-control form-control-sm ingredient-quantity"
-						name="ingredients[INDEX].quantityNeeded" placeholder="Qty"
-						required>
-				</div>
-				<div class="col-md-2 text-end">
-					<button type="button"
-						class="btn btn-sm btn-outline-danger remove-ingredient-btn"
-						title="Remove Ingredient">
-						<i class="fa-solid fa-times"></i>
-					</button>
-				</div>
-			</div>
-		</template>
-		<template id="ingredientRowTemplateEditModal">
-			<div class="row ingredient-row mb-2 gx-2 align-items-center">
-				<div class="col-md-6">
-					<label class="visually-hidden">Ingredient</label> <select
-						class="form-select form-select-sm ingredient-item"
-						name="ingredients[INDEX].inventoryItemId" required>
-						<option value="">-- Select Ingredient --</option>
-						<option th:each="invItem : ${inventoryItems}"
-							th:value="${invItem.id}"
-							th:text="${invItem.name + ' (' + invItem.unit.abbreviation + ')'}"></option>
-					</select>
-				</div>
-				<div class="col-md-4">
-					<label class="visually-hidden">Quantity</label> <input
-						type="number" step="0.01" min="0.01"
-						class="form-control form-control-sm ingredient-quantity"
-						name="ingredients[INDEX].quantityNeeded" placeholder="Qty"
-						required>
-				</div>
-				<div class="col-md-2 text-end">
-					<button type="button"
-						class="btn btn-sm btn-outline-danger remove-ingredient-btn"
-						title="Remove Ingredient">
-						<i class="fa-solid fa-times"></i>
-					</button>
-				</div>
-			</div>
-		</template>
-
-
-		<!-- Updated Manage Stock Modal -->
-		<div class="modal fade" id="manageStockModal" tabindex="-1"
-			aria-labelledby="manageStockModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg modal-dialog-scrollable">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="manageStockModalLabel">Manage
-							Product Stock</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<p class="small text-muted">Record production (increase stock)
-							or wastage/adjustments (decrease stock). Use 'Max' to calculate
-							the maximum producable quantity based on inventory.</p>
-						<div class="table-responsive">
-							<table class="table table-sm align-middle">
-								<thead>
-									<tr>
-										<th>Product</th>
-										<th>Current Stock</th>
-										<th>Adjust Quantity</th>
-										<!-- Removed Reason Header -->
-										<th>Action</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr th:each="prod : ${products}"
-										th:data-product-ingredients="${prod.ingredients != null ? #strings.listJoin(prod.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}"
-										th:data-product-id="${prod.id}">
-										<form th:action="@{/admin/products/stock/adjust}"
-											method="post" class="stock-adjust-form">
-											<input type="hidden" name="productId" th:value="${prod.id}" />
-											<td th:text="${prod.name}">...</td>
-											<td th:text="${prod.currentStock}">...</td>
-											<!-- CORRECTED TD STRUCTURE -->
-											<td>
-												<div class="input-group input-group-sm">
-													<input type="number" name="quantityChange"
-														class="form-control quantity-change-input"
-														style="width: 80px;" placeholder="+/- Qty" required />
-													<!-- Max Button: Display only if ingredients exist -->
-													<button type="button"
-														class="btn btn-outline-secondary max-quantity-btn"
-														th:if="${prod.ingredients != null and !prod.ingredients.isEmpty()}"
-														title="Calculate maximum producable quantity based on inventory">Max</button>
-												</div>
-											</td>
-											<!-- END CORRECTED TD -->
-											<!-- Removed Reason Input -->
-											<td><button type="submit" class="btn btn-sm btn-primary">Adjust</button></td>
-										</form>
-									</tr>
-									<tr th:if="${#lists.isEmpty(products)}">
-										<td colspan="4" class="text-center text-muted">No <!-- Updated colspan -->
-											products found.
-										</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-bs-dismiss="modal">Close</button>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Edit Product Modal remains the same -->
-		<div class="modal fade" id="editProductModal" tabindex="-1"
-			aria-labelledby="editProductModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<form th:action="@{/admin/products/update}" method="post"
-						th:object="${productUpdateDto}" id="editProductForm">
-						<div class="modal-header">
-							<h5 class="modal-title" id="editProductModalLabel">Edit
-								Product</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal"
-								aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('productUpdateDto.*')}"
-								class="alert alert-danger" role="alert">Please correct the
-								errors below.</div>
-							<div th:if="${productError}"
-								class="alert alert-danger alert-dismissible fade show"
-								role="alert">
-								<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
-									th:text="${productError}"></span>
-								<button type="button" class="btn-close" data-bs-dismiss="alert"
-									aria-label="Close"></button>
-							</div>
-
-							<input type="hidden" th:field="*{id}" />
-
-							<div class="mb-3">
-								<label for="editProductNameModal" class="form-label">Product
-									Name</label> <input type="text" class="form-control" th:field="*{name}"
-									id="editProductNameModal" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
-							</div>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="editProductCategoryModal" class="form-label">Category</label>
-									<select class="form-select" th:field="*{categoryId}"
-										id="editProductCategoryModal" th:errorclass="is-invalid">
-										<option value="">-- Select a Category --</option>
-										<option th:each="cat : ${categories}" th:value="${cat.id}"
-											th:text="${cat.name}"></option>
-									</select>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('categoryId')}"
-										th:errors="*{categoryId}"></div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="editProductPriceModal" class="form-label">Price</label>
-									<div class="input-group">
-										<span class="input-group-text">₱</span> <input type="number"
-											step="0.01" min="0" class="form-control" th:field="*{price}"
-											id="editProductPriceModal" th:errorclass="is-invalid">
-									</div>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
-								</div>
-							</div>
-							<div class="mb-3">
-								<label for="editProductDescriptionModal" class="form-label">Description
-									(Optional)</label>
-								<textarea class="form-control" th:field="*{description}"
-									id="editProductDescriptionModal" rows="2"
-									th:errorclass="is-invalid"></textarea>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('description')}"
-									th:errors="*{description}"></div>
-							</div>
-							<div class="mb-3">
-								<label for="editProductImageUrlModal" class="form-label">Image
-									URL (Optional)</label> <input type="text" class="form-control"
-									th:field="*{imageUrl}" id="editProductImageUrlModal"
-									placeholder="e.g., /img/my-product.jpg or https://...">
-							</div>
-
-							<hr class="my-4">
-							<h5 class="mb-3">Stock Management</h5>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="editLowThresholdModal" class="form-label">Low
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{lowStockThreshold}"
-										id="editLowThresholdModal" th:errorclass="is-invalid">
-									<div class="form-text">Status: Low at/below this level.</div>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('lowStockThreshold')}"
-										th:errors="*{lowStockThreshold}"></div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="editCriticalThresholdModal" class="form-label">Critical
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{criticalStockThreshold}"
-										id="editCriticalThresholdModal" th:errorclass="is-invalid">
-									<div class="form-text">Status: Critical at/below this
-										level.</div>
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('criticalStockThreshold')}"
-										th:errors="*{criticalStockThreshold}"></div>
-								</div>
-								<div class="col-12 mb-3" th:if="${#fields.hasGlobalErrors()}">
-									<div class="alert alert-danger alert-sm p-2" role="alert"
-										th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global
-										error</div>
-								</div>
-							</div>
-							<div class="alert alert-info small">Current stock cannot be
-								edited here. Use "Manage Stock".</div>
-
-
-							<hr class="my-4">
-							<h5 class="mb-3">Recipe Ingredients</h5>
-							<div id="editIngredientsContainerModal">
-								<div th:if="${#fields.hasErrors('ingredients*')}"
-									class="alert alert-danger small p-2 mt-2">Errors in
-									ingredients list. Please check items and quantities.</div>
-							</div>
-							<button type="button" class="btn btn-sm btn-outline-success mt-2"
-								id="addIngredientBtnEditModal">
-								<i class="fa-solid fa-plus me-1"></i> Add Ingredient
-							</button>
-
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
-								data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Save
-								Changes</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<!-- View Product Modal remains the same -->
-		<div class="modal fade" id="viewProductModal" tabindex="-1"
-			aria-labelledby="viewProductModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="viewProductModalLabel">Product
-							Details</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<div class="row mb-4">
-							<div class="col-md-4 text-center">
-								<img id="viewProductImage" src="/img/placeholder.jpg"
-									class="img-fluid rounded mb-2"
-									style="max-height: 250px; object-fit: contain;"
-									alt="Product Image"
-									onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-							</div>
-							<div class="col-md-8">
-								<h4 id="viewProductName">Product Name</h4>
-								<p class="text-muted mb-2" id="viewProductCategory">Category</p>
-								<p class="fs-5 fw-bold mb-2">
-									₱<span id="viewProductPrice">Price</span>
-								</p>
-								<p class="mb-2">
-									<strong>Description:</strong>
-								</p>
-								<p id="viewProductDescription">Description...</p>
-
-								<hr>
-
-								<p class="mb-1">
-									<strong>Stock Status:</strong> <span class="badge ms-2"
-										id="viewProductStockStatusBadge">Stock Status</span>
-								</p>
-								<p class="mb-1">
-									<strong>Current Stock:</strong> <span
-										id="viewProductCurrentStock">0</span> units
-								</p>
-								<p class="mb-1">
-									<strong>Low Stock Threshold:</strong> <span
-										id="viewProductLowThreshold">0</span> units
-								</p>
-								<p class="mb-1">
-									<strong>Critical Stock Threshold:</strong> <span
-										id="viewProductCriticalThreshold">0</span> units
-								</p>
-								<p class="small text-muted" id="viewProductStockLastUpdated">Stock
-									last updated: ...</p>
-							</div>
-						</div>
-
-						<hr>
-						<h5 class="mb-3">Recipe Ingredients</h5>
-						<div id="viewProductIngredientsList">
-							<p class="text-muted small">No ingredients assigned.</p>
-						</div>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
-							data-bs-dismiss="modal">Close</button>
-						<button type="button"
-							class="btn btn-warning edit-product-btn-from-view"
-							data-bs-dismiss="modal" data-bs-toggle="modal"
-							data-bs-target="#editProductModal">
-							<i class="fa-solid fa-pencil me-1"></i> Edit Product
-						</button>
-						<form th:action="@{/admin/products/delete}" method="post"
-							class="d-inline delete-product-form-from-view"
-							onsubmit="return confirm('Delete this product?');">
-							<input type="hidden" name="productId"
-								class="view-product-id-for-delete" value="" />
-							<button type="submit" class="btn btn-danger">
-								<i class="fa-solid fa-trash me-1"></i> Delete Product
-							</button>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
+		<div
+			th:replace="~{admin/fragments/product-modals :: all-product-modals}"></div>
 
 	</main>
 </body>
 </html>
-

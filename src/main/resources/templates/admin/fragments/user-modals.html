@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-
 	<div th:fragment="all-user-modals">
 
 		<div class="modal fade" id="manageAdminsModal" tabindex="-1"
@@ -45,8 +44,7 @@
 												th:data-username="${admin.username}">Edit</button>
 											<form
 												th:action="@{/admin/customers/admin/delete/{id}(id=${admin.id})}"
-												method="post"
-												onsubmit="return confirm('Are you sure you want to delete this admin?');">
+												method="post" onsubmit="return confirm('Are you sure?');">
 												<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
 											</form>
 										</td>
@@ -72,7 +70,7 @@
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('firstName')}"
-										th:errors="*{firstName}">Error</div>
+										th:errors="*{firstName}">FN Error</div>
 								</div>
 								<div class="col-md-6 mb-3">
 									<label for="adminLastName" class="form-label">Last Name</label>
@@ -80,7 +78,7 @@
 										id="adminLastName" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lastName')}"
-										th:errors="*{lastName}">Error</div>
+										th:errors="*{lastName}">LN Error</div>
 								</div>
 							</div>
 							<div class="mb-3">
@@ -89,7 +87,7 @@
 									id="adminUsername" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">Error</div>
+									th:errors="*{username}">User Error</div>
 							</div>
 							<div class="row">
 								<div class="col-md-6 mb-3">
@@ -99,7 +97,7 @@
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('password')}"
-										th:errors="*{password}">Error</div>
+										th:errors="*{password}">PW Error</div>
 								</div>
 								<div class="col-md-6 mb-3">
 									<label for="adminConfirmPassword" class="form-label">Confirm
@@ -108,7 +106,7 @@
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('confirmPassword')}"
-										th:errors="*{confirmPassword}">Error</div>
+										th:errors="*{confirmPassword}">Confirm PW Error</div>
 								</div>
 							</div>
 							<div class="d-flex justify-content-end">
@@ -146,7 +144,7 @@
 									id="custFirstName" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('firstName')}"
-									th:errors="*{firstName}">Error</div>
+									th:errors="*{firstName}">FN Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="custLastName" class="form-label">Last Name</label> <input
@@ -154,7 +152,7 @@
 									id="custLastName" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('lastName')}"
-									th:errors="*{lastName}">Error</div>
+									th:errors="*{lastName}">LN Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="custUsername" class="form-label">Username</label> <input
@@ -162,7 +160,7 @@
 									id="custUsername" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">Error</div>
+									th:errors="*{username}">User Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="custPassword" class="form-label">Password</label> <input
@@ -170,7 +168,7 @@
 									id="custPassword" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('password')}"
-									th:errors="*{password}">Error</div>
+									th:errors="*{password}">PW Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="custConfirmPassword" class="form-label">Confirm
@@ -179,7 +177,7 @@
 									th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('confirmPassword')}"
-									th:errors="*{confirmPassword}">Error</div>
+									th:errors="*{confirmPassword}">Confirm PW Error</div>
 							</div>
 						</div>
 						<div class="modal-footer">
@@ -215,7 +213,7 @@
 							<strong>Address:</strong>
 						</p>
 						<address class="mb-0 ms-3">
-							<span id="viewCustomerAddress1" class="d-block"></span> <span
+							<span id="viewCustomerAddress1" class="d-block"></span><span
 								id="viewCustomerAddress2" class="d-block"></span>
 						</address>
 					</div>
@@ -245,19 +243,16 @@
 							<div th:if="${customerError}"
 								class="alert alert-danger alert-dismissible fade show small p-2"
 								role="alert">
-								<i class="fa-solid fa-triangle-exclamation me-1"></i> <span
+								<i class="fa-solid fa-triangle-exclamation me-1"></i><span
 									th:text="${customerError}"></span>
 								<button type="button" class="btn-close btn-sm p-2"
 									data-bs-dismiss="alert" aria-label="Close"></button>
 							</div>
-
-
 							<input type="hidden" th:field="*{id}" />
-
 							<h5 class="mb-3">Personal Information</h5>
 							<div class="row mb-3">
 								<div class="col-md-6">
-									<label for="firstName" class="form-label">First Name</label> <input
+									<label for="firstName" class="form-label">First Name</label><input
 										type="text" class="form-control" th:field="*{firstName}"
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
@@ -265,7 +260,7 @@
 										th:errors="*{firstName}">Error</div>
 								</div>
 								<div class="col-md-6">
-									<label for="lastName" class="form-label">Last Name</label> <input
+									<label for="lastName" class="form-label">Last Name</label><input
 										type="text" class="form-control" th:field="*{lastName}"
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
@@ -273,10 +268,9 @@
 										th:errors="*{lastName}">Error</div>
 								</div>
 							</div>
-
 							<div class="row mb-3">
 								<div class="col-md-6">
-									<label for="username" class="form-label">Username</label> <input
+									<label for="username" class="form-label">Username</label><input
 										type="text" class="form-control" th:field="*{username}"
 										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
@@ -285,33 +279,31 @@
 								</div>
 								<div class="col-md-6">
 									<label for="phone" class="form-label">Phone Number
-										(Optional)</label> <input type="tel" class="form-control"
+										(Optional)</label><input type="tel" class="form-control"
 										th:field="*{phone}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Error</div>
 								</div>
 							</div>
-
 							<hr class="my-4">
-
 							<h5 class="mb-3">Address (Optional)</h5>
 							<div class="row g-2 mb-3">
 								<div class="col">
-									<label for="houseNo" class="form-label">House No.</label> <input
+									<label for="houseNo" class="form-label">House No.</label><input
 										type="text" class="form-control" placeholder="House No."
 										th:field="*{houseNo}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('houseNo')}" th:errors="*{houseNo}">Error</div>
 								</div>
 								<div class="col">
-									<label for="lotNo" class="form-label">Lot No.</label> <input
+									<label for="lotNo" class="form-label">Lot No.</label><input
 										type="text" class="form-control" placeholder="Lot No."
 										th:field="*{lotNo}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}">Error</div>
 								</div>
 								<div class="col">
-									<label for="blockNo" class="form-label">Block No.</label> <input
+									<label for="blockNo" class="form-label">Block No.</label><input
 										type="text" class="form-control" placeholder="Block No."
 										th:field="*{blockNo}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
@@ -319,7 +311,7 @@
 								</div>
 							</div>
 							<div class="mb-3">
-								<label for="street" class="form-label">Street</label> <input
+								<label for="street" class="form-label">Street</label><input
 									type="text" class="form-control"
 									placeholder="Street / Subdivision" th:field="*{street}"
 									th:errorclass="is-invalid">
@@ -328,7 +320,7 @@
 							</div>
 							<div class="row g-2 mb-3">
 								<div class="col">
-									<label for="barangay" class="form-label">Barangay</label> <input
+									<label for="barangay" class="form-label">Barangay</label><input
 										type="text" class="form-control" placeholder="Barangay"
 										th:field="*{barangay}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
@@ -336,17 +328,16 @@
 										th:errors="*{barangay}">Error</div>
 								</div>
 								<div class="col">
-									<label for="municipality" class="form-label">Municipality</label>
-									<input type="text" class="form-control"
-										placeholder="Municipality" th:field="*{municipality}"
-										th:errorclass="is-invalid">
+									<label for="municipality" class="form-label">Municipality</label><input
+										type="text" class="form-control" placeholder="Municipality"
+										th:field="*{municipality}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('municipality')}"
 										th:errors="*{municipality}">Error</div>
 								</div>
 							</div>
 							<div class="mb-3">
-								<label for="province" class="form-label">Province</label> <input
+								<label for="province" class="form-label">Province</label><input
 									type="text" class="form-control" placeholder="Province"
 									th:field="*{province}" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
@@ -383,18 +374,16 @@
 							<div th:if="${customerError}"
 								class="alert alert-danger alert-dismissible fade show small p-2"
 								role="alert">
-								<i class="fa-solid fa-triangle-exclamation me-1"></i> <span
+								<i class="fa-solid fa-triangle-exclamation me-1"></i><span
 									th:text="${customerError}"></span>
 								<button type="button" class="btn-close btn-sm p-2"
 									data-bs-dismiss="alert" aria-label="Close"></button>
 							</div>
-
 							<input type="hidden" th:field="*{id}" />
-
 							<h5 class="mb-3">Personal Information</h5>
 							<div class="mb-3">
 								<label for="editAdminFirstName" class="form-label">First
-									Name</label> <input type="text" class="form-control"
+									Name</label><input type="text" class="form-control"
 									th:field="*{firstName}" id="editAdminFirstName"
 									th:errorclass="is-invalid">
 								<div class="invalid-feedback"
@@ -403,26 +392,23 @@
 							</div>
 							<div class="mb-3">
 								<label for="editAdminLastName" class="form-label">Last
-									Name</label> <input type="text" class="form-control"
+									Name</label><input type="text" class="form-control"
 									th:field="*{lastName}" id="editAdminLastName"
 									th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('lastName')}"
 									th:errors="*{lastName}">Error</div>
 							</div>
-
 							<div class="mb-3">
-								<label for="editAdminUsername" class="form-label">Username</label>
-								<input type="text" class="form-control" th:field="*{username}"
+								<label for="editAdminUsername" class="form-label">Username</label><input
+									type="text" class="form-control" th:field="*{username}"
 									id="editAdminUsername" th:errorclass="is-invalid">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
 									th:errors="*{username}">Error</div>
 							</div>
-
 							<div class="alert alert-warning small">Password and Role
 								cannot be changed from this form.</div>
-
 						</div>
 						<div class="modal-footer">
 							<button type="button" class="btn btn-secondary"
@@ -434,6 +420,7 @@
 				</div>
 			</div>
 		</div>
+
 	</div>
 </body>
 </html>

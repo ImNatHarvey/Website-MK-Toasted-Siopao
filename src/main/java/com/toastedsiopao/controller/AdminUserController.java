@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.util.UriComponentsBuilder; // **** IMPORTED ****
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.List;
@@ -33,10 +33,9 @@ public class AdminUserController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	@GetMapping
+	@GetMapping // Unchanged GET mapping logic
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword) {
-		// ... (fetching users - unchanged) ...
 		List<User> customers;
 		if (StringUtils.hasText(keyword)) {
 			customers = userService.searchCustomers(keyword);
@@ -48,7 +47,6 @@ public class AdminUserController {
 		model.addAttribute("admins", userService.findAllAdmins());
 		model.addAttribute("currentUsername", principal.getName());
 
-		// Add DTOs if not present
 		if (!model.containsAttribute("adminUserDto")) {
 			model.addAttribute("adminUserDto", new AdminUserCreateDto());
 		}
@@ -65,49 +63,61 @@ public class AdminUserController {
 		return "admin/customers";
 	}
 
+	// Helper method to add common attributes for redirect-on-error scenarios
+	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
+		redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers()); // Assuming no search keyword
+																							// here
+		redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
+		// Add other common lists if needed by the main page or other modals
+	}
+
 	@PostMapping("/add-admin")
 	public String addAdminUser(@Valid @ModelAttribute("adminUserDto") AdminUserCreateDto userDto, BindingResult result,
-			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) { // **** ADDED
-																											// UriComponentsBuilder
-																											// ****
+			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
-		// ... (validation checks - unchanged) ...
-		if (userService.findByUsername(userDto.getUsername()) != null) {
-			result.rejectValue("username", "userDto.username", "Username already exists");
-		}
-		if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
-			result.rejectValue("confirmPassword", "userDto.confirmPassword", "Passwords do not match");
-		}
+		// --- Removed manual username/password checks ---
 
+		// Check only for DTO validation errors first
 		if (result.hasErrors()) {
-			// **** MODIFIED: Add URL parameter ****
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUserDto", result);
 			redirectAttributes.addFlashAttribute("adminUserDto", userDto);
-			// Pass necessary lists for main page
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers()); // Assuming no search
-																								// keyword here
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-
+			addCommonAttributesForRedirect(redirectAttributes); // Add common lists
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "manageAdminsModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		// ... (success/error handling - unchanged, but add redirect param on error) ...
 		try {
+			// Service method now handles username/password validation
 			User savedUser = userService.saveAdminUser(userDto, "ROLE_ADMIN");
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (ADMIN)",
-					/* ... */ "Created new admin user: " + savedUser.getUsername());
+					"Created new admin user: " + savedUser.getUsername());
 			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Admin user '" + savedUser.getUsername() + "' created successfully!");
-		} catch (Exception e) {
-			log.error("Error creating admin user: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "Error creating admin: " + e.getMessage());
+					"Admin user '" + savedUser.getUsername() + "' created successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error creating admin user: {}", e.getMessage());
+			// Add specific error back to BindingResult or use a generic flash attribute
+			if (e.getMessage().contains("Username already exists")) {
+				result.rejectValue("username", "userDto.username", e.getMessage());
+			} else if (e.getMessage().contains("Passwords do not match")) {
+				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
+			} else {
+				// Generic error for other validation issues from service
+				redirectAttributes.addFlashAttribute("customerError", "Error creating admin: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUserDto", result);
 			redirectAttributes.addFlashAttribute("adminUserDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes); // Add common lists
+			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "manageAdminsModal")
+					.build().toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (Exception e) { // Catch other unexpected errors
+			log.error("Unexpected error creating admin user: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("adminUserDto", userDto);
+			addCommonAttributesForRedirect(redirectAttributes); // Add common lists
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "manageAdminsModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
@@ -119,45 +129,52 @@ public class AdminUserController {
 	@PostMapping("/add-customer")
 	public String addCustomerUser(@Valid @ModelAttribute("customerUserDto") AdminUserCreateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) { // **** ADDED UriComponentsBuilder ****
+			UriComponentsBuilder uriBuilder) {
 
-		// ... (validation checks - unchanged) ...
-		if (userService.findByUsername(userDto.getUsername()) != null) {
-			result.rejectValue("username", "userDto.username", "Username already exists");
-		}
-		if (!userDto.getPassword().equals(userDto.getConfirmPassword())) {
-			result.rejectValue("confirmPassword", "userDto.confirmPassword", "Passwords do not match");
-		}
+		// --- Removed manual username/password checks ---
 
+		// Check only for DTO validation errors first
 		if (result.hasErrors()) {
-			// **** MODIFIED: Add URL parameter ****
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		// ... (success/error handling - unchanged, but add redirect param on error) ...
 		try {
-			User savedUser = userService.saveAdminUser(userDto, "ROLE_CUSTOMER");
+			// Service method now handles username/password validation
+			User savedUser = userService.saveAdminUser(userDto, "ROLE_CUSTOMER"); // Still use saveAdminUser, but pass
+																					// correct role
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (CUSTOMER)",
-					/* ... */ "Created new customer user: " + savedUser.getUsername());
+					"Created new customer user: " + savedUser.getUsername());
 			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Customer user '" + savedUser.getUsername() + "' created successfully!");
-		} catch (Exception e) {
-			log.error("Error creating customer user: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
+					"Customer user '" + savedUser.getUsername() + "' created successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error creating customer user: {}", e.getMessage());
+			if (e.getMessage().contains("Username already exists")) {
+				result.rejectValue("username", "userDto.username", e.getMessage());
+			} else if (e.getMessage().contains("Passwords do not match")) {
+				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
+					result);
 			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
+					.toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (Exception e) { // Catch other unexpected errors
+			log.error("Unexpected error creating customer user: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
@@ -169,56 +186,54 @@ public class AdminUserController {
 	@PostMapping("/update") // Update Customer
 	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") AdminCustomerUpdateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) { // **** ADDED UriComponentsBuilder ****
+			UriComponentsBuilder uriBuilder) {
 
+		// --- Removed manual username check ---
+
+		// Check DTO validation errors first
 		if (result.hasErrors()) {
-			// **** MODIFIED: Add URL parameter ****
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editCustomerModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		// ... (success/error handling - unchanged, but add redirect param on error) ...
 		try {
+			// Service method now handles username validation on update
 			User updatedUser = userService.updateCustomer(userDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (CUSTOMER)",
-					/* ... */ "Updated customer user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId()
-							+ ")");
+					"Updated customer user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Customer '" + updatedUser.getUsername() + "' updated successfully!");
-		} catch (IllegalArgumentException e) {
+					"Customer '" + updatedUser.getUsername() + "' updated successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
 			log.warn("Validation error updating customer: {}", e.getMessage());
-			result.rejectValue("username", "userDto.username", e.getMessage()); // Assuming username is the likely cause
+			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) { // Catch
+																												// specific
+																												// username
+																												// error
+				result.rejectValue("username", "userDto.username", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
+			}
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editCustomerModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
-		} catch (Exception e) {
+
+		} catch (Exception e) { // Catch other unexpected errors
 			log.error("Error updating customer: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editCustomerModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 		return "redirect:/admin/customers"; // Success redirect
@@ -227,101 +242,103 @@ public class AdminUserController {
 	@PostMapping("/admin/update") // Update Admin
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminAdminUpdateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) { // **** ADDED UriComponentsBuilder ****
+			UriComponentsBuilder uriBuilder) {
 
+		// --- Removed manual username check ---
+
+		// Check DTO validation errors first
 		if (result.hasErrors()) {
-			// **** MODIFIED: Add URL parameter ****
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editAdminModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		// ... (success/error handling - unchanged, but add redirect param on error) ...
 		try {
+			// Service method now handles username validation on update
 			User updatedUser = userService.updateAdmin(userDto);
-			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (ADMIN)", /* ... */ "Updated admin user: "
-					+ updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
+			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (ADMIN)",
+					"Updated admin user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Admin '" + updatedUser.getUsername() + "' updated successfully!");
-		} catch (IllegalArgumentException e) {
+					"Admin '" + updatedUser.getUsername() + "' updated successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
 			log.warn("Validation error updating admin: {}", e.getMessage());
-			result.rejectValue("username", "userDto.username", e.getMessage());
+			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) { // Catch
+																												// specific
+																												// username
+																												// error
+				result.rejectValue("username", "userDto.username", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("customerError", "Error updating admin: " + e.getMessage());
+			}
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editAdminModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
-		} catch (Exception e) {
+
+		} catch (Exception e) { // Catch other unexpected errors
 			log.error("Error updating admin: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "Error updating admin: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("adminUpdateDto", userDto);
-			// Pass necessary lists back
-			redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers());
-			redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
-			// **** MODIFIED: Redirect with parameter ****
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editAdminModal")
-					.queryParam("editId", userDto.getId()) // Optional
-					.build().toUriString();
+					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 		return "redirect:/admin/customers"; // Success redirect
 	}
 
-	// --- UNCHANGED Methods ---
+	// --- Delete methods remain unchanged ---
 	@PostMapping("/delete/{id}") // Deletes only customers
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... (logic unchanged) ...
 		Optional<User> userOpt = userService.findUserById(id);
-		if (userOpt.isEmpty() || !userOpt.get().getRole().equals("ROLE_CUSTOMER")) {
-			/* ... */ return "redirect:/admin/customers";
+		// Basic check if user exists and is a customer
+		if (userOpt.isEmpty() || !"ROLE_CUSTOMER".equals(userOpt.get().getRole())) {
+			redirectAttributes.addFlashAttribute("customerError", "Customer not found or invalid ID.");
+			return "redirect:/admin/customers";
 		}
 		String username = userOpt.get().getUsername();
 		try {
 			userService.deleteUserById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
-					/* ... */ "Deleted customer user: " + username + " (ID: " + id + ")");
+					"Deleted customer user: " + username + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Customer '" + username + "' deleted successfully!");
+					"Customer '" + username + "' deleted successfully!");
 		} catch (Exception e) {
-			/* ... */ redirectAttributes.addFlashAttribute("customerError",
-					"Error deleting customer: " + e.getMessage());
+			log.error("Error deleting customer ID {}: {}", id, e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("customerError", "Error deleting customer: " + e.getMessage());
 		}
 		return "redirect:/admin/customers";
 	}
 
 	@PostMapping("/admin/delete/{id}") // Separate path for deleting admins
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
-		// ... (logic unchanged) ...
 		Optional<User> userOpt = userService.findUserById(id);
-		if (userOpt.isEmpty() || !userOpt.get().getRole().equals("ROLE_ADMIN")) {
-			/* ... */ return "redirect:/admin/customers";
+		// Basic check if user exists and is an admin
+		if (userOpt.isEmpty() || !"ROLE_ADMIN".equals(userOpt.get().getRole())) {
+			redirectAttributes.addFlashAttribute("customerError", "Admin not found or invalid ID.");
+			return "redirect:/admin/customers";
 		}
 		String username = userOpt.get().getUsername();
+		// Prevent self-deletion
 		if (principal.getName().equals(username)) {
-			/* ... */ redirectAttributes.addFlashAttribute("customerError", "You cannot delete your own account.");
+			redirectAttributes.addFlashAttribute("customerError", "You cannot delete your own account.");
 			return "redirect:/admin/customers";
 		}
 		try {
 			userService.deleteUserById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (ADMIN)",
-					/* ... */ "Deleted admin user: " + username + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("customerSuccess",
-					/* ... */ "Admin '" + username + "' deleted successfully!");
+					"Deleted admin user: " + username + " (ID: " + id + ")");
+			redirectAttributes.addFlashAttribute("customerSuccess", "Admin '" + username + "' deleted successfully!");
 		} catch (Exception e) {
-			/* ... */ redirectAttributes.addFlashAttribute("customerError", "Error deleting admin: " + e.getMessage());
+			log.error("Error deleting admin ID {}: {}", id, e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("customerError", "Error deleting admin: " + e.getMessage());
 		}
 		return "redirect:/admin/customers";
 	}

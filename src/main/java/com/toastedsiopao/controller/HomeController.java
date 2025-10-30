@@ -1,5 +1,7 @@
 package com.toastedsiopao.controller;
 
+import org.slf4j.Logger; // Import Logger
+import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -10,79 +12,81 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.toastedsiopao.dto.UserDto;
-import com.toastedsiopao.model.User;
-import com.toastedsiopao.service.UserService; // Import UserService
+// Removed User model import as it's not directly used here anymore
+import com.toastedsiopao.service.UserService;
 
 import jakarta.validation.Valid;
 
 @Controller
 public class HomeController {
 
-	// --- Inject UserService ---
+	// --- Add Logger ---
+	private static final Logger log = LoggerFactory.getLogger(HomeController.class);
+	// --- End Logger ---
+
 	@Autowired
 	private UserService userService;
-	// --- End Injection ---
 
 	@GetMapping("/")
 	public String home() {
 		return "index";
 	}
 
-	// --- SIGNUP (GET Request) ---
 	@GetMapping("/signup")
 	public String showSignupForm(Model model) {
-		// Ensure the form always has a UserDto object to bind to
 		if (!model.containsAttribute("userDto")) {
 			model.addAttribute("userDto", new UserDto());
 		}
 		return "signup";
 	}
 
-	// --- SIGNUP (POST Request) ---
 	@PostMapping("/signup")
-	public String processSignup(@Valid @ModelAttribute("userDto") UserDto userDto, BindingResult result, // For
-																											// validation
-																											// results
-			RedirectAttributes redirectAttributes) { // For success/error messages after redirect
+	public String processSignup(@Valid @ModelAttribute("userDto") UserDto userDto, BindingResult result,
+			RedirectAttributes redirectAttributes) {
 
-		// 1. Check if username already exists
-		User existingUser = userService.findByUsername(userDto.getUsername());
-		if (existingUser != null) {
-			result.rejectValue("username", "userDto.username", "Username already exists"); // More specific error code
-		}
+		// --- Removed Manual Validations (Username Check, Password Match) ---
 
-		// 2. Check if passwords match (only if password field itself has no other
-		// errors)
-		if (!result.hasFieldErrors("password") && !result.hasFieldErrors("confirmPassword")
-				&& !userDto.getPassword().equals(userDto.getConfirmPassword())) {
-			result.rejectValue("confirmPassword", "userDto.confirmPassword", "Passwords do not match");
-		}
-
-		// 3. Check for standard validation errors (@NotBlank, @Size, etc.) + our custom
-		// checks
+		// 1. Check for standard validation errors (@NotBlank, @Size, @AssertTrue etc.
+		// from DTO)
 		if (result.hasErrors()) {
-			// Add the DTO and errors as Flash Attributes so they survive the redirect
+			log.warn("Signup form validation failed (DTO level). Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.userDto", result);
-			redirectAttributes.addFlashAttribute("userDto", userDto);
-			return "redirect:/signup"; // Redirect back to the GET mapping to show errors
-		}
-
-		// 4. If validation passes, save the new customer
-		try {
-			userService.saveCustomer(userDto);
-			// Add a success message (Flash Attribute) and redirect to login
-			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
-			return "redirect:/login";
-		} catch (Exception e) {
-			// Handle potential saving errors (e.g., database issues)
-			redirectAttributes.addFlashAttribute("errorMessage", "An unexpected error occurred during registration.");
-			// Pass DTO back in case of error
 			redirectAttributes.addFlashAttribute("userDto", userDto);
 			return "redirect:/signup";
 		}
-	}
-	// --- END SIGNUP ---
 
+		// 2. Try saving - Service layer now handles username/password logic
+		try {
+			userService.saveCustomer(userDto);
+			log.info("Signup successful for username: {}", userDto.getUsername());
+			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
+			return "redirect:/login";
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from the service
+			log.warn("Signup failed (Service level validation): {}", e.getMessage());
+			// Add specific error back to BindingResult or use generic message
+			if (e.getMessage().contains("Username already exists")) {
+				result.rejectValue("username", "userDto.username", e.getMessage());
+			} else if (e.getMessage().contains("Passwords do not match")) {
+				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
+			} else {
+				// Generic message for other service validation errors
+				redirectAttributes.addFlashAttribute("errorMessage", "Registration failed: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.userDto", result);
+			redirectAttributes.addFlashAttribute("userDto", userDto);
+			return "redirect:/signup";
+
+		} catch (Exception e) { // Catch unexpected errors during saving
+			log.error("Unexpected error during signup for username {}: {}", userDto.getUsername(), e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("errorMessage",
+					"An unexpected error occurred during registration. Please try again later.");
+			redirectAttributes.addFlashAttribute("userDto", userDto); // Send DTO back
+			return "redirect:/signup";
+		}
+	}
+
+	// --- Other mappings remain unchanged ---
 	@GetMapping("/login")
 	public String showLoginForm() {
 		return "login";

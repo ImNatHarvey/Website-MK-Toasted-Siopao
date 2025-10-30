@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils; // Import StringUtils
+import org.springframework.util.StringUtils;
 
 import com.toastedsiopao.dto.AdminAdminUpdateDto;
 import com.toastedsiopao.dto.AdminCustomerUpdateDto;
@@ -24,21 +24,45 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	// Centralized validation for username uniqueness
+	private void validateUsernameDoesNotExist(String username) {
+		if (userRepository.findByUsername(username).isPresent()) {
+			throw new IllegalArgumentException("Username already exists: " + username);
+		}
+	}
+
+	// Centralized validation for username uniqueness during update
+	private void validateUsernameOnUpdate(String username, Long userId) {
+		Optional<User> userWithSameUsername = userRepository.findByUsername(username);
+		if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(userId)) {
+			throw new IllegalArgumentException("Username '" + username + "' already exists.");
+		}
+	}
+
+	// Centralized password match validation
+	private void validatePasswordConfirmation(String password, String confirmPassword) {
+		if (!password.equals(confirmPassword)) {
+			throw new IllegalArgumentException("Passwords do not match");
+		}
+	}
+
 	@Override
 	@Transactional
 	public User saveCustomer(UserDto userDto) {
-		if (findByUsername(userDto.getUsername()) != null) {
-			throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
-		}
+		// --- Moved Validations Here ---
+		validateUsernameDoesNotExist(userDto.getUsername());
+		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
+		// --- End Moved Validations ---
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPhone(userDto.getPhone());
-		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole("ROLE_CUSTOMER");
+		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password here
+		newUser.setRole("ROLE_CUSTOMER"); // Set role explicitly
 
+		// Map address fields
 		newUser.setHouseNo(userDto.getHouseNo());
 		newUser.setLotNo(userDto.getLotNo());
 		newUser.setBlockNo(userDto.getBlockNo());
@@ -53,6 +77,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional(readOnly = true)
 	public User findByUsername(String username) {
+		// findByUsername now returns Optional<User>
 		return userRepository.findByUsername(username).orElse(null);
 	}
 
@@ -71,16 +96,17 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional
 	public User saveAdminUser(AdminUserCreateDto userDto, String role) {
-		if (findByUsername(userDto.getUsername()) != null) {
-			throw new IllegalArgumentException("Username already exists: " + userDto.getUsername());
-		}
+		// --- Moved Validations Here ---
+		validateUsernameDoesNotExist(userDto.getUsername());
+		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
+		// --- End Moved Validations ---
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
 		newUser.setUsername(userDto.getUsername());
-		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(role);
+		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password
+		newUser.setRole(role); // Use provided role
 
 		return userRepository.save(newUser);
 	}
@@ -91,15 +117,21 @@ public class UserServiceImpl implements UserService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		Optional<User> userWithSameUsername = userRepository.findByUsername(userDto.getUsername());
-		if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(userDto.getId())) {
-			throw new IllegalArgumentException("Username '" + userDto.getUsername() + "' already exists.");
+		// Ensure the user being updated is actually a customer
+		if (!"ROLE_CUSTOMER".equals(userToUpdate.getRole())) {
+			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
 
+		// --- Moved Validation Here ---
+		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		// --- End Moved Validation ---
+
+		// Map fields
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
-		userToUpdate.setPhone(userDto.getPhone());
+		userToUpdate.setPhone(userDto.getPhone()); // Assumes DTO validation handles format if present
+		// Map address fields
 		userToUpdate.setHouseNo(userDto.getHouseNo());
 		userToUpdate.setLotNo(userDto.getLotNo());
 		userToUpdate.setBlockNo(userDto.getBlockNo());
@@ -107,6 +139,7 @@ public class UserServiceImpl implements UserService {
 		userToUpdate.setBarangay(userDto.getBarangay());
 		userToUpdate.setMunicipality(userDto.getMunicipality());
 		userToUpdate.setProvince(userDto.getProvince());
+		// Password is NOT updated here
 
 		return userRepository.save(userToUpdate);
 	}
@@ -120,6 +153,7 @@ public class UserServiceImpl implements UserService {
 	@Override
 	@Transactional
 	public void deleteUserById(Long id) {
+		// Consider adding checks here later, e.g., prevent deleting the last admin
 		userRepository.deleteById(id);
 	}
 
@@ -129,25 +163,29 @@ public class UserServiceImpl implements UserService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		Optional<User> userWithSameUsername = userRepository.findByUsername(userDto.getUsername());
-		if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(userDto.getId())) {
-			throw new IllegalArgumentException("Username '" + userDto.getUsername() + "' already exists.");
+		// Ensure the user being updated is actually an admin
+		if (!"ROLE_ADMIN".equals(userToUpdate.getRole())) {
+			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
 		}
 
+		// --- Moved Validation Here ---
+		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		// --- End Moved Validation ---
+
+		// Map fields
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
+		// Password and Role are NOT updated here
 
 		return userRepository.save(userToUpdate);
 	}
 
-	// --- NEW: Implementation for searching customers ---
 	@Override
 	@Transactional(readOnly = true)
 	public List<User> searchCustomers(String keyword) {
-		// Use StringUtils to safely handle null or empty/whitespace keywords
 		if (!StringUtils.hasText(keyword)) {
-			return findAllCustomers(); // If no keyword, return all
+			return findAllCustomers();
 		}
 		return userRepository.findByRoleAndSearchKeyword(keyword.trim());
 	}

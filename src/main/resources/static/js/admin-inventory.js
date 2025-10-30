@@ -5,7 +5,11 @@
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-inventory.js loaded"); // Confirm script is running
 
-	const mainElement = document.querySelector('main'); // Needed for checking flags
+	// **** FIX IS HERE ****
+	// Select the specific <main> tag from inventory.html, not the base.html one
+	const mainElement = document.querySelector('main.container');
+	// **** END OF FIX ****
+
 	if (!mainElement) {
 		console.error("Main element not found in admin-inventory.js!");
 		return;

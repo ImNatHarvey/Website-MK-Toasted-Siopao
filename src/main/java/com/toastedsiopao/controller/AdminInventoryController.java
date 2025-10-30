@@ -34,7 +34,8 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin/inventory")
 public class AdminInventoryController {
 
-	// ... (Logger, Autowired fields, Helper method, GetMapping unchanged) ...
+	// ... (Logger, Autowired fields, addCommonAttributesForRedirect, GetMapping,
+	// saveInventoryItem, etc. are unchanged) ...
 	private static final Logger log = LoggerFactory.getLogger(AdminInventoryController.class);
 
 	@Autowired
@@ -79,7 +80,7 @@ public class AdminInventoryController {
 		return "admin/inventory";
 	}
 
-	@PostMapping("/save") // (Unchanged from Batch 4)
+	@PostMapping("/save")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -122,7 +123,7 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	@PostMapping("/categories/add") // (Updated from Batch 4)
+	@PostMapping("/categories/add")
 	public String addInventoryCategory(@Valid @ModelAttribute("inventoryCategoryDto") InventoryCategoryDto categoryDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -139,7 +140,6 @@ public class AdminInventoryController {
 			InventoryCategory newCategory = inventoryCategoryService.saveFromDto(categoryDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_INVENTORY_CATEGORY",
 					"Added new inventory category: " + newCategory.getName());
-			// **** MODIFIED: Use categorySuccess ****
 			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Inventory Category '" + newCategory.getName() + "' added successfully!");
 		} catch (IllegalArgumentException e) {
@@ -158,7 +158,6 @@ public class AdminInventoryController {
 			return "redirect:" + redirectUrl;
 		} catch (RuntimeException e) {
 			log.error("Error adding inventory category: {}", e.getMessage(), e);
-			// **** MODIFIED: Use categoryError ****
 			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -169,7 +168,7 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	@PostMapping("/units/add") // (Updated from Batch 4)
+	@PostMapping("/units/add")
 	public String addUnitOfMeasure(@Valid @ModelAttribute("unitOfMeasureDto") UnitOfMeasureDto unitDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -186,7 +185,6 @@ public class AdminInventoryController {
 			UnitOfMeasure newUnit = unitOfMeasureService.saveFromDto(unitDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_UNIT_OF_MEASURE",
 					"Added new unit: " + newUnit.getName() + " (" + newUnit.getAbbreviation() + ")");
-			// **** MODIFIED: Use unitSuccess ****
 			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + newUnit.getName() + "' added successfully!");
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding unit: {}", e.getMessage());
@@ -200,7 +198,6 @@ public class AdminInventoryController {
 			return "redirect:" + redirectUrl;
 		} catch (RuntimeException e) {
 			log.error("Error adding unit of measure: {}", e.getMessage(), e);
-			// **** MODIFIED: Use unitError ****
 			redirectAttributes.addFlashAttribute("unitError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -211,28 +208,35 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	@PostMapping("/stock/adjust") // (Unchanged from Batch 4)
+	// **** METHOD UPDATED ****
+	@PostMapping("/stock/adjust")
 	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
-			@RequestParam("quantityChange") BigDecimal quantityChange,
+			@RequestParam("quantity") BigDecimal quantity, // Changed from quantityChange
+			@RequestParam("action") String action, // Added action parameter
 			@RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes,
 			Principal principal, UriComponentsBuilder uriBuilder) {
 
-		String finalReason = StringUtils.hasText(reason) ? reason
-				: (quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Manual Stock Increase"
-						: "Manual Stock Decrease/Wastage");
-		if (quantityChange.compareTo(BigDecimal.ZERO) == 0) {
-			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
+		// Validate that quantity is positive
+		if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
+			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
+
+		// Determine the final quantity change (positive or negative)
+		BigDecimal quantityChange = action.equals("deduct") ? quantity.negate() : quantity;
+
+		String finalReason = StringUtils.hasText(reason) ? reason
+				: (action.equals("add") ? "Manual Stock Increase" : "Manual Stock Decrease/Wastage");
+
 		try {
 			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason);
-			String action = quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Increased" : "Decreased";
-			String details = action + " stock for " + updatedItem.getName() + " (ID: " + itemId + ") by "
-					+ quantityChange.abs() + ". Reason: " + finalReason;
-			redirectAttributes.addFlashAttribute("stockSuccess", action + " stock for '" + updatedItem.getName()
-					+ "' by " + quantityChange.abs() + ". New stock: " + updatedItem.getCurrentStock());
+			String actionText = action.equals("add") ? "Increased" : "Decreased";
+			String details = actionText + " stock for " + updatedItem.getName() + " (ID: " + itemId + ") by "
+					+ quantity.abs() + ". Reason: " + finalReason;
+			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
+					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 		} catch (RuntimeException e) {
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
@@ -243,8 +247,9 @@ public class AdminInventoryController {
 		}
 		return "redirect:/admin/inventory";
 	}
+	// **** END OF UPDATED METHOD ****
 
-	@PostMapping("/delete/{id}") // (Unchanged from Batch 4)
+	@PostMapping("/delete/{id}")
 	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
@@ -275,14 +280,12 @@ public class AdminInventoryController {
 			Principal principal) {
 		Optional<InventoryCategory> categoryOpt = inventoryCategoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
-			// **** MODIFIED: Use categoryError ****
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
 			return "redirect:/admin/inventory";
 		}
 		InventoryCategory category = categoryOpt.get();
 		List<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id);
 		if (!itemsInCategory.isEmpty()) {
-			// **** MODIFIED: Use categoryError ****
 			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete category '" + category.getName()
 					+ "'. It is associated with " + itemsInCategory.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
@@ -292,12 +295,10 @@ public class AdminInventoryController {
 			inventoryCategoryService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",
 					"Deleted inventory category: " + categoryName + " (ID: " + id + ")");
-			// **** MODIFIED: Use categorySuccess ****
 			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Category '" + categoryName + "' deleted successfully!");
 		} catch (Exception e) {
 			log.error("Error deleting inventory category ID {}: {}", id, e.getMessage(), e);
-			// **** MODIFIED: Use categoryError ****
 			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";
@@ -308,7 +309,6 @@ public class AdminInventoryController {
 			Principal principal) {
 		Optional<UnitOfMeasure> unitOpt = unitOfMeasureService.findById(id);
 		if (unitOpt.isEmpty()) {
-			// **** MODIFIED: Use unitError ****
 			redirectAttributes.addFlashAttribute("unitError", "Unit not found.");
 			return "redirect:/admin/inventory";
 		}
@@ -317,7 +317,6 @@ public class AdminInventoryController {
 				.filter(item -> item.getUnit() != null && item.getUnit().getId().equals(id))
 				.collect(Collectors.toList());
 		if (!itemsUsingUnit.isEmpty()) {
-			// **** MODIFIED: Use unitError ****
 			redirectAttributes.addFlashAttribute("unitError", "Cannot delete unit '" + unit.getName()
 					+ "'. It is associated with " + itemsUsingUnit.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
@@ -327,11 +326,9 @@ public class AdminInventoryController {
 			unitOfMeasureService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_UNIT_OF_MEASURE",
 					"Deleted unit: " + unitName + " (ID: " + id + ")");
-			// **** MODIFIED: Use unitSuccess ****
 			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + unitName + "' deleted successfully!");
 		} catch (Exception e) {
 			log.error("Error deleting unit ID {}: {}", id, e.getMessage(), e);
-			// **** MODIFIED: Use unitError ****
 			redirectAttributes.addFlashAttribute("unitError", "Error deleting unit: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";

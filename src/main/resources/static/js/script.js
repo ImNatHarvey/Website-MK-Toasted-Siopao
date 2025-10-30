@@ -116,8 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		setTimeout(checkBootstrapAndShow, 50); // Keep initial delay short
 
 	} else {
+		// This block is now correctly empty.
+		// The old, buggy version had a "setTimeout(forceRemoveAllModalState, 150);" here.
 		console.log("No 'showModal' URL parameter found.");
-		// General cleanup on normal page load, delayed
-		setTimeout(forceRemoveAllModalState, 150);
 	}
 });

@@ -99,9 +99,39 @@
 							<div id="addIngredientsContainer">
 								<div th:each="ing, iterStat : *{ingredients}"
 									class="row ingredient-row mb-2 gx-2 align-items-center">
+									<div class="col-md-7">
+										<select class="form-select form-select-sm ingredient-item"
+											th:field="*{ingredients[__${iterStat.index}__].inventoryItemId}"
+											th:errorclass="is-invalid" required>
+											<option value="">-- Select Ingredient --</option>
+											<option th:each="item : ${inventoryItems}"
+												th:value="${item.id}"
+												th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">
+												Item Name (unit)</option>
+										</select>
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].inventoryItemId')}"
+											th:errors="*{ingredients[__${iterStat.index}__].inventoryItemId}"></div>
+									</div>
+									<div class="col-md-3">
+										<input type="number" step="0.01" min="0.01"
+											class="form-control form-control-sm ingredient-quantity"
+											th:field="*{ingredients[__${iterStat.index}__].quantityNeeded}"
+											placeholder="Qty Needed" th:errorclass="is-invalid" required>
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].quantityNeeded')}"
+											th:errors="*{ingredients[__${iterStat.index}__].quantityNeeded}"></div>
+									</div>
+									<div class="col-md-2">
+										<button type="button"
+											class="btn btn-sm btn-action-delete w-100 remove-ingredient-btn">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
 								</div>
+
 								<div
-									th:if="${#fields.hasErrors('ingredients') && !#fields.hasErrors('ingredients*')}"
+									th:if="${#fields.hasErrors('*{ingredients}') && !#fields.hasErrors('*{ingredients*}')}"
 									class="alert alert-danger small p-2 mt-2"
 									th:errors="*{ingredients}">Ingredient list error.</div>
 							</div>
@@ -172,6 +202,7 @@
 			</div>
 		</div>
 
+
 		<div class="modal fade" id="editProductModal" tabindex="-1"
 			aria-labelledby="editProductModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
@@ -186,7 +217,6 @@
 						</div>
 						<div class="modal-body">
 							<input type="hidden" th:field="*{id}" />
-
 							<div class="mb-3">
 								<label for="editProductNameModal" class="form-label">Product
 									Name</label> <input type="text" class="form-control" th:field="*{name}"
@@ -273,9 +303,39 @@
 							<div id="editIngredientsContainerModal">
 								<div th:each="ing, iterStat : *{ingredients}"
 									class="row ingredient-row mb-2 gx-2 align-items-center">
+									<div class="col-md-7">
+										<select class="form-select form-select-sm ingredient-item"
+											th:field="*{ingredients[__${iterStat.index}__].inventoryItemId}"
+											th:errorclass="is-invalid" required>
+											<option value="">-- Select Ingredient --</option>
+											<option th:each="item : ${inventoryItems}"
+												th:value="${item.id}"
+												th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">
+												Item Name (unit)</option>
+										</select>
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].inventoryItemId')}"
+											th:errors="*{ingredients[__${iterStat.index}__].inventoryItemId}"></div>
+									</div>
+									<div class="col-md-3">
+										<input type="number" step="0.01" min="0.01"
+											class="form-control form-control-sm ingredient-quantity"
+											th:field="*{ingredients[__${iterStat.index}__].quantityNeeded}"
+											placeholder="Qty Needed" th:errorclass="is-invalid" required>
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].quantityNeeded')}"
+											th:errors="*{ingredients[__${iterStat.index}__].quantityNeeded}"></div>
+									</div>
+									<div class="col-md-2">
+										<button type="button"
+											class="btn btn-sm btn-action-delete w-100 remove-ingredient-btn">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
 								</div>
+
 								<div
-									th:if="${#fields.hasErrors('ingredients') && !#fields.hasErrors('ingredients*')}"
+									th:if="${#fields.hasErrors('*{ingredients}') && !#fields.hasErrors('*{ingredients*}')}"
 									class="alert alert-danger small p-2 mt-2"
 									th:errors="*{ingredients}">Ingredient list error.</div>
 							</div>
@@ -441,8 +501,63 @@
 			</div>
 		</div>
 
-		<template id="ingredientRowTemplate"></template>
-		<template id="ingredientRowTemplateEditModal"></template>
+		<template id="ingredientRowTemplate">
+			<div class="row ingredient-row mb-2 gx-2 align-items-center">
+				<div class="col-md-7">
+					<label class="form-label visually-hidden">Ingredient</label> <select
+						class="form-select form-select-sm ingredient-item"
+						name="ingredients[INDEX].inventoryItemId" required>
+						<option value="">-- Select Ingredient --</option>
+						<option th:each="item : ${inventoryItems}" th:value="${item.id}"
+							th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">
+							Item Name (unit)</option>
+					</select>
+				</div>
+				<div class="col-md-3">
+					<label class="form-label visually-hidden">Quantity</label> <input
+						type="number" step="0.01" min="0.01"
+						class="form-control form-control-sm ingredient-quantity"
+						name="ingredients[INDEX].quantityNeeded" placeholder="Qty Needed"
+						required>
+				</div>
+				<div class="col-md-2">
+					<button type="button"
+						class="btn btn-sm btn-action-delete w-100 remove-ingredient-btn"
+						title="Remove Ingredient">
+						<i class="fa-solid fa-trash"></i>
+					</button>
+				</div>
+			</div>
+		</template>
+
+		<template id="ingredientRowTemplateEditModal">
+			<div class="row ingredient-row mb-2 gx-2 align-items-center">
+				<div class="col-md-7">
+					<label class="form-label visually-hidden">Ingredient</label> <select
+						class="form-select form-select-sm ingredient-item"
+						name="ingredients[INDEX].inventoryItemId" required>
+						<option value="">-- Select Ingredient --</option>
+						<option th:each="item : ${inventoryItems}" th:value="${item.id}"
+							th:text="${item.name + ' (' + item.unit.abbreviation + ')'}">
+							Item Name (unit)</option>
+					</select>
+				</div>
+				<div class="col-md-3">
+					<label class="form-label visually-hidden">Quantity</label> <input
+						type="number" step="0.01" min="0.01"
+						class="form-control form-control-sm ingredient-quantity"
+						name="ingredients[INDEX].quantityNeeded" placeholder="Qty Needed"
+						required>
+				</div>
+				<div class="col-md-2">
+					<button type="button"
+						class="btn btn-sm btn-action-delete w-100 remove-ingredient-btn"
+						title="Remove Ingredient">
+						<i class="fa-solid fa-trash"></i>
+					</button>
+				</div>
+			</div>
+		</template>
 
 	</div>
 </body>

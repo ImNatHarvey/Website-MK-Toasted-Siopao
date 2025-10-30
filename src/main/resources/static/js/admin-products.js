@@ -5,9 +5,14 @@
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-products.js loaded"); // Confirm script is running
 
-	const mainElement = document.querySelector('main'); // Needed for inventory map
+	// **** FIX IS HERE ****
+	// We select the specific main element that has our data attribute,
+	// not just the first <main> tag on the page.
+	const mainElement = document.querySelector('main[data-inventory-stock-map]');
+	// **** END OF FIX ****
+
 	if (!mainElement) {
-		console.error("Main element not found in admin-products.js!");
+		console.error("Main element with data-inventory-stock-map not found in admin-products.js!");
 		return;
 	}
 

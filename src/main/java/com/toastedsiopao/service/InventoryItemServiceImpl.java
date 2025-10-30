@@ -3,14 +3,14 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
-import com.toastedsiopao.model.RecipeIngredient; // NEW
+import com.toastedsiopao.model.RecipeIngredient;
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.repository.InventoryCategoryRepository;
 import com.toastedsiopao.repository.InventoryItemRepository;
-import com.toastedsiopao.repository.RecipeIngredientRepository; // NEW
+import com.toastedsiopao.repository.RecipeIngredientRepository;
 import com.toastedsiopao.repository.UnitOfMeasureRepository;
-import org.slf4j.Logger; // NEW
-import org.slf4j.LoggerFactory; // NEW
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,12 +19,12 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class InventoryItemServiceImpl implements InventoryItemService {
 
-	// --- NEW ---
 	private static final Logger log = LoggerFactory.getLogger(InventoryItemServiceImpl.class);
 
 	@Autowired
@@ -33,15 +33,32 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	private InventoryCategoryRepository categoryRepository;
 	@Autowired
 	private UnitOfMeasureRepository unitRepository;
-
-	// --- NEWLY INJECTED ---
 	@Autowired
 	private RecipeIngredientRepository recipeIngredientRepository;
+
+	// --- Centralized Validation Methods ---
+	private void validateThresholds(BigDecimal lowThreshold, BigDecimal criticalThreshold) {
+		if (criticalThreshold != null && lowThreshold != null && criticalThreshold.compareTo(lowThreshold) > 0) {
+			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
+		}
+	}
+
+	private void validateNameUniqueness(String name, Long currentItemId) {
+		Optional<InventoryItem> existingItemOpt = itemRepository.findByNameIgnoreCase(name.trim());
+		if (existingItemOpt.isPresent()) {
+			InventoryItem existingItem = existingItemOpt.get();
+			// Allow saving if it's the same item being updated, otherwise throw error
+			if (currentItemId == null || !existingItem.getId().equals(currentItemId)) {
+				throw new IllegalArgumentException("Inventory item name '" + name.trim() + "' already exists.");
+			}
+		}
+	}
+	// --- End Validation Methods ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findAll() {
-		return itemRepository.findAll(); // Consider sorting
+		return itemRepository.findAll();
 	}
 
 	@Override
@@ -58,50 +75,74 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem save(InventoryItemDto itemDto) {
-		// 1. Fetch related entities
+		// --- Input Validation ---
+		if (itemDto == null) {
+			throw new IllegalArgumentException("Inventory item data cannot be null.");
+		}
+		if (!StringUtils.hasText(itemDto.getName())) {
+			throw new IllegalArgumentException("Item name cannot be blank."); // Should be caught by @NotBlank but good
+																				// practice
+		}
+		if (itemDto.getCategoryId() == null) {
+			throw new IllegalArgumentException("Category must be selected.");
+		}
+		if (itemDto.getUnitId() == null) {
+			throw new IllegalArgumentException("Unit must be selected.");
+		}
+		// Basic null checks for numbers (should be caught by @NotNull, but defense)
+		if (itemDto.getCurrentStock() == null)
+			itemDto.setCurrentStock(BigDecimal.ZERO);
+		if (itemDto.getLowStockThreshold() == null)
+			itemDto.setLowStockThreshold(BigDecimal.ZERO);
+		if (itemDto.getCriticalStockThreshold() == null)
+			itemDto.setCriticalStockThreshold(BigDecimal.ZERO);
+		// --- End Input Validation ---
+
+		// --- Moved Validations Here ---
+		validateThresholds(itemDto.getLowStockThreshold(), itemDto.getCriticalStockThreshold());
+		validateNameUniqueness(itemDto.getName(), itemDto.getId());
+		// --- End Moved Validations ---
+
+		// 1. Fetch related entities (Throw exception if not found)
 		InventoryCategory category = categoryRepository.findById(itemDto.getCategoryId()).orElseThrow(
 				() -> new RuntimeException("Inventory Category not found with id: " + itemDto.getCategoryId()));
 		UnitOfMeasure unit = unitRepository.findById(itemDto.getUnitId())
 				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId()));
 
-		// 2. Check for duplicate name (only if creating new or changing name)
-		Optional<InventoryItem> existingItemOpt = itemRepository.findByNameIgnoreCase(itemDto.getName().trim());
-		if (existingItemOpt.isPresent()) {
-			InventoryItem existingItem = existingItemOpt.get();
-			// Allow saving if it's the same item being updated, otherwise throw error
-			if (itemDto.getId() == null || !existingItem.getId().equals(itemDto.getId())) {
-				throw new IllegalArgumentException(
-						"Inventory item name '" + itemDto.getName().trim() + "' already exists.");
-			}
-		}
-
-		// 3. Ensure critical threshold <= low threshold
-		if (itemDto.getCriticalStockThreshold().compareTo(itemDto.getLowStockThreshold()) > 0) {
-			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
-		}
-
-		// 4. Create or Update Entity
+		// 2. Create or Update Entity
 		InventoryItem item;
-		if (itemDto.getId() != null) {
+		boolean isNew = itemDto.getId() == null;
+		if (!isNew) {
 			item = itemRepository.findById(itemDto.getId())
 					.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemDto.getId()));
 		} else {
 			item = new InventoryItem();
 		}
 
-		// 5. Map DTO to Entity
-		item.setName(itemDto.getName().trim());
+		// 3. Map DTO to Entity
+		item.setName(itemDto.getName().trim()); // Trim name
 		item.setCategory(category);
 		item.setUnit(unit);
-		item.setCurrentStock(itemDto.getCurrentStock());
-		item.setLowStockThreshold(itemDto.getLowStockThreshold());
-		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
-		item.setCostPerUnit(itemDto.getCostPerUnit());
+		// Ensure non-null BigDecimal values before setting
+		item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
+		item.setLowStockThreshold(Optional.ofNullable(itemDto.getLowStockThreshold()).orElse(BigDecimal.ZERO));
+		item.setCriticalStockThreshold(
+				Optional.ofNullable(itemDto.getCriticalStockThreshold()).orElse(BigDecimal.ZERO));
+		item.setCostPerUnit(itemDto.getCostPerUnit()); // Allow null cost
 
-		return itemRepository.save(item);
+		// Save the item
+		try {
+			InventoryItem savedItem = itemRepository.save(item);
+			log.info("{} inventory item: ID={}, Name='{}'", isNew ? "Created" : "Updated", savedItem.getId(),
+					savedItem.getName());
+			return savedItem;
+		} catch (Exception e) {
+			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
+			// Re-throw a more specific or wrapped exception if needed
+			throw new RuntimeException("Could not save inventory item due to a database error.", e);
+		}
 	}
 
-	// --- MODIFIED: deleteById method ---
 	@Override
 	public void deleteById(Long id) {
 		InventoryItem item = itemRepository.findById(id)
@@ -110,16 +151,31 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		// Check if this item is used in any recipes
 		List<RecipeIngredient> recipes = recipeIngredientRepository.findByInventoryItem(item);
 		if (!recipes.isEmpty()) {
-			throw new RuntimeException("Cannot delete item. It is used in " + recipes.size() + " product recipe(s).");
+			// Provide more context in the error
+			String productNames = recipes.stream()
+					.map(r -> r.getProduct() != null ? r.getProduct().getName() : "Unknown Product").distinct().limit(3) // Limit
+																															// the
+																															// number
+																															// of
+																															// product
+																															// names
+																															// listed
+					.collect(Collectors.joining(", "));
+			if (recipes.size() > 3)
+				productNames += ", ...";
+
+			throw new RuntimeException(
+					"Cannot delete item '" + item.getName() + "'. It is used in product recipe(s): " + productNames);
 		}
 
 		itemRepository.deleteById(id);
+		log.info("Deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
-	// --- END MODIFIED ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> searchItems(String keyword, Long categoryId) {
+		// Logic unchanged
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
@@ -138,7 +194,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 	}
 
-	// --- Stock Report Methods ---
+	// --- Stock Report Methods (Unchanged) ---
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findLowStockItems() {
@@ -157,9 +213,9 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.findOutOfStockItems();
 	}
 
-	// --- NEW: Implemented adjustStock method ---
 	@Override
 	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
+		// Logic unchanged
 		InventoryItem item = itemRepository.findById(itemId)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
 
@@ -172,10 +228,9 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setCurrentStock(newStock);
 		InventoryItem savedItem = itemRepository.save(item);
 
-		log.info("Stock adjusted for Inventory ID {}: Change={}, New Stock={}, Reason={}", itemId, quantityChange,
-				newStock, reason);
+		log.info("Stock adjusted for Inventory ID {}: Change={}, New Stock={}, Reason='{}'", itemId, quantityChange,
+				newStock, StringUtils.hasText(reason) ? reason : "No reason provided");
 
 		return savedItem;
 	}
-	// --- END NEW ---
 }

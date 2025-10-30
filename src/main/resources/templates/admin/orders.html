@@ -19,35 +19,37 @@
 						placeholder="Enter search term...">
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-info me-2">
+					<button type="submit" class="btn btn-action-view me-2">
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
-					<a th:href="@{/admin/orders}" class="btn btn-outline-secondary"
+					<a th:href="@{/admin/orders}" class="btn btn-custom-secondary"
 						title="Clear Search & Filters"> <i class="fa-solid fa-times"></i>
 					</a>
 				</div>
 				<input type="hidden" name="status" th:value="${currentStatus}" />
 			</div>
 		</form>
+
 		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
 			<a th:href="@{/admin/orders(keyword=${keyword})}"
 				class="btn btn-outline-primary"
 				th:classappend="${currentStatus == null ? 'active' : ''}">All
 				Orders</a> <a
 				th:href="@{/admin/orders(status='PENDING', keyword=${keyword})}"
-				class="btn btn-outline-warning text-dark"
+				class="btn btn-outline-primary"
 				th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending</a>
 			<a
 				th:href="@{/admin/orders(status='PROCESSING', keyword=${keyword})}"
-				class="btn btn-outline-info"
+				class="btn btn-outline-primary"
 				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
 			<a th:href="@{/admin/orders(status='DELIVERED', keyword=${keyword})}"
-				class="btn btn-outline-success"
+				class="btn btn-outline-primary"
 				th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
 			<a th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}"
-				class="btn btn-outline-danger"
+				class="btn btn-outline-primary"
 				th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
 		</div>
+
 		<div class="card">
 			<div class="card-header">
 				<h5 class="mb-0">Orders List</h5>
@@ -79,14 +81,11 @@
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</td>
 								<td
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
-								<td><span class="badge"
-									th:classappend="${#strings.equals(order.status,'PENDING') ? 'bg-warning text-dark' :
-										                 #strings.equals(order.status,'PROCESSING') ? 'bg-info' :
-										                 #strings.equals(order.status,'DELIVERED') ? 'bg-success' :
-										                 #strings.equals(order.status,'CANCELLED') ? 'bg-danger' : 'bg-secondary'}"
-									th:text="${order.status}">Status</span></td>
+								<td><span class="status-badge" th:text="${order.status}"
+									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
+										Status </span></td>
 								<td>
-									<button class="btn btn-sm btn-outline-primary">View</button>
+									<button class="btn btn-sm btn-action-view">View</button>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(orders)}">

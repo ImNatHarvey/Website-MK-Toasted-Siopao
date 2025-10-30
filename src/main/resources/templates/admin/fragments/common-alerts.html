@@ -71,22 +71,21 @@
 	</div>
 
 	<div th:fragment="unitAlerts">
-		<div th:if="${inventorySuccess}"
+		<div th:if="${unitSuccess}"
 			class="alert alert-success alert-dismissible fade show" role="alert">
 			<i class="fa-solid fa-check-circle me-2"></i> <span
-				th:text="${inventorySuccess}"></span>
+				th:text="${unitSuccess}"></span>
 			<button type="button" class="btn-close" data-bs-dismiss="alert"
 				aria-label="Close"></button>
 		</div>
-		<div th:if="${inventoryError}"
+		<div th:if="${unitError}"
 			class="alert alert-danger alert-dismissible fade show" role="alert">
 			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
-				th:text="${inventoryError}"></span>
+				th:text="${unitError}"></span>
 			<button type="button" class="btn-close" data-bs-dismiss="alert"
 				aria-label="Close"></button>
 		</div>
 	</div>
-
 	<div th:fragment="userAlerts">
 		<div th:if="${customerSuccess}"
 			class="alert alert-success alert-dismissible fade show" role="alert">

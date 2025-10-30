@@ -7,13 +7,10 @@
 <body>
 	<main>
 		<div class="container my-5 pt-3">
-			<!-- Adjust padding if needed -->
 			<div class="d-flex justify-content-between align-items-center mb-4">
 				<h1 class="fw-bold section-title">Site Management</h1>
-				<!-- Link to Activity Log -->
-				<a th:href="@{/admin/activity-log}"
-					class="btn btn-outline-secondary"> <i
-					class="fa-solid fa-clipboard-list me-1"></i> View Activity Log
+				<a th:href="@{/admin/activity-log}" class="btn btn-custom-outline">
+					<i class="fa-solid fa-clipboard-list me-1"></i> View Activity Log
 				</a>
 			</div>
 
@@ -21,14 +18,14 @@
 			<div class="row justify-content-center">
 				<div class="col-lg-10">
 
-					<!-- Announcement Management -->
 					<section class="mb-5">
 						<h2>Announcement Management</h2>
 						<div class="card p-4 shadow-sm">
 							<div
 								class="d-flex justify-content-between align-items-center mb-3">
 								<h3>Announcements</h3>
-								<button class="btn btn-primary">Create New Announcement</button>
+								<button class="btn btn-action-add">Create New
+									Announcement</button>
 							</div>
 							<div id="announcement-list" class="border rounded p-3 bg-light">
 								<p class="text-muted">No announcements yet.</p>
@@ -36,7 +33,6 @@
 						</div>
 					</section>
 
-					<!-- Homepage Content -->
 					<section class="mb-5">
 						<h2>Homepage Content</h2>
 						<div class="card p-4 shadow-sm">
@@ -45,16 +41,14 @@
 									type="text" id="hero-title" class="form-control"
 									value="MK Toasted Siopao">
 							</div>
-							<!-- ... other homepage fields ... -->
 							<div class="mb-3">
 								<label for="promo-text" class="form-label">Promo Text</label>
 								<textarea id="promo-text" class="form-control">Get 2 Toasted Siopao + 1 Drink for only ₱99</textarea>
 							</div>
-							<button class="btn btn-success">Save Changes</button>
+							<button class="btn btn-action-success">Save Changes</button>
 						</div>
 					</section>
 
-					<!-- Business Information -->
 					<section class="mb-5">
 						<h2>Business Information</h2>
 						<div class="card p-4 shadow-sm">
@@ -63,18 +57,16 @@
 									Name</label> <input type="text" id="business-name" class="form-control"
 									value="MK Toasted Siopao">
 							</div>
-							<!-- ... other business info fields ... -->
 							<div class="mb-3">
 								<label for="business-hours" class="form-label">Business
 									Hours</label>
 								<textarea id="business-hours" class="form-control">Monday to Saturday: 9:00 AM - 9:00 PM
 Sunday: 10:00 AM - 7:00 PM</textarea>
 							</div>
-							<button class="btn btn-success">Save Changes</button>
+							<button class="btn btn-action-success">Save Changes</button>
 						</div>
 					</section>
 
-					<!-- Social Media Links -->
 					<section class="mb-5">
 						<h2>Social Media Links</h2>
 						<div class="card p-4 shadow-sm">
@@ -83,12 +75,10 @@ Sunday: 10:00 AM - 7:00 PM</textarea>
 									type="url" id="facebook-url" class="form-control"
 									value="https://facebook.com/mktoastedsiopao">
 							</div>
-							<!-- ... other social media fields ... -->
-							<button class="btn btn-success">Save Changes</button>
+							<button class="btn btn-action-success">Save Changes</button>
 						</div>
 					</section>
 
-					<!-- Site Maintenance -->
 					<section class="mb-5">
 						<h2>Site Maintenance</h2>
 						<div class="card p-4 shadow-sm">
@@ -97,8 +87,7 @@ Sunday: 10:00 AM - 7:00 PM</textarea>
 									id="maintenance-mode"> <label class="form-check-label"
 									for="maintenance-mode">Enable Maintenance Mode</label>
 							</div>
-							<!-- ... maintenance fields ... -->
-							<button class="btn btn-warning">Save Settings</button>
+							<button class="btn btn-action-edit">Save Settings</button>
 						</div>
 					</section>
 
@@ -108,4 +97,3 @@ Sunday: 10:00 AM - 7:00 PM</textarea>
 	</main>
 </body>
 </html>
-

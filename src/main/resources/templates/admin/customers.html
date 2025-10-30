@@ -10,12 +10,12 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">User Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-primary" type="button" data-bs-toggle="modal"
-					data-bs-target="#addCustomerModal">
+				<button class="btn btn-action-add" type="button"
+					data-bs-toggle="modal" data-bs-target="#addCustomerModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Customer
 				</button>
-				<button class="btn btn-info" type="button" data-bs-toggle="modal"
-					data-bs-target="#manageAdminsModal">
+				<button class="btn btn-action-view" type="button"
+					data-bs-toggle="modal" data-bs-target="#manageAdminsModal">
 					<i class="fa-solid fa-user-shield me-1"></i> Manage Admins
 				</button>
 			</div>
@@ -34,10 +34,10 @@
 						placeholder="Enter search term...">
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-info me-2">
+					<button type="submit" class="btn btn-action-view me-2">
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
-					<a th:href="@{/admin/customers}" class="btn btn-outline-secondary"
+					<a th:href="@{/admin/customers}" class="btn btn-custom-secondary"
 						title="Clear Filters"> <i class="fa-solid fa-times"></i>
 					</a>
 				</div>
@@ -104,13 +104,14 @@
 								<td th:text="${customer.phone != null ? customer.phone : 'N/A'}">N/A</td>
 								<td
 									th:text="${customer.street != null ? (customer.street + ', ' + customer.barangay) : 'N/A'}">N/A</td>
-								<td><span class="badge bg-success">Active</span></td>
+								<td><span class="status-badge status-active">Active</span>
+								</td>
 								<td class="d-flex justify-content-center gap-2">
-									<button class="btn btn-sm btn-outline-primary"
+									<button class="btn btn-sm btn-action-view"
 										data-bs-toggle="modal" data-bs-target="#viewCustomerModal">View</button>
 
 									<button type="button"
-										class="btn btn-sm btn-outline-warning edit-customer-btn"
+										class="btn btn-sm btn-action-edit edit-customer-btn"
 										data-bs-toggle="modal" data-bs-target="#editCustomerModal"
 										th:data-id="${customer.id}"
 										th:data-first-name="${customer.firstName}"
@@ -129,7 +130,7 @@
 										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"
 										method="post"
 										onsubmit="return confirm('Are you sure you want to delete this customer?');">
-										<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
 								</td>
 							</tr>

@@ -36,7 +36,7 @@
 										<td th:text="${admin.username}">admin_user</td>
 										<td class="d-flex gap-2">
 											<button type="button"
-												class="btn btn-sm btn-outline-warning edit-admin-btn"
+												class="btn btn-sm btn-action-edit edit-admin-btn"
 												data-bs-toggle="modal" data-bs-target="#editAdminModal"
 												th:data-id="${admin.id}"
 												th:data-first-name="${admin.firstName}"
@@ -45,7 +45,7 @@
 											<form
 												th:action="@{/admin/customers/admin/delete/{id}(id=${admin.id})}"
 												method="post" onsubmit="return confirm('Are you sure?');">
-												<button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+												<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 											</form>
 										</td>
 									</tr>
@@ -110,18 +110,19 @@
 								</div>
 							</div>
 							<div class="d-flex justify-content-end">
-								<button type="submit" class="btn btn-primary">Create
+								<button type="submit" class="btn btn-custom">Create
 									Admin</button>
 							</div>
 						</form>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
+						<button type="button" class="btn btn-custom-secondary"
 							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="addCustomerModal" tabindex="-1"
 			aria-labelledby="addCustomerModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -181,15 +182,16 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
+							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Close</button>
-							<button type="submit" class="btn btn-primary">Create
+							<button type="submit" class="btn btn-custom">Create
 								Customer</button>
 						</div>
 					</form>
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="viewCustomerModal" tabindex="-1"
 			aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -218,12 +220,13 @@
 						</address>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
+						<button type="button" class="btn btn-custom-secondary"
 							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="editCustomerModal" tabindex="-1"
 			aria-labelledby="editCustomerModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
@@ -346,15 +349,16 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
+							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Save
+							<button type="submit" class="btn btn-custom">Save
 								Changes</button>
 						</div>
 					</form>
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="editAdminModal" tabindex="-1"
 			aria-labelledby="editAdminModalLabel" aria-hidden="true">
 			<div class="modal-dialog">
@@ -411,9 +415,9 @@
 								cannot be changed from this form.</div>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
+							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary">Save
+							<button type="submit" class="btn btn-custom">Save
 								Changes</button>
 						</div>
 					</form>

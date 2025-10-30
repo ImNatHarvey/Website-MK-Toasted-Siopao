@@ -10,19 +10,19 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-primary" data-bs-toggle="modal"
+				<button class="btn btn-action-add" data-bs-toggle="modal"
 					data-bs-target="#addItemModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Item
 				</button>
-				<button class="btn btn-secondary" data-bs-toggle="modal"
+				<button class="btn btn-custom-outline" data-bs-toggle="modal"
 					data-bs-target="#manageCategoriesModal">
 					<i class="fa-solid fa-tags me-1"></i> Manage Categories
 				</button>
-				<button class="btn btn-secondary" data-bs-toggle="modal"
+				<button class="btn btn-custom-outline" data-bs-toggle="modal"
 					data-bs-target="#manageUnitsModal">
 					<i class="fa-solid fa-ruler-combined me-1"></i> Manage Units
 				</button>
-				<button class="btn btn-success" data-bs-toggle="modal"
+				<button class="btn btn-action-success" data-bs-toggle="modal"
 					data-bs-target="#manageStockModal">
 					<i class="fa-solid fa-boxes-stacked me-1"></i> Manage Stock
 				</button>
@@ -54,10 +54,10 @@
 					</select>
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-info me-2">
+					<button type="submit" class="btn btn-action-view me-2">
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
-					<a th:href="@{/admin/inventory}" class="btn btn-outline-secondary"
+					<a th:href="@{/admin/inventory}" class="btn btn-custom-secondary"
 						title="Clear Filters"> <i class="fa-solid fa-times"></i>
 					</a>
 				</div>
@@ -94,15 +94,12 @@
 									th:text="${#numbers.formatDecimal(item.lowStockThreshold, 1, 'COMMA', 2, 'POINT')}">5.00</td>
 								<td
 									th:text="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 'COMMA', 2, 'POINT')}">2.00</td>
-								<td><span class="badge"
+								<td><span class="status-badge"
 									th:text="${#strings.replace(item.stockStatus, '_', ' ')}"
-									th:classappend="${#strings.equals(item.stockStatus, 'NORMAL') ? 'bg-success' :
-														   #strings.equals(item.stockStatus, 'LOW') ? 'bg-warning text-dark' :
-														   #strings.equals(item.stockStatus, 'CRITICAL') ? 'bg-danger' :
-														   #strings.equals(item.stockStatus, 'NO_STOCK') ? 'bg-dark' : 'bg-secondary'}">
-										OK </span></td>
+									th:classappend="'status-' + ${#strings.toLowerCase(item.stockStatus)}">
+										Status </span></td>
 								<td class="d-flex justify-content-center gap-2">
-									<button class="btn btn-sm btn-warning edit-item-btn"
+									<button class="btn btn-sm btn-action-edit edit-item-btn"
 										data-bs-toggle="modal" data-bs-target="#addItemModal"
 										th:data-id="${item.id}" th:data-name="${item.name}"
 										th:data-category-id="${item.category.id}"
@@ -116,7 +113,7 @@
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
 										onsubmit="return confirm('Are you sure you want to delete this item?');">
-										<button type="submit" class="btn btn-sm btn-danger">Delete</button>
+										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
 								</td>
 							</tr>

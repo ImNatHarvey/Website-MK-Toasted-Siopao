@@ -8,7 +8,7 @@
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<form th:action="@{/admin/inventory/save}" method="post"
-						th:object="${inventoryItemDto}" id="itemForm" novate>
+						th:object="${inventoryItemDto}" id="itemForm" novalidate>
 						<input type="hidden" th:field="*{id}" id="itemId">
 						<div class="modal-header">
 							<h5 class="modal-title" id="addItemModalLabel">Add/Edit
@@ -119,9 +119,9 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="button" class="btn btn-secondary"
+							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Close</button>
-							<button type="submit" class="btn btn-primary">Save Item</button>
+							<button type="submit" class="btn btn-custom">Save Item</button>
 						</div>
 					</form>
 				</div>
@@ -150,7 +150,7 @@
 								<input type="text" class="form-control"
 									placeholder="Category name..." th:field="*{name}"
 									th:errorclass="is-invalid">
-								<button class="btn btn-primary" type="submit">Add</button>
+								<button class="btn btn-action-add" type="submit">Add</button>
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name
 									error</div>
@@ -172,7 +172,7 @@
 									th:action="@{/admin/inventory/categories/delete/{id}(id=${cat.id})}"
 									method="post"
 									onsubmit="return confirm('Are you sure you want to delete this category? Ensure no items are using it.');">
-									<button type="submit" class="btn btn-sm btn-outline-danger"
+									<button type="submit" class="btn btn-sm btn-action-delete"
 										title="Delete Category">
 										<i class="fa-solid fa-trash"></i>
 									</button>
@@ -181,7 +181,7 @@
 						</ul>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
+						<button type="button" class="btn btn-custom-secondary"
 							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
@@ -229,7 +229,7 @@
 										th:errors="*{abbreviation}">Abbr. error</div>
 								</div>
 								<div class="col-md-2">
-									<button class="btn btn-primary w-100" type="submit">Add</button>
+									<button class="btn btn-action-add w-100" type="submit">Add</button>
 								</div>
 							</div>
 						</form>
@@ -248,7 +248,7 @@
 									th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
 									method="post"
 									onsubmit="return confirm('Are you sure you want to delete this unit? Ensure no items are using it.');">
-									<button type="submit" class="btn btn-sm btn-outline-danger"
+									<button type="submit" class="btn btn-sm btn-action-delete"
 										title="Delete Unit">
 										<i class="fa-solid fa-trash"></i>
 									</button>
@@ -257,7 +257,7 @@
 						</ul>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
+						<button type="button" class="btn btn-custom-secondary"
 							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
@@ -311,7 +311,7 @@
 											<td><input type="number" step="0.01"
 												name="quantityChange" class="form-control form-control-sm"
 												style="width: 100px;" placeholder="+/- Qty" required /></td>
-											<td><button type="submit" class="btn btn-sm btn-primary">Adjust</button></td>
+											<td><button type="submit" class="btn btn-sm btn-custom">Adjust</button></td>
 										</form>
 									</tr>
 									<tr th:if="${#lists.isEmpty(allInventoryItems)}">
@@ -323,7 +323,7 @@
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-secondary"
+						<button type="button" class="btn btn-custom-secondary"
 							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>

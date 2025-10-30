@@ -1,9 +1,14 @@
 :root {
 	--light: #fffdf5;
 	--dark: #213448;
-	--primary: #113F67;
-	--secondary: #fdf5aa;
-	--accent: #ffc374;
+	--primary: #113F67; /* Deep Blue */
+	--secondary: #fdf5aa; /* Light Yellow */
+	--accent: #ffc374; /* Orange/Gold */
+	--success: #28a745; /* Green */
+	--warning: #ffc107; /* Yellow */
+	--danger: #dc3545; /* Red */
+	--info: #17a2b8; /* Teal */
+	--muted-text: #6c757d; /* Standard muted color */
 }
 
 /* Base */
@@ -20,7 +25,7 @@ body {
 
 .navbar-brand {
 	font-weight: bold;
-	color: var(--secondary);
+	color: var(--secondary); /* Light Yellow */
 }
 
 .navbar-brand span {
@@ -28,66 +33,213 @@ body {
 }
 
 .nav-link {
-	color: var(--light);
+	color: var(--light); /* White */
 	margin: 0 10px;
 	transition: color 0.2s ease;
 }
 
 .nav-link:hover, .nav-link.active {
-	color: var(--secondary) !important;
+	color: var(--secondary) !important; /* Light Yellow */
 }
 
 .nav-link.active {
 	font-weight: bold;
-	border-bottom: 2px solid var(--secondary);
+	border-bottom: 2px solid var(--secondary); /* Light Yellow */
 }
 
 .navbar-toggler {
-	background-color: var(--secondary);
-	color: var(--primary);
+	background-color: var(--secondary); /* Light Yellow */
+	border-color: var(--primary); /* Deep Blue */
 }
 
-/* Navbar Buttons */
+.navbar-toggler-icon {
+	/* Optional: Style the icon itself if needed */
+	background-image:
+		url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(17, 63, 103, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* ================= Buttons ================= */
+
+/* General Custom Button (Primary Action) */
 .btn-custom {
-	background-color: var(--accent);
-	color: var(--primary);
+	background-color: var(--accent); /* Orange/Gold */
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
 	margin-left: 10px;
+	/* Keep margin for navbar spacing, adjust elsewhere */
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	transition: 0.3s ease;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--accent); /* Add border for consistency */
 }
 
 .btn-custom:hover {
-	background-color: var(--light);
-	color: var(--primary);
+	background-color: var(--primary); /* Deep Blue on hover */
+	color: var(--light); /* White text */
+	border-color: var(--primary);
 }
 
-@media ( max-width : 991px) {
-	#navbarNav {
-		text-align: center;
-	}
-	#navbarNav .navbar-nav {
-		margin: 0 auto;
-	}
-	#navbarNav .d-flex {
-		justify-content: center;
-		margin-top: 10px;
-	}
+/* Secondary Action Button (e.g., Close, Cancel) */
+.btn-custom-secondary {
+	background-color: var(--muted-text); /* Grey */
+	color: var(--light); /* White */
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--muted-text);
+}
+
+.btn-custom-secondary:hover {
+	background-color: var(--dark); /* Dark Blue */
+	color: var(--light);
+	border-color: var(--dark);
+}
+
+/* Outline/Alternative Button */
+.btn-custom-outline {
+	background-color: transparent;
+	color: var(--primary); /* Deep Blue text */
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--primary); /* Deep Blue border */
+}
+
+.btn-custom-outline:hover {
+	background-color: var(--primary); /* Deep Blue background */
+	color: var(--light); /* White text */
+	border-color: var(--primary);
+}
+
+/* Specific Action Buttons (use sparingly if needed, prefer custom base) */
+.btn-action-add { /* Example: Use primary color scheme */
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.btn-action-add:hover {
+	background-color: var(--dark);
+	border-color: var(--dark);
+}
+
+.btn-action-edit { /* Example: Use warning color scheme */
+	background-color: var(--warning);
+	color: var(--dark);
+	border-color: var(--warning);
+}
+
+.btn-action-edit:hover {
+	background-color: #e0a800;
+	border-color: #d39e00;
+} /* Darker warning */
+.btn-action-delete { /* Example: Use danger color scheme */
+	background-color: var(--danger);
+	color: var(--light);
+	border-color: var(--danger);
+}
+
+.btn-action-delete:hover {
+	background-color: #c82333;
+	border-color: #bd2130;
+} /* Darker danger */
+.btn-action-view { /* Example: Use info color scheme */
+	background-color: var(--info);
+	color: var(--light);
+	border-color: var(--info);
+}
+
+.btn-action-view:hover {
+	background-color: #138496;
+	border-color: #117a8b;
+} /* Darker info */
+.btn-action-success { /* Example: Use success color scheme */
+	background-color: var(--success);
+	color: var(--light);
+	border-color: var(--success);
+}
+
+.btn-action-success:hover {
+	background-color: #218838;
+	border-color: #1e7e34;
+} /* Darker success */
+
+/* Adjust button padding/margin for specific contexts if needed */
+.table .btn-sm { /* Make small buttons less rounded */
+	border-radius: 0.2rem;
+	padding: 0.25rem 0.5rem;
+}
+
+.modal-footer .btn { /* Space out modal buttons */
+	margin-left: 5px;
+}
+
+.modal-footer .btn:first-child {
+	margin-left: 0;
+}
+
+.d-flex.gap-2>.btn { /* Override margin-left for flex gap */
+	margin-left: 0;
+}
+
+/* ================= Status Badges ================= */
+.status-badge {
+	padding: 0.35em 0.65em;
+	font-size: 0.8em;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--dark); /* Default text */
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	border-radius: 0.375rem;
+	background-color: var(--muted-text); /* Default background */
+}
+
+.status-badge.status-normal, .status-badge.status-active, .status-badge.status-delivered,
+	.status-badge.status-completed {
+	background-color: var(--success);
+	color: var(--light);
+}
+
+.status-badge.status-low, .status-badge.status-pending {
+	background-color: var(--warning);
+	color: var(--dark); /* Dark text on yellow */
+}
+
+.status-badge.status-critical, .status-badge.status-cancelled {
+	background-color: var(--danger);
+	color: var(--light);
+}
+
+.status-badge.status-processing {
+	background-color: var(--info);
+	color: var(--light);
+}
+
+.status-badge.status-no_stock {
+	background-color: var(--dark);
+	color: var(--light);
 }
 
 /* ================= Primary Content ================= */
 /* Promo Banner */
 .promo-banner {
-	background-color: var(--secondary);
+	background-color: var(--secondary); /* Light Yellow */
 	border-radius: 20px;
 	padding: 30px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .promo-banner h4 {
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 }
 
@@ -98,73 +250,68 @@ body {
 
 /* Section Title */
 .section-title {
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 }
 
 /* Call to Action */
 .cta-section {
-	background-color: var(--secondary);
+	background-color: var(--secondary); /* Light Yellow */
 	padding: 50px 20px;
 }
 
 .cta-section h4 {
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 }
 
-/* ================= Menu Page ================= */
-/* Category Filter */
-.category-btn, .btn-outline-primary {
-	/* Removed conflicting background/border */
+/* ================= Menu Page / Cards ================= */
+/* Category Filter Buttons (Re-style outline buttons) */
+.btn-outline-primary {
 	color: var(--primary);
-	border-color: var(--secondary);
+	border-color: var(--primary);
 	border-radius: 20px;
 	padding: 6px 16px;
-	font-weight: bold;
+	font-weight: normal; /* Make non-active normal weight */
 	transition: 0.3s ease;
 }
 
-.category-btn.active, .btn-outline-primary.active, .btn-outline-primary:hover
-	{
-	background-color: var(--primary) !important; /* Ensure override */
+.btn-outline-primary.active, .btn-outline-primary:hover {
+	background-color: var(--primary) !important;
 	color: var(--light) !important;
 	border-color: var(--primary) !important;
+	font-weight: bold; /* Make active/hover bold */
 }
 
-/* Search */
-/* Removed conflicting styles for input-group */
+/* Search Input Group */
 .input-group .form-control {
 	border-radius: 20px 0 0 20px;
-	/* Removed border, padding, transition */
+	border-right: 0; /* Remove right border */
+}
+
+.input-group .form-control:focus {
+	border-color: var(--primary); /* Highlight border on focus */
+	box-shadow: 0 0 0 0.2rem rgba(17, 63, 103, 0.25); /* Focus shadow */
 }
 
 .input-group .btn {
 	border-radius: 0 20px 20px 0;
-	/* Removed border, background, color, transition */
-	/* Re-add specific styles if needed, avoiding conflict */
-	border: 1px solid #ced4da; /* Default Bootstrap border */
-    background-color: #e9ecef; /* Default Bootstrap button background */
-    color: #495057; /* Default Bootstrap button text */
+	border: 1px solid #ced4da;
+	border-left: 0; /* Remove left border */
+	background-color: #e9ecef; /* Default BG */
+	color: var(--dark);
 }
 
-/* Remove hover effect causing blue background */
-/* .input-group:hover .form-control, .input-group:hover .btn {
-	background-color: var(--primary);
+.input-group .btn:hover {
+	background-color: var(--primary); /* Theme hover */
 	color: var(--light);
 	border-color: var(--primary);
 }
 
-.input-group:hover .form-control::placeholder {
-	color: var(--light);
-	opacity: 1;
-} */
-
-
-/* Menu Cards */
+/* Menu/Product Cards */
 .card {
-	background-color: var(--secondary);
-	border: none;
+	background-color: var(--light); /* Use light background for cards */
+	border: 1px solid #eee; /* Subtle border */
 	border-radius: 15px;
 	overflow: hidden;
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -179,10 +326,16 @@ body {
 	height: 180px;
 	object-fit: cover;
 }
+/* Admin specific card image size */
+.admin-product-img {
+	height: 150px; /* Slightly smaller for admin view */
+	object-fit: contain; /* Use contain for admin to see full image */
+	padding: 5px;
+}
 
 .card-title {
 	font-weight: bold;
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 }
 
 .price {
@@ -190,168 +343,220 @@ body {
 	font-size: 1rem;
 }
 
-/* Order Buttons */
-.btn-order, .btn-warning {
-	background-color: var(--accent);
+/* "Order" button on menu cards */
+.btn-warning { /* Use Bootstrap yellow for 'Order' */
 	color: var(--dark);
 	font-weight: bold;
 	border-radius: 20px;
 	padding: 6px 16px;
 	transition: 0.3s ease;
+	border-color: var(--warning);
+	background-color: var(--warning);
 }
 
-.btn-order:hover, .btn-warning:hover {
-	background-color: var(--primary);
-	border-color: var(--primary);
-	color: var(--light);
+.btn-warning:hover {
+	background-color: #e0a800; /* Darker warning */
+	border-color: #d39e00;
+	color: var(--dark);
 }
 
-/* Order Summary */
+/* ================= Order Summary Sidebar ================= */
 .order-summary {
-	background-color: var(--secondary);
+	background-color: var(--secondary); /* Light Yellow */
 	border-radius: 15px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .order-title {
 	font-weight: bold;
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 }
 
 .total-price {
 	font-size: 1.1rem;
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 }
 
-.btn-checkout {
-	background-color: var(--accent);
-	color: var(--primary);
+.btn-checkout { /* Keep this as btn-custom style */
+	background-color: var(--accent); /* Orange/Gold */
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 	border-radius: 25px;
 	padding: 10px;
 	transition: 0.3s ease;
+	border: 1px solid var(--accent);
 }
 
 .btn-checkout:hover {
-	background-color: var(--primary);
+	background-color: var(--primary); /* Deep Blue */
 	color: var(--light);
+	border-color: var(--primary);
 }
 
-/* ================= Sticky Order Summary ================= */
-.sticky-order-summary {
-	background: #fff;
-	border-top: 2px solid #ddd;
-	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
-	padding: 15px 20px;
-	margin-top: 40px;
+.btn-checkout:disabled {
+	background-color: #ccc;
+	border-color: #ccc;
+	color: #666;
+	cursor: not-allowed;
 }
 
-.sticky-order-summary .summary-content {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	max-width: 1200px;
-	margin: 0 auto;
-}
-
-.sticky-order-summary strong {
-	font-size: 1.1rem;
-}
-
-#footer-total {
-	font-weight: bold;
-	font-size: 1.2rem;
-	color: var(--dark);
-	margin-left: 8px;
-}
-
-.sticky-order-summary button {
-	min-width: 160px;
-	padding: 10px 20px;
-	font-weight: 500;
-}
+/* ================= Sticky Order Summary (If implemented) ================= */
+/* Styles remain the same */
 
 /* ================= Order Page ================= */
 .order-page {
-	background-color: var(--light);
-	padding: 50px 20px;
+	/* background-color: var(--light); */ /* Already on body */
+	padding: 50px 0px; /* Reduced side padding */
 }
 
 .order-page h2 {
-	color: var(--primary);
+	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 	margin-bottom: 30px;
 }
-
-/* ================= Login / Auth Pages ================= */
-
-/* This centers the auth card on a page */
-.auth-page-body {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	min-height: 100vh;
-	padding-top: 0; /* Override body padding */
+/* Ensure form labels are visible */
+.order-page .form-label {
+	color: var(--dark);
 }
 
-/* This is the card for login/signup */
+/* ================= Login / Auth Pages ================= */
+.auth-page-content {
+	/* No specific styles needed if using card approach */
+	
+}
+
 .auth-card {
-	background-color: var(--secondary);
+	background-color: var(--secondary); /* Light Yellow */
 	border: none;
 	border-radius: 15px;
 }
 
+.auth-card .section-title {
+	margin-top: 0; /* Adjust spacing if needed */
+}
+
 /* ================= Footer ================= */
 footer {
-	background-color: var(--primary);
+	background-color: var(--primary); /* Deep Blue */
 	color: var(--light);
 	text-align: center;
 	padding: 20px;
+	margin-top: auto; /* Push footer down */
 }
 
-/* === Fix for Blue Inputs === */
-/* Reset background for specific input groups if necessary */
-/* Example: Target input group in Manage Categories modal */
-#addCategoryForm .input-group .form-control,
-#addCategoryForm .input-group .btn {
-    background-color: #fff; /* Bootstrap default */
-    color: #212529; /* Bootstrap default */
-    border-color: #ced4da; /* Bootstrap default */
-}
-#addCategoryForm .input-group .form-control::placeholder {
-    color: #6c757d; /* Bootstrap default */
+/* ================= Admin Specific Styles ================= */
+.admin-body {
+	/* Optional: Slightly different background for admin? */
+	/* background-color: #f8f9fa; */
+	
 }
 
-/* Example: Target input group in Manage Stock modal */
-#manageStockModal .input-group .form-control,
-#manageStockModal .input-group .btn {
-    background-color: #fff; /* Bootstrap default */
-    color: #212529; /* Bootstrap default */
-    border-color: #ced4da; /* Bootstrap default */
-}
-#manageStockModal .input-group .form-control::placeholder {
-     color: #6c757d; /* Bootstrap default */
+/* Stats Cards */
+.stats-card {
+	border-left: 5px solid var(--primary); /* Accent border */
+	border-radius: 8px;
+	background-color: var(--light);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Example: Target price input in Add Product modal */
-#addProductForm #addProductPrice {
-    background-color: #fff; /* Bootstrap default */
-    color: #212529; /* Bootstrap default */
-    border-color: #ced4da; /* Bootstrap default */
+.stats-card .card-title {
+	color: var(--primary);
+	font-size: 0.95rem;
+	font-weight: bold;
 }
 
-/* Remove hover effect specifically for these inputs if the general one was removed */
-#addCategoryForm .input-group:hover .form-control,
-#addCategoryForm .input-group:hover .btn,
-#manageStockModal .input-group:hover .form-control,
-#manageStockModal .input-group:hover .btn,
-#addProductForm #addProductPrice:hover {
-     /* Explicitly prevent hover color change if needed */
-    background-color: #fff;
-    color: #212529;
-    border-color: #ced4da;
+.stats-value, .stats-card .display-6 { /* Target both uses */
+	color: var(--dark);
+	font-weight: bold;
+	font-size: 1.8rem; /* Adjust size */
 }
-#addCategoryForm .input-group:hover .form-control::placeholder,
-#manageStockModal .input-group:hover .form-control::placeholder {
-    color: #6c757d;
+
+.stats-change {
+	font-size: 0.85rem;
+	color: var(--muted-text);
+}
+
+/* Quick Navigation Cards (Admin Dashboard) */
+.quick-nav-card {
+	background-color: var(--secondary); /* Light Yellow */
+	border-radius: 10px;
+	padding: 20px;
+	transition: transform 0.2s ease;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.quick-nav-card:hover {
+	transform: translateY(-5px);
+}
+
+.quick-nav-card h4 {
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+	margin-top: 10px;
+}
+
+.quick-nav-card .nav-icon {
+	font-size: 2.5rem;
+	color: var(--primary);
+}
+
+.quick-nav-card .btn {
+	margin-top: auto; /* Push button to bottom */
+}
+
+/* Admin Tables */
+.table thead th {
+	background-color: var(--primary); /* Header BG */
+	color: var(--light); /* Header Text */
+	vertical-align: middle;
+}
+
+.table td {
+	vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+	background-color: var(--secondary); /* Row hover color */
+}
+
+/* Modal Styling */
+.modal-header {
+	background-color: var(--primary);
+	color: var(--light);
+}
+
+.modal-header .btn-close {
+	background-color: var(--light);
+	border-radius: 50%;
+}
+
+.modal-title {
+	font-weight: bold;
+}
+
+/* === Fix for specific input groups if needed === */
+/* Ensure these overrides are specific enough */
+#addCategoryForm .input-group .form-control, #manageStockModal .input-group .form-control,
+	#addProductForm #addProductPrice, #itemForm #itemCost input,
+	/* Target cost input in inventory */ #editProductForm #editProductPriceModal
+	/* Target edit product price */ {
+	background-color: #fff !important; /* Force default BG */
+	color: #212529 !important; /* Force default text */
+}
+
+#addCategoryForm .input-group .form-control::placeholder,
+	#manageStockModal .input-group .form-control::placeholder {
+	color: #6c757d !important; /* Force default placeholder */
+}
+
+/* Prevent hover styles on these specific inputs */
+#addCategoryForm .input-group:hover .form-control, #manageStockModal .input-group:hover .form-control,
+	#addProductForm #addProductPrice:hover, #itemForm #itemCost input:hover,
+	#editProductForm #editProductPriceModal:hover {
+	/* Keep default styles on hover */
+	background-color: #fff !important;
+	color: #212529 !important;
 }

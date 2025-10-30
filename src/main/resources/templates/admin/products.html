@@ -12,16 +12,16 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-primary" type="button" data-bs-toggle="modal"
-					data-bs-target="#addProductModal">
+				<button class="btn btn-action-add" type="button"
+					data-bs-toggle="modal" data-bs-target="#addProductModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Product
 				</button>
-				<button class="btn btn-secondary" type="button"
+				<button class="btn btn-custom-outline" type="button"
 					data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
 					<i class="fa-solid fa-tags me-1"></i> Manage Categories
 				</button>
-				<button class="btn btn-success" type="button" data-bs-toggle="modal"
-					data-bs-target="#manageStockModal">
+				<button class="btn btn-action-success" type="button"
+					data-bs-toggle="modal" data-bs-target="#manageStockModal">
 					<i class="fa-solid fa-boxes-stacked me-1"></i> Manage Stock
 				</button>
 			</div>
@@ -51,10 +51,10 @@
 					</select>
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-info me-2">
+					<button type="submit" class="btn btn-action-view me-2">
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
-					<a th:href="@{/admin/products}" class="btn btn-outline-secondary"
+					<a th:href="@{/admin/products}" class="btn btn-custom-secondary"
 						title="Clear Filters"><i class="fa-solid fa-times"></i></a>
 				</div>
 			</div>
@@ -84,20 +84,17 @@
 								th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
 						</p>
 						<div class="mb-2">
-							<span class="badge"
+							<span class="status-badge"
 								th:text="${#strings.replace(product.stockStatus, '_', ' ')}"
-								th:classappend="${#strings.equals(product.stockStatus, 'NORMAL') ? 'bg-success' :
-												   #strings.equals(product.stockStatus, 'LOW') ? 'bg-warning text-dark' :
-												   #strings.equals(product.stockStatus, 'CRITICAL') ? 'bg-danger' :
-												   #strings.equals(product.stockStatus, 'NO_STOCK') ? 'bg-dark' : 'bg-secondary'}">...</span>
-							<span class="small text-muted"
+								th:classappend="'status-' + ${#strings.toLowerCase(product.stockStatus)}">
+								... </span> <span class="small text-muted"
 								th:text="'(' + ${product.currentStock} + ' in stock)'">...</span>
 						</div>
 						<p class="card-text small mb-3 flex-grow-1"
 							th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
 						<div class="mt-auto d-flex justify-content-between gap-1">
 							<button type="button"
-								class="btn btn-sm btn-outline-info flex-fill view-product-btn"
+								class="btn btn-sm btn-action-view flex-fill view-product-btn"
 								data-bs-toggle="modal" data-bs-target="#viewProductModal"
 								th:data-id="${product.id}" th:data-name="${product.name}"
 								th:data-category-name="${product.category.name}"
@@ -105,10 +102,7 @@
 								th:data-description="${product.description}"
 								th:data-image-url="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
 								th:data-stock-status="${#strings.replace(product.stockStatus, '_', ' ')}"
-								th:data-stock-status-class="${#strings.equals(product.stockStatus, 'NORMAL') ? 'bg-success' :
-                                                              #strings.equals(product.stockStatus, 'LOW') ? 'bg-warning text-dark' :
-                                                              #strings.equals(product.stockStatus, 'CRITICAL') ? 'bg-danger' :
-                                                              #strings.equals(product.stockStatus, 'NO_STOCK') ? 'bg-dark' : 'bg-secondary'}"
+								th:data-stock-status-class="'status-' + ${#strings.toLowerCase(product.stockStatus)}"
 								th:data-current-stock="${product.currentStock}"
 								th:data-low-stock-threshold="${product.lowStockThreshold}"
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
@@ -117,7 +111,7 @@
 											 data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
 								View</button>
 							<button type="button"
-								class="btn btn-sm btn-outline-warning flex-fill edit-product-btn"
+								class="btn btn-sm btn-action-edit flex-fill edit-product-btn"
 								data-bs-toggle="modal" data-bs-target="#editProductModal"
 								th:data-id="${product.id}" th:data-name="${product.name}"
 								th:data-category-id="${product.category.id}"
@@ -132,8 +126,7 @@
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
 								method="post" class="d-inline flex-fill"
 								onsubmit="return confirm('Delete this product?');">
-								<button type="submit"
-									class="btn btn-sm btn-outline-danger w-100">Delete</button>
+								<button type="submit" class="btn btn-sm btn-action-delete w-100">Delete</button>
 							</form>
 						</div>
 					</div>

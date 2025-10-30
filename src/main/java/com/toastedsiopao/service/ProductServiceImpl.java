@@ -7,13 +7,13 @@ import com.toastedsiopao.repository.CategoryRepository;
 import com.toastedsiopao.repository.InventoryItemRepository;
 import com.toastedsiopao.repository.OrderItemRepository;
 import com.toastedsiopao.repository.ProductRepository;
-// Import InventoryItemService
 import com.toastedsiopao.service.InventoryItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils; // Import StringUtils
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -31,13 +31,19 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private CategoryRepository categoryRepository;
 	@Autowired
-	private InventoryItemRepository inventoryItemRepository; // Keep for direct saves if needed
+	private InventoryItemRepository inventoryItemRepository;
 	@Autowired
 	private OrderItemRepository orderItemRepository;
-
-	// Inject InventoryItemService for stock adjustments
 	@Autowired
 	private InventoryItemService inventoryItemService;
+
+	// --- Centralized Validation Method ---
+	private void validateThresholds(Integer lowThreshold, Integer criticalThreshold) {
+		if (criticalThreshold != null && lowThreshold != null && criticalThreshold > lowThreshold) {
+			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
+		}
+	}
+	// --- End Validation Method ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -53,25 +59,60 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public Product save(ProductDto productDto) {
+		// --- Input Validation ---
+		if (productDto == null) {
+			throw new IllegalArgumentException("Product data cannot be null.");
+		}
+		if (!StringUtils.hasText(productDto.getName())) {
+			throw new IllegalArgumentException("Product name cannot be blank.");
+		}
+		if (productDto.getCategoryId() == null) {
+			throw new IllegalArgumentException("Category must be selected.");
+		}
+		if (productDto.getPrice() == null) {
+			throw new IllegalArgumentException("Price cannot be null.");
+		}
+		// Basic null checks for thresholds
+		if (productDto.getLowStockThreshold() == null)
+			productDto.setLowStockThreshold(0);
+		if (productDto.getCriticalStockThreshold() == null)
+			productDto.setCriticalStockThreshold(0);
+		// --- End Input Validation ---
+
+		// --- Moved Threshold Validation Here ---
+		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
+		// --- End Moved Validation ---
+
 		Category category = categoryRepository.findById(productDto.getCategoryId())
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + productDto.getCategoryId()));
 
 		Product product;
 		boolean isNew = productDto.getId() == null;
+		String logAction = isNew ? "Creating" : "Updating";
 
 		if (!isNew) {
 			product = productRepository.findById(productDto.getId())
 					.orElseThrow(() -> new RuntimeException("Product not found with id: " + productDto.getId()));
+			log.info("{} product: ID={}, Name='{}'", logAction, product.getId(), productDto.getName());
+		} else {
+			product = new Product();
+			product.setCurrentStock(0); // Set initial stock to 0 for new products
+			log.info("{} new product: Name='{}'", logAction, productDto.getName());
+		}
 
-			// --- IMPROVED INGREDIENT HANDLING ---
-			// Remove ingredients that are no longer in the DTO
+		// --- Ingredient Handling (Unchanged from original) ---
+		// Remove ingredients that are no longer in the DTO
+		if (product.getIngredients() != null) { // Check if list exists (it should)
 			List<Long> dtoIngredientItemIds = productDto.getIngredients().stream()
+					.filter(dto -> dto.getInventoryItemId() != null) // Filter out null IDs
 					.map(RecipeIngredientDto::getInventoryItemId).collect(Collectors.toList());
 
 			product.getIngredients()
 					.removeIf(ingredient -> !dtoIngredientItemIds.contains(ingredient.getInventoryItem().getId()));
+		}
 
-			// Update existing or add new
+		// Update existing or add new
+		if (productDto.getIngredients() != null) {
 			for (RecipeIngredientDto ingredientDto : productDto.getIngredients()) {
 				if (ingredientDto.getInventoryItemId() != null && ingredientDto.getQuantityNeeded() != null
 						&& ingredientDto.getQuantityNeeded().compareTo(BigDecimal.ZERO) > 0) {
@@ -82,7 +123,8 @@ public class ProductServiceImpl implements ProductService {
 
 					// Check if this ingredient already exists and update it
 					Optional<RecipeIngredient> existingIngredient = product.getIngredients().stream()
-							.filter(ing -> ing.getInventoryItem().getId().equals(ingredientDto.getInventoryItemId()))
+							.filter(ing -> ing.getInventoryItem() != null
+									&& ing.getInventoryItem().getId().equals(ingredientDto.getInventoryItemId()))
 							.findFirst();
 
 					if (existingIngredient.isPresent()) {
@@ -94,27 +136,8 @@ public class ProductServiceImpl implements ProductService {
 					}
 				}
 			}
-			// --- END IMPROVED HANDLING ---
-
-		} else {
-			product = new Product();
-			product.setCurrentStock(0); // Set initial stock to 0 for new products
-
-			// Process ingredients for new product
-			if (productDto.getIngredients() != null) {
-				for (RecipeIngredientDto ingredientDto : productDto.getIngredients()) {
-					if (ingredientDto.getInventoryItemId() != null && ingredientDto.getQuantityNeeded() != null
-							&& ingredientDto.getQuantityNeeded().compareTo(BigDecimal.ZERO) > 0) {
-						InventoryItem inventoryItem = inventoryItemRepository
-								.findById(ingredientDto.getInventoryItemId()).orElseThrow(() -> new RuntimeException(
-										"Inventory Item not found with id: " + ingredientDto.getInventoryItemId()));
-						RecipeIngredient recipeIngredient = new RecipeIngredient(product, inventoryItem,
-								ingredientDto.getQuantityNeeded());
-						product.addIngredient(recipeIngredient);
-					}
-				}
-			}
 		}
+		// --- End Ingredient Handling ---
 
 		// Map basic fields
 		product.setName(productDto.getName());
@@ -123,15 +146,17 @@ public class ProductServiceImpl implements ProductService {
 		product.setCategory(category);
 		product.setImageUrl(productDto.getImageUrl());
 
-		// Validate thresholds before saving
-		if (productDto.getCriticalStockThreshold() != null && productDto.getLowStockThreshold() != null
-				&& productDto.getCriticalStockThreshold() > productDto.getLowStockThreshold()) {
-			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
-		}
-		product.setLowStockThreshold(productDto.getLowStockThreshold());
-		product.setCriticalStockThreshold(productDto.getCriticalStockThreshold());
+		// Map thresholds (already validated)
+		product.setLowStockThreshold(Optional.ofNullable(productDto.getLowStockThreshold()).orElse(0));
+		product.setCriticalStockThreshold(Optional.ofNullable(productDto.getCriticalStockThreshold()).orElse(0));
 
-		return productRepository.save(product);
+		try {
+			return productRepository.save(product);
+		} catch (Exception e) {
+			log.error("Database error {} product '{}': {}", logAction.toLowerCase(), productDto.getName(),
+					e.getMessage(), e);
+			throw new RuntimeException("Could not save product due to a database error.", e);
+		}
 	}
 
 	@Override
@@ -146,9 +171,11 @@ public class ProductServiceImpl implements ProductService {
 					+ orderItems.size() + " existing order(s).");
 		}
 
+		log.info("Deleting product: ID={}, Name='{}'", id, product.getName());
 		productRepository.deleteById(id);
 	}
 
+	// ... (find, search methods unchanged) ...
 	@Override
 	@Transactional(readOnly = true)
 	public List<Product> findByCategory(Long categoryId) {
@@ -166,8 +193,7 @@ public class ProductServiceImpl implements ProductService {
 		return productRepository.findByNameContainingIgnoreCase(keyword.trim());
 	}
 
-	// --- MODIFIED: adjustStock method with Inventory Deduction ---
-	@Override
+	@Override // (Unchanged from original)
 	public Product adjustStock(Long productId, int quantityChange, String reason) {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
@@ -186,7 +212,6 @@ public class ProductServiceImpl implements ProductService {
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					if (item == null) {
-						// This shouldn't happen with proper data, but good to check
 						throw new RuntimeException("Recipe for product '" + product.getName()
 								+ "' contains an invalid ingredient reference.");
 					}
@@ -194,12 +219,10 @@ public class ProductServiceImpl implements ProductService {
 					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) {
 						log.warn("Skipping ingredient '{}' for product '{}': quantity needed is zero or null.",
 								item.getName(), product.getName());
-						continue; // Skip ingredients with zero or null quantity needed
+						continue;
 					}
-
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 
-					// Reload item to get the latest stock, prevent stale reads
 					InventoryItem currentItemState = inventoryItemRepository.findById(item.getId())
 							.orElseThrow(() -> new RuntimeException(
 									"Inventory item '" + item.getName() + "' not found during stock check."));
@@ -217,8 +240,6 @@ public class ProductServiceImpl implements ProductService {
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
-
-					// Skip again if quantity is invalid
 					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) {
 						continue;
 					}
@@ -227,7 +248,6 @@ public class ProductServiceImpl implements ProductService {
 					String deductionReason = "Production of " + quantityChange + "x " + product.getName() + " (ID: "
 							+ productId + ")";
 
-					// Use the service to adjust inventory stock (negative quantityChange)
 					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
 
 					log.info("Deducted {} {} of '{}' from inventory for production.", amountToDecrease,
@@ -242,19 +262,16 @@ public class ProductServiceImpl implements ProductService {
 		int newStock = currentStock + quantityChange;
 
 		if (newStock < 0) {
-			// Although production logic handles ingredients, direct negative adjustments
-			// need this check
 			throw new IllegalArgumentException("Product stock cannot go below zero for '" + product.getName()
 					+ "'. Current stock: " + currentStock + ", Change: " + quantityChange);
 		}
 
 		product.setCurrentStock(newStock);
-		Product savedProduct = productRepository.save(product); // This also updates stockLastUpdated via @PreUpdate
+		Product savedProduct = productRepository.save(product);
 
 		log.info("Stock adjusted for Product ID {} ('{}'): Change={}, New Stock={}, Reason='{}'", productId,
 				product.getName(), quantityChange, newStock, reason);
 
 		return savedProduct;
 	}
-	// --- END adjustStock MODIFICATION ---
 }

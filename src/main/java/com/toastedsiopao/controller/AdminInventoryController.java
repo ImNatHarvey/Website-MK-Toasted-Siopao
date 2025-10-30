@@ -1,5 +1,6 @@
 package com.toastedsiopao.controller;
 
+// ... (Imports remain the same)
 import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.dto.UnitOfMeasureDto;
@@ -21,7 +22,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.util.StringUtils; // **** ADDED IMPORT ****
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.security.Principal;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/admin/inventory")
 public class AdminInventoryController {
 
+	// ... (Logger, Autowired fields, Helper method, GetMapping unchanged) ...
 	private static final Logger log = LoggerFactory.getLogger(AdminInventoryController.class);
 
 	@Autowired
@@ -44,7 +46,6 @@ public class AdminInventoryController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	// Helper remains the same
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
 		redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
@@ -52,17 +53,16 @@ public class AdminInventoryController {
 		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAll());
 	}
 
-	@GetMapping // Unchanged
+	@GetMapping
 	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "category", required = false) Long categoryId) {
-		// ... unchanged ...
 		List<InventoryItem> items = inventoryItemService.searchItems(keyword, categoryId);
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
-		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll(); // Get all for modal
+		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll();
 
-		model.addAttribute("allInventoryItems", allItemsForStockModal); // Add for stock modal
-		model.addAttribute("inventoryItems", items); // Filtered items for main table
+		model.addAttribute("allInventoryItems", allItemsForStockModal);
+		model.addAttribute("inventoryItems", items);
 		model.addAttribute("inventoryCategories", categories);
 		model.addAttribute("unitsOfMeasure", units);
 		model.addAttribute("keyword", keyword);
@@ -79,13 +79,11 @@ public class AdminInventoryController {
 		return "admin/inventory";
 	}
 
-	@PostMapping("/save") // Unchanged from previous batch correction
+	@PostMapping("/save") // (Unchanged from Batch 4)
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
-		// DTO validation check
 		if (result.hasErrors()) {
-			// ... unchanged error handling ...
 			log.warn("Inventory item DTO validation failed. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
@@ -96,25 +94,21 @@ public class AdminInventoryController {
 			return "redirect:" + redirectUrl;
 		}
 		try {
-			// Service handles validation
 			InventoryItem savedItem = inventoryItemService.save(itemDto);
-			// ... unchanged success logging & redirect ...
 			String action = itemDto.getId() == null ? "ADD_INVENTORY_ITEM" : "EDIT_INVENTORY_ITEM";
 			String message = itemDto.getId() == null ? "Added" : "Updated";
 			activityLogService.logAdminAction(principal.getName(), action,
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
-		} catch (RuntimeException e) { // Catch validation and other runtime errors from service
+		} catch (RuntimeException e) {
 			log.warn("Error saving inventory item: {}", e.getMessage());
-			// Add specific error back to BindingResult or use a generic flash attribute
 			if (e.getMessage().contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
 						e.getMessage()));
 			} else if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage()); // Use global error for threshold issue
+				result.reject("global", e.getMessage());
 			} else {
-				// Generic error for other validation issues from service
 				redirectAttributes.addFlashAttribute("inventoryError", "Error saving item: " + e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
@@ -125,18 +119,13 @@ public class AdminInventoryController {
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		// Removed the separate Exception catch as RuntimeException covers others too
 		return "redirect:/admin/inventory";
 	}
 
-	@PostMapping("/categories/add")
+	@PostMapping("/categories/add") // (Updated from Batch 4)
 	public String addInventoryCategory(@Valid @ModelAttribute("inventoryCategoryDto") InventoryCategoryDto categoryDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
-
-		// --- Removed manual duplicate name check ---
-
-		// Check only DTO validation errors first
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryCategoryDto",
 					result);
@@ -146,22 +135,19 @@ public class AdminInventoryController {
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
-
 		try {
-			// Service method now handles validation and saving
-			InventoryCategory newCategory = inventoryCategoryService.saveFromDto(categoryDto); // Assuming a new method
-																								// in service
+			InventoryCategory newCategory = inventoryCategoryService.saveFromDto(categoryDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_INVENTORY_CATEGORY",
 					"Added new inventory category: " + newCategory.getName());
-			redirectAttributes.addFlashAttribute("inventorySuccess",
+			// **** MODIFIED: Use categorySuccess ****
+			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Inventory Category '" + newCategory.getName() + "' added successfully!");
-
-		} catch (IllegalArgumentException e) { // Catch validation errors from service
+		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding inventory category: {}", e.getMessage());
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
 			} else {
-				redirectAttributes.addFlashAttribute("inventoryError", "Error adding category: " + e.getMessage());
+				redirectAttributes.addFlashAttribute("categoryError", "Error adding category: " + e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryCategoryDto",
 					result);
@@ -170,10 +156,10 @@ public class AdminInventoryController {
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
-
-		} catch (RuntimeException e) { // Catch other runtime errors during save
+		} catch (RuntimeException e) {
 			log.error("Error adding inventory category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("inventoryError", "An unexpected error occurred: " + e.getMessage());
+			// **** MODIFIED: Use categoryError ****
+			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageCategoriesModal")
@@ -183,15 +169,10 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	@PostMapping("/units/add")
+	@PostMapping("/units/add") // (Updated from Batch 4)
 	public String addUnitOfMeasure(@Valid @ModelAttribute("unitOfMeasureDto") UnitOfMeasureDto unitDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
-
-		// --- Removed manual duplicate name/abbr check ---
-
-		// Check only DTO validation errors first (also covers global errors added by
-		// DTO validation)
 		if (result.hasErrors() || result.hasGlobalErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureDto",
 					result);
@@ -201,19 +182,15 @@ public class AdminInventoryController {
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
-
 		try {
-			// Service method now handles validation and saving
-			UnitOfMeasure newUnit = unitOfMeasureService.saveFromDto(unitDto); // Assuming a new method in service
+			UnitOfMeasure newUnit = unitOfMeasureService.saveFromDto(unitDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_UNIT_OF_MEASURE",
 					"Added new unit: " + newUnit.getName() + " (" + newUnit.getAbbreviation() + ")");
-			redirectAttributes.addFlashAttribute("inventorySuccess",
-					"Unit '" + newUnit.getName() + "' added successfully!");
-
-		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			// **** MODIFIED: Use unitSuccess ****
+			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + newUnit.getName() + "' added successfully!");
+		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding unit: {}", e.getMessage());
-			// Service should throw specific message for duplicates
-			result.reject("global", e.getMessage()); // Use global error for duplicate name/abbr
+			result.reject("global", e.getMessage());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureDto",
 					result);
 			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
@@ -221,10 +198,10 @@ public class AdminInventoryController {
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageUnitsModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
-
-		} catch (RuntimeException e) { // Catch other runtime errors
+		} catch (RuntimeException e) {
 			log.error("Error adding unit of measure: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("inventoryError", "An unexpected error occurred: " + e.getMessage());
+			// **** MODIFIED: Use unitError ****
+			redirectAttributes.addFlashAttribute("unitError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageUnitsModal").build()
@@ -234,26 +211,22 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	// Stock Adjust POST mapping remains unchanged
-	@PostMapping("/stock/adjust")
+	@PostMapping("/stock/adjust") // (Unchanged from Batch 4)
 	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
 			@RequestParam("quantityChange") BigDecimal quantityChange,
-			@RequestParam(value = "reason", required = false) String reason, // Allow reason override
-			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
+			@RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes,
+			Principal principal, UriComponentsBuilder uriBuilder) {
 
 		String finalReason = StringUtils.hasText(reason) ? reason
 				: (quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Manual Stock Increase"
 						: "Manual Stock Decrease/Wastage");
-
 		if (quantityChange.compareTo(BigDecimal.ZERO) == 0) {
-			// ... unchanged zero quantity error handling ...
 			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
 		try {
-			// ... unchanged success handling ...
 			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason);
 			String action = quantityChange.compareTo(BigDecimal.ZERO) > 0 ? "Increased" : "Decreased";
 			String details = action + " stock for " + updatedItem.getName() + " (ID: " + itemId + ") by "
@@ -261,23 +234,19 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", action + " stock for '" + updatedItem.getName()
 					+ "' by " + quantityChange.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
-		} catch (RuntimeException e) { // Catch validation and other runtime errors
-			// ... unchanged error handling ...
+		} catch (RuntimeException e) {
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		// Removed separate Exception catch
 		return "redirect:/admin/inventory";
 	}
 
-	// --- Delete methods remain unchanged ---
-	@PostMapping("/delete/{id}")
+	@PostMapping("/delete/{id}") // (Unchanged from Batch 4)
 	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... unchanged delete logic ...
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
 		if (itemOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Inventory item not found.");
@@ -304,16 +273,17 @@ public class AdminInventoryController {
 	@PostMapping("/categories/delete/{id}")
 	public String deleteInventoryCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... unchanged delete logic ...
 		Optional<InventoryCategory> categoryOpt = inventoryCategoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
-			redirectAttributes.addFlashAttribute("inventoryError", "Category not found.");
+			// **** MODIFIED: Use categoryError ****
+			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
 			return "redirect:/admin/inventory";
 		}
 		InventoryCategory category = categoryOpt.get();
 		List<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id);
 		if (!itemsInCategory.isEmpty()) {
-			redirectAttributes.addFlashAttribute("inventoryError", "Cannot delete category '" + category.getName()
+			// **** MODIFIED: Use categoryError ****
+			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete category '" + category.getName()
 					+ "'. It is associated with " + itemsInCategory.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
 		}
@@ -322,11 +292,13 @@ public class AdminInventoryController {
 			inventoryCategoryService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",
 					"Deleted inventory category: " + categoryName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("inventorySuccess",
+			// **** MODIFIED: Use categorySuccess ****
+			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Category '" + categoryName + "' deleted successfully!");
 		} catch (Exception e) {
 			log.error("Error deleting inventory category ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("inventoryError", "Error deleting category: " + e.getMessage());
+			// **** MODIFIED: Use categoryError ****
+			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";
 	}
@@ -334,10 +306,10 @@ public class AdminInventoryController {
 	@PostMapping("/units/delete/{id}")
 	public String deleteUnitOfMeasure(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... unchanged delete logic ...
 		Optional<UnitOfMeasure> unitOpt = unitOfMeasureService.findById(id);
 		if (unitOpt.isEmpty()) {
-			redirectAttributes.addFlashAttribute("inventoryError", "Unit not found.");
+			// **** MODIFIED: Use unitError ****
+			redirectAttributes.addFlashAttribute("unitError", "Unit not found.");
 			return "redirect:/admin/inventory";
 		}
 		UnitOfMeasure unit = unitOpt.get();
@@ -345,7 +317,8 @@ public class AdminInventoryController {
 				.filter(item -> item.getUnit() != null && item.getUnit().getId().equals(id))
 				.collect(Collectors.toList());
 		if (!itemsUsingUnit.isEmpty()) {
-			redirectAttributes.addFlashAttribute("inventoryError", "Cannot delete unit '" + unit.getName()
+			// **** MODIFIED: Use unitError ****
+			redirectAttributes.addFlashAttribute("unitError", "Cannot delete unit '" + unit.getName()
 					+ "'. It is associated with " + itemsUsingUnit.size() + " inventory item(s).");
 			return "redirect:/admin/inventory";
 		}
@@ -354,10 +327,12 @@ public class AdminInventoryController {
 			unitOfMeasureService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_UNIT_OF_MEASURE",
 					"Deleted unit: " + unitName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("inventorySuccess", "Unit '" + unitName + "' deleted successfully!");
+			// **** MODIFIED: Use unitSuccess ****
+			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + unitName + "' deleted successfully!");
 		} catch (Exception e) {
 			log.error("Error deleting unit ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("inventoryError", "Error deleting unit: " + e.getMessage());
+			// **** MODIFIED: Use unitError ****
+			redirectAttributes.addFlashAttribute("unitError", "Error deleting unit: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";
 	}

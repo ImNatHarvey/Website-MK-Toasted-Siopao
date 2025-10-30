@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError; // Import FieldError
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -46,10 +47,18 @@ public class AdminProductController {
 	@Autowired
 	private ObjectMapper objectMapper;
 
-	@GetMapping
+	// Helper to add common attributes for redirects
+	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
+		redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
+		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+		// We might need the JSON map again too, but it's complex for a redirect
+		// For now, let's rely on the GET mapping to rebuild it.
+	}
+
+	@GetMapping // Unchanged
 	public String manageProducts(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword) {
-		// ... GetMapping logic unchanged ...
+		// ... (logic unchanged) ...
 		List<Product> productList;
 		List<Category> categoryList = categoryService.findAll();
 		List<InventoryItem> inventoryItems = inventoryItemService.findAll();
@@ -93,124 +102,155 @@ public class AdminProductController {
 	@PostMapping("/add")
 	public String addProduct(@Valid @ModelAttribute("productDto") ProductDto productDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-		// ... Validation and redirect logic unchanged ...
-		if (productDto.getCriticalStockThreshold() != null && productDto.getLowStockThreshold() != null
-				&& productDto.getCriticalStockThreshold() > productDto.getLowStockThreshold()) {
-			result.reject("global", "Critical stock threshold cannot be greater than low stock threshold.");
-		}
+
+		// --- Removed Threshold Check ---
+
+		// Check DTO validation errors first
 		if (result.hasErrors()) {
+			log.warn("Product DTO validation failed for add. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "addProductModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		try { // ... Success logic unchanged ...
+
+		try {
+			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_PRODUCT",
 					"Added new product: " + savedProduct.getName() + " (ID: " + savedProduct.getId() + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + savedProduct.getName() + "' added successfully!");
-		} catch (Exception e) { // ... Error logic unchanged ...
-			log.error("Error adding product: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("productError", "Error adding product: " + e.getMessage());
+
+		} catch (RuntimeException e) { // Catch validation (threshold) or other runtime errors
+			log.warn("Error adding product: {}", e.getMessage(), e);
+			// Add specific error back to BindingResult or use a generic flash attribute
+			if (e.getMessage().contains("threshold")) {
+				result.reject("global", e.getMessage()); // Use global error for threshold issue
+			} else {
+				redirectAttributes.addFlashAttribute("productError", "Error adding product: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "addProductModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
+
 		return "redirect:/admin/products";
 	}
 
 	@PostMapping("/update")
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-		// ... Validation and redirect logic unchanged ...
-		if (productDto.getCriticalStockThreshold() != null && productDto.getLowStockThreshold() != null
-				&& productDto.getCriticalStockThreshold() > productDto.getLowStockThreshold()) {
-			result.reject("global", "Critical stock threshold cannot be greater than low stock threshold.");
-		}
+
+		// --- Removed Threshold Check ---
+
+		// Check DTO validation errors first
 		if (result.hasErrors()) {
+			log.warn("Product DTO validation failed for update. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editProductModal")
 					.queryParam("editId", productDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		try { // ... Success logic unchanged ...
+
+		try {
 			if (productDto.getId() == null)
 				throw new IllegalArgumentException("Product ID is missing for update.");
+			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PRODUCT",
 					"Updated product: " + savedProduct.getName() + " (ID: " + savedProduct.getId() + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + savedProduct.getName() + "' updated successfully!");
-		} catch (Exception e) { // ... Error logic unchanged ...
-			log.error("Error updating product: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("productError", "Error updating product: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
+
+		} catch (RuntimeException e) { // Catch validation (threshold) or other runtime errors
+			log.warn("Error updating product: {}", e.getMessage(), e);
+			if (e.getMessage().contains("threshold")) {
+				result.reject("global", e.getMessage()); // Use global error for threshold issue
+			} else {
+				redirectAttributes.addFlashAttribute("productError", "Error updating product: " + e.getMessage());
+			}
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
+			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editProductModal")
 					.queryParam("editId", productDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
+
 		return "redirect:/admin/products";
 	}
 
 	@PostMapping("/categories/add")
 	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-		// ... Validation and redirect logic unchanged ...
-		if (categoryDto.getName() != null && !categoryDto.getName().trim().isEmpty()) {
-			if (categoryService.findByName(categoryDto.getName().trim()).isPresent()) {
-				result.rejectValue("name", "duplicate", "Category name already exists");
-			}
-		}
+
+		// --- Removed manual duplicate name check ---
+
+		// Check DTO validation errors first
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
-			redirectAttributes.addFlashAttribute("products", productService.findAll());
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			addCommonAttributesForRedirect(redirectAttributes); // Might need products list too
+			redirectAttributes.addFlashAttribute("products", productService.findAll()); // Add products list back
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		try { // ... Success logic unchanged ...
-			Category newCategory = new Category(categoryDto.getName().trim());
-			categoryService.save(newCategory);
+
+		try {
+			// Service method now handles validation and saving
+			Category newCategory = categoryService.saveFromDto(categoryDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_CATEGORY",
 					"Added new product category: " + newCategory.getName());
 			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Category '" + newCategory.getName() + "' added successfully!");
-		} catch (Exception e) { // ... Error logic unchanged ...
-			log.error("Error adding product category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "Error adding category: " + e.getMessage());
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error adding product category: {}", e.getMessage());
+			if (e.getMessage().contains("already exists")) {
+				result.rejectValue("name", "duplicate", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("categoryError", "Error adding category: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
 			redirectAttributes.addFlashAttribute("products", productService.findAll());
-			redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-			redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
+					.build().toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (RuntimeException e) { // Catch other runtime errors
+			log.error("Error adding product category: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			redirectAttributes.addFlashAttribute("products", productService.findAll());
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
+
 		return "redirect:/admin/products";
 	}
 
+	// ... (Stock Adjust, Delete Product, Delete Category methods remain unchanged)
+	// ...
 	@PostMapping("/stock/adjust")
 	public String adjustProductStock(@RequestParam("productId") Long productId,
 			@RequestParam("quantityChange") int quantityChange, RedirectAttributes redirectAttributes,
 			Principal principal, UriComponentsBuilder uriBuilder) {
+		// ... (unchanged) ...
 		String derivedReason = quantityChange > 0 ? "Production" : "Adjustment/Wastage";
 		if (quantityChange == 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
@@ -220,23 +260,15 @@ public class AdminProductController {
 		}
 		try {
 			Product updatedProduct = productService.adjustStock(productId, quantityChange, derivedReason);
-			// ... Success logic ...
 			String action = quantityChange > 0 ? "Produced" : "Adjusted";
 			String details = action + " " + Math.abs(quantityChange) + " units of " + updatedProduct.getName()
 					+ " (ID: " + productId + "). Reason: " + derivedReason;
 			redirectAttributes.addFlashAttribute("stockSuccess", action + " " + Math.abs(quantityChange) + " units of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
-			// **** SIMPLIFIED CATCH BLOCK ****
-		} catch (RuntimeException e) { // Catches IllegalArgumentException + others
+		} catch (RuntimeException e) {
 			log.warn("Stock adjustment failed: {}", e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
-					.toUriString();
-			return "redirect:" + redirectUrl;
-		} catch (Exception e) { // Catch unexpected errors
-			log.error("Unexpected error adjusting stock: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("stockError", "An unexpected error occurred.");
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
@@ -244,10 +276,10 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// --- UNCHANGED Delete Methods ---
 	@PostMapping("/delete/{id}")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+		// ... (unchanged) ...
 		Optional<Product> productOpt = productService.findById(id);
 		if (productOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("productError", "Product not found.");
@@ -272,6 +304,7 @@ public class AdminProductController {
 	@PostMapping("/categories/delete/{id}")
 	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+		// ... (unchanged) ...
 		Optional<Category> categoryOpt = categoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");

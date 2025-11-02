@@ -29,4 +29,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			+ "u.phone LIKE CONCAT('%', :keyword, '%'))")
 	List<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword);
 
+	// --- NEW: Method for inactivity check (THE FIX) ---
+	/**
+	 * Finds a list of users by their role and status. * @param role The user role
+	 * (e.g., "ROLE_CUSTOMER"). * @param status The user status (e.g., "ACTIVE").
+	 * 
+	 * @return A list of matching User entities.
+	 */
+	List<User> findByRoleAndStatus(String role, String status);
+	// --- END NEW ---
+
 }

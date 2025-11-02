@@ -32,9 +32,29 @@ public interface UserService {
 	// --- NEW METHOD ---
 	/**
 	 * Searches for customers based on a keyword matching name, username, or phone.
-	 * * @param keyword The search term.
-	 * 
-	 * @return A list of matching customer User entities.
+	 * * @param keyword The search term. * @return A list of matching customer User
+	 * entities.
 	 */
 	List<User> searchCustomers(String keyword);
+
+	// --- NEW: Methods for activity tracking ---
+	/**
+	 * Updates the lastActivity timestamp for a user. * @param username The username
+	 * of the user to update.
+	 */
+	void updateLastActivity(String username);
+
+	/**
+	 * Manually updates the status of a user. * @param userId The ID of the user.
+	 * 
+	 * @param status The new status ("ACTIVE" or "INACTIVE").
+	 */
+	void updateCustomerStatus(Long userId, String status);
+
+	/**
+	 * Iterates through all customers and marks them as INACTIVE if they haven't had
+	 * activity in a defined period (e.g., 1 month).
+	 */
+	void checkForInactiveCustomers();
+	// --- END NEW ---
 }

@@ -1,7 +1,10 @@
 package com.toastedsiopao.service;
 
+import java.time.LocalDateTime; // Import LocalDateTime
 import java.util.List;
 import java.util.Optional;
+import org.slf4j.Logger; // Import Logger
+import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,12 @@ import com.toastedsiopao.repository.UserRepository;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+	// --- NEW: Logger ---
+	private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
+
+	// --- NEW: Inactivity Period (1 month) ---
+	private static final int INACTIVITY_PERIOD_MONTHS = 1;
 
 	@Autowired
 	private UserRepository userRepository;
@@ -78,6 +87,8 @@ public class UserServiceImpl implements UserService {
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password here
 		newUser.setRole("ROLE_CUSTOMER"); // Set role explicitly
+		// Note: Status, CreatedAt, and LastActivity are set by @PrePersist in User
+		// model
 
 		// Map address fields
 		newUser.setHouseNo(userDto.getHouseNo());
@@ -126,6 +137,10 @@ public class UserServiceImpl implements UserService {
 		newUser.setEmail(userDto.getEmail()); // **** ADDED EMAIL MAPPING ****
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password
 		newUser.setRole(role); // Use provided role
+		// Note: Status, CreatedAt, and LastActivity are set by @PrePersist in User
+		// model
+		// If it's an admin, status will default to "ACTIVE" but inactivity check won't
+		// run on them.
 
 		return userRepository.save(newUser);
 	}
@@ -152,6 +167,17 @@ public class UserServiceImpl implements UserService {
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
 		userToUpdate.setPhone(userDto.getPhone());
+
+		// --- NEW: Map Status ---
+		if (StringUtils.hasText(userDto.getStatus())
+				&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE"))) {
+			userToUpdate.setStatus(userDto.getStatus());
+		} else {
+			// This should be caught by DTO validation, but as a safeguard:
+			throw new IllegalArgumentException("Invalid status value provided.");
+		}
+		// --- END NEW ---
+
 		// Map address fields
 		userToUpdate.setHouseNo(userDto.getHouseNo());
 		userToUpdate.setLotNo(userDto.getLotNo());
@@ -200,6 +226,7 @@ public class UserServiceImpl implements UserService {
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail()); // **** ADDED EMAIL UPDATE MAPPING ****
 		// Password and Role are NOT updated here
+		// Status is not managed for admins in this way
 
 		return userRepository.save(userToUpdate);
 	}
@@ -212,4 +239,79 @@ public class UserServiceImpl implements UserService {
 		}
 		return userRepository.findByRoleAndSearchKeyword(keyword.trim());
 	}
+
+	// --- NEW: Implementation of activity tracking methods ---
+
+	@Override
+	@Transactional
+	public void updateLastActivity(String username) {
+		try {
+			User user = findByUsername(username);
+			if (user != null) {
+				user.setLastActivity(LocalDateTime.now());
+				// Also ensure they are marked ACTIVE on login
+				if ("INACTIVE".equals(user.getStatus())) {
+					user.setStatus("ACTIVE");
+					log.info("User '{}' was INACTIVE, setting to ACTIVE upon login.", username);
+				}
+				userRepository.save(user);
+			} else {
+				log.warn("Could not update last activity: User '{}' not found.", username);
+			}
+		} catch (Exception e) {
+			log.error("Error updating last activity for user '{}': {}", username, e.getMessage());
+		}
+	}
+
+	@Override
+	@Transactional
+	public void updateCustomerStatus(Long userId, String status) {
+		if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
+			throw new IllegalArgumentException("Status must be either ACTIVE or INACTIVE.");
+		}
+		User user = userRepository.findById(userId)
+				.orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+		if (!"ROLE_CUSTOMER".equals(user.getRole())) {
+			throw new IllegalArgumentException("Can only update status for customers.");
+		}
+
+		user.setStatus(status);
+		userRepository.save(user);
+		log.info("Manually updated status for user ID {} to {}", userId, status);
+	}
+
+	@Override
+	@Transactional
+	public void checkForInactiveCustomers() {
+		log.info("--- Running scheduled check for inactive customers... ---");
+		LocalDateTime cutoffDate = LocalDateTime.now().minusMonths(INACTIVITY_PERIOD_MONTHS);
+		log.info("Inactivity cutoff date: {}", cutoffDate);
+
+		List<User> activeCustomers = userRepository.findByRoleAndStatus("ROLE_CUSTOMER", "ACTIVE");
+		int markedInactive = 0;
+
+		for (User customer : activeCustomers) {
+			LocalDateTime lastActivity = customer.getLastActivity();
+			if (lastActivity == null) {
+				// If lastActivity is null, use createdAt as the reference
+				lastActivity = customer.getCreatedAt();
+			}
+
+			if (lastActivity.isBefore(cutoffDate)) {
+				customer.setStatus("INACTIVE");
+				userRepository.save(customer);
+				markedInactive++;
+				log.info("Marked user '{}' (ID: {}) as INACTIVE. Last activity: {}", customer.getUsername(),
+						customer.getId(), lastActivity);
+			}
+		}
+
+		if (markedInactive > 0) {
+			log.info("--- Finished inactivity check. Marked {} customer(s) as INACTIVE. ---", markedInactive);
+		} else {
+			log.info("--- Finished inactivity check. No customers required status change. ---");
+		}
+	}
+	// --- END NEW ---
 }

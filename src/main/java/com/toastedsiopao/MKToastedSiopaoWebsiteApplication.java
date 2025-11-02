@@ -1,5 +1,6 @@
 package com.toastedsiopao;
 
+import java.time.LocalDateTime; // Import LocalDateTime
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -9,12 +10,14 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling; // Import EnableScheduling
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.UserRepository;
 
 @SpringBootApplication
+@EnableScheduling // --- NEW: Enable scheduled tasks ---
 public class MKToastedSiopaoWebsiteApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(MKToastedSiopaoWebsiteApplication.class);
@@ -37,6 +40,7 @@ public class MKToastedSiopaoWebsiteApplication {
 			String adminUsername = "mktoastedadmin";
 			String adminPassword = "mktoasted123";
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
+
 			if (existingAdminOptional.isEmpty()) {
 				log.info(">>> Creating admin user '{}'", adminUsername);
 				User adminUser = new User();
@@ -45,16 +49,40 @@ public class MKToastedSiopaoWebsiteApplication {
 				adminUser.setRole("ROLE_ADMIN");
 				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
+				// Status, CreatedAt, LastActivity will be set by @PrePersist
 				userRepository.save(adminUser);
 				log.info(">>> Admin user created.");
 			} else {
-				log.info(">>> Admin user '{}' already exists.", adminUsername);
+				// --- NEW: Patch existing user if needed ---
+				User adminUser = existingAdminOptional.get();
+				boolean needsUpdate = false;
+				if (adminUser.getCreatedAt() == null) {
+					adminUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
+					needsUpdate = true;
+				}
+				if (adminUser.getLastActivity() == null) {
+					adminUser.setLastActivity(LocalDateTime.now());
+					needsUpdate = true;
+				}
+				if (adminUser.getStatus() == null) {
+					adminUser.setStatus("ACTIVE");
+					needsUpdate = true;
+				}
+				if (needsUpdate) {
+					log.info(">>> Patching existing admin user '{}' with default status/activity dates.",
+							adminUsername);
+					userRepository.save(adminUser);
+				} else {
+					log.info(">>> Admin user '{}' already exists and is up-to-date.", adminUsername);
+				}
+				// --- END NEW ---
 			}
 
 			// --- Test Customer User ---
 			String customerUsername = "testcustomer";
 			String customerPassword = "password123";
 			Optional<User> existingCustomerOptional = userRepository.findByUsername(customerUsername);
+
 			if (existingCustomerOptional.isEmpty()) {
 				log.info(">>> Creating test customer user '{}'", customerUsername);
 				User customerUser = new User();
@@ -63,10 +91,33 @@ public class MKToastedSiopaoWebsiteApplication {
 				customerUser.setRole("ROLE_CUSTOMER");
 				customerUser.setFirstName("Test");
 				customerUser.setLastName("Customer");
+				// Status, CreatedAt, LastActivity will be set by @PrePersist
 				userRepository.save(customerUser);
 				log.info(">>> Test customer user created.");
 			} else {
-				log.info(">>> Test customer user '{}' already exists.", customerUsername);
+				// --- NEW: Patch existing user if needed ---
+				User customerUser = existingCustomerOptional.get();
+				boolean needsUpdate = false;
+				if (customerUser.getCreatedAt() == null) {
+					customerUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
+					needsUpdate = true;
+				}
+				if (customerUser.getLastActivity() == null) {
+					customerUser.setLastActivity(LocalDateTime.now());
+					needsUpdate = true;
+				}
+				if (customerUser.getStatus() == null) {
+					customerUser.setStatus("ACTIVE");
+					needsUpdate = true;
+				}
+				if (needsUpdate) {
+					log.info(">>> Patching existing customer user '{}' with default status/activity dates.",
+							customerUsername);
+					userRepository.save(customerUser);
+				} else {
+					log.info(">>> Test customer user '{}' already exists and is up-to-date.", customerUsername);
+				}
+				// --- END NEW ---
 			}
 		};
 	}

@@ -5,11 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime; // Import LocalDateTime
 
 @Entity
 @Table(name = "users")
@@ -71,10 +74,34 @@ public class User {
 	private String province;
 	// --- END NEW ADDRESS FIELDS ---
 
+	// --- NEW: Status and Activity Tracking (Made nullable for migration) ---
+	@Column(nullable = true, length = 20) // FIX: Was nullable=false
+	private String status; // "ACTIVE", "INACTIVE"
+
+	@Column(nullable = true, updatable = false) // FIX: Was nullable=false
+	private LocalDateTime createdAt;
+
+	@Column(nullable = true) // This one was already correct
+	private LocalDateTime lastActivity;
+	// --- END NEW ---
+
 	// Constructor for convenience (still useful for initial user creation)
 	public User(String username, String password, String role) {
 		this.username = username;
 		this.password = password;
 		this.role = role;
+	}
+
+	@PrePersist
+	protected void onCreate() {
+		if (createdAt == null) {
+			createdAt = LocalDateTime.now();
+		}
+		if (lastActivity == null) {
+			lastActivity = LocalDateTime.now(); // Set initial activity to creation time
+		}
+		if (status == null) {
+			status = "ACTIVE"; // Default status
+		}
 	}
 }

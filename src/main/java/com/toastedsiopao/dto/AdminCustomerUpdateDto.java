@@ -58,4 +58,10 @@ public class AdminCustomerUpdateDto {
 
 	@Size(max = 100, message = "Province cannot exceed 100 characters")
 	private String province;
+
+	// --- NEW: Status Field ---
+	@NotBlank(message = "Status must be selected")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "Status must be either ACTIVE or INACTIVE")
+	private String status;
+	// --- END NEW ---
 }

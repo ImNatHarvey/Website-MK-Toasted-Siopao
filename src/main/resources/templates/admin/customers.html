@@ -5,7 +5,11 @@
 <title>Manage Customers - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4">
+	<main class="container my-4"
+		th:attr="data-show-add-customer-modal=${#fields.hasErrors('customerUserDto.*') ? 'true' : 'false'},
+                 data-show-manage-admins-modal=${#fields.hasErrors('adminUserDto.*') ? 'true' : 'false'},
+                 data-show-edit-customer-modal=${#fields.hasErrors('customerUpdateDto.*') ? 'true' : 'false'},
+                 data-show-edit-admin-modal=${#fields.hasErrors('adminUpdateDto.*') ? 'true' : 'false'}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">User Management</h1>
@@ -65,7 +69,8 @@
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Active Customers</h5>
-						<p class="display-6 fw-bold text-muted">?</p>
+						<p class="display-6 fw-bold text-muted"
+							th:text="${customers.?[status != null and status == 'ACTIVE'].size()}">?</p>
 					</div>
 				</div>
 			</div>
@@ -94,9 +99,13 @@
 							<tr th:each="customer : ${customers}"
 								th:data-name="${customer.firstName + ' ' + customer.lastName}"
 								th:data-username="${customer.username}"
-								th:data-phone="${customer.phone != null ? customer.phone : ''}"
+								th:data-email="${customer.email != null ? customer.email : 'N/A'}"
+								th:data-phone="${customer.phone != null ? customer.phone : 'N/A'}"
 								th:data-address-line1="${(customer.houseNo != null ? customer.houseNo : '') + ' ' + (customer.street != null ? customer.street : '')}"
-								th:data-address-line2="${(customer.barangay != null ? customer.barangay : '') + ', ' + (customer.municipality != null ? customer.municipality : '') + ', ' + (customer.province != null ? customer.province : '')}">
+								th:data-address-line2="${(customer.barangay != null ? customer.barangay : '') + ', ' + (customer.municipality != null ? customer.municipality : '') + ', ' + (customer.province != null ? customer.province : '')}"
+								th:data-created-at="${customer.createdAt != null ? #temporals.format(customer.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+								th:data-last-activity="${customer.lastActivity != null ? #temporals.format(customer.lastActivity, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+								th:data-status="${customer.status}">
 
 								<td th:text="${customer.id}">001</td>
 								<td th:text="${customer.firstName + ' ' + customer.lastName}">Juan
@@ -106,7 +115,10 @@
 								<td th:text="${customer.phone != null ? customer.phone : 'N/A'}">N/A</td>
 								<td
 									th:text="${customer.street != null ? (customer.street + ', ' + customer.barangay) : 'N/A'}">N/A</td>
-								<td><span class="status-badge status-active">Active</span>
+								<td>
+									<span class="status-badge"
+									th:text="${customer.status != null ? customer.status : 'N/A'}"
+									th:classappend="${customer.status == 'ACTIVE' ? 'status-active' : 'status-cancelled'}">Status</span>
 								</td>
 								<td class="d-flex justify-content-center gap-2">
 									<button class="btn btn-sm btn-action-view"
@@ -127,7 +139,8 @@
 										th:data-street="${customer.street}"
 										th:data-barangay="${customer.barangay}"
 										th:data-municipality="${customer.municipality}"
-										th:data-province="${customer.province}">Edit</button>
+										th:data-province="${customer.province}"
+										th:data-status="${customer.status}">Edit</button>
 
 									<form
 										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"

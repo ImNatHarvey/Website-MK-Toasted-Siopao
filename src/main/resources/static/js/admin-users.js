@@ -31,18 +31,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const name = dataset.name || 'N/A';
 			const username = dataset.username || 'N/A';
+			const email = dataset.email || 'N/A'; // NEW
 			const phone = dataset.phone || 'N/A';
 			const address1 = dataset.addressLine1 || '';
 			const address2 = dataset.addressLine2 || '';
+			const status = dataset.status || 'N/A'; // NEW
+			const createdAt = dataset.createdAt || 'N/A'; // NEW
+			const lastActivity = dataset.lastActivity || 'N/A'; // NEW
 
 			viewCustomerModal.querySelector('#viewCustomerModalLabel').textContent = 'Details for ' + name;
 			viewCustomerModal.querySelector('#viewCustomerName').textContent = name;
 			viewCustomerModal.querySelector('#viewCustomerUsername').textContent = username;
+			viewCustomerModal.querySelector('#viewCustomerEmail').textContent = email; // NEW
 			viewCustomerModal.querySelector('#viewCustomerPhone').textContent = phone;
 			viewCustomerModal.querySelector('#viewCustomerAddress1').textContent = address1.trim();
 			// Clean up address line 2 formatting
 			const address2Trimmed = address2.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim();
 			viewCustomerModal.querySelector('#viewCustomerAddress2').textContent = address2Trimmed.length > 0 ? address2Trimmed : 'No address details provided.';
+
+			// NEW: Populate status badge
+			const statusBadge = viewCustomerModal.querySelector('#viewCustomerStatusBadge');
+			statusBadge.textContent = status;
+			statusBadge.className = 'status-badge'; // Reset classes
+			if (status === 'ACTIVE') {
+				statusBadge.classList.add('status-active');
+			} else {
+				statusBadge.classList.add('status-cancelled'); // Using 'cancelled' style for 'inactive'
+			}
+
+			// NEW: Populate dates
+			viewCustomerModal.querySelector('#viewCustomerCreatedAt').textContent = createdAt;
+			viewCustomerModal.querySelector('#viewCustomerLastActivity').textContent = lastActivity;
 		});
 	}
 
@@ -70,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#firstName').value = dataset.firstName || '';
 			form.querySelector('#lastName').value = dataset.lastName || '';
 			form.querySelector('#username').value = dataset.username || '';
-			form.querySelector('#email').value = dataset.email || ''; // **** ADDED THIS LINE ****
+			form.querySelector('#email').value = dataset.email || '';
 			form.querySelector('#phone').value = dataset.phone || '';
 			form.querySelector('#houseNo').value = dataset.houseNo || '';
 			form.querySelector('#lotNo').value = dataset.lotNo || '';
@@ -79,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#barangay').value = dataset.barangay || '';
 			form.querySelector('#municipality').value = dataset.municipality || '';
 			form.querySelector('#province').value = dataset.province || '';
+			form.querySelector('#status').value = dataset.status || 'ACTIVE'; // NEW: Populate status
 
 			// Clear previous validation highlights unless reopening
 			if (mainElement.dataset.showEditCustomerModal !== 'true') {

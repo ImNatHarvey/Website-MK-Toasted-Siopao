@@ -22,6 +22,13 @@ public class UserDto {
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
 	private String username;
 
+	// **** NEW FIELD ****
+	@NotBlank(message = "Email cannot be blank")
+	@Email(message = "Invalid email format")
+	@Size(max = 100, message = "Email cannot exceed 100 characters")
+	private String email;
+	// **** END NEW FIELD ****
+
 	@NotBlank(message = "Phone number cannot be blank")
 	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "Invalid Philippine phone number format (e.g., 09xxxxxxxxx or +639xxxxxxxxx)")
 	private String phone;
@@ -55,7 +62,6 @@ public class UserDto {
 	// --- Password ---
 	@NotBlank(message = "Password cannot be blank")
 	@Size(min = 8, message = "Password must be at least 8 characters")
-	// **** ADDED PATTERN ****
 	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
 	private String password;
 

@@ -38,7 +38,7 @@
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/customers}" class="btn btn-custom-secondary"
-						title="Clear Filters"><i class="fa-solid fa-times me-1"></i> Clear
+						title="Clear Filters"> <i class="fa-solid fa-times"></i>
 					</a>
 				</div>
 			</div>
@@ -83,6 +83,7 @@
 								<th>ID</th>
 								<th>Name</th>
 								<th>Username</th>
+								<th>Email</th>
 								<th>Phone</th>
 								<th>Address</th>
 								<th>Status</th>
@@ -101,6 +102,7 @@
 								<td th:text="${customer.firstName + ' ' + customer.lastName}">Juan
 									Dela Cruz</td>
 								<td th:text="${customer.username}">Juan_Dela</td>
+								<td th:text="${customer.email != null ? customer.email : 'N/A'}">N/A</td>
 								<td th:text="${customer.phone != null ? customer.phone : 'N/A'}">N/A</td>
 								<td
 									th:text="${customer.street != null ? (customer.street + ', ' + customer.barangay) : 'N/A'}">N/A</td>
@@ -117,6 +119,7 @@
 										th:data-first-name="${customer.firstName}"
 										th:data-last-name="${customer.lastName}"
 										th:data-username="${customer.username}"
+										th:data-email="${customer.email}"
 										th:data-phone="${customer.phone}"
 										th:data-house-no="${customer.houseNo}"
 										th:data-lot-no="${customer.lotNo}"
@@ -135,7 +138,7 @@
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(customers)}">
-								<td colspan="7" class="text-center text-muted"
+								<td colspan="8" class="text-center text-muted"
 									th:text="${keyword != null ? 'No customers found matching your search.' : 'No customers found.'}">
 									No customers found.</td>
 							</tr>

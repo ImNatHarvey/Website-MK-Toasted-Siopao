@@ -31,6 +31,13 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
+	// Centralized validation for email uniqueness
+	private void validateEmailDoesNotExist(String email) {
+		if (userRepository.findByEmail(email).isPresent()) {
+			throw new IllegalArgumentException("Email already exists: " + email);
+		}
+	}
+
 	// Centralized validation for username uniqueness during update
 	private void validateUsernameOnUpdate(String username, Long userId) {
 		Optional<User> userWithSameUsername = userRepository.findByUsername(username);
@@ -38,6 +45,16 @@ public class UserServiceImpl implements UserService {
 			throw new IllegalArgumentException("Username '" + username + "' already exists.");
 		}
 	}
+
+	// **** NEW VALIDATION METHOD ****
+	// Centralized validation for email uniqueness during update
+	private void validateEmailOnUpdate(String email, Long userId) {
+		Optional<User> userWithSameEmail = userRepository.findByEmail(email);
+		if (userWithSameEmail.isPresent() && !userWithSameEmail.get().getId().equals(userId)) {
+			throw new IllegalArgumentException("Email '" + email + "' already exists.");
+		}
+	}
+	// **** END NEW METHOD ****
 
 	// Centralized password match validation
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
@@ -51,6 +68,7 @@ public class UserServiceImpl implements UserService {
 	public User saveCustomer(UserDto userDto) {
 		// --- Moved Validations Here ---
 		validateUsernameDoesNotExist(userDto.getUsername());
+		validateEmailDoesNotExist(userDto.getEmail()); // **** ADDED EMAIL CHECK ****
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 		// --- End Moved Validations ---
 
@@ -58,6 +76,7 @@ public class UserServiceImpl implements UserService {
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
 		newUser.setUsername(userDto.getUsername());
+		newUser.setEmail(userDto.getEmail()); // **** ADDED EMAIL MAPPING ****
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password here
 		newUser.setRole("ROLE_CUSTOMER"); // Set role explicitly
@@ -99,6 +118,7 @@ public class UserServiceImpl implements UserService {
 		// --- Moved Validations Here ---
 		validateUsernameDoesNotExist(userDto.getUsername());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
+		// We will add email validation here in the next batch
 		// --- End Moved Validations ---
 
 		User newUser = new User();
@@ -107,6 +127,7 @@ public class UserServiceImpl implements UserService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password
 		newUser.setRole(role); // Use provided role
+		// Note: Admin creation does not include email yet. We can add that next.
 
 		return userRepository.save(newUser);
 	}
@@ -124,12 +145,14 @@ public class UserServiceImpl implements UserService {
 
 		// --- Moved Validation Here ---
 		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		validateEmailOnUpdate(userDto.getEmail(), userDto.getId()); // **** ADDED EMAIL UPDATE CHECK ****
 		// --- End Moved Validation ---
 
 		// Map fields
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
+		userToUpdate.setEmail(userDto.getEmail()); // **** ADDED EMAIL UPDATE MAPPING ****
 		userToUpdate.setPhone(userDto.getPhone()); // Assumes DTO validation handles format if present
 		// Map address fields
 		userToUpdate.setHouseNo(userDto.getHouseNo());
@@ -170,6 +193,7 @@ public class UserServiceImpl implements UserService {
 
 		// --- Moved Validation Here ---
 		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		// We will add email validation here in the next batch
 		// --- End Moved Validation ---
 
 		// Map fields

@@ -15,6 +15,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByUsername(String username);
 
+	// **** NEW METHOD ****
+	Optional<User> findByEmail(String email);
+	// **** END NEW METHOD ****
+
 	List<User> findByRole(String role);
 
 	// --- NEW: Search customers by keyword across multiple fields ---

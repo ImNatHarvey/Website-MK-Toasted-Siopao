@@ -67,6 +67,12 @@ public class HomeController {
 			// Add specific error back to BindingResult or use generic message
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "userDto.username", e.getMessage());
+
+				// **** ADDED EMAIL ERROR HANDLING ****
+			} else if (e.getMessage().contains("Email already exists")) {
+				result.rejectValue("email", "userDto.email", e.getMessage());
+				// **** END ADDED HANDLING ****
+
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
 			} else {

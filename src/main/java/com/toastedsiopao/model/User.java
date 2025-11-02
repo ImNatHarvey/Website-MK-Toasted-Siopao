@@ -40,6 +40,11 @@ public class User {
 	@Column(length = 50)
 	private String lastName;
 
+	// **** NEW FIELD ****
+	@Column(unique = true, length = 100) // Email should be unique
+	private String email;
+	// **** END NEW FIELD ****
+
 	@Column(length = 20)
 	private String phone;
 

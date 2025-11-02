@@ -1,5 +1,6 @@
 package com.toastedsiopao.dto;
 
+import jakarta.validation.constraints.Email; // **** ADDED IMPORT ****
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -24,6 +25,13 @@ public class AdminCustomerUpdateDto {
 	@Size(min = 3, max = 50, message = "Username length must be 3-50 characters")
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
 	private String username;
+
+	// **** NEW FIELD ****
+	@NotBlank(message = "Email cannot be blank")
+	@Email(message = "Invalid email format")
+	@Size(max = 100, message = "Email cannot exceed 100 characters")
+	private String email;
+	// **** END NEW FIELD ****
 
 	// Phone is optional during admin edit, but if provided, must match format
 	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "Invalid Philippine phone number format (e.g., 09xxxxxxxxx or +639xxxxxxxxx)")

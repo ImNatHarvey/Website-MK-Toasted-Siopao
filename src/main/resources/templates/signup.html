@@ -10,14 +10,12 @@
 		<section class="auth-section py-5">
 			<div class="row justify-content-center">
 				<div class="col-md-6 col-lg-5">
-					<!-- Using the auth-card style -->
 					<div class="card shadow-sm p-4 auth-card">
 						<h2 class="text-center mb-3 section-title">Create Your
 							Account</h2>
 						<p class="text-center text-muted mb-4">Join us for delicious
 							toasted siopao!</p>
 
-						<!-- Display generic error messages from redirect -->
 						<div th:if="${errorMessage}"
 							class="alert alert-danger alert-dismissible fade show"
 							role="alert">
@@ -26,19 +24,14 @@
 								aria-label="Close"></button>
 						</div>
 
-						<!-- Use th:object to bind the form to the DTO -->
 						<form id="signupForm" method="post" th:action="@{/signup}"
 							th:object="${userDto}">
 
-							<!-- Name Fields -->
 							<div class="row mb-3">
-								<!-- CORRECTED THIS LINE -->
 								<div class="col">
-									<label for="firstName" class="form-label">First Name</label>
-									<!-- Use th:field for binding -->
-									<input type="text" class="form-control" th:field="*{firstName}"
+									<label for="firstName" class="form-label">First Name</label> <input
+										type="text" class="form-control" th:field="*{firstName}"
 										th:errorclass="is-invalid">
-									<!-- Display errors for this field -->
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('firstName')}"
 										th:errors="*{firstName}">First Name Error</div>
@@ -53,7 +46,6 @@
 								</div>
 							</div>
 
-							<!-- Username & Phone -->
 							<div class="mb-3">
 								<label for="username" class="form-label">Username</label> <input
 									type="text" class="form-control" th:field="*{username}"
@@ -61,6 +53,15 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
 									th:errors="*{username}">Username Error</div>
+							</div>
+
+							<div class="mb-3">
+								<label for="email" class="form-label">Email</label> <input
+									type="email" class="form-control" th:field="*{email}"
+									th:errorclass="is-invalid" placeholder="you@example.com">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
+									Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="phone" class="form-label">Phone Number</label> <input
@@ -71,7 +72,6 @@
 									Error</div>
 							</div>
 
-							<!-- Location Details -->
 							<h5 class="mt-4">Location Details (Optional)</h5>
 							<div class="row g-2 mb-3">
 								<div class="col">
@@ -97,7 +97,7 @@
 										No.</label> <input type="text" class="form-control"
 										placeholder="Block No." th:field="*{blockNo}"
 										th:errorclass="is-invalid">
-									<div class="invalid-feedback"
+									<div classs="invalid-feedback"
 										th:if="${#fields.hasErrors('blockNo')}" th:errors="*{blockNo}">Block
 										No. Error</div>
 								</div>
@@ -139,7 +139,6 @@
 									th:errors="*{province}">Province Error</div>
 							</div>
 
-							<!-- Password -->
 							<div class="mb-3">
 								<label for="password" class="form-label">Password</label> <input
 									type="password" class="form-control" th:field="*{password}"
@@ -152,19 +151,17 @@
 								<label for="confirmPassword" class="form-label">Confirm
 									Password</label> <input type="password" class="form-control"
 									th:field="*{confirmPassword}" th:errorclass="is-invalid">
-								<!-- Specific error for password mismatch -->
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('confirmPassword')}"
 									th:errors="*{confirmPassword}">Confirm Password Error</div>
 							</div>
 
-							<!-- Terms Checkbox -->
 							<div class="mb-3 form-check"
 								th:classappend="${#fields.hasErrors('terms')} ? 'is-invalid' : ''">
 								<input type="checkbox" class="form-check-input"
 									th:field="*{terms}" th:errorclass="is-invalid"> <label
-									class="form-check-label" for="terms"> <!-- Ensure 'for' matches 'id' -->
-									I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy
+									class="form-check-label" for="terms"> I agree to the <a
+									href="#">Terms of Service</a> and <a href="#">Privacy
 										Policy</a>
 								</label>
 								<div class="invalid-feedback"
@@ -173,7 +170,6 @@
 							</div>
 
 
-							<!-- Submit Button -->
 							<div class="d-grid">
 								<button type="submit" class="btn btn-custom">Create
 									Account</button>
@@ -190,4 +186,3 @@
 	</main>
 </body>
 </html>
-

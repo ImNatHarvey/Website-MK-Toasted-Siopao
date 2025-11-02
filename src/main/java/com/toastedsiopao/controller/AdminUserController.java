@@ -88,7 +88,7 @@ public class AdminUserController {
 		}
 
 		try {
-			// Service method now handles username/password validation
+			// Service method now handles username/password/email validation
 			User savedUser = userService.saveAdminUser(userDto, "ROLE_ADMIN");
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (ADMIN)",
 					"Created new admin user: " + savedUser.getUsername());
@@ -100,6 +100,10 @@ public class AdminUserController {
 			// Add specific error back to BindingResult or use a generic flash attribute
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "userDto.username", e.getMessage());
+				// **** ADDED EMAIL HANDLING ****
+			} else if (e.getMessage().contains("Email already exists")) {
+				result.rejectValue("email", "userDto.email", e.getMessage());
+				// **** END ADDED HANDLING ****
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
 			} else {
@@ -145,7 +149,7 @@ public class AdminUserController {
 		}
 
 		try {
-			// Service method now handles username/password validation
+			// Service method now handles username/password/email validation
 			User savedUser = userService.saveAdminUser(userDto, "ROLE_CUSTOMER"); // Still use saveAdminUser, but pass
 																					// correct role
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (CUSTOMER)",
@@ -157,6 +161,10 @@ public class AdminUserController {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "userDto.username", e.getMessage());
+				// **** ADDED EMAIL HANDLING ****
+			} else if (e.getMessage().contains("Email already exists")) {
+				result.rejectValue("email", "userDto.email", e.getMessage());
+				// **** END ADDED HANDLING ****
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
 			} else {
@@ -202,7 +210,7 @@ public class AdminUserController {
 		}
 
 		try {
-			// Service method now handles username validation on update
+			// Service method now handles username/email validation on update
 			User updatedUser = userService.updateCustomer(userDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (CUSTOMER)",
 					"Updated customer user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
@@ -211,11 +219,12 @@ public class AdminUserController {
 
 		} catch (IllegalArgumentException e) { // Catch validation errors from service
 			log.warn("Validation error updating customer: {}", e.getMessage());
-			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) { // Catch
-																												// specific
-																												// username
-																												// error
+			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "userDto.username", e.getMessage());
+				// **** ADDED EMAIL HANDLING ****
+			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
+				result.rejectValue("email", "userDto.email", e.getMessage());
+				// **** END ADDED HANDLING ****
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
 			}
@@ -257,7 +266,7 @@ public class AdminUserController {
 		}
 
 		try {
-			// Service method now handles username validation on update
+			// Service method now handles username/email validation on update
 			User updatedUser = userService.updateAdmin(userDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (ADMIN)",
 					"Updated admin user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
@@ -266,11 +275,12 @@ public class AdminUserController {
 
 		} catch (IllegalArgumentException e) { // Catch validation errors from service
 			log.warn("Validation error updating admin: {}", e.getMessage());
-			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) { // Catch
-																												// specific
-																												// username
-																												// error
+			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "userDto.username", e.getMessage());
+				// **** ADDED EMAIL HANDLING ****
+			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
+				result.rejectValue("email", "userDto.email", e.getMessage());
+				// **** END ADDED HANDLING ****
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error updating admin: " + e.getMessage());
 			}

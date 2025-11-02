@@ -25,6 +25,7 @@
 									<tr>
 										<th>Name</th>
 										<th>Username</th>
+										<th>Email</th>
 										<th>Actions</th>
 									</tr>
 								</thead>
@@ -34,6 +35,7 @@
 										<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
 											User</td>
 										<td th:text="${admin.username}">admin_user</td>
+										<td th:text="${admin.email != null ? admin.email : 'N/A'}">email@example.com</td>
 										<td class="d-flex gap-2">
 											<button type="button"
 												class="btn btn-sm btn-action-edit edit-admin-btn"
@@ -41,7 +43,8 @@
 												th:data-id="${admin.id}"
 												th:data-first-name="${admin.firstName}"
 												th:data-last-name="${admin.lastName}"
-												th:data-username="${admin.username}">Edit</button>
+												th:data-username="${admin.username}"
+												th:data-email="${admin.email}">Edit</button>
 											<form
 												th:action="@{/admin/customers/admin/delete/{id}(id=${admin.id})}"
 												method="post" onsubmit="return confirm('Are you sure?');">
@@ -50,7 +53,7 @@
 										</td>
 									</tr>
 									<tr th:if="${#lists.size(admins) <= 1}">
-										<td colspan="3" class="text-center text-muted">No other
+										<td colspan="4" class="text-center text-muted">No other
 											admin accounts found.</td>
 									</tr>
 								</tbody>
@@ -81,13 +84,23 @@
 										th:errors="*{lastName}">LN Error</div>
 								</div>
 							</div>
-							<div class="mb-3">
-								<label for="adminUsername" class="form-label">Username</label> <input
-									type="text" class="form-control" th:field="*{username}"
-									id="adminUsername" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">User Error</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminUsername" class="form-label">Username</label>
+									<input type="text" class="form-control" th:field="*{username}"
+										id="adminUsername" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('username')}"
+										th:errors="*{username}">User Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminEmail" class="form-label">Email</label> <input
+										type="email" class="form-control" th:field="*{email}"
+										id="adminEmail" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
+										Error</div>
+								</div>
 							</div>
 							<div class="row">
 								<div class="col-md-6 mb-3">
@@ -162,6 +175,14 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
 									th:errors="*{username}">User Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="custEmail" class="form-label">Email</label> <input
+									type="email" class="form-control" th:field="*{email}"
+									id="custEmail" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
+									Error</div>
 							</div>
 							<div class="mb-3">
 								<label for="custPassword" class="form-label">Password</label> <input
@@ -318,7 +339,7 @@
 									<label for="blockNo" class="form-label">Block No.</label><input
 										type="text" class="form-control" placeholder="Block No."
 										th:field="*{blockNo}" th:errorclass="is-invalid">
-									<div classs="invalid-feedback"
+									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('blockNo')}" th:errors="*{blockNo}">Error</div>
 								</div>
 							</div>
@@ -419,6 +440,13 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('username')}"
 									th:errors="*{username}">Error</div>
+							</div>
+							<div class="mb-3">
+								<label for="editAdminEmail" class="form-label">Email</label><input
+									type="email" class="form-control" th:field="*{email}"
+									id="editAdminEmail" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 							</div>
 							<div class="alert alert-warning small">Password and Role
 								cannot be changed from this form.</div>

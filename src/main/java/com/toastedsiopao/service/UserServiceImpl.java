@@ -46,7 +46,6 @@ public class UserServiceImpl implements UserService {
 		}
 	}
 
-	// **** NEW VALIDATION METHOD ****
 	// Centralized validation for email uniqueness during update
 	private void validateEmailOnUpdate(String email, Long userId) {
 		Optional<User> userWithSameEmail = userRepository.findByEmail(email);
@@ -54,7 +53,6 @@ public class UserServiceImpl implements UserService {
 			throw new IllegalArgumentException("Email '" + email + "' already exists.");
 		}
 	}
-	// **** END NEW METHOD ****
 
 	// Centralized password match validation
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
@@ -68,7 +66,7 @@ public class UserServiceImpl implements UserService {
 	public User saveCustomer(UserDto userDto) {
 		// --- Moved Validations Here ---
 		validateUsernameDoesNotExist(userDto.getUsername());
-		validateEmailDoesNotExist(userDto.getEmail()); // **** ADDED EMAIL CHECK ****
+		validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 		// --- End Moved Validations ---
 
@@ -76,7 +74,7 @@ public class UserServiceImpl implements UserService {
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
 		newUser.setUsername(userDto.getUsername());
-		newUser.setEmail(userDto.getEmail()); // **** ADDED EMAIL MAPPING ****
+		newUser.setEmail(userDto.getEmail());
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password here
 		newUser.setRole("ROLE_CUSTOMER"); // Set role explicitly
@@ -117,17 +115,17 @@ public class UserServiceImpl implements UserService {
 	public User saveAdminUser(AdminUserCreateDto userDto, String role) {
 		// --- Moved Validations Here ---
 		validateUsernameDoesNotExist(userDto.getUsername());
+		validateEmailDoesNotExist(userDto.getEmail()); // **** ADDED EMAIL CHECK ****
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
-		// We will add email validation here in the next batch
 		// --- End Moved Validations ---
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
 		newUser.setUsername(userDto.getUsername());
+		newUser.setEmail(userDto.getEmail()); // **** ADDED EMAIL MAPPING ****
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword())); // Encode password
 		newUser.setRole(role); // Use provided role
-		// Note: Admin creation does not include email yet. We can add that next.
 
 		return userRepository.save(newUser);
 	}
@@ -145,15 +143,15 @@ public class UserServiceImpl implements UserService {
 
 		// --- Moved Validation Here ---
 		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
-		validateEmailOnUpdate(userDto.getEmail(), userDto.getId()); // **** ADDED EMAIL UPDATE CHECK ****
+		validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
 		// --- End Moved Validation ---
 
 		// Map fields
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
-		userToUpdate.setEmail(userDto.getEmail()); // **** ADDED EMAIL UPDATE MAPPING ****
-		userToUpdate.setPhone(userDto.getPhone()); // Assumes DTO validation handles format if present
+		userToUpdate.setEmail(userDto.getEmail());
+		userToUpdate.setPhone(userDto.getPhone());
 		// Map address fields
 		userToUpdate.setHouseNo(userDto.getHouseNo());
 		userToUpdate.setLotNo(userDto.getLotNo());
@@ -193,13 +191,14 @@ public class UserServiceImpl implements UserService {
 
 		// --- Moved Validation Here ---
 		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
-		// We will add email validation here in the next batch
+		validateEmailOnUpdate(userDto.getEmail(), userDto.getId()); // **** ADDED EMAIL UPDATE CHECK ****
 		// --- End Moved Validation ---
 
 		// Map fields
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
+		userToUpdate.setEmail(userDto.getEmail()); // **** ADDED EMAIL UPDATE MAPPING ****
 		// Password and Role are NOT updated here
 
 		return userRepository.save(userToUpdate);

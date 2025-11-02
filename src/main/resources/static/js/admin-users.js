@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#firstName').value = dataset.firstName || '';
 			form.querySelector('#lastName').value = dataset.lastName || '';
 			form.querySelector('#username').value = dataset.username || '';
+			form.querySelector('#email').value = dataset.email || ''; // **** ADDED THIS LINE ****
 			form.querySelector('#phone').value = dataset.phone || '';
 			form.querySelector('#houseNo').value = dataset.houseNo || '';
 			form.querySelector('#lotNo').value = dataset.lotNo || '';
@@ -133,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
 			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
 			form.querySelector('#editAdminUsername').value = dataset.username || '';
+			form.querySelector('#editAdminEmail').value = dataset.email || ''; // **** ADDED THIS LINE ****
 
 			// Clear previous validation highlights unless reopening
 			if (mainElement.dataset.showEditAdminModal !== 'true') {

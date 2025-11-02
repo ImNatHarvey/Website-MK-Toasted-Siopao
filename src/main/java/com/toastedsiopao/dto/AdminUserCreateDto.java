@@ -25,6 +25,8 @@ public class AdminUserCreateDto {
 
 	@NotBlank(message = "Password cannot be blank")
 	@Size(min = 8, message = "Password must be at least 8 characters")
+	// **** ADDED PATTERN ****
+	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
 	private String password;
 
 	@NotBlank(message = "Confirm password cannot be blank")

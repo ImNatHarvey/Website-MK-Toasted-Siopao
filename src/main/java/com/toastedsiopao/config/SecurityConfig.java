@@ -3,7 +3,6 @@ package com.toastedsiopao.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-// Removed @Order import
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,8 +11,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // **** KEPT IMPORT ****
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-// Kept CustomerAuthenticationSuccessHandler import
 
 @Configuration
 @EnableWebSecurity
@@ -24,37 +23,52 @@ public class SecurityConfig {
 
 	@Autowired
 	private CustomerAuthenticationSuccessHandler customerAuthenticationSuccessHandler;
-	// Removed AdminAuthenticationSuccessHandler injection
 
 	@Bean
 	public static PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
+	// **** ADDED BEAN FOR OUR NEW (CORRECT) FILTER ****
+	/**
+	 * Creates the custom whitespace check filter. This filter is simple and doesn't
+	 * need the AuthenticationManager.
+	 */
+	@Bean
+	public LoginWhitespaceFilter loginWhitespaceFilter() {
+		return new LoginWhitespaceFilter();
+	}
+	// **** END ADDED BEAN ****
+
 	// --- SINGLE Security Filter Chain ---
 	@Bean
-	// Removed @Order annotation
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.authorizeHttpRequests(auth -> auth
-				// *** START PUBLIC ACCESS RULES ***
-				.requestMatchers("/css/**", // Allow CSS files
-						"/img/**", // Allow Image files
-						"/", // Allow Homepage
-						"/menu", // Allow Public Menu
-						"/about", // Allow About Us
-						"/order", // Allow Public Order Page (GET)
-						"/login", // Allow Login Page (GET)
-						"/signup", // *** ALLOW SIGNUP PAGE (GET) ***
-						"/access-denied", // Allow Access Denied Page
-						"/logout" // Allow Logout URL processing
-				).permitAll() // *** END PUBLIC ACCESS RULES ***
+	public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginWhitespaceFilter loginWhitespaceFilter)
+			throws Exception { // **** INJECTED NEW FILTER ****
+		http
+				// **** ADDED NEW FILTER ****
+				// This runs our custom parameter check *before* the real login filter
+				.addFilterBefore(loginWhitespaceFilter, UsernamePasswordAuthenticationFilter.class)
 
-				// Role rules for protected areas
-				.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/u/**").hasRole("CUSTOMER")
+				.authorizeHttpRequests(auth -> auth
+						// *** START PUBLIC ACCESS RULES ***
+						.requestMatchers("/css/**", // Allow CSS files
+								"/img/**", // Allow Image files
+								"/", // Allow Homepage
+								"/menu", // Allow Public Menu
+								"/about", // Allow About Us
+								"/order", // Allow Public Order Page (GET)
+								"/login", // Allow Login Page (GET)
+								"/signup", // *** ALLOW SIGNUP PAGE (GET) ***
+								"/access-denied", // Allow Access Denied Page
+								"/logout" // Allow Logout URL processing
+						).permitAll() // *** END PUBLIC ACCESS RULES ***
 
-				// Any other request requires authentication
-				.anyRequest().authenticated())
-				// --- The rest should be correct ---
+						// Role rules for protected areas
+						.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/u/**").hasRole("CUSTOMER")
+
+						// Any other request requires authentication
+						.anyRequest().authenticated())
+				// --- This configuration is now safe and will not be broken ---
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
 						.successHandler(customerAuthenticationSuccessHandler).failureUrl("/login?error=true")
 						.permitAll())
@@ -62,10 +76,7 @@ public class SecurityConfig {
 						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true).deleteCookies("JSESSIONID")
 						.clearAuthentication(true))
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
-				.headers(headers -> headers.cacheControl(cache -> cache.disable())).csrf(csrf -> csrf.disable()); // Keep
-																													// disabled
-																													// for
-																													// now
+				.headers(headers -> headers.cacheControl(cache -> cache.disable())).csrf(csrf -> csrf.disable());
 
 		return http.build();
 	}

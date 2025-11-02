@@ -1,6 +1,7 @@
 package com.toastedsiopao.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException; // **** ADDED IMPORT ****
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +26,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		// --- ADD LOGGING ---
 		System.out.println("--- Attempting to load user by username: " + username + " ---");
 		// --- END LOGGING ---
+
+		// **** ADDED WHITESPACE CHECK ****
+		// This prevents logins with " user " or "user name"
+		if (username == null || username.contains(" ")) {
+			System.out.println("--- Login failed: Username contains whitespace. ---");
+			// Throw BadCredentialsException so it's handled as a generic login failure
+			throw new BadCredentialsException("Username cannot contain spaces");
+		}
+		// **** END ADDED CHECK ****
 
 		User user = userRepository.findByUsername(username).orElseThrow(() -> {
 			// --- ADD LOGGING ---

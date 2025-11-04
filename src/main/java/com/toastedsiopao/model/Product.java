@@ -67,8 +67,14 @@ public class Product {
 	private LocalDateTime stockLastUpdated;
 
 	// --- NEW: Recipe Lock Field ---
+	// ==================================
+	// == COMMENT UPDATED ==
+	// ==================================
 	@Column(nullable = false)
-	private boolean recipeLocked = false; // Locks recipe after first stock-in
+	private boolean recipeLocked = false; // Locks recipe on product creation
+	// ==================================
+	// == END UPDATE ==
+	// ==================================
 	// --- END NEW ---
 
 	@PrePersist

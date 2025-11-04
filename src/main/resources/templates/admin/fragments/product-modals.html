@@ -9,7 +9,8 @@
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<form th:action="@{/admin/products/add}" method="post"
-						th:object="${productDto}" id="addProductForm">
+						th:object="${productDto}" id="addProductForm"
+						onsubmit="return confirm('Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified.');">
 						<div class="modal-header">
 							<h5 class="modal-title" id="addProductModalLabel">Add New
 								Product</h5>
@@ -427,6 +428,7 @@
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="viewProductModal" tabindex="-1"
 			aria-labelledby="viewProductModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">

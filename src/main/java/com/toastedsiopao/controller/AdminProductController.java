@@ -258,11 +258,6 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// ... (Delete Product, Delete Category methods remain unchanged) ...
-
-	// ==================================
-	// == ADJUST STOCK METHOD - UPDATED ==
-	// ==================================
 	@PostMapping("/stock/adjust")
 	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity, // CHANGED
 			@RequestParam("action") String action, // ADDED
@@ -297,9 +292,6 @@ public class AdminProductController {
 		}
 		return "redirect:/admin/products";
 	}
-	// ==================================
-	// == END ADJUST STOCK METHOD ==
-	// ==================================
 
 	@PostMapping("/delete/{id}")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,

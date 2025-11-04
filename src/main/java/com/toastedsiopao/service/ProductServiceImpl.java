@@ -98,15 +98,34 @@ public class ProductServiceImpl implements ProductService {
 			product = new Product();
 			product.setCurrentStock(0); // Set initial stock to 0 for new products
 			log.info("{} new product: Name='{}'", logAction, productDto.getName());
-			// Note: recipeLocked defaults to false
+			// ==================================
+			// == LOGIC MOVED HERE ==
+			// ==================================
+			product.setRecipeLocked(true); // Lock recipe immediately on creation
+			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
+			// ==================================
+			// == END MOVED LOGIC ==
+			// ==================================
 		}
 
 		// --- MODIFIED: Ingredient Handling ---
 		// Check if the recipe is locked. If it is, skip all ingredient modifications.
 		if (product.isRecipeLocked()) {
-			log.warn("Attempted to modify ingredients for locked product '{}' (ID: {}). Ingredients were not changed.",
-					product.getName(), product.getId());
-		} else {
+			// This will now only be true for non-new (edit) cases.
+			// New products have it set to true, but this block is skipped,
+			// allowing ingredients to be added *one time* during creation.
+			if (!isNew) {
+				log.warn(
+						"Attempted to modify ingredients for locked product '{}' (ID: {}). Ingredients were not changed.",
+						product.getName(), product.getId());
+			}
+		}
+
+		// --- This block now only runs IF:
+		// 1. It's a NEW product (isRecipeLocked=true, but isNew=true)
+		// 2. It's an OLD product AND recipeLocked=false (which should no longer happen,
+		// but safe to keep)
+		if (!product.isRecipeLocked() || isNew) {
 			// Recipe is not locked, proceed with ingredient logic as normal.
 			// Remove ingredients that are no longer in the DTO
 			if (product.getIngredients() != null) { // Check if list exists (it should)
@@ -213,7 +232,6 @@ public class ProductServiceImpl implements ProductService {
 				log.warn(
 						"Product ID {} ('{}') has no ingredients defined. Increasing stock without consuming inventory.",
 						productId, product.getName());
-				// --- !! Even if no ingredients, we still lock the "empty" recipe !! ---
 			} else {
 				BigDecimal productionAmount = new BigDecimal(quantityChange);
 
@@ -264,14 +282,9 @@ public class ProductServiceImpl implements ProductService {
 				}
 			}
 
-			// --- NEW: SET RECIPE LOCK ---
-			// If this is the first time stock is being added, lock the recipe.
-			if (!product.isRecipeLocked()) {
-				product.setRecipeLocked(true);
-				log.info("Recipe for product '{}' (ID: {}) is now LOCKED due to first production.", product.getName(),
-						productId);
-			}
-			// --- END NEW ---
+			// ==================================
+			// == RECIPE LOCK LOGIC REMOVED ==
+			// ==================================
 		}
 		// --- END PRODUCTION LOGIC ---
 

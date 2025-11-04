@@ -5,11 +5,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-products.js loaded"); // Confirm script is running
 
-	// **** FIX IS HERE ****
-	// We select the specific main element that has our data attribute,
-	// not just the first <main> tag on the page.
 	const mainElement = document.querySelector('main[data-inventory-stock-map]');
-	// **** END OF FIX ****
 
 	if (!mainElement) {
 		console.error("Main element with data-inventory-stock-map not found in admin-products.js!");
@@ -19,10 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
 	// --- Logic for Edit Product Modal ---
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
+		// ... (edit modal 'show' and 'hidden' logic remains unchanged) ...
 		const form = editProductModal.querySelector('#editProductForm');
 		const modalTitle = editProductModal.querySelector('#editProductModalLabel');
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
-		// --- NEW: Get lock warning and add button ---
 		const recipeLockedWarning = editProductModal.querySelector('#editRecipeLockedWarning');
 		const addIngredientBtn = editProductModal.querySelector('#addIngredientBtnEditModal');
 
@@ -39,13 +35,12 @@ document.addEventListener('DOMContentLoaded', function() {
 				dataset = button.dataset;
 			} else {
 				console.warn("Edit Product modal opened without expected button source.");
-				// Optionally reset form if opened unexpectedly
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				return;
 			}
 
-			console.log("Populating Edit Product Modal with data:", dataset); // Debug log
+			console.log("Populating Edit Product Modal with data:", dataset); 
 
 			modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 			form.querySelector('#id').value = dataset.id || '';
@@ -69,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
 						.filter(item => item.includes(':'))
 						.map(item => {
 							const parts = item.split(':');
-							// Ensure quantity is parsed correctly, handle potential non-numeric values
 							const quantity = parseFloat(parts[1]);
 							return { itemId: parts[0], quantity: isNaN(quantity) ? '' : quantity };
 						});
@@ -78,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					ingredients = [];
 				}
 			}
-			console.log("Parsed ingredients for Edit:", ingredients); // Debug log
+			console.log("Parsed ingredients for Edit:", ingredients); 
 
 			if (ingredientsContainer) {
 				ingredients.forEach((ingData) => {
@@ -88,64 +82,52 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.warn("Ingredient container not found for edit modal.");
 			}
 
-			// --- NEW: Handle Recipe Lock UI ---
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
 			console.log("Is recipe locked? ", isRecipeLocked);
 
 			if (isRecipeLocked) {
-				// Show warning
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
-				// Hide 'Add Ingredient' button
 				if (addIngredientBtn) addIngredientBtn.style.display = 'none';
-				// Disable all ingredient inputs and buttons
 				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
 					el.disabled = true;
 					if (el.classList.contains('remove-ingredient-btn')) {
-						el.style.display = 'none'; // Hide remove buttons
+						el.style.display = 'none'; 
 					}
 				});
 			} else {
-				// Hide warning
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'none';
-				// Show 'Add Ingredient' button
 				if (addIngredientBtn) addIngredientBtn.style.display = 'block';
-				// Ensure all inputs are enabled (in case modal is reused)
 				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
 					el.disabled = false;
 					if (el.classList.contains('remove-ingredient-btn')) {
-						el.style.display = 'block'; // Show remove buttons
+						el.style.display = 'block'; 
 					}
 				});
 			}
-			// --- END NEW ---
 
 
-			// Clear previous validation highlights unless it's being reopened by script.js
-			// Check if the main element still has the data attribute flag
 			if (mainElement.dataset.showEditProductModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form.querySelector('.alert.alert-danger'); // General validation alert
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) { // Avoid removing Thymeleaf conditional alerts
+				const errorAlert = form.querySelector('.alert.alert-danger'); 
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) { 
 					errorAlert.remove();
 				}
 			}
 		});
 
 		editProductModal.addEventListener('hidden.bs.modal', function() {
-			// Clear form state only if the modal wasn't explicitly flagged to stay open
 			if (mainElement.dataset.showEditProductModal !== 'true') {
-				console.log("Clearing Edit Product modal on hide (not validation reopen).") // Debug
-				if (form) form.reset(); // Clear basic fields
-				if (form) form.querySelector('#id').value = ''; // Clear hidden ID
+				console.log("Clearing Edit Product modal on hide (not validation reopen).") 
+				if (form) form.reset(); 
+				if (form) form.querySelector('#id').value = ''; 
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) { // Avoid removing Thymeleaf conditional alerts
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) { 
 					errorAlert.remove();
 				}
-				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; // Clear ingredients
+				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; 
 			} else {
-				// If it WAS kept open, remove the flag for the next time it's closed normally
-				console.log("Resetting showEditProductModal flag on hide.") // Debug
+				console.log("Resetting showEditProductModal flag on hide.") 
 				mainElement.removeAttribute('data-show-edit-product-modal');
 			}
 		});
@@ -175,7 +157,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const stockBadge = viewProductModal.querySelector('#viewProductStockStatusBadge');
 			stockBadge.textContent = dataset.stockStatus || 'N/A';
-			stockBadge.className = 'badge ms-2 ' + (dataset.stockStatusClass || 'bg-secondary');
+			stockBadge.className = 'status-badge ms-2 ' + (dataset.stockStatusClass || 'status-no_stock');
+
 			viewProductModal.querySelector('#viewProductCurrentStock').textContent = dataset.currentStock || '0';
 			viewProductModal.querySelector('#viewProductLowThreshold').textContent = dataset.lowStockThreshold || '0';
 			viewProductModal.querySelector('#viewProductCriticalThreshold').textContent = dataset.criticalStockThreshold || '0';
@@ -187,8 +170,23 @@ document.addEventListener('DOMContentLoaded', function() {
 				lastUpdatedEl.style.display = 'none';
 			}
 
+			// ==================================
+			// == QUICK FIX MOVED HERE ==
+			// ==================================
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
-			ingredientsListDiv.innerHTML = '';
+			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading'); // Find heading
+
+			// --- Clear previous badge ---
+			const existingBadge = ingredientsHeading ? ingredientsHeading.querySelector('.badge') : null;
+			if (existingBadge) {
+				existingBadge.remove();
+			}
+
+			ingredientsListDiv.innerHTML = ''; // Clear ingredients list
+			// ==================================
+			// == END FIX ==
+			// ==================================
+
 			let ingredientsDataView = [];
 			if (dataset.ingredientsView && dataset.ingredientsView.length > 0) {
 				try {
@@ -209,15 +207,21 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 			console.log("Parsed ingredients for View:", ingredientsDataView); // Debug log
 
+			// ==================================
+			// == QUICK FIX MOVED HERE ==
+			// ==================================
 			// --- NEW: Add Lock Status to View Modal ---
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
-			if (isRecipeLocked) {
+			if (isRecipeLocked && ingredientsHeading) {
 				const lockBadge = document.createElement('span');
-				lockBadge.className = 'badge bg-warning text-dark ms-2';
+				lockBadge.className = 'badge bg-warning text-dark ms-2'; // This matches the user's image style
 				lockBadge.textContent = 'Recipe Locked';
-				ingredientsListDiv.appendChild(lockBadge);
+				ingredientsHeading.appendChild(lockBadge); // Append inside the h5
 			}
 			// --- END NEW ---
+			// ==================================
+			// == END FIX ==
+			// ==================================
 
 			if (ingredientsDataView.length > 0) {
 				const table = document.createElement('table');
@@ -252,29 +256,29 @@ document.addEventListener('DOMContentLoaded', function() {
 	// --- Logic for Add Product Modal (Clear on Hide) ---
 	const addProductModal = document.getElementById('addProductModal');
 	if (addProductModal) {
+		// ... (add modal 'hidden' logic remains unchanged) ...
 		const form = addProductModal.querySelector('#addProductForm');
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
 
 		addProductModal.addEventListener('hidden.bs.modal', function() {
-			// Clear form state only if the modal wasn't explicitly flagged to stay open
 			if (mainElement.dataset.showAddProductModal !== 'true') {
-				console.log("Clearing Add Product modal on hide (not validation reopen).") // Debug
+				console.log("Clearing Add Product modal on hide (not validation reopen).") 
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
 				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
 					errorAlert.remove();
 				}
-				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; // Clear dynamic ingredients
+				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; 
 			} else {
-				// Reset the flag for the next time
-				console.log("Resetting showAddProductModal flag on hide.") // Debug
+				console.log("Resetting showAddProductModal flag on hide.") 
 				mainElement.removeAttribute('data-show-add-product-modal');
 			}
 		});
 	}
 
 	// --- Recipe Ingredient Management ---
+	// ... (addIngredientRow, removeIngredientRow, renumberIngredientRows functions remain unchanged) ...
 	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
@@ -283,9 +287,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			return;
 		}
 
-		// Use content of template if available
-		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true).innerHTML; // Fallback for older browsers?
-		const tempDiv = document.createElement('div'); // Create temporary div to append fragment/HTML string
+		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true).innerHTML; 
+		const tempDiv = document.createElement('div'); 
 		if (typeof fragment === 'string') {
 			tempDiv.innerHTML = fragment;
 		} else {
@@ -300,27 +303,25 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
-		const index = currentRowCount; // Index for the new row
+		const index = currentRowCount; 
 
-		// Update name attributes with the correct index
 		newRowElement.querySelectorAll('[name]').forEach(input => {
-			if (input.name) { // Check if name attribute exists
+			if (input.name) { 
 				input.name = input.name.replace('[INDEX]', `[${index}]`);
 			} else {
 				console.warn("Input found without name attribute in template:", input);
 			}
 		});
 
-		// Populate if data is provided (used by Edit Product modal)
 		if (data) {
 			const select = newRowElement.querySelector('.ingredient-item');
 			const quantityInput = newRowElement.querySelector('.ingredient-quantity');
-			if (select) select.value = data.itemId || ''; // Ensure setting to empty if no itemId
-			if (quantityInput) quantityInput.value = data.quantity || ''; // Ensure setting to empty if no quantity
+			if (select) select.value = data.itemId || ''; 
+			if (quantityInput) quantityInput.value = data.quantity || ''; 
 		}
 
 		containerDiv.appendChild(newRowElement);
-		console.log(`Added ingredient row to ${containerId} with index ${index}`); // Debug
+		console.log(`Added ingredient row to ${containerId} with index ${index}`); 
 	}
 
 	function removeIngredientRow(button) {
@@ -328,7 +329,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (rowToRemove) {
 			const container = rowToRemove.parentElement;
 			rowToRemove.remove();
-			renumberIngredientRows(container); // Renumber after removing
+			renumberIngredientRows(container); 
 		}
 	}
 
@@ -344,6 +345,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+
 	// Add Ingredient Button Listeners
 	document.getElementById('addIngredientBtn')?.addEventListener('click', () => addIngredientRow('addIngredientsContainer', 'ingredientRowTemplate'));
 	document.getElementById('addIngredientBtnEditModal')?.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
@@ -356,35 +358,34 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
-	// --- MAX BUTTON LOGIC (Copied from script.js, needs mainElement defined above) ---
+	// --- MAX BUTTON LOGIC ---
 	document.addEventListener('click', function(event) {
+		// ... (max button logic remains unchanged) ...
 		const maxBtn = event.target.closest('.max-quantity-btn');
 		if (!maxBtn) return;
 
 		console.log("--- Max button clicked (product page) ---");
 
-		const row = maxBtn.closest('tr'); // Assumes button is in a table row
+		const row = maxBtn.closest('tr'); 
 		const quantityInput = row ? row.querySelector('.quantity-change-input') : null;
-		const productId = row ? row.dataset.productId : null; // Get product ID from row
+		const productId = row ? row.dataset.productId : null; 
 
 		if (!mainElement) {
 			console.error("Main element not found inside Max button listener.");
 			alert("Internal error: Configuration data missing.");
 			return;
 		}
-		const inventoryStockJson = mainElement.dataset.inventoryStockMap; // JSON string '{"id":qty,...}'
-		const ingredientsData = row ? row.dataset.productIngredients : null; // 'id:qty,id:qty' format
+		const inventoryStockJson = mainElement.dataset.inventoryStockMap; 
+		const ingredientsData = row ? row.dataset.productIngredients : null; 
 
-		// Robust checks
-		if (!row) { /* ... error handling ... */ alert("Internal error: Could not identify product row."); return; }
-		if (!quantityInput) { /* ... error handling ... */ alert("Internal error: Could not find quantity field."); return; }
-		if (!productId) { /* ... error handling ... */ alert("Internal error: Product ID missing."); return; }
-		if (!ingredientsData || ingredientsData.trim() === '') { /* ... error handling ... */ alert("Could not calculate maximum: Product recipe data is missing."); return; }
-		if (!inventoryStockJson || inventoryStockJson.trim() === '') { /* ... error handling ... */ alert("Could not calculate maximum: Inventory stock data missing."); return; }
+		if (!row) { alert("Internal error: Could not identify product row."); return; }
+		if (!quantityInput) { alert("Internal error: Could not find quantity field."); return; }
+		if (!productId) { alert("Internal error: Product ID missing."); return; }
+		if (!ingredientsData || ingredientsData.trim() === '') { alert("Could not calculate maximum: Product recipe data is missing."); return; }
+		if (!inventoryStockJson || inventoryStockJson.trim() === '') { alert("Could not calculate maximum: Inventory stock data missing."); return; }
 
 
 		try {
-			// 1. Parse Product Ingredients
 			console.log(`Parsing recipe for product ${productId}:`, ingredientsData);
 			const recipe = ingredientsData.split(',')
 				.map(item => item.trim())
@@ -401,9 +402,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				.filter(item => item !== null);
 
 			console.log("Parsed recipe:", recipe);
-			if (recipe.length === 0) { /* ... error handling ... */ alert("Product has no valid ingredients."); quantityInput.value = 0; return; }
+			if (recipe.length === 0) { alert("Product has no valid ingredients."); quantityInput.value = 0; return; }
 
-			// 2. Parse Inventory Stock Map
 			console.log("Parsing inventory stock JSON:", inventoryStockJson);
 			let inventoryStockMap = {};
 			try {
@@ -418,13 +418,12 @@ document.addEventListener('DOMContentLoaded', function() {
 						} else { console.warn(`Skipping invalid inventory entry: key='${key}', value='${rawMap[key]}'`); }
 					}
 				}
-			} catch (jsonError) { /* ... error handling ... */ console.error("Error parsing inventory stock JSON:", jsonError); alert("Inventory data error."); quantityInput.value = ''; return; }
+			} catch (jsonError) { console.error("Error parsing inventory stock JSON:", jsonError); alert("Inventory data error."); quantityInput.value = ''; return; }
 
 			console.log("Parsed inventory map:", inventoryStockMap);
-			if (Object.keys(inventoryStockMap).length === 0) { /* ... error handling ... */ alert("Inventory data appears empty."); quantityInput.value = 0; return; }
+			if (Object.keys(inventoryStockMap).length === 0) { alert("Inventory data appears empty."); quantityInput.value = 0; return; }
 
 
-			// 3. Calculate Max Producable Quantity
 			console.log("Calculating maximum...");
 			let maxPossible = Infinity;
 			for (const ingredient of recipe) {
@@ -434,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (availableStock === undefined || availableStock === null || isNaN(availableStock)) {
 					console.error(`Stock not found/invalid for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
 				}
-				if (availableStock <= 0 || availableStock < ingredient.quantityNeeded) { // Check if available is zero or less than needed
+				if (availableStock <= 0 || availableStock < ingredient.quantityNeeded) { 
 					console.log(`Insufficient stock for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
 				}
 
@@ -444,8 +443,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			console.log(`Max Possible = ${maxPossible}`);
 
-			// 4. Update Input Field
-			if (maxPossible === Infinity || maxPossible < 0) { // Handle empty recipe or calculation error
+			if (maxPossible === Infinity || maxPossible < 0) { 
 				console.warn("Max calculation result invalid, setting to 0.");
 				quantityInput.value = 0;
 			} else {
@@ -453,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 			console.log(`Set quantity input to: ${quantityInput.value}`);
 
-		} catch (error) { /* ... error handling ... */ console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
-	}); // End Max Button Listener
+		} catch (error) { console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
+	}); 
 
-}); // End DOMContentLoaded for admin-products.js
+});

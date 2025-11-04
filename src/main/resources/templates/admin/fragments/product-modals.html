@@ -302,9 +302,8 @@
 
 							<div class="alert alert-warning small p-2" role="alert"
 								id="editRecipeLockedWarning" style="display: none;">
-								<i class="fa-solid fa-lock me-1"></i> This product's recipe is <strong>locked</strong>
-								because stock has been produced. Ingredients can no longer be
-								modified.
+								<i class="fa-solid fa-lock me-1"></i> This product's recipe is <strong>locked</strong>.
+								Ingredients can no longer be modified.
 							</div>
 							<div id="editIngredientsContainerModal">
 								<div th:each="ing, iterStat : *{ingredients}"
@@ -483,7 +482,8 @@
 						</div>
 
 						<hr>
-						<h5 class="mb-3">Recipe Ingredients</h5>
+						<h5 class="mb-3" id="viewProductIngredientsHeading">Recipe
+							Ingredients</h5>
 						<div id="viewProductIngredientsList">
 							<p class="text-muted small">No ingredients assigned.</p>
 						</div>

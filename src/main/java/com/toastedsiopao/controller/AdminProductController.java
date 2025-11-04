@@ -258,26 +258,34 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// ... (Stock Adjust, Delete Product, Delete Category methods remain unchanged)
-	// ...
+	// ... (Delete Product, Delete Category methods remain unchanged) ...
+
+	// ==================================
+	// == ADJUST STOCK METHOD - UPDATED ==
+	// ==================================
 	@PostMapping("/stock/adjust")
-	public String adjustProductStock(@RequestParam("productId") Long productId,
-			@RequestParam("quantityChange") int quantityChange, RedirectAttributes redirectAttributes,
-			Principal principal, UriComponentsBuilder uriBuilder) {
-		// ... (unchanged) ...
-		String derivedReason = quantityChange > 0 ? "Production" : "Adjustment/Wastage";
-		if (quantityChange == 0) {
-			redirectAttributes.addFlashAttribute("stockError", "Quantity change cannot be zero.");
+	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity, // CHANGED
+			@RequestParam("action") String action, // ADDED
+			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
+
+		// Validate that quantity is positive
+		if (quantity <= 0) {
+			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
+
+		// Determine the final quantity change (positive or negative)
+		int quantityChange = action.equals("deduct") ? -quantity : quantity;
+		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
+
 		try {
 			Product updatedProduct = productService.adjustStock(productId, quantityChange, derivedReason);
-			String action = quantityChange > 0 ? "Produced" : "Adjusted";
-			String details = action + " " + Math.abs(quantityChange) + " units of " + updatedProduct.getName()
-					+ " (ID: " + productId + "). Reason: " + derivedReason;
-			redirectAttributes.addFlashAttribute("stockSuccess", action + " " + Math.abs(quantityChange) + " units of '"
+			String actionText = action.equals("add") ? "Produced" : "Adjusted";
+			String details = actionText + " " + quantity + " units of " + updatedProduct.getName() + " (ID: "
+					+ productId + "). Reason: " + derivedReason;
+			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " units of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
 		} catch (RuntimeException e) {
@@ -289,6 +297,9 @@ public class AdminProductController {
 		}
 		return "redirect:/admin/products";
 	}
+	// ==================================
+	// == END ADJUST STOCK METHOD ==
+	// ==================================
 
 	@PostMapping("/delete/{id}")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,

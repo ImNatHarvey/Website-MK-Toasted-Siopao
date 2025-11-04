@@ -381,7 +381,7 @@
 									<tr>
 										<th>Product</th>
 										<th>Current Stock</th>
-										<th>Adjust Quantity</th>
+										<th>Quantity</th>
 										<th>Action</th>
 									</tr>
 								</thead>
@@ -394,18 +394,22 @@
 											<input type="hidden" name="productId" th:value="${prod.id}" />
 											<td th:text="${prod.name}">...</td>
 											<td th:text="${prod.currentStock}">...</td>
+											<td><input type="number" name="quantity"
+												class="form-control form-control-sm quantity-change-input"
+												style="width: 100px;" placeholder="Qty" required step="1"
+												min="1" /></td>
 											<td>
-												<div class="input-group input-group-sm">
-													<input type="number" name="quantityChange"
-														class="form-control quantity-change-input"
-														style="width: 80px;" placeholder="+/- Qty" required />
+												<div class="d-flex gap-1">
 													<button type="button"
-														class="btn btn-outline-secondary max-quantity-btn"
+														class="btn btn-sm btn-action-view max-quantity-btn"
 														th:if="${prod.ingredients != null and !#lists.isEmpty(prod.ingredients)}"
 														title="Calculate maximum producable quantity based on inventory">Max</button>
+													<button type="submit" name="action" value="add"
+														class="btn btn-sm btn-action-success">Add</button>
+													<button type="submit" name="action" value="deduct"
+														class="btn btn-sm btn-action-delete">Deduct</button>
 												</div>
 											</td>
-											<td><button type="submit" class="btn btn-sm btn-custom">Adjust</button></td>
 										</form>
 									</tr>
 									<tr th:if="${#lists.isEmpty(products)}">
@@ -423,7 +427,6 @@
 				</div>
 			</div>
 		</div>
-
 		<div class="modal fade" id="viewProductModal" tabindex="-1"
 			aria-labelledby="viewProductModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">

@@ -55,8 +55,7 @@
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/products}" class="btn btn-custom-secondary"
-						title="Clear Filters">Clear
-					</a>
+						title="Clear Filters">Clear </a>
 				</div>
 			</div>
 		</form>
@@ -109,7 +108,8 @@
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
 								th:data-stock-last-updated="${product.stockLastUpdated != null ? #temporals.format(product.stockLastUpdated, 'MMM dd, yyyy HH:mm') : ''}"
 								th:attr="data-ingredients-view=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.name + ':' + #numbers.formatDecimal(quantityNeeded, 1, 'COMMA', 2, 'POINT') + ':' + inventoryItem.unit.abbreviation], ',') : ''},
-											 data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
+											 data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
+											 data-recipe-locked=${product.recipeLocked}">
 								View</button>
 							<button type="button"
 								class="btn btn-sm btn-action-edit flex-fill edit-product-btn"
@@ -121,7 +121,8 @@
 								th:data-image-url="${product.imageUrl}"
 								th:data-low-stock-threshold="${product.lowStockThreshold}"
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
-								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}">
+								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
+											 data-recipe-locked=${product.recipeLocked}">
 								Edit</button>
 							<form
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"

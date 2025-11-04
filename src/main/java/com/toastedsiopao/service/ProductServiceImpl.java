@@ -98,41 +98,49 @@ public class ProductServiceImpl implements ProductService {
 			product = new Product();
 			product.setCurrentStock(0); // Set initial stock to 0 for new products
 			log.info("{} new product: Name='{}'", logAction, productDto.getName());
+			// Note: recipeLocked defaults to false
 		}
 
-		// --- Ingredient Handling (Unchanged from original) ---
-		// Remove ingredients that are no longer in the DTO
-		if (product.getIngredients() != null) { // Check if list exists (it should)
-			List<Long> dtoIngredientItemIds = productDto.getIngredients().stream()
-					.filter(dto -> dto.getInventoryItemId() != null) // Filter out null IDs
-					.map(RecipeIngredientDto::getInventoryItemId).collect(Collectors.toList());
+		// --- MODIFIED: Ingredient Handling ---
+		// Check if the recipe is locked. If it is, skip all ingredient modifications.
+		if (product.isRecipeLocked()) {
+			log.warn("Attempted to modify ingredients for locked product '{}' (ID: {}). Ingredients were not changed.",
+					product.getName(), product.getId());
+		} else {
+			// Recipe is not locked, proceed with ingredient logic as normal.
+			// Remove ingredients that are no longer in the DTO
+			if (product.getIngredients() != null) { // Check if list exists (it should)
+				List<Long> dtoIngredientItemIds = productDto.getIngredients().stream()
+						.filter(dto -> dto.getInventoryItemId() != null) // Filter out null IDs
+						.map(RecipeIngredientDto::getInventoryItemId).collect(Collectors.toList());
 
-			product.getIngredients()
-					.removeIf(ingredient -> !dtoIngredientItemIds.contains(ingredient.getInventoryItem().getId()));
-		}
+				product.getIngredients()
+						.removeIf(ingredient -> !dtoIngredientItemIds.contains(ingredient.getInventoryItem().getId()));
+			}
 
-		// Update existing or add new
-		if (productDto.getIngredients() != null) {
-			for (RecipeIngredientDto ingredientDto : productDto.getIngredients()) {
-				if (ingredientDto.getInventoryItemId() != null && ingredientDto.getQuantityNeeded() != null
-						&& ingredientDto.getQuantityNeeded().compareTo(BigDecimal.ZERO) > 0) {
+			// Update existing or add new
+			if (productDto.getIngredients() != null) {
+				for (RecipeIngredientDto ingredientDto : productDto.getIngredients()) {
+					if (ingredientDto.getInventoryItemId() != null && ingredientDto.getQuantityNeeded() != null
+							&& ingredientDto.getQuantityNeeded().compareTo(BigDecimal.ZERO) > 0) {
 
-					InventoryItem inventoryItem = inventoryItemRepository.findById(ingredientDto.getInventoryItemId())
-							.orElseThrow(() -> new RuntimeException(
-									"Inventory Item not found with id: " + ingredientDto.getInventoryItemId()));
+						InventoryItem inventoryItem = inventoryItemRepository
+								.findById(ingredientDto.getInventoryItemId()).orElseThrow(() -> new RuntimeException(
+										"Inventory Item not found with id: " + ingredientDto.getInventoryItemId()));
 
-					// Check if this ingredient already exists and update it
-					Optional<RecipeIngredient> existingIngredient = product.getIngredients().stream()
-							.filter(ing -> ing.getInventoryItem() != null
-									&& ing.getInventoryItem().getId().equals(ingredientDto.getInventoryItemId()))
-							.findFirst();
+						// Check if this ingredient already exists and update it
+						Optional<RecipeIngredient> existingIngredient = product.getIngredients().stream()
+								.filter(ing -> ing.getInventoryItem() != null
+										&& ing.getInventoryItem().getId().equals(ingredientDto.getInventoryItemId()))
+								.findFirst();
 
-					if (existingIngredient.isPresent()) {
-						existingIngredient.get().setQuantityNeeded(ingredientDto.getQuantityNeeded());
-					} else {
-						// Add new one
-						product.addIngredient(
-								new RecipeIngredient(product, inventoryItem, ingredientDto.getQuantityNeeded()));
+						if (existingIngredient.isPresent()) {
+							existingIngredient.get().setQuantityNeeded(ingredientDto.getQuantityNeeded());
+						} else {
+							// Add new one
+							product.addIngredient(
+									new RecipeIngredient(product, inventoryItem, ingredientDto.getQuantityNeeded()));
+						}
 					}
 				}
 			}
@@ -205,6 +213,7 @@ public class ProductServiceImpl implements ProductService {
 				log.warn(
 						"Product ID {} ('{}') has no ingredients defined. Increasing stock without consuming inventory.",
 						productId, product.getName());
+				// --- !! Even if no ingredients, we still lock the "empty" recipe !! ---
 			} else {
 				BigDecimal productionAmount = new BigDecimal(quantityChange);
 
@@ -254,6 +263,15 @@ public class ProductServiceImpl implements ProductService {
 							item.getUnit().getAbbreviation(), item.getName());
 				}
 			}
+
+			// --- NEW: SET RECIPE LOCK ---
+			// If this is the first time stock is being added, lock the recipe.
+			if (!product.isRecipeLocked()) {
+				product.setRecipeLocked(true);
+				log.info("Recipe for product '{}' (ID: {}) is now LOCKED due to first production.", product.getName(),
+						productId);
+			}
+			// --- END NEW ---
 		}
 		// --- END PRODUCTION LOGIC ---
 

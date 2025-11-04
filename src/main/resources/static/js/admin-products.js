@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		const form = editProductModal.querySelector('#editProductForm');
 		const modalTitle = editProductModal.querySelector('#editProductModalLabel');
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
+		// --- NEW: Get lock warning and add button ---
+		const recipeLockedWarning = editProductModal.querySelector('#editRecipeLockedWarning');
+		const addIngredientBtn = editProductModal.querySelector('#addIngredientBtnEditModal');
+
 
 		editProductModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
@@ -83,6 +87,38 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				console.warn("Ingredient container not found for edit modal.");
 			}
+
+			// --- NEW: Handle Recipe Lock UI ---
+			const isRecipeLocked = (dataset.recipeLocked === 'true');
+			console.log("Is recipe locked? ", isRecipeLocked);
+
+			if (isRecipeLocked) {
+				// Show warning
+				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
+				// Hide 'Add Ingredient' button
+				if (addIngredientBtn) addIngredientBtn.style.display = 'none';
+				// Disable all ingredient inputs and buttons
+				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
+					el.disabled = true;
+					if (el.classList.contains('remove-ingredient-btn')) {
+						el.style.display = 'none'; // Hide remove buttons
+					}
+				});
+			} else {
+				// Hide warning
+				if (recipeLockedWarning) recipeLockedWarning.style.display = 'none';
+				// Show 'Add Ingredient' button
+				if (addIngredientBtn) addIngredientBtn.style.display = 'block';
+				// Ensure all inputs are enabled (in case modal is reused)
+				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
+					el.disabled = false;
+					if (el.classList.contains('remove-ingredient-btn')) {
+						el.style.display = 'block'; // Show remove buttons
+					}
+				});
+			}
+			// --- END NEW ---
+
 
 			// Clear previous validation highlights unless it's being reopened by script.js
 			// Check if the main element still has the data attribute flag
@@ -173,9 +209,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 			console.log("Parsed ingredients for View:", ingredientsDataView); // Debug log
 
+			// --- NEW: Add Lock Status to View Modal ---
+			const isRecipeLocked = (dataset.recipeLocked === 'true');
+			if (isRecipeLocked) {
+				const lockBadge = document.createElement('span');
+				lockBadge.className = 'badge bg-warning text-dark ms-2';
+				lockBadge.textContent = 'Recipe Locked';
+				ingredientsListDiv.appendChild(lockBadge);
+			}
+			// --- END NEW ---
+
 			if (ingredientsDataView.length > 0) {
 				const table = document.createElement('table');
-				table.className = 'table table-sm table-striped';
+				table.className = 'table table-sm table-striped mt-2'; // Added margin-top
 				table.innerHTML = `<thead><tr><th>Ingredient</th><th>Qty Needed</th><th>Unit</th></tr></thead><tbody></tbody>`;
 				const tbody = table.querySelector('tbody');
 				ingredientsDataView.forEach(ing => {

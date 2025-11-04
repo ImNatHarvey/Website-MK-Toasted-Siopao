@@ -65,6 +65,10 @@ public class Product {
 	private Integer criticalStockThreshold = 0; // e.g., 5
 
 	private LocalDateTime stockLastUpdated;
+
+	// --- NEW: Recipe Lock Field ---
+	@Column(nullable = false)
+	private boolean recipeLocked = false; // Locks recipe after first stock-in
 	// --- END NEW ---
 
 	@PrePersist

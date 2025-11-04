@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'transactions')}">
 <head>
 <title>Transaction History - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4">
+
+	<div id="admin-content-wrapper">
 		<h2 class="section-title mb-4 text-center">Transaction History</h2>
 
-		<!-- Filters -->
 		<div class="card mb-4">
 			<div class="card-body text-center">
 				<form class="row g-3 justify-content-center align-items-center">
@@ -31,7 +31,6 @@
 			</div>
 		</div>
 
-		<!-- Stats Cards -->
 		<div class="row justify-content-center mb-4">
 			<div class="col-md-3 mb-3">
 				<div class="stats-card card text-center py-3">
@@ -59,7 +58,6 @@
 			</div>
 		</div>
 
-		<!-- Transactions Table -->
 		<div class="card mb-4">
 			<div class="card-header text-center">
 				<h5 class="mb-0">Recent Transactions</h5>
@@ -94,6 +92,6 @@
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 </body>
 </html>

@@ -42,6 +42,7 @@ body {
 	color: var(--secondary) !important; /* Light Yellow */
 }
 
+/* This .active style is for the old top-bar, not the sidebar */
 .nav-link.active {
 	font-weight: bold;
 	border-bottom: 2px solid var(--secondary); /* Light Yellow */
@@ -445,11 +446,6 @@ footer {
 }
 
 /* ================= Admin Specific Styles ================= */
-.admin-body {
-	/* Optional: Slightly different background for admin? */
-	/* background-color: #f8f9fa; */
-	
-}
 
 /* Stats Cards */
 .stats-card {
@@ -559,4 +555,140 @@ footer {
 	/* Keep default styles on hover */
 	background-color: #fff !important;
 	color: #212529 !important;
+}
+
+/* ================================================= */
+/* == NEW STYLES FOR ADMIN SIDEBAR LAYOUT == */
+/* ================================================= */
+.admin-wrapper {
+	display: flex;
+}
+
+.admin-sidebar {
+	width: 260px; /* EXPANDED sidebar width */
+	height: 100vh; /* Full height */
+	position: fixed;
+	top: 0;
+	left: 0;
+	background-color: var(--primary); /* Deep Blue */
+	padding: 0; /* Remove padding */
+	overflow-y: auto;
+	transition: width 0.3s ease;
+	z-index: 1000;
+}
+
+.sidebar-header {
+	height: 70px; /* Match content navbar height */
+	padding: 0 1.5rem;
+	background-color: var(--primary);
+	border-bottom: 1px solid #4A6D8C; /* Lighter blue border */
+	display: flex; /* Use flex to center */
+	align-items: center;
+	justify-content: center;
+}
+
+.sidebar-header a {
+	color: var(--secondary);
+	font-size: 1.25rem;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+.admin-sidebar .nav {
+	padding: 1rem 0; /* FIX: Remove horizontal padding */
+}
+
+.admin-sidebar .nav-link {
+	color: var(--light);
+	padding: 0.75rem 1.5rem; /* FIX: Add padding to links */
+	border-radius: 0; /* FIX: Remove border-radius */
+	margin-bottom: 5px;
+	font-size: 1rem;
+	white-space: nowrap;
+	transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.admin-sidebar .nav-link:hover {
+	background-color: var(--accent); 
+	color: var(--primary) !important; 
+}
+
+.admin-sidebar .nav-link.active { 
+	background-color: var(--light) !important; 
+	color: var(--primary) !important; 
+	font-weight: bold;
+	border-bottom: none !important; 
+	margin-right: -1rem; 
+}
+
+.admin-sidebar .nav-link i.fa-fw {
+	margin-right: 8px;
+}
+
+/* Main content area */
+.admin-content {
+	margin-left: 260px; /* EXPANDED to match sidebar width */
+	width: calc(100% - 260px); /* Full width minus sidebar */
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh;
+}
+
+/* New top-bar for the content area */
+.admin-content-navbar {
+	height: 70px;
+	background-color: var(--primary); /* CHANGED to navy blue */
+	border-bottom: 1px solid #dee2e6;
+	padding: 0 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	flex-shrink: 0;
+}
+
+.admin-content-navbar .navbar-nav {
+	flex-direction: row;
+}
+
+.admin-content-navbar .nav-item {
+	display: flex;
+	align-items: center;
+	margin-left: 1rem;
+}
+
+.admin-content-navbar .navbar-text {
+	color: var(--light); /* CHANGED to light text */
+}
+
+.admin-content-navbar .nav-link {
+	color: var(--light); /* CHANGED to light text (bell icon) */
+}
+
+.admin-content-navbar .nav-link:hover {
+	color: var(--secondary) !important; /* Light yellow hover */
+}
+
+/* Wrapper for the actual page content */
+.admin-content-page {
+	padding: 1.5rem;
+	flex-grow: 1;
+	background-color: #f8f9fa; /* A very light grey background */
+}
+
+/* Footer adjustment */
+.admin-footer {
+	margin-left: 0;
+	width: 100%;
+	background-color: var(--primary); /* REVERTED to navy blue */
+	color: var(--light); /* REVERTED to light text */
+	padding: 20px;
+	text-align: center;
+	flex-shrink: 0;
+}
+
+/* Override base footer */
+footer.admin-footer {
+	background-color: var(--primary);
+	color: var(--light);
 }

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main}, ~{::script})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'customers')}">
 <head>
 <title>Manage Customers - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4"
+
+	<div id="admin-content-wrapper"
 		th:attr="data-show-add-customer-modal=${#fields.hasErrors('customerUserDto.*') ? 'true' : 'false'},
                  data-show-manage-admins-modal=${#fields.hasErrors('adminUserDto.*') ? 'true' : 'false'},
                  data-show-edit-customer-modal=${#fields.hasErrors('customerUpdateDto.*') ? 'true' : 'false'},
@@ -42,8 +43,7 @@
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/customers}" class="btn btn-custom-secondary"
-						title="Clear Filters">Clear
-					</a>
+						title="Clear Filters">Clear </a>
 				</div>
 			</div>
 		</form>
@@ -115,8 +115,7 @@
 								<td th:text="${customer.phone != null ? customer.phone : 'N/A'}">N/A</td>
 								<td
 									th:text="${customer.street != null ? (customer.street + ', ' + customer.barangay) : 'N/A'}">N/A</td>
-								<td>
-									<span class="status-badge"
+								<td><span class="status-badge"
 									th:text="${customer.status != null ? customer.status : 'N/A'}"
 									th:classappend="${customer.status == 'ACTIVE' ? 'status-active' : 'status-cancelled'}">Status</span>
 								</td>
@@ -169,8 +168,7 @@
 
 		<div th:replace="~{admin/fragments/user-modals :: all-user-modals}"></div>
 
-	</main>
-
+	</div>
 	<th:block th:fragment="script">
 		<script th:src="@{/js/admin-users.js}"></script>
 	</th:block>

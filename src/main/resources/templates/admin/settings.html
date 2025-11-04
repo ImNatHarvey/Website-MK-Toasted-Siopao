@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'settings')}">
 <head>
 <title>Site Management - MK Admin Portal</title>
 </head>
 <body>
-	<main>
+
+	<div id="admin-content-wrapper">
 		<div class="container my-5 pt-3">
 			<div class="d-flex justify-content-between align-items-center mb-4">
 				<h1 class="fw-bold section-title">Site Management</h1>
@@ -94,6 +95,6 @@ Sunday: 10:00 AM - 7:00 PM</textarea>
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 </body>
 </html>

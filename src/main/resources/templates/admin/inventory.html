@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main}, ~{::script})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'inventory')}">
 <head>
 <title>Manage Inventory - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4">
+
+	<div id="admin-content-wrapper">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
@@ -58,8 +59,7 @@
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/inventory}" class="btn btn-custom-secondary"
-						title="Clear Filters">Clear 
-					</a>
+						title="Clear Filters">Clear </a>
 				</div>
 			</div>
 		</form>
@@ -136,8 +136,7 @@
 		<div
 			th:replace="~{admin/fragments/inventory-modals :: all-inventory-modals}"></div>
 
-	</main>
-
+	</div>
 	<th:block th:fragment="script">
 		<script th:src="@{/js/admin-inventory.js}"></script>
 	</th:block>

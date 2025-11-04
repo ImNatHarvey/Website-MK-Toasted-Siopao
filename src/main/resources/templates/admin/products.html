@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main}, ~{::script})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'products')}">
 <head>
 <title>Product Management - MK Admin</title>
 </head>
 <body>
-	<main class="container mt-4"
+
+	<div id="admin-content-wrapper"
 		th:attr="data-inventory-stock-map=${inventoryStockMapJson != null ? inventoryStockMapJson : '{}'}">
 
 		<div
@@ -144,8 +145,7 @@
 		<div
 			th:replace="~{admin/fragments/product-modals :: all-product-modals}"></div>
 
-	</main>
-
+	</div>
 	<th:block th:fragment="script">
 		<script th:src="@{/js/admin-products.js}"></script>
 	</th:block>

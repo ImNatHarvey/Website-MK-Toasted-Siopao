@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::main})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'activity-log')}">
 <head>
 <title>Activity Log - MK Admin Portal</title>
 </head>
 <body>
-	<main>
+
+	<div id="admin-content-wrapper">
 		<div class="container mt-4">
 			<h2 class="section-title mb-4 text-center">Admin Activity Log</h2>
 
@@ -25,16 +26,13 @@
 								</tr>
 							</thead>
 							<tbody>
-								<!-- Loop through log entries passed from controller -->
 								<tr th:each="logEntry : ${activityLogs}">
-									<!-- Format timestamp nicely -->
 									<td
 										th:text="${#temporals.format(logEntry.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
 									<td th:text="${logEntry.username}"></td>
 									<td th:text="${logEntry.action}"></td>
 									<td th:text="${logEntry.details}"></td>
 								</tr>
-								<!-- Show message if no logs exist -->
 								<tr th:if="${#lists.isEmpty(activityLogs)}">
 									<td colspan="4" class="text-center text-muted">No activity
 										recorded yet.</td>
@@ -42,7 +40,6 @@
 							</tbody>
 						</table>
 					</div>
-					<!-- Optional: Add pagination later if the log gets very long -->
 				</div>
 			</div>
 			<div class="text-center mt-3">
@@ -50,6 +47,6 @@
 					to Site Management</a>
 			</div>
 		</div>
-	</main>
+	</div>
 </body>
 </html>

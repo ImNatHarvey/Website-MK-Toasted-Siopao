@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-	th:replace="~{admin/base :: layout(~{::main}, ~{})}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'orders')}">
 <head>
 <title>Manage Orders - MK Admin Portal</title>
 </head>
 <body>
-	<main class="container my-4">
+
+	<div id="admin-content-wrapper">
 		<h2 class="mb-4 text-center section-title">Order Management</h2>
 
 		<form th:action="@{/admin/orders}" method="get"
@@ -23,8 +24,7 @@
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/orders}" class="btn btn-custom-secondary"
-						title="Clear Search & Filters">Clear
-					</a>
+						title="Clear Search & Filters">Clear </a>
 				</div>
 				<input type="hidden" name="status" th:value="${currentStatus}" />
 			</div>
@@ -103,6 +103,6 @@
 				</div>
 			</div>
 		</div>
-	</main>
+	</div>
 </body>
 </html>

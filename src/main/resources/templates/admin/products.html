@@ -89,6 +89,12 @@
 								th:classappend="'status-' + ${#strings.toLowerCase(product.stockStatus)}">
 								... </span> <span class="small text-muted"
 								th:text="'(' + ${product.currentStock} + ' in stock)'">...</span>
+
+							<span th:if="${product.recipeLocked}"
+								class="badge bg-secondary ms-1"
+								title="Recipe is locked and can no longer be edited."> <i
+								class="fa-solid fa-lock fa-xs"></i> Recipe Locked
+							</span>
 						</div>
 						<p class="card-text small mb-3 flex-grow-1"
 							th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>

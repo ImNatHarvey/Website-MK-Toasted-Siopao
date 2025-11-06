@@ -609,16 +609,16 @@ footer {
 }
 
 .admin-sidebar .nav-link:hover {
-	background-color: var(--accent); 
-	color: var(--primary) !important; 
+	background-color: var(--accent);
+	color: var(--primary) !important;
 }
 
-.admin-sidebar .nav-link.active { 
-	background-color: var(--light) !important; 
-	color: var(--primary) !important; 
+.admin-sidebar .nav-link.active {
+	background-color: var(--light) !important;
+	color: var(--primary) !important;
 	font-weight: bold;
-	border-bottom: none !important; 
-	margin-right: -1rem; 
+	border-bottom: none !important;
+	margin-right: -1rem;
 }
 
 .admin-sidebar .nav-link i.fa-fw {
@@ -692,3 +692,15 @@ footer.admin-footer {
 	background-color: var(--primary);
 	color: var(--light);
 }
+
+/* **** NEW: Threshold Slider Styling **** */
+.threshold-group .threshold-input {
+	flex: 0 0 100px; /* Do not grow, do not shrink, base width 100px */
+	min-width: 100px;
+}
+
+.threshold-group .threshold-slider {
+	flex: 1 1 auto; /* Grow and shrink as needed */
+	min-width: 50px;
+}
+/* **** END NEW **** */

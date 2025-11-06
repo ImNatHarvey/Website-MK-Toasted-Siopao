@@ -15,10 +15,104 @@ document.addEventListener('DOMContentLoaded', function() {
 		return;
 	}
 
+	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
+	function initThresholdSliders(modalElement) {
+		console.log("Initializing threshold sliders for modal:", modalElement.id);
+		const lowThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="low"]');
+		const criticalThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="critical"]');
+
+		if (!lowThresholdGroup || !criticalThresholdGroup) {
+			console.warn("Could not find threshold groups in modal:", modalElement.id);
+			return;
+		}
+
+		const lowInput = lowThresholdGroup.querySelector('.threshold-input');
+		const lowSlider = lowThresholdGroup.querySelector('.threshold-slider');
+		const criticalInput = criticalThresholdGroup.querySelector('.threshold-input');
+		const criticalSlider = criticalThresholdGroup.querySelector('.threshold-slider');
+
+		if (!lowInput || !lowSlider || !criticalInput || !criticalSlider) {
+			console.error("Missing one or more threshold inputs/sliders.");
+			return;
+		}
+
+		// --- Helper Function ---
+		// Syncs slider and input, adjusting slider max if needed
+		const syncSliderAndInput = (input, slider) => {
+			let value = parseInt(input.value, 10);
+			if (isNaN(value)) value = 0;
+
+			// Adjust slider's max range if input value exceeds it (e.g., user types "200")
+			let sliderMax = parseInt(slider.max, 10);
+			if (value > sliderMax) {
+				slider.max = value;
+			}
+			// But don't let slider max go below a sensible default like 100
+			if (value < 100 && sliderMax > 100) {
+				slider.max = 100;
+			}
+
+			slider.value = value;
+			input.value = value; // Ensure no decimals
+		};
+
+		// --- Helper Function ---
+		// Enforces Critical < Low
+		const enforceThresholdLogic = () => {
+			let lowValue = parseInt(lowInput.value, 10);
+			let criticalValue = parseInt(criticalInput.value, 10);
+			if (isNaN(lowValue)) lowValue = 0;
+			if (isNaN(criticalValue)) criticalValue = 0;
+
+			// **** START: QUICK FIX ****
+			// Critical max should be one less than low, but not less than 0.
+			let criticalMax = (lowValue > 0) ? lowValue - 1 : 0;
+			// **** END: QUICK FIX ****
+
+			// Set the max attribute for the critical input and slider
+			criticalInput.max = criticalMax;
+			criticalSlider.max = criticalMax;
+
+			// If critical is now higher than its new max, cap it
+			if (criticalValue > criticalMax) {
+				criticalInput.value = criticalMax;
+				criticalSlider.value = criticalMax;
+			}
+		};
+
+		// --- Initial Sync on Modal Show ---
+		syncSliderAndInput(lowInput, lowSlider);
+		syncSliderAndInput(criticalInput, criticalSlider);
+		enforceThresholdLogic(); // Enforce logic right away
+
+		// --- Event Listeners ---
+		// Slider updates Input
+		lowSlider.addEventListener('input', () => {
+			lowInput.value = lowSlider.value;
+			enforceThresholdLogic(); // Check logic
+		});
+		criticalSlider.addEventListener('input', () => {
+			criticalInput.value = criticalSlider.value;
+			// No need to check logic here, slider is already capped
+		});
+
+		// Input updates Slider
+		lowInput.addEventListener('input', () => {
+			syncSliderAndInput(lowInput, lowSlider);
+			enforceThresholdLogic(); // Check logic
+		});
+		criticalInput.addEventListener('input', () => {
+			syncSliderAndInput(criticalInput, criticalSlider);
+			enforceThresholdLogic(); // Check logic (in case user types > low)
+		});
+	}
+	// **** END NEW FUNCTION ****
+
+
 	// --- Logic for Edit Product Modal ---
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
-		// ... (edit modal 'show' and 'hidden' logic remains unchanged) ...
+		// ...
 		const form = editProductModal.querySelector('#editProductForm');
 		const modalTitle = editProductModal.querySelector('#editProductModalLabel');
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
@@ -30,6 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const button = event.relatedTarget;
 			let dataset;
 
+			// ... (Omitted unchanged dataset logic for view/edit buttons) ...
 			if (button && button.classList.contains('edit-product-btn-from-view')) {
 				const viewModal = document.getElementById('viewProductModal');
 				const originalButton = viewModal ? viewModal.relatedTarget : null;
@@ -45,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			console.log("Populating Edit Product Modal with data:", dataset);
 
+			// ... (Omitted unchanged form population logic) ...
 			modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 			form.querySelector('#id').value = dataset.id || '';
 			form.querySelector('#editProductNameModal').value = dataset.name || '';
@@ -52,9 +148,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#editProductPriceModal').value = dataset.price || '0.00';
 			form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
 			form.querySelector('#editProductImageUrlModal').value = dataset.imageUrl || '';
-			form.querySelector('#editLowThresholdModal').value = dataset.lowStockThreshold || '0';
-			form.querySelector('#editCriticalThresholdModal').value = dataset.criticalStockThreshold || '0';
+			form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0'; // UPDATED ID
+			form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0'; // UPDATED ID
 
+			// ... (Omitted unchanged ingredients logic) ...
 			if (ingredientsContainer) {
 				ingredientsContainer.innerHTML = ''; // Clear previous rows
 			}
@@ -116,8 +213,12 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 			}
+
+			// **** CALL NEW SLIDER FUNCTION ****
+			initThresholdSliders(editProductModal);
 		});
 
+		// ... (Omitted unchanged 'hidden.bs.modal' listener) ...
 		editProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditProductModal !== 'true') {
 				console.log("Clearing Edit Product modal on hide (not validation reopen).")
@@ -137,6 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 	// --- Logic for View Product Modal ---
+	// ... (Omitted unchanged 'show.bs.modal' listener) ...
 	const viewProductModal = document.getElementById('viewProductModal');
 	if (viewProductModal) {
 		viewProductModal.addEventListener('show.bs.modal', function(event) {
@@ -241,7 +343,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				ingredientsListDiv.innerHTML = '<p class="text-muted small">No ingredients assigned.</p>';
 			}
 
-			// Set up Delete form action inside view modal
+			// ... (Omitted unchanged delete form logic) ...
 			const deleteForm = viewProductModal.querySelector('.delete-product-form-from-view');
 			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete'); // Assuming input exists for ID
 			if (deleteForm && dataset.id) {
@@ -259,11 +361,19 @@ document.addEventListener('DOMContentLoaded', function() {
 	// --- Logic for Add Product Modal (Clear on Hide) ---
 	const addProductModal = document.getElementById('addProductModal');
 	if (addProductModal) {
-		// ... (add modal 'hidden' logic remains unchanged) ...
 		const form = addProductModal.querySelector('#addProductForm');
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
 
+		// **** CALL NEW SLIDER FUNCTION ****
+		addProductModal.addEventListener('show.bs.modal', function() {
+			// Only init sliders if it's NOT a reopen from validation
+			if (mainElement.dataset.showAddProductModal !== 'true') {
+				initThresholdSliders(addProductModal);
+			}
+		});
+
 		addProductModal.addEventListener('hidden.bs.modal', function() {
+			// ... (Omitted unchanged 'hidden.bs.modal' listener) ...
 			if (mainElement.dataset.showAddProductModal !== 'true') {
 				console.log("Clearing Add Product modal on hide (not validation reopen).")
 				if (form) form.reset();
@@ -362,6 +472,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	});
 
 	// --- MAX BUTTON LOGIC ---
+	// ... (Omitted unchanged max button logic) ...
 	document.addEventListener('click', function(event) {
 		// ... (max button logic remains unchanged) ...
 		const maxBtn = event.target.closest('.max-quantity-btn');

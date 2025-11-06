@@ -70,26 +70,42 @@
 							<hr class="my-4">
 							<h5 class="mb-3">Initial Stock Thresholds</h5>
 							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="addLowThreshold" class="form-label">Low
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{lowStockThreshold}"
-										id="addLowThreshold" th:errorclass="is-invalid">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="low">
+									<label for="addLowThresholdInput" class="form-label">Low
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0" max="999"
+											class="form-control threshold-input"
+											th:field="*{lowStockThreshold}" id="addLowThresholdInput"
+											th:errorclass="is-invalid"> <input type="range"
+											class="form-range threshold-slider" min="0" max="100"
+											step="1" id="addLowThresholdSlider">
+									</div>
 									<div class="form-text">Status: Low at/below this level.</div>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lowStockThreshold')}"
 										th:errors="*{lowStockThreshold}"></div>
 								</div>
-								<div class="col-md-6 mb-3">
-									<label for="addCriticalThreshold" class="form-label">Critical
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{criticalStockThreshold}"
-										id="addCriticalThreshold" th:errorclass="is-invalid">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="critical">
+									<label for="addCriticalThresholdInput" class="form-label">Critical
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0" max="999"
+											class="form-control threshold-input"
+											th:field="*{criticalStockThreshold}"
+											id="addCriticalThresholdInput" th:errorclass="is-invalid">
+										<input type="range" class="form-range threshold-slider"
+											min="0" max="100" step="1" id="addCriticalThresholdSlider">
+									</div>
 									<div class="form-text">Status: Critical at/below this
 										level.</div>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('criticalStockThreshold')}"
 										th:errors="*{criticalStockThreshold}"></div>
+								</div>
+								<div class="col-12">
 									<div class="invalid-feedback d-block"
 										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
 								</div>
@@ -268,21 +284,35 @@
 							<hr class="my-4">
 							<h5 class="mb-3">Stock Management</h5>
 							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="editLowThresholdModal" class="form-label">Low
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{lowStockThreshold}"
-										id="editLowThresholdModal" th:errorclass="is-invalid">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="low">
+									<label for="editLowThresholdInput" class="form-label">Low
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0" max="999"
+											class="form-control threshold-input"
+											th:field="*{lowStockThreshold}" id="editLowThresholdInput"
+											th:errorclass="is-invalid"> <input type="range"
+											class="form-range threshold-slider" min="0" max="100"
+											step="1" id="editLowThresholdSlider">
+									</div>
 									<div class="form-text">Status: Low at/below this level.</div>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lowStockThreshold')}"
 										th:errors="*{lowStockThreshold}"></div>
 								</div>
-								<div class="col-md-6 mb-3">
-									<label for="editCriticalThresholdModal" class="form-label">Critical
-										Stock Threshold</label> <input type="number" step="1" min="0"
-										class="form-control" th:field="*{criticalStockThreshold}"
-										id="editCriticalThresholdModal" th:errorclass="is-invalid">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="critical">
+									<label for="editCriticalThresholdInput" class="form-label">Critical
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0" max="999"
+											class="form-control threshold-input"
+											th:field="*{criticalStockThreshold}"
+											id="editCriticalThresholdInput" th:errorclass="is-invalid">
+										<input type="range" class_="form-range threshold-slider"
+											min="0" max="100" step="1" id="editCriticalThresholdSlider">
+									</div>
 									<div class="form-text">Status: Critical at/below this
 										level.</div>
 									<div class="invalid-feedback"
@@ -300,7 +330,6 @@
 
 							<hr class="my-4">
 							<h5 class="mb-3">Recipe Ingredients</h5>
-
 							<div class="alert alert-warning small p-2" role="alert"
 								id="editRecipeLockedWarning" style="display: none;">
 								<i class="fa-solid fa-lock me-1"></i> This product's recipe is <strong>locked</strong>.

@@ -66,21 +66,31 @@ public interface OrderService {
 
 	/**
 	 * Gets a list of top-selling products and the total quantity sold. * @param
-	 * limit The number of top products to return (e.g., 5).
-	 * 
-	 * @return A List of Maps, where each map contains "product" (Product object)
-	 *         and "quantity" (Long).
+	 * limit The number of top products to return (e.g., 5). * @return A List of
+	 * Maps, where each map contains "product" (Product object) and "quantity"
+	 * (Long).
 	 */
 	List<Map<String, Object>> getTopSellingProducts(int limit);
 
 	/**
 	 * Gets sales data grouped by day for a date range, for use in charts. * @param
-	 * start Start timestamp.
+	 * start Start timestamp. * @param end End timestamp.
 	 * 
-	 * @param end End timestamp.
 	 * @return A Map<String, BigDecimal> where key is date (YYYY-MM-DD) and value is
 	 *         total sales.
 	 */
 	Map<String, BigDecimal> getSalesDataForChart(LocalDateTime start, LocalDateTime end);
 
+	// --- NEW: For Transaction History Page ---
+	/**
+	 * Gets the sum of all 'DELIVERED' orders ever. * @return Total revenue as
+	 * BigDecimal.
+	 */
+	BigDecimal getTotalRevenueAllTime();
+
+	/**
+	 * Gets the count of all 'DELIVERED' orders ever. * @return Total number of
+	 * transactions as long.
+	 */
+	long getTotalTransactionsAllTime();
 }

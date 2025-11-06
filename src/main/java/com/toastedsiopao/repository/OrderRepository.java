@@ -74,4 +74,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	@Query("SELECT FUNCTION('DATE', o.orderDate) AS orderDay, SUM(o.totalAmount) AS dailySales FROM Order o WHERE o.orderDate BETWEEN :start AND :end AND o.status = 'DELIVERED' GROUP BY orderDay ORDER BY orderDay ASC")
 	List<Object[]> findSalesDataBetweenDates(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
+	// --- NEW: For Transaction History Page ---
+	/**
+	 * Calculates the sum of totalAmount for all 'DELIVERED' orders.
+	 */
+	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status = 'DELIVERED'")
+	BigDecimal findTotalRevenueAllTime();
+
+	/**
+	 * Counts all 'DELIVERED' orders.
+	 */
+	@Query("SELECT COUNT(o) FROM Order o WHERE o.status = 'DELIVERED'")
+	long countTotalTransactionsAllTime();
 }

@@ -144,4 +144,18 @@ public class OrderServiceImpl implements OrderService {
 																		// should prevent)
 						LinkedHashMap::new));
 	}
+
+	// --- NEW: Transaction History Page Implementation ---
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getTotalRevenueAllTime() {
+		BigDecimal total = orderRepository.findTotalRevenueAllTime();
+		return total != null ? total : BigDecimal.ZERO;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long getTotalTransactionsAllTime() {
+		return orderRepository.countTotalTransactionsAllTime();
+	}
 }

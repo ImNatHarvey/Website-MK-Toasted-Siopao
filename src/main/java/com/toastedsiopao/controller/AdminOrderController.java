@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Map; // NEW IMPORT
+
 @Controller
 @RequestMapping("/admin/orders") // All methods in this class are under /admin/orders
 public class AdminOrderController {
@@ -36,6 +38,16 @@ public class AdminOrderController {
 		Pageable pageable = PageRequest.of(page, size); // NEW
 		Page<Order> orderPage = orderService.searchOrders(keyword, status, pageable); // UPDATED
 
+		// --- NEW: Get Order Stats ---
+		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();
+		long totalOrders = orderStatusCounts.values().stream().mapToLong(Long::longValue).sum();
+		model.addAttribute("totalOrders", totalOrders);
+		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault("PENDING", 0L));
+		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault("PROCESSING", 0L));
+		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault("DELIVERED", 0L));
+		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault("CANCELLED", 0L));
+		// --- END NEW ---
+
 		model.addAttribute("orderPage", orderPage); // NEW: Add the full page object
 		model.addAttribute("orders", orderPage.getContent()); // UPDATED: Get content from page
 		model.addAttribute("keyword", keyword);
@@ -44,7 +56,7 @@ public class AdminOrderController {
 		// NEW: Pass pagination attributes to the model
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", orderPage.getTotalPages());
-		model.addAttribute("totalItems", orderPage.getTotalElements());
+		model.addAttribute("totalItems", orderPage.getTotalElements()); // This is the paged total
 		model.addAttribute("size", size);
 
 		return "admin/orders"; // Renders orders.html

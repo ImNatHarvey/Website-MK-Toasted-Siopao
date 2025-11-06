@@ -25,8 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
 		const itemStockInput = addItemModal.querySelector('#itemCurrentStock');
+		// **** UPDATED: Get slider inputs ****
 		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
 		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
+		// **** END UPDATE ****
 		const itemCostInput = addItemModal.querySelector('#itemCost');
 
 		addItemModal.addEventListener('show.bs.modal', function(event) {
@@ -43,8 +45,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemCategorySelect.value = button.dataset.categoryId || '';
 				itemUnitSelect.value = button.dataset.unitId || '';
 				itemStockInput.value = button.dataset.currentStock || '0.00';
-				itemLowThresholdInput.value = button.dataset.lowThreshold || '0.00';
-				itemCriticalThresholdInput.value = button.dataset.criticalThreshold || '0.00';
+				// Use parseFloat for initial population from dataset, as it might be decimal
+				itemLowThresholdInput.value = parseFloat(button.dataset.lowThreshold || '0').toFixed(0);
+				itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
 				// UPDATED: Now required, so default to empty string if missing (shouldn't be)
 				itemCostInput.value = button.dataset.cost || '';
 			} else {
@@ -52,6 +55,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				modalTitle.textContent = 'Add New Inventory Item';
 				if (itemForm) itemForm.reset();
 				itemIdInput.value = ''; // Ensure ID is cleared for Add
+				itemLowThresholdInput.value = '0'; // Default to 0
+				itemCriticalThresholdInput.value = '0'; // Default to 0
 			}
 
 			// Clear previous validation highlights unless it's being reopened by script.js
@@ -65,6 +70,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
 			}
+
+			// **** NEW: Initialize sliders ****
+			initThresholdSliders(addItemModal);
+			// **** END NEW ****
 		});
 
 		addItemModal.addEventListener('hidden.bs.modal', function() {
@@ -184,5 +193,103 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 	// --- END NEW ---
+
+
+	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
+	// **** MODIFIED to use parseInt and new critical logic ****
+	function initThresholdSliders(modalElement) {
+		console.log("Initializing threshold sliders for modal:", modalElement.id);
+		const lowThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="low"]');
+		const criticalThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="critical"]');
+
+		if (!lowThresholdGroup || !criticalThresholdGroup) {
+			console.warn("Could not find threshold groups in modal:", modalElement.id);
+			return;
+		}
+
+		// IDs from inventory-modals.html
+		const lowInput = lowThresholdGroup.querySelector('#itemLowThreshold');
+		const lowSlider = lowThresholdGroup.querySelector('#itemLowThresholdSlider');
+		const criticalInput = criticalThresholdGroup.querySelector('#itemCriticalThreshold');
+		const criticalSlider = criticalThresholdGroup.querySelector('#itemCriticalThresholdSlider');
+
+
+		if (!lowInput || !lowSlider || !criticalInput || !criticalSlider) {
+			console.error("Missing one or more threshold inputs/sliders.");
+			return;
+		}
+
+		// --- Helper Function ---
+		// Syncs slider and input, adjusting slider max if needed
+		const syncSliderAndInput = (input, slider) => {
+			let value = parseInt(input.value, 10); // Use parseInt
+			if (isNaN(value)) value = 0;
+
+			// Adjust slider's max range if input value exceeds it (e.g., user types "200")
+			let sliderMax = parseInt(slider.max, 10);
+			if (value > sliderMax) {
+				slider.max = value;
+			}
+			// But don't let slider max go below a sensible default like 100
+			if (value < 100 && sliderMax > 100) {
+				slider.max = 100;
+			}
+
+			slider.value = value;
+			input.value = value; // Ensure no decimals
+		};
+
+		// --- Helper Function ---
+		// Enforces Critical < Low
+		const enforceThresholdLogic = () => {
+			let lowValue = parseInt(lowInput.value, 10);
+			let criticalValue = parseInt(criticalInput.value, 10);
+			if (isNaN(lowValue)) lowValue = 0;
+			if (isNaN(criticalValue)) criticalValue = 0;
+
+			// **** MODIFIED LOGIC ****
+			// Critical max should be one less than low, but not less than 0.
+			let criticalMax = (lowValue > 0) ? lowValue - 1 : 0;
+			// **** END MODIFIED LOGIC ****
+
+			// Set the max attribute for the critical input and slider
+			criticalInput.max = criticalMax; // Set max on number input
+			criticalSlider.max = criticalMax; // Set max on range slider
+
+			// If critical is now higher than its new max, cap it
+			if (criticalValue > criticalMax) {
+				criticalInput.value = criticalMax;
+				criticalSlider.value = criticalMax;
+			}
+		};
+
+		// --- Initial Sync on Modal Show ---
+		syncSliderAndInput(lowInput, lowSlider);
+		syncSliderAndInput(criticalInput, criticalSlider);
+		enforceThresholdLogic(); // Enforce logic right away
+
+		// --- Event Listeners ---
+		// Slider updates Input
+		lowSlider.addEventListener('input', () => {
+			lowInput.value = lowSlider.value;
+			enforceThresholdLogic(); // Check logic
+		});
+		criticalSlider.addEventListener('input', () => {
+			criticalInput.value = criticalSlider.value;
+			// No need to check logic here, slider is already capped
+		});
+
+		// Input updates Slider
+		lowInput.addEventListener('input', () => {
+			syncSliderAndInput(lowInput, lowSlider);
+			enforceThresholdLogic(); // Check logic
+		});
+		criticalInput.addEventListener('input', () => {
+			syncSliderAndInput(criticalInput, criticalSlider);
+			enforceThresholdLogic(); // Check logic (in case user types > low)
+		});
+	}
+	// **** END NEW FUNCTION ****
+
 
 }); // End DOMContentLoaded for admin-inventory.js

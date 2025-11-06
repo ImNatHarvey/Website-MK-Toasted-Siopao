@@ -84,33 +84,49 @@
 										Error</div>
 								</div>
 							</div>
+
 							<hr>
 							<h6 class="mb-3">Stock Thresholds</h6>
 							<div class="row">
-								<div class="col-md-6 mb-3">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="low">
 									<label for="itemLowThreshold" class="form-label">Low
-										Stock Threshold</label> <input type="number" step="0.01"
-										class="form-control" th:field="*{lowStockThreshold}"
-										id="itemLowThreshold"
-										th:classappend="${#fields.hasErrors('lowStockThreshold')} ? 'is-invalid' : ''">
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0"
+											class="form-control threshold-input"
+											th:field="*{lowStockThreshold}" id="itemLowThreshold"
+											th:classappend="${#fields.hasErrors('lowStockThreshold')} ? 'is-invalid' : ''">
+										<input type="range" class="form-range threshold-slider"
+											min="0" max="100" step="1" id="itemLowThresholdSlider">
+									</div>
 									<div class="form-text">Stock is 'Low' (Yellow) at/below
 										this level.</div>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lowStockThreshold')}"
 										th:errors="*{lowStockThreshold}">Low Threshold Error</div>
 								</div>
-								<div class="col-md-6 mb-3">
+								<div class="col-md-6 mb-3 threshold-group"
+									data-threshold-type="critical">
 									<label for="itemCriticalThreshold" class="form-label">Critical
-										Stock Threshold</label> <input type="number" step="0.01"
-										class="form-control" th:field="*{criticalStockThreshold}"
-										id="itemCriticalThreshold"
-										th:classappend="${#fields.hasErrors('criticalStockThreshold')} ? 'is-invalid' : ''">
+										Stock Threshold</label>
+									<div class="d-flex align-items-center gap-2">
+										<input type="number" step="1" min="0"
+											class="form-control threshold-input"
+											th:field="*{criticalStockThreshold}"
+											id="itemCriticalThreshold"
+											th:classappend="${#fields.hasErrors('criticalStockThreshold')} ? 'is-invalid' : ''">
+										<input type="range" class="form-range threshold-slider"
+											min="0" max="100" step="1" id="itemCriticalThresholdSlider">
+									</div>
 									<div class="form-text">Stock is 'Critical' (Red) at/below
 										this level. Cannot be higher than Low Threshold.</div>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('criticalStockThreshold')}"
 										th:errors="*{criticalStockThreshold}">Critical Threshold
 										Error</div>
+								</div>
+								<div class="col-12">
 									<div class="invalid-feedback d-block"
 										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
 										Threshold Error</div>

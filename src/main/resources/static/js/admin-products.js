@@ -5,7 +5,10 @@
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-products.js loaded"); // Confirm script is running
 
-	const mainElement = document.querySelector('main[data-inventory-stock-map]');
+	// **** FIX IS HERE ****
+	// Select the specific <div> from products.html
+	const mainElement = document.getElementById('admin-content-wrapper');
+	// **** END OF FIX ****
 
 	if (!mainElement) {
 		console.error("Main element with data-inventory-stock-map not found in admin-products.js!");
@@ -40,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				return;
 			}
 
-			console.log("Populating Edit Product Modal with data:", dataset); 
+			console.log("Populating Edit Product Modal with data:", dataset);
 
 			modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 			form.querySelector('#id').value = dataset.id || '';
@@ -72,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					ingredients = [];
 				}
 			}
-			console.log("Parsed ingredients for Edit:", ingredients); 
+			console.log("Parsed ingredients for Edit:", ingredients);
 
 			if (ingredientsContainer) {
 				ingredients.forEach((ingData) => {
@@ -91,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
 					el.disabled = true;
 					if (el.classList.contains('remove-ingredient-btn')) {
-						el.style.display = 'none'; 
+						el.style.display = 'none';
 					}
 				});
 			} else {
@@ -100,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
 					el.disabled = false;
 					if (el.classList.contains('remove-ingredient-btn')) {
-						el.style.display = 'block'; 
+						el.style.display = 'block';
 					}
 				});
 			}
@@ -108,8 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			if (mainElement.dataset.showEditProductModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form.querySelector('.alert.alert-danger'); 
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) { 
+				const errorAlert = form.querySelector('.alert.alert-danger');
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
 					errorAlert.remove();
 				}
 			}
@@ -117,17 +120,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		editProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditProductModal !== 'true') {
-				console.log("Clearing Edit Product modal on hide (not validation reopen).") 
-				if (form) form.reset(); 
-				if (form) form.querySelector('#id').value = ''; 
+				console.log("Clearing Edit Product modal on hide (not validation reopen).")
+				if (form) form.reset();
+				if (form) form.querySelector('#id').value = '';
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) { 
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
 					errorAlert.remove();
 				}
-				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; 
+				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 			} else {
-				console.log("Resetting showEditProductModal flag on hide.") 
+				console.log("Resetting showEditProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-edit-product-modal');
 			}
 		});
@@ -262,16 +265,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		addProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showAddProductModal !== 'true') {
-				console.log("Clearing Add Product modal on hide (not validation reopen).") 
+				console.log("Clearing Add Product modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
 				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
 					errorAlert.remove();
 				}
-				if (ingredientsContainer) ingredientsContainer.innerHTML = ''; 
+				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 			} else {
-				console.log("Resetting showAddProductModal flag on hide.") 
+				console.log("Resetting showAddProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-product-modal');
 			}
 		});
@@ -287,8 +290,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			return;
 		}
 
-		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true).innerHTML; 
-		const tempDiv = document.createElement('div'); 
+		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true).innerHTML;
+		const tempDiv = document.createElement('div');
 		if (typeof fragment === 'string') {
 			tempDiv.innerHTML = fragment;
 		} else {
@@ -303,10 +306,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
-		const index = currentRowCount; 
+		const index = currentRowCount;
 
 		newRowElement.querySelectorAll('[name]').forEach(input => {
-			if (input.name) { 
+			if (input.name) {
 				input.name = input.name.replace('[INDEX]', `[${index}]`);
 			} else {
 				console.warn("Input found without name attribute in template:", input);
@@ -316,12 +319,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (data) {
 			const select = newRowElement.querySelector('.ingredient-item');
 			const quantityInput = newRowElement.querySelector('.ingredient-quantity');
-			if (select) select.value = data.itemId || ''; 
-			if (quantityInput) quantityInput.value = data.quantity || ''; 
+			if (select) select.value = data.itemId || '';
+			if (quantityInput) quantityInput.value = data.quantity || '';
 		}
 
 		containerDiv.appendChild(newRowElement);
-		console.log(`Added ingredient row to ${containerId} with index ${index}`); 
+		console.log(`Added ingredient row to ${containerId} with index ${index}`);
 	}
 
 	function removeIngredientRow(button) {
@@ -329,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (rowToRemove) {
 			const container = rowToRemove.parentElement;
 			rowToRemove.remove();
-			renumberIngredientRows(container); 
+			renumberIngredientRows(container);
 		}
 	}
 
@@ -366,17 +369,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		console.log("--- Max button clicked (product page) ---");
 
-		const row = maxBtn.closest('tr'); 
+		const row = maxBtn.closest('tr');
 		const quantityInput = row ? row.querySelector('.quantity-change-input') : null;
-		const productId = row ? row.dataset.productId : null; 
+		const productId = row ? row.dataset.productId : null;
 
 		if (!mainElement) {
 			console.error("Main element not found inside Max button listener.");
 			alert("Internal error: Configuration data missing.");
 			return;
 		}
-		const inventoryStockJson = mainElement.dataset.inventoryStockMap; 
-		const ingredientsData = row ? row.dataset.productIngredients : null; 
+		const inventoryStockJson = mainElement.dataset.inventoryStockMap;
+		const ingredientsData = row ? row.dataset.productIngredients : null;
 
 		if (!row) { alert("Internal error: Could not identify product row."); return; }
 		if (!quantityInput) { alert("Internal error: Could not find quantity field."); return; }
@@ -433,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (availableStock === undefined || availableStock === null || isNaN(availableStock)) {
 					console.error(`Stock not found/invalid for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
 				}
-				if (availableStock <= 0 || availableStock < ingredient.quantityNeeded) { 
+				if (availableStock <= 0 || availableStock < ingredient.quantityNeeded) {
 					console.log(`Insufficient stock for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
 				}
 
@@ -443,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			console.log(`Max Possible = ${maxPossible}`);
 
-			if (maxPossible === Infinity || maxPossible < 0) { 
+			if (maxPossible === Infinity || maxPossible < 0) {
 				console.warn("Max calculation result invalid, setting to 0.");
 				quantityInput.value = 0;
 			} else {
@@ -452,6 +455,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.log(`Set quantity input to: ${quantityInput.value}`);
 
 		} catch (error) { console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
-	}); 
+	});
 
 });

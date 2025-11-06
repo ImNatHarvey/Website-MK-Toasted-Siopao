@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-users.js loaded"); // Confirm script is running
 
 	// **** FIX IS HERE ****
-	// Select the specific <main> tag from customers.html, not the base.html one
-	const mainElement = document.querySelector('main.container');
+	// Select the specific <div> from customers.html
+	const mainElement = document.getElementById('admin-content-wrapper');
 	// **** END OF FIX ****
 
 	if (!mainElement) {

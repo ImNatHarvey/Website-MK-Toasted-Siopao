@@ -6,8 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-inventory.js loaded"); // Confirm script is running
 
 	// **** FIX IS HERE ****
-	// Select the specific <main> tag from inventory.html, not the base.html one
-	const mainElement = document.querySelector('main.container');
+	// Select the specific <div> from inventory.html
+	const mainElement = document.getElementById('admin-content-wrapper');
 	// **** END OF FIX ****
 
 	if (!mainElement) {

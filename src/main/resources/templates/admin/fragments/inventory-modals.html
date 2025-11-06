@@ -46,18 +46,17 @@
 										th:errors="*{categoryId}">Category Error</div>
 								</div>
 								<div class="col-md-6 mb-3">
-									<label for="itemUnit" class="form-label">Unit of
-										Measure</label> <select class="form-select" th:field="*{unitId}"
-										id="itemUnit"
-										th:classappend="${#fields.hasErrors('unitId')} ? 'is-invalid' : ''">
-										<option value="">-- Select Unit --</option>
-										<option th:each="unit : ${unitsOfMeasure}"
-											th:value="${unit.id}"
-											th:text="${unit.name + ' (' + unit.abbreviation + ')'}"></option>
-									</select>
+									<label for="itemCost" class="form-label">Cost Per Unit</label>
+									<div class="input-group"
+										th:classappend="${#fields.hasErrors('costPerUnit')} ? 'is-invalid' : ''">
+										<span class="input-group-text">₱</span> <input type="number"
+											step="0.01" class="form-control" th:field="*{costPerUnit}"
+											id="itemCost"
+											th:classappend="${#fields.hasErrors('costPerUnit')} ? 'is-invalid' : ''">
+									</div>
 									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('unitId')}" th:errors="*{unitId}">Unit
-										Error</div>
+										th:if="${#fields.hasErrors('costPerUnit')}"
+										th:errors="*{costPerUnit}">Cost Error</div>
 								</div>
 							</div>
 							<div class="row">
@@ -71,18 +70,18 @@
 										th:errors="*{currentStock}">Stock Error</div>
 								</div>
 								<div class="col-md-6 mb-3">
-									<label for="itemCost" class="form-label">Cost Per Unit
-										(Optional)</label>
-									<div class="input-group"
-										th:classappend="${#fields.hasErrors('costPerUnit')} ? 'is-invalid' : ''">
-										<span class="input-group-text">₱</span> <input type="number"
-											step="0.01" class="form-control" th:field="*{costPerUnit}"
-											id="itemCost"
-											th:classappend="${#fields.hasErrors('costPerUnit')} ? 'is-invalid' : ''">
-									</div>
+									<label for="itemUnit" class="form-label">Unit of
+										Measure</label> <select class="form-select" th:field="*{unitId}"
+										id="itemUnit"
+										th:classappend="${#fields.hasErrors('unitId')} ? 'is-invalid' : ''">
+										<option value="">-- Select Unit --</option>
+										<option th:each="unit : ${unitsOfMeasure}"
+											th:value="${unit.id}"
+											th:text="${unit.name + ' (' + unit.abbreviation + ')'}"></option>
+									</select>
 									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('costPerUnit')}"
-										th:errors="*{costPerUnit}">Cost Error</div>
+										th:if="${#fields.hasErrors('unitId')}" th:errors="*{unitId}">Unit
+										Error</div>
 								</div>
 							</div>
 							<hr>
@@ -119,7 +118,8 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="submit" class="btn btn-custom">Save Changes</button>
+							<button type="submit" class="btn btn-custom">Save
+								Changes</button>
 							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Cancel</button>
 
@@ -340,6 +340,64 @@
 			</div>
 		</div>
 
+		<div class="modal fade" id="viewItemModal" tabindex="-1"
+			aria-labelledby="viewItemModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewItemModalLabel">Item Details</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<h4 id="viewItemName" class="mb-1">Item Name</h4>
+						<p class="mb-3">
+							<span class="status-badge" id="viewItemStatusBadge">Status</span>
+						</p>
+						<p>
+							<strong>Category:</strong> <span id="viewItemCategory"></span>
+						</p>
+						<p>
+							<strong>Unit:</strong> <span id="viewItemUnit"></span>
+						</p>
+						<hr>
+						<h5 class="mb-3">Stock & Cost Details</h5>
+						<div class="row">
+							<div class="col-6">
+								<p class="mb-1">
+									<strong>Current Stock:</strong>
+								</p>
+								<p class="fs-5 fw-bold" id="viewItemCurrentStock">0.00</p>
+							</div>
+							<div class="col-6">
+								<p class="mb-1">
+									<strong>Cost / Unit:</strong>
+								</p>
+								<p class="fs-5 fw-bold" id="viewItemCostPerUnit">₱0.00</p>
+							</div>
+						</div>
+						<p class="mb-3">
+							<strong>Total Cost Value:</strong> <span class="fs-5 fw-bold"
+								id="viewItemTotalCostValue">₱0.00</span>
+						</p>
+						<p class="mb-1">
+							<strong>Low Stock Threshold:</strong> <span
+								id="viewItemLowThreshold">0.00</span>
+						</p>
+						<p class="mb-1">
+							<strong>Critical Stock Threshold:</strong> <span
+								id="viewItemCriticalThreshold">0.00</span>
+						</p>
+						<p class="small text-muted mt-2" id="viewItemLastUpdated">Last
+							Updated: N/A</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </body>
 </html>

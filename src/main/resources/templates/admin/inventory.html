@@ -35,7 +35,44 @@
 		<div th:replace="~{admin/fragments/common-alerts :: unitAlerts}"></div>
 		<div th:replace="~{admin/fragments/common-alerts :: stockAlerts}"></div>
 
-
+		<div class="row text-center mb-4">
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Items</h5>
+						<p class="display-6 fw-bold" th:text="${totalItems}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Inventory Value</h5>
+						<p class="display-6 fw-bold"
+							th:text="'₱' + ${#numbers.formatDecimal(totalInventoryValue, 1, 'COMMA', 2, 'POINT')}">
+							₱0.00</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Items Low</h5>
+						<p class="display-6 fw-bold text-warning"
+							th:text="${lowStockCount}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Items Out of Stock</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="${outOfStockCount}">0</p>
+					</div>
+				</div>
+			</div>
+		</div>
 		<form th:action="@{/admin/inventory}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="row g-3 align-items-end">
@@ -77,8 +114,8 @@
 								<th>Category</th>
 								<th>Current Stock</th>
 								<th>Unit</th>
-								<th>Low Threshold</th>
-								<th>Critical Threshold</th>
+								<th>Cost Per Unit</th>
+								<th>Total Cost</th>
 								<th>Status</th>
 								<th>Actions</th>
 							</tr>
@@ -91,14 +128,28 @@
 									th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">25.00</td>
 								<td th:text="${item.unit.abbreviation}">kg</td>
 								<td
-									th:text="${#numbers.formatDecimal(item.lowStockThreshold, 1, 'COMMA', 2, 'POINT')}">5.00</td>
+									th:text="'₱' + ${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}">₱50.00</td>
 								<td
-									th:text="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 'COMMA', 2, 'POINT')}">2.00</td>
+									th:text="'₱' + ${#numbers.formatDecimal(item.getTotalCostValue(), 1, 'COMMA', 2, 'POINT')}">₱1,250.00</td>
 								<td><span class="status-badge"
 									th:text="${#strings.replace(item.stockStatus, '_', ' ')}"
 									th:classappend="'status-' + ${#strings.toLowerCase(item.stockStatus)}">
 										Status </span></td>
 								<td class="d-flex justify-content-center gap-2">
+									<button class="btn btn-sm btn-action-view view-item-btn"
+										data-bs-toggle="modal" data-bs-target="#viewItemModal"
+										th:data-name="${item.name}"
+										th:data-category-name="${item.category.name}"
+										th:data-unit-name="${item.unit.name + ' (' + item.unit.abbreviation + ')'}"
+										th:data-current-stock="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}"
+										th:data-cost-per-unit="${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}"
+										th:data-total-cost-value="${#numbers.formatDecimal(item.getTotalCostValue(), 1, 'COMMA', 2, 'POINT')}"
+										th:data-low-threshold="${#numbers.formatDecimal(item.lowStockThreshold, 1, 'COMMA', 2, 'POINT')}"
+										th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 'COMMA', 2, 'POINT')}"
+										th:data-stock-status="${#strings.replace(item.stockStatus, '_', ' ')}"
+										th:data-stock-status-class="'status-' + ${#strings.toLowerCase(item.stockStatus)}"
+										th:data-last-updated="${item.lastUpdated != null ? #temporals.format(item.lastUpdated, 'MMM dd, yyyy HH:mm') : 'N/A'}">
+										View</button>
 									<button class="btn btn-sm btn-action-edit edit-item-btn"
 										data-bs-toggle="modal" data-bs-target="#addItemModal"
 										th:data-id="${item.id}" th:data-name="${item.name}"

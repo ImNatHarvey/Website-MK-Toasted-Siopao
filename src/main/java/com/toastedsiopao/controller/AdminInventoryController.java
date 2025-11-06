@@ -1,6 +1,5 @@
 package com.toastedsiopao.controller;
 
-// ... (Imports remain the same)
 import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.dto.UnitOfMeasureDto;
@@ -70,6 +69,21 @@ public class AdminInventoryController {
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
 		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll(); // Unchanged: modal needs all items
+
+		// --- NEW: Calculate Stats ---
+		// We get *all* items for stats calculation, not just the paged ones.
+		List<InventoryItem> allItems = inventoryItemService.findAll();
+		BigDecimal totalInventoryValue = allItems.stream().map(InventoryItem::getTotalCostValue) // Use the new method
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
+
+		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
+		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
+
+		model.addAttribute("totalInventoryValue", totalInventoryValue);
+		model.addAttribute("lowStockCount", lowStockItems.size());
+		model.addAttribute("outOfStockCount", outOfStockItems.size());
+		// totalItems is already available from inventoryPage.getTotalElements()
+		// --- END NEW ---
 
 		model.addAttribute("allInventoryItems", allItemsForStockModal);
 		model.addAttribute("inventoryPage", inventoryPage); // Add the full page object

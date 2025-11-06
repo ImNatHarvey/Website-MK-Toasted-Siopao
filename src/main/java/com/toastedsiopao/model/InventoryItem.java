@@ -55,9 +55,12 @@ public class InventoryItem {
 	private BigDecimal criticalStockThreshold = BigDecimal.ZERO;
 
 	// --- Optional Cost ---
+	// --- UPDATED: Made NotNull ---
+	@NotNull(message = "Cost per unit cannot be null")
 	@PositiveOrZero(message = "Cost must be zero or positive")
-	@Column(precision = 10, scale = 2)
+	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal costPerUnit; // Cost for one unit (e.g., cost per kg)
+	// --- END UPDATE ---
 
 	private LocalDateTime lastUpdated;
 
@@ -85,6 +88,16 @@ public class InventoryItem {
 			return "NORMAL"; // Green
 		}
 	}
+
+	// --- NEW: Total Cost Calculation ---
+	@Transient
+	public BigDecimal getTotalCostValue() {
+		if (costPerUnit == null || currentStock == null) {
+			return BigDecimal.ZERO;
+		}
+		return costPerUnit.multiply(currentStock);
+	}
+	// --- END NEW ---
 
 	// --- Threshold Percentages (Calculated for default view) ---
 	// These are approximations if a 'max capacity' isn't defined

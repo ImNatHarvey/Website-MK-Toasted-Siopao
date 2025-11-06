@@ -38,6 +38,9 @@ public class InventoryItemDto {
 	@DecimalMin(value = "0.0", message = "Critical threshold must be zero or positive")
 	private BigDecimal criticalStockThreshold = BigDecimal.ZERO;
 
-	@PositiveOrZero(message = "Cost must be zero or positive")
+	// --- UPDATED ---
+	@NotNull(message = "Cost per unit cannot be null")
+	@DecimalMin(value = "0.0", message = "Cost must be zero or positive")
 	private BigDecimal costPerUnit;
+	// --- END UPDATE ---
 }

@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemStockInput.value = button.dataset.currentStock || '0.00';
 				itemLowThresholdInput.value = button.dataset.lowThreshold || '0.00';
 				itemCriticalThresholdInput.value = button.dataset.criticalThreshold || '0.00';
-				itemCostInput.value = button.dataset.cost || ''; // Handle potentially empty cost
+				// UPDATED: Now required, so default to empty string if missing (shouldn't be)
+				itemCostInput.value = button.dataset.cost || '';
 			} else {
 				console.log("Populating modal for ADD (resetting form)."); // Debug
 				modalTitle.textContent = 'Add New Inventory Item';
@@ -135,5 +136,53 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// --- NEW: Logic for "View Item" Modal ---
+	const viewItemModal = document.getElementById('viewItemModal');
+	if (viewItemModal) {
+		viewItemModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			if (!button || !button.classList.contains('view-item-btn')) {
+				console.warn("View Item Modal opened without a valid row source.");
+				return;
+			}
+
+			const dataset = button.dataset;
+			console.log("Populating View Item Modal with data:", dataset); // Debug
+
+			// Helper function to set text content
+			const setText = (id, value) => {
+				const el = viewItemModal.querySelector(id);
+				if (el) {
+					el.textContent = value || 'N/A';
+				} else {
+					console.warn(`Element ${id} not found in viewItemModal.`);
+				}
+			};
+
+			// Populate fields
+			setText('#viewItemName', dataset.name);
+			setText('#viewItemCategory', dataset.categoryName);
+			setText('#viewItemUnit', dataset.unitName);
+			setText('#viewItemCurrentStock', dataset.currentStock);
+			setText('#viewItemCostPerUnit', '₱' + (dataset.costPerUnit || '0.00'));
+			setText('#viewItemTotalCostValue', '₱' + (dataset.totalCostValue || '0.00'));
+			setText('#viewItemLowThreshold', dataset.lowThreshold);
+			setText('#viewItemCriticalThreshold', dataset.criticalThreshold);
+			setText('#viewItemLastUpdated', 'Last Updated: ' + (dataset.lastUpdated || 'N/A'));
+
+			// Populate status badge
+			const statusBadge = viewItemModal.querySelector('#viewItemStatusBadge');
+			if (statusBadge) {
+				statusBadge.textContent = dataset.stockStatus || 'N/A';
+				statusBadge.className = 'status-badge'; // Reset classes
+				if (dataset.stockStatusClass) {
+					statusBadge.classList.add(dataset.stockStatusClass);
+				}
+			} else {
+				console.warn("Element #viewItemStatusBadge not found.");
+			}
+		});
+	}
+	// --- END NEW ---
 
 }); // End DOMContentLoaded for admin-inventory.js

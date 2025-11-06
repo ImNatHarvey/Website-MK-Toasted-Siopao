@@ -28,26 +28,6 @@
 
 		<div th:replace="~{admin/fragments/common-alerts :: userAlerts}"></div>
 
-
-		<form th:action="@{/admin/customers}" method="get"
-			class="mb-4 p-3 bg-light rounded shadow-sm">
-			<div class="row g-3 align-items-end">
-				<div class="col-md-10">
-					<label for="keyword" class="form-label">Search by Name,
-						Username, Phone</label> <input type="text" class="form-control"
-						id="keyword" name="keyword" th:value="${keyword}"
-						placeholder="Enter search term...">
-				</div>
-				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-action-view me-2">
-						<i class="fa-solid fa-search me-1"></i> Search
-					</button>
-					<a th:href="@{/admin/customers}" class="btn btn-custom-secondary"
-						title="Clear Filters">Clear </a>
-				</div>
-			</div>
-		</form>
-
 		<div class="row text-center mb-4">
 			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
@@ -75,6 +55,24 @@
 				</div>
 			</div>
 		</div>
+		<form th:action="@{/admin/customers}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="row g-3 align-items-end">
+				<div class="col-md-10">
+					<label for="keyword" class="form-label">Search by Name,
+						Username, Phone</label> <input type="text" class="form-control"
+						id="keyword" name="keyword" th:value="${keyword}"
+						placeholder="Enter search term...">
+				</div>
+				<div class="col-md-2 d-flex justify-content-end">
+					<button type="submit" class="btn btn-action-view me-2">
+						<i class="fa-solid fa-search me-1"></i> Search
+					</button>
+					<a th:href="@{/admin/customers}" class="btn btn-custom-secondary"
+						title="Clear Filters">Clear </a>
+				</div>
+			</div>
+		</form>
 
 		<div class="card">
 			<div class="card-header">

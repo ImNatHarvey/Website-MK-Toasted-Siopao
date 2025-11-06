@@ -125,6 +125,51 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// --- NEW: Logic for Edit Inventory Category Modal ---
+	const editInvCategoryModal = document.getElementById('editInvCategoryModal');
+	if (editInvCategoryModal) {
+		const form = editInvCategoryModal.querySelector('#editInvCategoryForm');
+
+		editInvCategoryModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const isValidationReopen = mainElement.dataset.showEditInvCategoryModal === 'true';
+			console.log("Edit Inv Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+
+			if (button && button.classList.contains('edit-inv-category-btn') && !isValidationReopen) {
+				const dataset = button.dataset;
+				console.log("Populating Edit Inv Category Modal with data:", dataset); // Debug
+				if (form) {
+					form.querySelector('#editInvCategoryId').value = dataset.id || '';
+					form.querySelector('#editInvCategoryName').value = dataset.name || '';
+				}
+			} else if (isValidationReopen) {
+				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
+			}
+
+			// Clear previous validation highlights unless reopening
+			if (mainElement.dataset.showEditInvCategoryModal !== 'true') {
+				console.log("Clearing validation highlights on modal show (not validation reopen)."); // Debug
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
+			}
+		});
+
+		editInvCategoryModal.addEventListener('hidden.bs.modal', function() {
+			// Clear form state only if not flagged to stay open
+			if (mainElement.dataset.showEditInvCategoryModal !== 'true') {
+				console.log("Clearing Edit Inv Category modal on hide (not validation reopen).") // Debug
+				if (form) form.reset();
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Resetting showEditInvCategoryModal flag on hide.") // Debug
+				mainElement.removeAttribute('data-show-edit-inv-category-modal');
+			}
+		});
+	}
+	// --- END NEW ---
+
+
 	// --- Logic for Manage Units Modal (Clear on Hide) ---
 	const manageUnitsModal = document.getElementById('manageUnitsModal');
 	if (manageUnitsModal) {
@@ -143,6 +188,52 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	}
+
+	// --- NEW: Logic for Edit Unit Modal ---
+	const editUnitModal = document.getElementById('editUnitModal');
+	if (editUnitModal) {
+		const form = editUnitModal.querySelector('#editUnitForm');
+
+		editUnitModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const isValidationReopen = mainElement.dataset.showEditUnitModal === 'true';
+			console.log("Edit Unit Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+
+			if (button && button.classList.contains('edit-unit-btn') && !isValidationReopen) {
+				const dataset = button.dataset;
+				console.log("Populating Edit Unit Modal with data:", dataset); // Debug
+				if (form) {
+					form.querySelector('#editUnitId').value = dataset.id || '';
+					form.querySelector('#editUnitName').value = dataset.name || '';
+					form.querySelector('#editUnitAbbreviation').value = dataset.abbreviation || '';
+				}
+			} else if (isValidationReopen) {
+				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
+			}
+
+			// Clear previous validation highlights unless reopening
+			if (mainElement.dataset.showEditUnitModal !== 'true') {
+				console.log("Clearing validation highlights on modal show (not validation reopen)."); // Debug
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
+			}
+		});
+
+		editUnitModal.addEventListener('hidden.bs.modal', function() {
+			// Clear form state only if not flagged to stay open
+			if (mainElement.dataset.showEditUnitModal !== 'true') {
+				console.log("Clearing Edit Unit modal on hide (not validation reopen).") // Debug
+				if (form) form.reset();
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Resetting showEditUnitModal flag on hide.") // Debug
+				mainElement.removeAttribute('data-show-edit-unit-modal');
+			}
+		});
+	}
+	// --- END NEW ---
+
 
 	// --- Logic for Manage Stock Modal (Clear Inputs on Hide) ---
 	const manageStockModal = document.getElementById('manageStockModal');
@@ -316,6 +407,4 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 	// **** END NEW FUNCTION ****
-
-
-}); // End DOMContentLoaded for admin-inventory.js
+});

@@ -18,5 +18,17 @@ public interface InventoryCategoryService {
 	InventoryCategory saveFromDto(InventoryCategoryDto categoryDto);
 	// --- End NEW ---
 
+	// --- NEW: Update using DTO (includes validation) ---
+	/**
+	 * Updates an existing Inventory Category from a DTO, including validation.
+	 *
+	 * @param categoryDto The DTO containing category data (must include ID).
+	 * @return The updated InventoryCategory entity.
+	 * @throws IllegalArgumentException if validation fails (e.g., duplicate name).
+	 * @throws RuntimeException         if category is not found.
+	 */
+	InventoryCategory updateFromDto(InventoryCategoryDto categoryDto);
+	// --- End NEW ---
+
 	void deleteById(Long id);
 }

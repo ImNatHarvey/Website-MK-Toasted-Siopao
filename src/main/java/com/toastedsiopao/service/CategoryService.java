@@ -14,13 +14,23 @@ public interface CategoryService {
 
 	// **** ADDED METHOD SIGNATURE ****
 	/**
-	 * Saves a new Category from a DTO, including validation.
+	 * Saves a new Category from a DTO, including validation. * @param categoryDto
+	 * The DTO containing category data.
 	 * 
-	 * @param categoryDto The DTO containing category data.
 	 * @return The saved Category entity.
 	 * @throws IllegalArgumentException if validation fails (e.g., duplicate name).
 	 */
 	Category saveFromDto(CategoryDto categoryDto);
+
+	/**
+	 * Updates an existing Category from a DTO, including validation.
+	 *
+	 * @param categoryDto The DTO containing category data (must include ID).
+	 * @return The updated Category entity.
+	 * @throws IllegalArgumentException if validation fails (e.g., duplicate name).
+	 * @throws RuntimeException         if category is not found.
+	 */
+	Category updateFromDto(CategoryDto categoryDto);
 	// **** END ADDED METHOD ****
 
 	void deleteById(Long id);

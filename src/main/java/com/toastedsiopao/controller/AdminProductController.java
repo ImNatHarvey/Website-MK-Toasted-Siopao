@@ -120,6 +120,11 @@ public class AdminProductController {
 		if (!model.containsAttribute("productUpdateDto")) {
 			model.addAttribute("productUpdateDto", new ProductDto());
 		}
+		// --- NEW: Add DTO for category update modal ---
+		if (!model.containsAttribute("categoryUpdateDto")) {
+			model.addAttribute("categoryUpdateDto", new CategoryDto());
+		}
+		// --- END NEW ---
 		return "admin/products";
 	}
 
@@ -274,6 +279,67 @@ public class AdminProductController {
 
 		return "redirect:/admin/products";
 	}
+
+	// --- NEW: Update Category Method ---
+	@PostMapping("/categories/update")
+	public String updateCategory(@Valid @ModelAttribute("categoryUpdateDto") CategoryDto categoryDto,
+			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
+			UriComponentsBuilder uriBuilder) {
+
+		// Check DTO validation errors first
+		if (result.hasErrors()) {
+			log.warn("Category update DTO validation failed. Errors: {}", result.getAllErrors());
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
+					result);
+			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8))); // Add
+																											// products
+																											// list
+																											// back
+			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		try {
+			// Service method now handles validation and updating
+			Category updatedCategory = categoryService.updateFromDto(categoryDto);
+			activityLogService.logAdminAction(principal.getName(), "EDIT_CATEGORY", "Updated product category: "
+					+ updatedCategory.getName() + " (ID: " + updatedCategory.getId() + ")");
+			redirectAttributes.addFlashAttribute("categorySuccess",
+					"Category '" + updatedCategory.getName() + "' updated successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error updating product category: {}", e.getMessage());
+			if (e.getMessage().contains("already exists")) {
+				result.rejectValue("name", "duplicate", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("categoryError", "Error updating category: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
+					result);
+			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
+			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (RuntimeException e) { // Catch other runtime errors (e.g., not found)
+			log.error("Error updating product category: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
+			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		return "redirect:/admin/products";
+	}
+	// --- END NEW ---
 
 	@PostMapping("/stock/adjust")
 	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity, // CHANGED

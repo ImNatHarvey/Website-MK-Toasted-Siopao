@@ -19,6 +19,19 @@ public interface UnitOfMeasureService {
 	UnitOfMeasure saveFromDto(UnitOfMeasureDto unitDto);
 	// --- End NEW ---
 
+	// --- NEW: Update using DTO (includes validation) ---
+	/**
+	 * Updates an existing Unit of Measure from a DTO, including validation.
+	 *
+	 * @param unitDto The DTO containing unit data (must include ID).
+	 * @return The updated UnitOfMeasure entity.
+	 * @throws IllegalArgumentException if validation fails (e.g., duplicate
+	 *                                  name/abbreviation).
+	 * @throws RuntimeException         if unit is not found.
+	 */
+	UnitOfMeasure updateFromDto(UnitOfMeasureDto unitDto);
+	// --- End NEW ---
+
 	void deleteById(Long id);
 
 	// --- REMOVED incorrect method signature ---

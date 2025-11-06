@@ -108,6 +108,15 @@ public class AdminInventoryController {
 		if (!model.containsAttribute("unitOfMeasureDto")) {
 			model.addAttribute("unitOfMeasureDto", new UnitOfMeasureDto());
 		}
+		// --- NEW: Add DTO for category update modal ---
+		if (!model.containsAttribute("inventoryCategoryUpdateDto")) {
+			model.addAttribute("inventoryCategoryUpdateDto", new InventoryCategoryDto());
+		}
+		// --- NEW: Add DTO for unit update modal (for next step) ---
+		if (!model.containsAttribute("unitOfMeasureUpdateDto")) {
+			model.addAttribute("unitOfMeasureUpdateDto", new UnitOfMeasureDto());
+		}
+		// --- END NEW ---
 		return "admin/inventory";
 	}
 	// --- END UPDATED METHOD ---
@@ -200,6 +209,62 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
+	// --- NEW: Update Inventory Category Method ---
+	@PostMapping("/categories/update")
+	public String updateInventoryCategory(
+			@Valid @ModelAttribute("inventoryCategoryUpdateDto") InventoryCategoryDto categoryDto, BindingResult result,
+			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
+
+		// Check DTO validation errors first
+		if (result.hasErrors()) {
+			log.warn("Inventory category update DTO validation failed. Errors: {}", result.getAllErrors());
+			redirectAttributes.addFlashAttribute(
+					"org.springframework.validation.BindingResult.inventoryCategoryUpdateDto", result);
+			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editInvCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		try {
+			// Service method now handles validation and updating
+			InventoryCategory updatedCategory = inventoryCategoryService.updateFromDto(categoryDto);
+			activityLogService.logAdminAction(principal.getName(), "EDIT_INVENTORY_CATEGORY",
+					"Updated inventory category: " + updatedCategory.getName() + " (ID: " + updatedCategory.getId()
+							+ ")");
+			redirectAttributes.addFlashAttribute("categorySuccess",
+					"Category '" + updatedCategory.getName() + "' updated successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error updating inventory category: {}", e.getMessage());
+			if (e.getMessage().contains("already exists")) {
+				result.rejectValue("name", "duplicate", e.getMessage());
+			} else {
+				redirectAttributes.addFlashAttribute("categoryError", "Error updating category: " + e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute(
+					"org.springframework.validation.BindingResult.inventoryCategoryUpdateDto", result);
+			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editInvCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (RuntimeException e) { // Catch other runtime errors (e.g., not found)
+			log.error("Error updating inventory category: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editInvCategoryModal")
+					.queryParam("editId", categoryDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		return "redirect:/admin/inventory";
+	}
+	// --- END NEW ---
+
 	@PostMapping("/units/add")
 	public String addUnitOfMeasure(@Valid @ModelAttribute("unitOfMeasureDto") UnitOfMeasureDto unitDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
@@ -239,6 +304,58 @@ public class AdminInventoryController {
 		}
 		return "redirect:/admin/inventory";
 	}
+
+	// --- NEW: Update Unit Method ---
+	@PostMapping("/units/update")
+	public String updateUnitOfMeasure(@Valid @ModelAttribute("unitOfMeasureUpdateDto") UnitOfMeasureDto unitDto,
+			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
+			UriComponentsBuilder uriBuilder) {
+
+		// Check DTO validation errors first
+		if (result.hasErrors()) {
+			log.warn("Unit update DTO validation failed. Errors: {}", result.getAllErrors());
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureUpdateDto",
+					result);
+			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editUnitModal")
+					.queryParam("editId", unitDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		try {
+			// Service method now handles validation and updating
+			UnitOfMeasure updatedUnit = unitOfMeasureService.updateFromDto(unitDto);
+			activityLogService.logAdminAction(principal.getName(), "EDIT_UNIT_OF_MEASURE",
+					"Updated unit: " + updatedUnit.getName() + " (ID: " + updatedUnit.getId() + ")");
+			redirectAttributes.addFlashAttribute("unitSuccess",
+					"Unit '" + updatedUnit.getName() + "' updated successfully!");
+
+		} catch (IllegalArgumentException e) { // Catch validation errors from service
+			log.warn("Validation error updating unit: {}", e.getMessage());
+			// For units, duplicate errors are global
+			result.reject("global", e.getMessage());
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureUpdateDto",
+					result);
+			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editUnitModal")
+					.queryParam("editId", unitDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+
+		} catch (RuntimeException e) { // Catch other runtime errors (e.g., not found)
+			log.error("Error updating unit: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("unitError", "An unexpected error occurred: " + e.getMessage());
+			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editUnitModal")
+					.queryParam("editId", unitDto.getId()).build().toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		return "redirect:/admin/inventory";
+	}
+	// --- END NEW ---
 
 	// **** METHOD UPDATED ****
 	@PostMapping("/stock/adjust")

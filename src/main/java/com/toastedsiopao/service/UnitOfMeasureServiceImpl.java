@@ -44,6 +44,28 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 		}
 	}
 
+	// --- NEW: Centralized validation for name/abbreviation uniqueness on update
+	// ---
+	private void validateUniquenessOnUpdate(String name, String abbreviation, Long unitId) {
+		if (!StringUtils.hasText(name)) {
+			throw new IllegalArgumentException("Unit name cannot be blank.");
+		}
+		if (!StringUtils.hasText(abbreviation)) {
+			throw new IllegalArgumentException("Unit abbreviation cannot be blank.");
+		}
+
+		Optional<UnitOfMeasure> byName = repository.findByNameIgnoreCase(name.trim());
+		if (byName.isPresent() && !byName.get().getId().equals(unitId)) {
+			throw new IllegalArgumentException("Unit name '" + name.trim() + "' already exists.");
+		}
+
+		Optional<UnitOfMeasure> byAbbr = repository.findByAbbreviationIgnoreCase(abbreviation.trim());
+		if (byAbbr.isPresent() && !byAbbr.get().getId().equals(unitId)) {
+			throw new IllegalArgumentException("Unit abbreviation '" + abbreviation.trim() + "' already exists.");
+		}
+	}
+	// --- END NEW ---
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<UnitOfMeasure> findAll() {
@@ -99,6 +121,37 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 		} catch (Exception e) {
 			log.error("Database error saving unit '{}': {}", unitDto.getName(), e.getMessage(), e);
 			throw new RuntimeException("Could not save unit due to a database error.", e);
+		}
+	}
+	// --- End NEW Method ---
+
+	// --- NEW: Update method using DTO with validation ---
+	@Override
+	public UnitOfMeasure updateFromDto(UnitOfMeasureDto unitDto) {
+		if (unitDto == null || unitDto.getId() == null) {
+			throw new IllegalArgumentException("Unit data or ID cannot be null for update.");
+		}
+
+		// 1. Find the existing unit
+		UnitOfMeasure unitToUpdate = repository.findById(unitDto.getId())
+				.orElseThrow(() -> new RuntimeException("Unit not found with id: " + unitDto.getId()));
+
+		// 2. Validate the new name and abbreviation
+		validateUniquenessOnUpdate(unitDto.getName(), unitDto.getAbbreviation(), unitDto.getId());
+
+		// 3. Update the fields
+		unitToUpdate.setName(unitDto.getName().trim());
+		unitToUpdate.setAbbreviation(unitDto.getAbbreviation().trim());
+
+		try {
+			// 4. Save
+			UnitOfMeasure savedUnit = repository.save(unitToUpdate);
+			log.info("Updated unit: ID={}, Name='{}', Abbreviation='{}'", savedUnit.getId(), savedUnit.getName(),
+					savedUnit.getAbbreviation());
+			return savedUnit;
+		} catch (Exception e) {
+			log.error("Database error updating unit '{}': {}", unitDto.getName(), e.getMessage(), e);
+			throw new RuntimeException("Could not update unit due to a database error.", e);
 		}
 	}
 	// --- End NEW Method ---

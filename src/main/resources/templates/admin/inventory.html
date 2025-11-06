@@ -9,7 +9,9 @@
 	<div id="admin-content-wrapper"
 		th:attr="data-show-add-item-modal=${#fields.hasErrors('inventoryItemDto.*') ? 'true' : 'false'},
                  data-show-manage-categories-modal=${#fields.hasErrors('inventoryCategoryDto.*') ? 'true' : 'false'},
-                 data-show-manage-units-modal=${#fields.hasErrors('unitOfMeasureDto') ? 'true' : 'false'},
+                 data-show-edit-inv-category-modal=${#fields.hasErrors('inventoryCategoryUpdateDto.*') ? 'true' : 'false'},
+                 data-show-manage-units-modal=${#fields.hasErrors('unitOfMeasureDto.*') ? 'true' : 'false'},
+                 data-show-edit-unit-modal=${#fields.hasErrors('unitOfMeasureUpdateDto.*') ? 'true' : 'false'},
                  data-show-manage-stock-modal=${stockError != null ? 'true' : 'false'}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">

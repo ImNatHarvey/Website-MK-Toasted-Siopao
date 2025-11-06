@@ -454,6 +454,69 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// --- NEW: Logic for Manage Categories Modal (Clear on Hide) ---
+	const manageCategoriesModal = document.getElementById('manageCategoriesModal');
+	if (manageCategoriesModal) {
+		const form = manageCategoriesModal.querySelector('#addCategoryForm');
+
+		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
+			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
+				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).") // Debug
+				if (form) form.reset();
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Resetting showManageCategoriesModal flag on hide.") // Debug
+				mainElement.removeAttribute('data-show-manage-categories-modal');
+			}
+		});
+	}
+	// --- END NEW ---
+
+	// --- NEW: Logic for Edit Category Modal ---
+	const editCategoryModal = document.getElementById('editCategoryModal');
+	if (editCategoryModal) {
+		const form = editCategoryModal.querySelector('#editCategoryForm');
+
+		editCategoryModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const isValidationReopen = mainElement.dataset.showEditCategoryModal === 'true';
+			console.log("Edit Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+
+			if (button && button.classList.contains('edit-category-btn') && !isValidationReopen) {
+				const dataset = button.dataset;
+				console.log("Populating Edit Category Modal with data:", dataset); // Debug
+				if (form) {
+					form.querySelector('#editCategoryId').value = dataset.id || '';
+					form.querySelector('#editCategoryName').value = dataset.name || '';
+				}
+			} else if (isValidationReopen) {
+				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
+			}
+
+			// Clear previous validation highlights unless reopening
+			if (mainElement.dataset.showEditCategoryModal !== 'true') {
+				console.log("Clearing validation highlights on modal show (not validation reopen)."); // Debug
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
+			}
+		});
+
+		editCategoryModal.addEventListener('hidden.bs.modal', function() {
+			// Clear form state only if not flagged to stay open
+			if (mainElement.dataset.showEditCategoryModal !== 'true') {
+				console.log("Clearing Edit Category modal on hide (not validation reopen).") // Debug
+				if (form) form.reset();
+				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			} else {
+				console.log("Resetting showEditCategoryModal flag on hide.") // Debug
+				mainElement.removeAttribute('data-show-edit-category-modal');
+			}
+		});
+	}
+	// --- END NEW ---
+
+
 	// --- Recipe Ingredient Management ---
 	// ... (addIngredientRow, removeIngredientRow, renumberIngredientRows functions remain unchanged) ...
 	function addIngredientRow(containerId, templateId, data = null) {
@@ -527,20 +590,20 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('addIngredientBtn')?.addEventListener('click', () => addIngredientRow('addIngredientsContainer', 'ingredientRowTemplate'));
 	document.getElementById('addIngredientBtnEditModal')?.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
 
-	// Event delegation for Remove buttons
+	// **** START: CONSOLIDATED CLICK LISTENER ****
+	// Event delegation for Remove buttons AND Max buttons
 	document.addEventListener('click', function(event) {
+
+		// --- Handle Remove Ingredient ---
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {
 			removeIngredientRow(removeBtn);
+			return; // Stop processing this click
 		}
-	});
 
-	// --- MAX BUTTON LOGIC ---
-	// ... (Omitted unchanged max button logic) ...
-	document.addEventListener('click', function(event) {
-		// ... (max button logic remains unchanged) ...
+		// --- Handle MAX BUTTON LOGIC ---
 		const maxBtn = event.target.closest('.max-quantity-btn');
-		if (!maxBtn) return;
+		if (!maxBtn) return; // Not a max button, stop processing
 
 		console.log("--- Max button clicked (product page) ---");
 
@@ -631,5 +694,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		} catch (error) { console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
 	});
+	// **** END: CONSOLIDATED CLICK LISTENER ****
 
 });

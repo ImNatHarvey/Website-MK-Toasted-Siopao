@@ -33,6 +33,18 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 		}
 	}
 
+	// --- NEW: Centralized validation for name uniqueness on update ---
+	private void validateNameUniquenessOnUpdate(String name, Long categoryId) {
+		if (!StringUtils.hasText(name)) {
+			throw new IllegalArgumentException("Category name cannot be blank.");
+		}
+		Optional<InventoryCategory> existing = repository.findByNameIgnoreCase(name.trim());
+		if (existing.isPresent() && !existing.get().getId().equals(categoryId)) {
+			throw new IllegalArgumentException("Inventory category name '" + name.trim() + "' already exists.");
+		}
+	}
+	// --- END NEW ---
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryCategory> findAll() {
@@ -80,6 +92,35 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 		} catch (Exception e) {
 			log.error("Database error saving inventory category '{}': {}", categoryDto.getName(), e.getMessage(), e);
 			throw new RuntimeException("Could not save inventory category due to a database error.", e);
+		}
+	}
+	// --- End NEW Method ---
+
+	// --- NEW: Update method using DTO with validation ---
+	@Override
+	public InventoryCategory updateFromDto(InventoryCategoryDto categoryDto) {
+		if (categoryDto == null || categoryDto.getId() == null) {
+			throw new IllegalArgumentException("Category data or ID cannot be null for update.");
+		}
+
+		// 1. Find the existing category
+		InventoryCategory categoryToUpdate = repository.findById(categoryDto.getId()).orElseThrow(
+				() -> new RuntimeException("Inventory Category not found with id: " + categoryDto.getId()));
+
+		// 2. Validate the new name
+		validateNameUniquenessOnUpdate(categoryDto.getName(), categoryDto.getId());
+
+		// 3. Update the name
+		categoryToUpdate.setName(categoryDto.getName().trim());
+
+		try {
+			// 4. Save
+			InventoryCategory savedCategory = repository.save(categoryToUpdate);
+			log.info("Updated inventory category: ID={}, Name='{}'", savedCategory.getId(), savedCategory.getName());
+			return savedCategory;
+		} catch (Exception e) {
+			log.error("Database error updating inventory category '{}': {}", categoryDto.getName(), e.getMessage(), e);
+			throw new RuntimeException("Could not update inventory category due to a database error.", e);
 		}
 	}
 	// --- End NEW Method ---

@@ -1003,3 +1003,17 @@ footer.admin-footer {
 .image-uploader-container.preview-active .image-preview-container {
 	display: block;
 }
+
+/* =============================================== */
+/* == NEW STYLES FOR READONLY (LOCKED) INPUTS == */
+/* =============================================== */
+.form-control-readonly {
+	background-color: #e9ecef; /* Bootstrap's disabled bg color */
+	opacity: 1;
+	cursor: not-allowed;
+}
+
+/* Target selects specifically */
+select.form-control-readonly {
+	pointer-events: none; /* Disables clicking on the select */
+}

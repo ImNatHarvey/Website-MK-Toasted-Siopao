@@ -26,13 +26,20 @@ document.addEventListener('DOMContentLoaded', function() {
 		const previewImg = uploader.querySelector('.image-preview');
 		const removeBtn = uploader.querySelector('.image-remove-btn');
 		const form = uploader.closest('form');
-		// *** FIX: Find the correct hidden input for this uploader's form ***
 		const removeImageHiddenInput = form ? form.querySelector('input[name="removeImage"]') : null;
 
-		if (!input || !dropZone || !previewContainer || !previewImg || !removeBtn || !removeImageHiddenInput) {
-			console.error(`Uploader #${containerId} is missing required elements (input, dropZone, previewContainer, previewImg, removeBtn, or removeImage hidden input).`);
+		// **** START OF BUG 1 FIX ****
+		// Basic elements must exist
+		if (!input || !dropZone || !previewContainer || !previewImg || !removeBtn) {
+			console.error(`Uploader #${containerId} is missing required elements (input, dropZone, previewContainer, previewImg, or removeBtn).`);
 			return;
 		}
+		// The removeImageHiddenInput is *required* for edit, but *optional* for add.
+		if (form && form.id === 'editProductForm' && !removeImageHiddenInput) {
+			console.error(`Uploader #${containerId} is missing 'removeImage' hidden input.`);
+			return;
+		}
+		// **** END OF BUG 1 FIX ****
 
 		// Function to show the preview
 		const showPreview = (fileOrSrc) => {
@@ -42,7 +49,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				previewImg.src = fileOrSrc;
 				uploader.classList.add('preview-active');
 				input.value = ''; // Clear file input
-				removeImageHiddenInput.value = 'false'; // **** FIX: Explicitly set remove to false ****
+				if (removeImageHiddenInput) { // Check if input exists
+					removeImageHiddenInput.value = 'false';
+				}
 			}
 			// Check 2: Is it a File object? (Check for `name` property)
 			else if (typeof fileOrSrc === 'object' && fileOrSrc !== null && fileOrSrc.name) {
@@ -51,7 +60,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				reader.onload = () => {
 					previewImg.src = reader.result;
 					uploader.classList.add('preview-active');
-					removeImageHiddenInput.value = 'false'; // **** FIX: Explicitly set remove to false ****
+					if (removeImageHiddenInput) { // Check if input exists
+						removeImageHiddenInput.value = 'false';
+					}
 				};
 				reader.readAsDataURL(fileOrSrc);
 			}
@@ -67,7 +78,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			previewImg.src = '';
 			uploader.classList.remove('preview-active');
 			input.value = ''; // Clear the file input
-			removeImageHiddenInput.value = 'true'; // **** FIX: Explicitly set remove to true ****
+			if (removeImageHiddenInput) { // Check if input exists
+				removeImageHiddenInput.value = 'true';
+			}
 		};
 
 		// --- Event Listeners ---
@@ -121,8 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		uploader.resetUploader = resetUploader;
 
 		// --- Initial Reset (for Add Modal) ---
-		// *** FIX: Check the ID and form to ensure we reset the right one ***
-		if (containerId === 'addImageUploader' || form.id === 'addProductForm') {
+		if (containerId === 'addImageUploader' || (form && form.id === 'addProductForm')) {
 			resetUploader();
 		}
 	}
@@ -136,21 +148,29 @@ document.addEventListener('DOMContentLoaded', function() {
 	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
 	function initThresholdSliders(modalElement) {
 		console.log("Initializing threshold sliders for modal:", modalElement.id);
-		const lowThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="low"]');
-		const criticalThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="critical"]');
 
-		if (!lowThresholdGroup || !criticalThresholdGroup) {
-			console.warn("Could not find threshold groups in modal:", modalElement.id);
+		let lowInput, lowSlider, criticalInput, criticalSlider;
+
+		// **** START OF BUG 2 FIX ****
+		// Select inputs based on the modal ID for robustness
+		if (modalElement.id === 'addProductModal') {
+			lowInput = modalElement.querySelector('#addLowThresholdInput');
+			lowSlider = modalElement.querySelector('#addLowThresholdSlider');
+			criticalInput = modalElement.querySelector('#addCriticalThresholdInput');
+			criticalSlider = modalElement.querySelector('#addCriticalThresholdSlider');
+		} else if (modalElement.id === 'editProductModal') {
+			lowInput = modalElement.querySelector('#editLowThresholdInput');
+			lowSlider = modalElement.querySelector('#editLowThresholdSlider');
+			criticalInput = modalElement.querySelector('#editCriticalThresholdInput');
+			criticalSlider = modalElement.querySelector('#editCriticalThresholdSlider');
+		} else {
+			console.warn("initThresholdSliders called on unknown modal:", modalElement.id);
 			return;
 		}
-
-		const lowInput = lowThresholdGroup.querySelector('.threshold-input');
-		const lowSlider = lowThresholdGroup.querySelector('.threshold-slider');
-		const criticalInput = criticalThresholdGroup.querySelector('.threshold-input');
-		const criticalSlider = criticalThresholdGroup.querySelector('.threshold-slider');
+		// **** END OF BUG 2 FIX ****
 
 		if (!lowInput || !lowSlider || !criticalInput || !criticalSlider) {
-			console.error("Missing one or more threshold inputs/sliders.");
+			console.error("Missing one or more threshold inputs/sliders for modal:", modalElement.id);
 			return;
 		}
 
@@ -351,18 +371,15 @@ document.addEventListener('DOMContentLoaded', function() {
 			// --- This logic runs for both edit and validation reopen ---
 			// UPDATED: Check form for recipeLocked value if dataset is not present (validation reopen)
 			let isRecipeLocked = (dataset && dataset.recipeLocked === 'true');
-			if (isValidationReopen && !isRecipeLocked) {
-				// Check if the form's (hidden) data implies it's locked
-				// This is tricky, as we don't pass this in the DTO.
-				// We'll rely on the fact that an "edit" *must* have come from a button
-				// and `dataset` will be populated *even on validation reopen* if we set it right.
-				// The logic might be slightly flawed, but let's assume `dataset` is available.
-				// A better way would be to pass `recipeLocked` in the DTO.
-				// For now, let's just use the dataset.
-				if (form.querySelector('#id').value) { // If it's an edit
-					// We can't know for sure without the dataset.
-					// Let's assume the button's dataset is still the best source.
-					// This part is complex. Let's stick to the original `dataset` check.
+
+			// **** START OF BUG FIX 2 ****
+			if (isValidationReopen && !dataset) {
+				// If validation fails, dataset might be null. We must re-check the original button's data.
+				// This is tricky. A simpler assumption: if the form has an ID, the recipe *is* locked
+				// (as all products are locked on creation).
+				if (form.querySelector('#id').value) {
+					console.log("Validation reopen: Assuming recipe is locked because product exists.");
+					isRecipeLocked = true;
 				}
 			}
 			console.log("Is recipe locked? ", isRecipeLocked);
@@ -372,25 +389,30 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
 				if (addIngredientBtn) addIngredientBtn.style.display = 'none';
 				if (ingredientsContainer) { // Check if container exists
-					ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
-						el.disabled = true;
-						if (el.classList.contains('remove-ingredient-btn')) {
-							el.style.display = 'none';
-						}
+					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
+						el.readOnly = true; // <-- SET TO READONLY
+						el.classList.add('form-control-readonly'); // <-- Add a class for styling
+					});
+					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
+						btn.disabled = true; // <-- Disable the button
+						btn.style.display = 'none';
 					});
 				}
 			} else {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'none';
 				if (addIngredientBtn) addIngredientBtn.style.display = 'block';
 				if (ingredientsContainer) { // Check if container exists
-					ingredientsContainer.querySelectorAll('select, input, button').forEach(el => {
-						el.disabled = false;
-						if (el.classList.contains('remove-ingredient-btn')) {
-							el.style.display = 'block';
-						}
+					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
+						el.readOnly = false; // <-- SET TO NOT READONLY
+						el.classList.remove('form-control-readonly'); // <-- Remove class
+					});
+					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
+						btn.disabled = false; // <-- Enable the button
+						btn.style.display = 'block';
 					});
 				}
 			}
+			// **** END OF BUG FIX 2 ****
 
 
 			if (mainElement.dataset.showEditProductModal !== 'true') {

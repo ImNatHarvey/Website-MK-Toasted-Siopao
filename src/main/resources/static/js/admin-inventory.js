@@ -386,6 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		enforceThresholdLogic(); // Enforce logic right away
 
 		// --- Event Listeners ---
+
+		// **** START OF BUG FIX 1 ****
 		// Slider updates Input
 		lowSlider.addEventListener('input', () => {
 			lowInput.value = lowSlider.value;
@@ -395,6 +397,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			criticalInput.value = criticalSlider.value;
 			// No need to check logic here, slider is already capped
 		});
+		// **** END OF BUG FIX 1 ****
 
 		// Input updates Slider
 		lowInput.addEventListener('input', () => {
@@ -403,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 		criticalInput.addEventListener('input', () => {
 			syncSliderAndInput(criticalInput, criticalSlider);
-			enforceThresholdLogic(); // Check logic (in case user types > low)
+			enforceThresholdLogic(); // Check logic
 		});
 	}
 	// **** END NEW FUNCTION ****

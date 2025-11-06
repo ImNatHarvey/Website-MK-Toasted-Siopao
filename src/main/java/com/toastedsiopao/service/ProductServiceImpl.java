@@ -41,7 +41,16 @@ public class ProductServiceImpl implements ProductService {
 
 	// --- Centralized Validation Method ---
 	private void validateThresholds(Integer lowThreshold, Integer criticalThreshold) {
-		if (criticalThreshold != null && lowThreshold != null && criticalThreshold > lowThreshold) {
+		// --- UPDATED: Added checks for > 0 ---
+		if (lowThreshold == null || lowThreshold <= 0) {
+			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
+		}
+		if (criticalThreshold == null || criticalThreshold <= 0) {
+			throw new IllegalArgumentException("Critical stock threshold must be greater than 0.");
+		}
+		// --- END UPDATE ---
+
+		if (criticalThreshold > lowThreshold) {
 			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
 		}
 	}
@@ -74,12 +83,8 @@ public class ProductServiceImpl implements ProductService {
 		if (productDto.getPrice() == null) {
 			throw new IllegalArgumentException("Price cannot be null.");
 		}
-		// Basic null checks for thresholds
-		if (productDto.getLowStockThreshold() == null)
-			productDto.setLowStockThreshold(0);
-		if (productDto.getCriticalStockThreshold() == null)
-			productDto.setCriticalStockThreshold(0);
-		// --- End Input Validation ---
+		// Basic null checks for thresholds (now handled by @NotNull)
+		// --- END Input Validation ---
 
 		// --- Moved Threshold Validation Here ---
 		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
@@ -176,8 +181,8 @@ public class ProductServiceImpl implements ProductService {
 		product.setImageUrl(productDto.getImageUrl());
 
 		// Map thresholds (already validated)
-		product.setLowStockThreshold(Optional.ofNullable(productDto.getLowStockThreshold()).orElse(0));
-		product.setCriticalStockThreshold(Optional.ofNullable(productDto.getCriticalStockThreshold()).orElse(0));
+		product.setLowStockThreshold(productDto.getLowStockThreshold());
+		product.setCriticalStockThreshold(productDto.getCriticalStockThreshold());
 
 		try {
 			return productRepository.save(product);

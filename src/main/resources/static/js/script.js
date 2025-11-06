@@ -76,23 +76,63 @@ document.addEventListener('DOMContentLoaded', function() {
 							// **** END MODIFICATION ****
 
 
-							// Apply manual styling after shown (Keep this)
+							// --- UPDATED: New logic to manually apply 'is-invalid' ---
 							modalElement.addEventListener('shown.bs.modal', () => {
-								/* ... JS code to manually add 'is-invalid' class ... */
-								console.log(`#${modalToShow} fully shown. Applying manual styles if needed.`);
+								console.log(`#${modalToShow} fully shown. Applying manual validation styles...`);
+								// Find all invalid-feedback divs that have content
 								const errorMessages = modalElement.querySelectorAll('.invalid-feedback');
+
 								errorMessages.forEach(msg => {
-									if (msg.textContent.trim() !== '' && msg.style.display !== 'none') {
-										let inputField = msg.previousElementSibling;
-										if (inputField && inputField.classList.contains('input-group')) { inputField = inputField.querySelector('input, select, textarea'); }
-										else if (inputField && inputField.tagName !== 'INPUT' && inputField.tagName !== 'SELECT' && inputField.tagName !== 'TEXTAREA') { const parentDiv = msg.closest('div'); if (parentDiv) inputField = parentDiv.querySelector('input, select, textarea'); }
-										if (inputField && (inputField.tagName === 'INPUT' || inputField.tagName === 'SELECT' || inputField.tagName === 'TEXTAREA')) {
-											inputField.classList.add('is-invalid');
-											const inputGroup = inputField.closest('.input-group'); if (inputGroup) { inputGroup.classList.add('is-invalid'); }
+									// Check if Thymeleaf has added error text and it's not just whitespace
+									if (msg.textContent.trim() !== '') {
+										console.log("Found error message:", msg.textContent.trim());
+
+										// --- FIX: Make the error message visible ---
+										// Bootstrap hides .invalid-feedback by default. We must manually show it.
+										msg.classList.add('d-block');
+										// --- END FIX ---
+
+										// Get the element right before the error message
+										let el = msg.previousElementSibling;
+
+										// --- NEW LOGIC to handle threshold fields ---
+										// If the sibling is a '.form-text', look one more sibling up
+										if (el && el.classList.contains('form-text')) {
+											el = el.previousElementSibling;
+										}
+										// --- END NEW LOGIC ---
+
+										if (el) {
+											if (el.classList.contains('form-control') || el.classList.contains('form-select')) {
+												// Simple case: <input> or <select>
+												el.classList.add('is-invalid');
+												console.log("Applying 'is-invalid' to:", el);
+											} else if (el.classList.contains('input-group')) {
+												// Complex case: <div class="input-group">
+												el.classList.add('is-invalid'); // Add to group wrapper
+												const inputInside = el.querySelector('.form-control, .form-select');
+												if (inputInside) {
+													inputInside.classList.add('is-invalid'); // Add to input inside
+													console.log("Applying 'is-invalid' to group and input inside:", el);
+												}
+											} else if (el.classList.contains('d-flex')) {
+												// --- NEW CASE: Handle threshold 'd-flex' container ---
+												const inputInside = el.querySelector('.form-control.threshold-input');
+												if (inputInside) {
+													inputInside.classList.add('is-invalid');
+													console.log("Applying 'is-invalid' to threshold input:", inputInside);
+												}
+												// --- END NEW CASE ---
+											} else {
+												console.warn("Could not find matching input for error message:", msg.textContent.trim());
+											}
+										} else {
+											console.warn("No previous sibling found for error message:", msg.textContent.trim());
 										}
 									}
 								});
 							}, { once: true });
+							// --- END UPDATED LOGIC ---
 
 							// Show the modal
 							console.log(`Calling show() for #${modalToShow}...`);

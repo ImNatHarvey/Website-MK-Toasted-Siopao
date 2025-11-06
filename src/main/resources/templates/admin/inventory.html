@@ -6,7 +6,11 @@
 </head>
 <body>
 
-	<div id="admin-content-wrapper">
+	<div id="admin-content-wrapper"
+		th:attr="data-show-add-item-modal=${#fields.hasErrors('inventoryItemDto.*') ? 'true' : 'false'},
+                 data-show-manage-categories-modal=${#fields.hasErrors('inventoryCategoryDto.*') ? 'true' : 'false'},
+                 data-show-manage-units-modal=${#fields.hasErrors('unitOfMeasureDto') ? 'true' : 'false'},
+                 data-show-manage-stock-modal=${stockError != null ? 'true' : 'false'}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>

@@ -140,19 +140,9 @@ public class AdminProductController {
 			return "redirect:" + redirectUrl;
 		}
 
-		// --- NEW: Check for empty ingredients ---
-		if (productDto.getIngredients() == null || productDto.getIngredients().isEmpty()) {
-			log.warn("Product add failed: No ingredients provided for {}.", productDto.getName());
-			// Add an error to the 'ingredients' field in the DTO
-			result.rejectValue("ingredients", "NotEmpty", "A product must have at least one ingredient.");
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
-			redirectAttributes.addFlashAttribute("productDto", productDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "addProductModal").build()
-					.toUriString();
-			return "redirect:" + redirectUrl;
-		}
-		// --- END NEW ---
+		// --- UPDATED: Removed manual ingredients check ---
+		// The @NotEmpty annotation on ProductDto.ingredients now handles this.
+		// --- END UPDATE ---
 
 		try {
 			// Service method now handles threshold validation

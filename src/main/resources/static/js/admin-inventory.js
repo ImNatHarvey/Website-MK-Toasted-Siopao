@@ -35,9 +35,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			const button = event.relatedTarget;
 			const isEdit = button && button.classList.contains('edit-item-btn');
 
-			console.log("Add/Edit Item Modal 'show.bs.modal' event triggered."); // Debug
+			// --- UPDATED: Check if we are reopening from validation ---
+			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
+			console.log("Add/Edit Item Modal 'show.bs.modal' event. IsEdit:", isEdit, "IsValidationReopen:", isValidationReopen); // Debug
 
-			if (isEdit && button.dataset) {
+			if (isEdit && button.dataset && !isValidationReopen) {
 				console.log("Populating modal for EDIT with data:", button.dataset); // Debug
 				modalTitle.textContent = 'Edit Inventory Item';
 				itemIdInput.value = button.dataset.id || '';
@@ -50,13 +52,24 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
 				// UPDATED: Now required, so default to empty string if missing (shouldn't be)
 				itemCostInput.value = button.dataset.cost || '';
-			} else {
+			} else if (!isEdit && !isValidationReopen) {
 				console.log("Populating modal for ADD (resetting form)."); // Debug
 				modalTitle.textContent = 'Add New Inventory Item';
 				if (itemForm) itemForm.reset();
 				itemIdInput.value = ''; // Ensure ID is cleared for Add
-				itemLowThresholdInput.value = '0'; // Default to 0
-				itemCriticalThresholdInput.value = '0'; // Default to 0
+				// --- UPDATED: Set to blank instead of '0' ---
+				itemLowThresholdInput.value = ''; // Default to blank
+				itemCriticalThresholdInput.value = ''; // Default to blank
+				// --- END UPDATE ---
+			} else if (isValidationReopen) {
+				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
+				// We don't reset the form, Thymeleaf has already repopulated it.
+				// We just need to ensure the title is correct.
+				if (itemIdInput.value) {
+					modalTitle.textContent = 'Edit Inventory Item';
+				} else {
+					modalTitle.textContent = 'Add New Inventory Item';
+				}
 			}
 
 			// Clear previous validation highlights unless it's being reopened by script.js
@@ -222,8 +235,14 @@ document.addEventListener('DOMContentLoaded', function() {
 		// --- Helper Function ---
 		// Syncs slider and input, adjusting slider max if needed
 		const syncSliderAndInput = (input, slider) => {
+			// --- UPDATED: Handle blank/NaN state ---
 			let value = parseInt(input.value, 10); // Use parseInt
-			if (isNaN(value)) value = 0;
+			let isBlank = isNaN(value);
+			if (isBlank) {
+				slider.value = 0; // Set slider to 0 if input is blank
+				return; // Don't proceed
+			}
+			// --- END UPDATE ---
 
 			// Adjust slider's max range if input value exceeds it (e.g., user types "200")
 			let sliderMax = parseInt(slider.max, 10);
@@ -244,8 +263,15 @@ document.addEventListener('DOMContentLoaded', function() {
 		const enforceThresholdLogic = () => {
 			let lowValue = parseInt(lowInput.value, 10);
 			let criticalValue = parseInt(criticalInput.value, 10);
-			if (isNaN(lowValue)) lowValue = 0;
-			if (isNaN(criticalValue)) criticalValue = 0;
+
+			// --- UPDATED: If low is blank/NaN, don't do anything ---
+			if (isNaN(lowValue)) {
+				lowValue = 0; // Treat as 0 for max calculation
+			}
+			// --- END UPDATE ---
+			if (isNaN(criticalValue)) {
+				criticalValue = 0; // Treat as 0 for capping
+			}
 
 			// **** MODIFIED LOGIC ****
 			// Critical max should be one less than low, but not less than 0.

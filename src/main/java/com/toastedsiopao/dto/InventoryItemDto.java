@@ -30,13 +30,17 @@ public class InventoryItemDto {
 	@PositiveOrZero(message = "Stock must be zero or positive")
 	private BigDecimal currentStock = BigDecimal.ZERO;
 
+	// --- UPDATED: Changed value from "0.0" to "1.0" ---
 	@NotNull(message = "Low stock threshold cannot be null")
-	@DecimalMin(value = "0.0", message = "Low threshold must be zero or positive") // Use DecimalMin for BigDecimal
-	private BigDecimal lowStockThreshold = BigDecimal.ZERO;
+	@DecimalMin(value = "1.0", message = "Low threshold must be at least 1") // Use DecimalMin for BigDecimal
+	private BigDecimal lowStockThreshold;
+	// --- END UPDATE ---
 
+	// --- UPDATED: Changed value from "0.0" to "1.0" ---
 	@NotNull(message = "Critical stock threshold cannot be null")
-	@DecimalMin(value = "0.0", message = "Critical threshold must be zero or positive")
-	private BigDecimal criticalStockThreshold = BigDecimal.ZERO;
+	@DecimalMin(value = "1.0", message = "Critical threshold must be at least 1")
+	private BigDecimal criticalStockThreshold;
+	// --- END UPDATE ---
 
 	// --- UPDATED ---
 	@NotNull(message = "Cost per unit cannot be null")

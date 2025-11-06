@@ -40,7 +40,16 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	// --- Centralized Validation Methods ---
 	private void validateThresholds(BigDecimal lowThreshold, BigDecimal criticalThreshold) {
-		if (criticalThreshold != null && lowThreshold != null && criticalThreshold.compareTo(lowThreshold) > 0) {
+		// --- UPDATED: Added checks for > 0 ---
+		if (lowThreshold == null || lowThreshold.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
+		}
+		if (criticalThreshold == null || criticalThreshold.compareTo(BigDecimal.ZERO) <= 0) {
+			throw new IllegalArgumentException("Critical stock threshold must be greater than 0.");
+		}
+		// --- END UPDATE ---
+
+		if (criticalThreshold.compareTo(lowThreshold) > 0) {
 			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
 		}
 	}
@@ -102,10 +111,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		// Basic null checks for numbers (should be caught by @NotNull, but defense)
 		if (itemDto.getCurrentStock() == null)
 			itemDto.setCurrentStock(BigDecimal.ZERO);
-		if (itemDto.getLowStockThreshold() == null)
-			itemDto.setLowStockThreshold(BigDecimal.ZERO);
-		if (itemDto.getCriticalStockThreshold() == null)
-			itemDto.setCriticalStockThreshold(BigDecimal.ZERO);
 		// --- End Input Validation ---
 
 		// --- Moved Validations Here ---
@@ -135,9 +140,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setUnit(unit);
 		// Ensure non-null BigDecimal values before setting
 		item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
-		item.setLowStockThreshold(Optional.ofNullable(itemDto.getLowStockThreshold()).orElse(BigDecimal.ZERO));
-		item.setCriticalStockThreshold(
-				Optional.ofNullable(itemDto.getCriticalStockThreshold()).orElse(BigDecimal.ZERO));
+		item.setLowStockThreshold(itemDto.getLowStockThreshold());
+		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
 		item.setCostPerUnit(itemDto.getCostPerUnit()); // Allow null cost
 
 		// Save the item

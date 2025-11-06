@@ -1,9 +1,11 @@
 package com.toastedsiopao.dto;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty; // **** IMPORT ADDED ****
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero; // Keep PositiveOrZero for Integer
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,6 +37,9 @@ public class ProductDto {
 	private String imageUrl;
 
 	@Valid
+	// --- UPDATED: Added @NotEmpty validation ---
+	@NotEmpty(message = "A product must have at least one ingredient")
+	// --- END UPDATE ---
 	private List<RecipeIngredientDto> ingredients = new ArrayList<>();
 
 	// --- NEW: Stock Management Fields ---
@@ -43,13 +48,17 @@ public class ProductDto {
 	// We might add it later if needed for initial creation, but thresholds are
 	// primary here.
 
+	// --- UPDATED: Changed from @PositiveOrZero to @Min(1) ---
 	@NotNull(message = "Low stock threshold cannot be null")
-	@PositiveOrZero(message = "Low threshold must be zero or positive")
-	private Integer lowStockThreshold = 0;
+	@Min(value = 1, message = "Low threshold must be at least 1")
+	private Integer lowStockThreshold;
+	// --- END UPDATE ---
 
+	// --- UPDATED: Changed from @PositiveOrZero to @Min(1) ---
 	@NotNull(message = "Critical stock threshold cannot be null")
-	@PositiveOrZero(message = "Critical threshold must be zero or positive")
-	private Integer criticalStockThreshold = 0;
+	@Min(value = 1, message = "Critical threshold must be at least 1")
+	private Integer criticalStockThreshold;
+	// --- END UPDATE ---
 	// --- END NEW ---
 
 }

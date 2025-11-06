@@ -330,4 +330,24 @@ public class ProductServiceImpl implements ProductService {
 
 		return savedProduct;
 	}
+
+	// --- NEW: Implementation for stat cards ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countAllProducts() {
+		return productRepository.count();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countLowStockProducts() {
+		return productRepository.countLowStockProducts();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countOutOfStockProducts() {
+		return productRepository.countOutOfStockProducts();
+	}
+	// --- END NEW ---
 }

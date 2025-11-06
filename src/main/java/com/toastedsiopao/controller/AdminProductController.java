@@ -78,6 +78,17 @@ public class AdminProductController {
 		model.addAttribute("selectedCategoryId", categoryId);
 		// --- END UPDATED Logic ---
 
+		// --- NEW: Fetch stats ---
+		// Note: These are grand totals, not based on the search/filter
+		long totalProducts = productService.countAllProducts();
+		long lowStockProducts = productService.countLowStockProducts();
+		long outOfStockProducts = productService.countOutOfStockProducts();
+
+		model.addAttribute("totalProducts", totalProducts);
+		model.addAttribute("lowStockProducts", lowStockProducts);
+		model.addAttribute("outOfStockProducts", outOfStockProducts);
+		// --- END NEW ---
+
 		model.addAttribute("productPage", productPage); // NEW: Add page object
 		model.addAttribute("products", productPage.getContent()); // Get content from page
 		model.addAttribute("categories", categoryList);
@@ -86,7 +97,7 @@ public class AdminProductController {
 		// NEW: Pass pagination attributes
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", productPage.getTotalPages());
-		model.addAttribute("totalItems", productPage.getTotalElements());
+		model.addAttribute("totalItems", productPage.getTotalElements()); // This is the paged total
 		model.addAttribute("size", size);
 
 		Map<Long, BigDecimal> inventoryStockMap = new HashMap<>();

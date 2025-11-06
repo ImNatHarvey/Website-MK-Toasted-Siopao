@@ -25,10 +25,10 @@ public interface ProductService {
 	// --- NEW: Combined search method ---
 	/**
 	 * Searches for products based on a keyword and/or category, with pagination.
-	 * * @param keyword The search term (matches product name).
+	 * * @param keyword The search term (matches product name). * @param categoryId
+	 * The category ID to filter by.
 	 * 
-	 * @param categoryId The category ID to filter by.
-	 * @param pageable   The pagination information.
+	 * @param pageable The pagination information.
 	 * @return A paginated list of matching products.
 	 */
 	Page<Product> searchProducts(String keyword, Long categoryId, Pageable pageable);
@@ -48,4 +48,12 @@ public interface ProductService {
 	 */
 	Product adjustStock(Long productId, int quantityChange, String reason);
 	// --- END FIX ---
+
+	// --- NEW: Methods for stat cards ---
+	long countAllProducts();
+
+	long countLowStockProducts();
+
+	long countOutOfStockProducts();
+	// --- END NEW ---
 }

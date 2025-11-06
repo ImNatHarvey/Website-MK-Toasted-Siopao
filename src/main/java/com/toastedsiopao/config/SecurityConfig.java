@@ -53,6 +53,8 @@ public class SecurityConfig {
 						// *** START PUBLIC ACCESS RULES ***
 						.requestMatchers("/css/**", // Allow CSS files
 								"/img/**", // Allow Image files
+								"/js/**", // **** NEW: Allow JavaScript files ****
+								"/img/uploads/**", // **** NEW: Allow uploaded images ****
 								"/", // Allow Homepage
 								"/menu", // Allow Public Menu
 								"/about", // Allow About Us

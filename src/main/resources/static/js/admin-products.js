@@ -1,19 +1,137 @@
 /**
  * JavaScript specific to the Admin Products page (admin/products.html)
- * Handles modal population, recipe ingredients, max button, etc.
+ * Handles modal population, recipe ingredients, max button, AND NEW IMAGE UPLOADER.
  */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-products.js loaded"); // Confirm script is running
 
-	// **** FIX IS HERE ****
-	// Select the specific <div> from products.html
 	const mainElement = document.getElementById('admin-content-wrapper');
-	// **** END OF FIX ****
 
 	if (!mainElement) {
 		console.error("Main element with data-inventory-stock-map not found in admin-products.js!");
 		return;
 	}
+
+	// **** NEW FUNCTION: Image Uploader Logic ****
+	function setupImageUploader(containerId) {
+		const uploader = document.getElementById(containerId);
+		if (!uploader) {
+			console.warn(`Uploader container #${containerId} not found.`);
+			return;
+		}
+
+		const input = uploader.querySelector('.image-uploader-input');
+		const dropZone = uploader.querySelector('.image-drop-zone');
+		const previewContainer = uploader.querySelector('.image-preview-container');
+		const previewImg = uploader.querySelector('.image-preview');
+		const removeBtn = uploader.querySelector('.image-remove-btn');
+		const form = uploader.closest('form');
+		// *** FIX: Find the correct hidden input for this uploader's form ***
+		const removeImageHiddenInput = form ? form.querySelector('input[name="removeImage"]') : null;
+
+		if (!input || !dropZone || !previewContainer || !previewImg || !removeBtn || !removeImageHiddenInput) {
+			console.error(`Uploader #${containerId} is missing required elements (input, dropZone, previewContainer, previewImg, removeBtn, or removeImage hidden input).`);
+			return;
+		}
+
+		// Function to show the preview
+		const showPreview = (fileOrSrc) => {
+			// Check 1: Is it a valid image URL string?
+			if (typeof fileOrSrc === 'string' && fileOrSrc && fileOrSrc !== "null") {
+				// It's a valid URL (for edit modal)
+				previewImg.src = fileOrSrc;
+				uploader.classList.add('preview-active');
+				input.value = ''; // Clear file input
+				removeImageHiddenInput.value = 'false'; // **** FIX: Explicitly set remove to false ****
+			}
+			// Check 2: Is it a File object? (Check for `name` property)
+			else if (typeof fileOrSrc === 'object' && fileOrSrc !== null && fileOrSrc.name) {
+				// It's a File object (from upload or drop)
+				const reader = new FileReader();
+				reader.onload = () => {
+					previewImg.src = reader.result;
+					uploader.classList.add('preview-active');
+					removeImageHiddenInput.value = 'false'; // **** FIX: Explicitly set remove to false ****
+				};
+				reader.readAsDataURL(fileOrSrc);
+			}
+			// Check 3: It's null, undefined, "", or "null"
+			else {
+				// It's an invalid source (null, "", or not a file), so reset
+				resetUploader();
+			}
+		};
+
+		// Function to reset the uploader
+		const resetUploader = () => {
+			previewImg.src = '';
+			uploader.classList.remove('preview-active');
+			input.value = ''; // Clear the file input
+			removeImageHiddenInput.value = 'true'; // **** FIX: Explicitly set remove to true ****
+		};
+
+		// --- Event Listeners ---
+		// 1. Click on drop zone OR preview container triggers file input click
+		dropZone.addEventListener('click', () => {
+			input.click();
+		});
+		previewContainer.addEventListener('click', (e) => {
+			// Don't trigger if the remove button was clicked
+			if (e.target !== removeBtn && !removeBtn.contains(e.target)) {
+				input.click();
+			}
+		});
+
+
+		// 2. File input change (user selected a file)
+		input.addEventListener('change', () => {
+			if (input.files && input.files[0]) {
+				showPreview(input.files[0]);
+			}
+		});
+
+		// 3. Remove button click
+		removeBtn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			resetUploader();
+		});
+
+		// 4. Drag and Drop events
+		uploader.addEventListener('dragover', (e) => {
+			e.preventDefault();
+			uploader.classList.add('drag-over');
+		});
+		uploader.addEventListener('dragleave', (e) => {
+			e.preventDefault();
+			uploader.classList.remove('drag-over');
+		});
+		uploader.addEventListener('drop', (e) => {
+			e.preventDefault();
+			uploader.classList.remove('drag-over');
+			if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+				// Manually set the file input's files property
+				input.files = e.dataTransfer.files;
+				showPreview(e.dataTransfer.files[0]);
+			}
+		});
+
+		// --- Public API for the modal ---
+		// Add functions to the uploader element itself so modal logic can call them
+		uploader.showPreview = showPreview;
+		uploader.resetUploader = resetUploader;
+
+		// --- Initial Reset (for Add Modal) ---
+		// *** FIX: Check the ID and form to ensure we reset the right one ***
+		if (containerId === 'addImageUploader' || form.id === 'addProductForm') {
+			resetUploader();
+		}
+	}
+	// **** END NEW FUNCTION: Image Uploader Logic ****
+
+	// --- Initialize both uploaders on page load ---
+	setupImageUploader('addImageUploader');
+	setupImageUploader('editImageUploader');
+
 
 	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
 	function initThresholdSliders(modalElement) {
@@ -131,6 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
 		const recipeLockedWarning = editProductModal.querySelector('#editRecipeLockedWarning');
 		const addIngredientBtn = editProductModal.querySelector('#addIngredientBtnEditModal');
+		const editImageUploader = document.getElementById('editImageUploader'); // NEW
 
 
 		editProductModal.addEventListener('show.bs.modal', function(event) {
@@ -153,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.warn("Edit Product modal opened without expected button source.");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+				if (editImageUploader) editImageUploader.resetUploader(); // NEW
 				return;
 			}
 
@@ -161,6 +281,21 @@ document.addEventListener('DOMContentLoaded', function() {
 				// We just need to ensure the title is correct.
 				const nameInput = form.querySelector('#editProductNameModal');
 				modalTitle.textContent = 'Edit: ' + (nameInput.value || 'Product');
+
+				// **** NEW: Re-initialize image uploader state from form ****
+				const existingImageUrl = form.querySelector('#editProductImageUrlHidden').value;
+				const removeImage = form.querySelector('#editProductRemoveImageHidden').value === 'true';
+
+				// *** FIX: Check removeImage flag first
+				if (removeImage) {
+					editImageUploader.resetUploader();
+				} else if (existingImageUrl) {
+					editImageUploader.showPreview(existingImageUrl);
+				} else {
+					editImageUploader.resetUploader();
+				}
+				// **** END NEW ****
+
 			} else if (dataset) {
 				console.log("Populating Edit Product Modal with data:", dataset);
 
@@ -171,9 +306,15 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelector('#editProductCategoryModal').value = dataset.categoryId || '';
 				form.querySelector('#editProductPriceModal').value = dataset.price || '0.00';
 				form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
-				form.querySelector('#editProductImageUrlModal').value = dataset.imageUrl || '';
+				// form.querySelector('#editProductImageUrlModal').value = dataset.imageUrl || ''; // OLD
 				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0'; // UPDATED ID
 				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0'; // UPDATED ID
+
+				// **** NEW: Populate image uploader ****
+				const imageUrl = dataset.imageUrl;
+				// *** FIX: Use showPreview for ALL cases to handle null/empty ***
+				editImageUploader.showPreview(imageUrl);
+				// **** END NEW ****
 
 				// ... (Omitted unchanged ingredients logic) ...
 				if (ingredientsContainer) {
@@ -276,6 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+				if (editImageUploader) editImageUploader.resetUploader(); // NEW
 			} else {
 				console.log("Resetting showEditProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-edit-product-modal');
@@ -409,6 +551,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (addProductModal) {
 		const form = addProductModal.querySelector('#addProductForm');
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
+		const addImageUploader = document.getElementById('addImageUploader'); // NEW
 
 		// **** CALL NEW SLIDER FUNCTION ****
 		addProductModal.addEventListener('show.bs.modal', function() {
@@ -422,10 +565,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.log("Populating modal for ADD (resetting form)."); // Debug
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+				if (addImageUploader) addImageUploader.resetUploader(); // NEW
 
 				// --- NEW: Manually reset threshold inputs to blank ---
-				form.querySelector('#addLowThresholdInput').value = '';
-				form.querySelector('#addCriticalThresholdInput').value = '';
+				const lowInput = form.querySelector('#addLowThresholdInput');
+				const critInput = form.querySelector('#addCriticalThresholdInput');
+				if (lowInput) lowInput.value = '';
+				if (critInput) critInput.value = '';
 				// --- END NEW ---
 
 				initThresholdSliders(addProductModal);
@@ -433,6 +579,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
 				// Sliders still need to be initialized to match the (invalid) values
 				initThresholdSliders(addProductModal);
+				// Image uploader state is lost on validation error, user must re-select
+				if (addImageUploader) addImageUploader.resetUploader();
 			}
 		});
 
@@ -447,6 +595,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
+				if (addImageUploader) addImageUploader.resetUploader(); // NEW
 			} else {
 				console.log("Resetting showAddProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-product-modal');

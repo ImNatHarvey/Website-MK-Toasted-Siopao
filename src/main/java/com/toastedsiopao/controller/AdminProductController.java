@@ -9,20 +9,22 @@ import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CategoryService;
+import com.toastedsiopao.service.FileStorageService; // NEW IMPORT
 import com.toastedsiopao.service.InventoryItemService;
 import com.toastedsiopao.service.ProductService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; // Import Page
-import org.springframework.data.domain.PageRequest; // Import PageRequest
-import org.springframework.data.domain.Pageable; // Import Pageable
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils; // **** FIX: ADDED MISSING IMPORT ****
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError; // Import FieldError
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile; // NEW IMPORT
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -49,6 +51,9 @@ public class AdminProductController {
 	private ActivityLogService activityLogService;
 	@Autowired
 	private ObjectMapper objectMapper;
+
+	@Autowired
+	private FileStorageService fileStorageService; // NEW: Inject FileStorageService
 
 	// Helper to add common attributes for redirects
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
@@ -128,11 +133,11 @@ public class AdminProductController {
 		return "admin/products";
 	}
 
+	// --- UPDATED METHOD: ADD PRODUCT ---
 	@PostMapping("/add")
 	public String addProduct(@Valid @ModelAttribute("productDto") ProductDto productDto, BindingResult result,
+			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile, // NEW: Added imageFile
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-
-		// --- Removed Threshold Check ---
 
 		// Check DTO validation errors first
 		if (result.hasErrors()) {
@@ -145,11 +150,26 @@ public class AdminProductController {
 			return "redirect:" + redirectUrl;
 		}
 
-		// --- UPDATED: Removed manual ingredients check ---
-		// The @NotEmpty annotation on ProductDto.ingredients now handles this.
-		// --- END UPDATE ---
-
 		try {
+			// --- NEW: File Handling ---
+			if (imageFile != null && !imageFile.isEmpty()) {
+				try {
+					String imagePath = fileStorageService.store(imageFile);
+					productDto.setImageUrl(imagePath); // Set the path in the DTO
+				} catch (Exception e) {
+					log.error("Error storing image file during add: {}", e.getMessage());
+					result.reject("global", "Could not save image: " + e.getMessage());
+					redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto",
+							result);
+					redirectAttributes.addFlashAttribute("productDto", productDto);
+					addCommonAttributesForRedirect(redirectAttributes);
+					String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "addProductModal")
+							.build().toUriString();
+					return "redirect:" + redirectUrl;
+				}
+			}
+			// --- END NEW ---
+
 			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_PRODUCT",
@@ -176,11 +196,11 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
+	// --- UPDATED METHOD: UPDATE PRODUCT ---
 	@PostMapping("/update")
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, BindingResult result,
+			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile, // NEW: Added imageFile
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-
-		// --- Removed Threshold Check ---
 
 		// Check DTO validation errors first
 		if (result.hasErrors()) {
@@ -197,6 +217,46 @@ public class AdminProductController {
 		try {
 			if (productDto.getId() == null)
 				throw new IllegalArgumentException("Product ID is missing for update.");
+
+			// --- NEW: File Handling for Update ---
+			String oldImagePath = productDto.getImageUrl(); // Get the existing path from the hidden form field
+
+			if (productDto.isRemoveImage()) {
+				// 1. User checked "Remove Image"
+				log.info("User requested image removal for product ID: {}", productDto.getId());
+				if (StringUtils.hasText(oldImagePath)) {
+					fileStorageService.delete(oldImagePath);
+				}
+				productDto.setImageUrl(null); // Clear the path
+			} else if (imageFile != null && !imageFile.isEmpty()) {
+				// 2. User uploaded a new image
+				log.info("User uploaded new image for product ID: {}", productDto.getId());
+				try {
+					// Store the new file
+					String newImagePath = fileStorageService.store(imageFile);
+					productDto.setImageUrl(newImagePath); // Set the new path
+					// Delete the old file if it existed
+					if (StringUtils.hasText(oldImagePath)) {
+						fileStorageService.delete(oldImagePath);
+					}
+				} catch (Exception e) {
+					log.error("Error storing new image file during update: {}", e.getMessage());
+					result.reject("global", "Could not save new image: " + e.getMessage());
+					redirectAttributes
+							.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto", result);
+					redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
+					addCommonAttributesForRedirect(redirectAttributes);
+					String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editProductModal")
+							.queryParam("editId", productDto.getId()).build().toUriString();
+					return "redirect:" + redirectUrl;
+				}
+			} else {
+				// 3. User did nothing (or file was empty)
+				// The productDto.imageUrl (from the hidden field) will just be re-saved.
+				log.debug("No image change for product ID: {}", productDto.getId());
+			}
+			// --- END NEW ---
+
 			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PRODUCT",
@@ -387,6 +447,13 @@ public class AdminProductController {
 		}
 		String productName = productOpt.get().getName();
 		try {
+			// --- NEW: Delete associated image file ---
+			String imagePath = productOpt.get().getImageUrl();
+			if (StringUtils.hasText(imagePath)) {
+				fileStorageService.delete(imagePath);
+			}
+			// --- END NEW ---
+
 			productService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
 					"Deleted product: " + productName + " (ID: " + id + ")");

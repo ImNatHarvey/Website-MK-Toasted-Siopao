@@ -926,3 +926,80 @@ footer.admin-footer {
 	color: var(--primary);
 	margin-left: 1rem;
 }
+
+/* =============================================== */
+/* == NEW STYLES FOR IMAGE UPLOADER == */
+/* =============================================== */
+.image-uploader-container {
+	position: relative;
+	width: 100%;
+	border: 2px dashed #aab8c5; /* Muted border */
+	border-radius: 8px;
+	background-color: #f5f8fa; /* Very light blue/grey */
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.image-uploader-container.drag-over {
+	background-color: #eaf1f6; /* Lighten on drag over */
+	border-color: var(--primary);
+}
+
+/* Hidden file input */
+.image-uploader-container .image-uploader-input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+	cursor: pointer;
+	z-index: 10;
+}
+
+/* Drop zone "Choose file" UI */
+.image-uploader-container .image-drop-zone {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem;
+	text-align: center;
+	color: var(--muted-text);
+}
+
+.image-uploader-container .image-drop-zone i {
+	font-size: 2.5rem;
+	margin-bottom: 0.75rem;
+}
+
+/* Preview container (initially hidden) */
+.image-uploader-container .image-preview-container {
+	display: none; /* Hidden by default */
+	position: relative;
+	padding: 0.5rem;
+}
+
+.image-uploader-container .image-preview {
+	width: 100%;
+	height: auto;
+	max-height: 300px;
+	object-fit: contain;
+	border-radius: 6px;
+}
+
+.image-uploader-container .image-remove-btn {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	z-index: 15;
+}
+
+/* When preview is active, hide the drop zone */
+.image-uploader-container.preview-active .image-drop-zone {
+	display: none;
+}
+
+/* When preview is active, show the preview container */
+.image-uploader-container.preview-active .image-preview-container {
+	display: block;
+}

@@ -61,4 +61,8 @@ public class ProductDto {
 	// --- END UPDATE ---
 	// --- END NEW ---
 
+	// --- NEW: Flag for image removal ---
+	private boolean removeImage = false;
+	// --- END NEW ---
+
 }

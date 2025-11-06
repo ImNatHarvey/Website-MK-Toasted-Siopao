@@ -10,6 +10,7 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/products/add}" method="post"
 						th:object="${productDto}" id="addProductForm"
+						enctype="multipart/form-data"
 						onsubmit="return confirm('Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified.');">
 						<div class="modal-header">
 							<h5 class="modal-title" id="addProductModalLabel">Add New
@@ -61,11 +62,27 @@
 									th:if="${#fields.hasErrors('description')}"
 									th:errors="*{description}">...</div>
 							</div>
+
 							<div class="mb-3">
-								<label for="addProductImageUrl" class="form-label">Image
-									URL (Optional)</label> <input type="text" class="form-control"
-									th:field="*{imageUrl}" id="addProductImageUrl"
-									placeholder="e.g., /img/my-product.jpg or https://...">
+								<label class="form-label">Product Image (Optional)</label>
+								<div class="image-uploader-container" id="addImageUploader">
+									<input type="file" name="imageFile"
+										class="image-uploader-input" accept="image/png, image/jpeg">
+									<div class="image-drop-zone">
+										<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+										<p class="mb-0">
+											<strong>Choose a file</strong> or drag it here.
+										</p>
+									</div>
+									<div class="image-preview-container">
+										<img src="" alt="Image Preview" class="image-preview">
+										<button type="button"
+											class="btn btn-sm btn-danger image-remove-btn"
+											title="Remove Image">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
+								</div>
 							</div>
 							<hr class="my-4">
 							<h5 class="mb-3">Initial Product Thresholds</h5>
@@ -267,12 +284,14 @@
 				</div>
 			</div>
 		</div>
+
 		<div class="modal fade" id="editProductModal" tabindex="-1"
 			aria-labelledby="editProductModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<form th:action="@{/admin/products/update}" method="post"
-						th:object="${productUpdateDto}" id="editProductForm">
+						th:object="${productUpdateDto}" id="editProductForm"
+						enctype="multipart/form-data">
 						<div class="modal-header">
 							<h5 class="modal-title" id="editProductModalLabel">Edit
 								Product</h5>
@@ -280,7 +299,10 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<input type="hidden" th:field="*{id}" />
+							<input type="hidden" th:field="*{id}" /> <input type="hidden"
+								th:field="*{imageUrl}" id="editProductImageUrlHidden" /> <input
+								type="hidden" th:field="*{removeImage}"
+								id="editProductRemoveImageHidden" />
 							<div class="mb-3">
 								<label for="editProductNameModal" class="form-label">Product
 									Name</label> <input type="text" class="form-control" th:field="*{name}"
@@ -322,13 +344,28 @@
 									th:if="${#fields.hasErrors('description')}"
 									th:errors="*{description}"></div>
 							</div>
-							<div class="mb-3">
-								<label for="editProductImageUrlModal" class="form-label">Image
-									URL (Optional)</label> <input type="text" class="form-control"
-									th:field="*{imageUrl}" id="editProductImageUrlModal"
-									placeholder="e.g., /img/my-product.jpg or https://...">
-							</div>
 
+							<div class="mb-3">
+								<label class="form-label">Product Image</label>
+								<div class="image-uploader-container" id="editImageUploader">
+									<input type="file" name="imageFile"
+										class="image-uploader-input" accept="image/png, image/jpeg">
+									<div class="image-drop-zone">
+										<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+										<p class="mb-0">
+											<strong>Choose a file</strong> or drag it here.
+										</p>
+									</div>
+									<div class="image-preview-container">
+										<img src="" alt="Image Preview" class="image-preview">
+										<button type="button"
+											class="btn btn-sm btn-danger image-remove-btn"
+											title="Remove Image">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
+								</div>
+							</div>
 							<hr class="my-4">
 							<h5 class="mb-3">Stock Management</h5>
 							<div class="row">

@@ -105,7 +105,7 @@
 							<strong>Phone:</strong> <span id="viewCustomerPhone"></span>
 						</p>
 						<hr>
-						<p class_="mb-1">
+						<p class="mb-1">
 							<strong>Account Created:</strong> <span
 								id="viewCustomerCreatedAt"></span>
 						</p>
@@ -248,13 +248,13 @@
 							<div class="row g-2 mb-3">
 								<div class="col">
 									<label for="barangay" class="form-label">Barangay</label> <input
-										type.="text" class="form-control" placeholder="Barangay"
+										type="text" class="form-control" placeholder="Barangay"
 										th:field="*{barangay}" th:errorclass="is-invalid">
-									<div class="invalid-feedback"
+									<div classs="invalid-feedback"
 										th:if="${#fields.hasErrors('barangay')}"
 										th:errors="*{barangay}">Error</div>
 								</div>
-								<div class.="col">
+								<div class="col">
 									<label for="municipality" class="form-label">Municipality</label>
 									<input type="text" class="form-control"
 										placeholder="Municipality" th:field="*{municipality}"

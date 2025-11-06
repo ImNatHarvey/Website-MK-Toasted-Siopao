@@ -172,6 +172,22 @@ body {
 	border-color: #1e7e34;
 } /* Darker success */
 
+/* --- NEW: Fix for disabled buttons losing color --- */
+.btn-action-edit:disabled, .btn-action-edit.disabled {
+	background-color: var(--warning);
+	border-color: var(--warning);
+	color: var(--dark);
+	opacity: 0.65;
+}
+
+.btn-action-delete:disabled, .btn-action-delete.disabled {
+	background-color: var(--danger);
+	border-color: var(--danger);
+	color: var(--light);
+	opacity: 0.65;
+}
+/* --- END NEW --- */
+
 /* Adjust button padding/margin for specific contexts if needed */
 .table .btn-sm { /* Make small buttons less rounded */
 	border-radius: 0.2rem;

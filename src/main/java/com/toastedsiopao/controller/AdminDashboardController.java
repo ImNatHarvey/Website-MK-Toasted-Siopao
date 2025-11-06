@@ -1,9 +1,16 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.model.Order;
 import com.toastedsiopao.service.ActivityLogService;
+import com.toastedsiopao.service.CustomerService;
+import com.toastedsiopao.service.OrderService;
+import com.toastedsiopao.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,14 +23,45 @@ public class AdminDashboardController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminDashboardController.class);
 
-	// --- OrderService import and @Autowired field removed ---
+	// --- NEWLY INJECTED SERVICES ---
+	@Autowired
+	private OrderService orderService;
+	@Autowired
+	private ProductService productService;
+	@Autowired
+	private CustomerService customerService;
+	// --- END NEW INJECTIONS ---
+
 	@Autowired
 	private ActivityLogService activityLogService;
 
 	@GetMapping("/dashboard")
 	public String adminDashboard(Model model) {
-		// Add logic here later to fetch dashboard stats if needed
-		// For now, just return the view name
+		// --- NEW: Fetch real stats for the dashboard ---
+		Pageable recentOrdersPageable = PageRequest.of(0, 5); // Get top 5 recent orders
+		Page<Order> recentOrders = orderService.searchOrders(null, null, recentOrdersPageable);
+
+		// Get top 5 pending orders
+		Page<Order> pendingOrders = orderService.searchOrders(null, "PENDING", recentOrdersPageable);
+
+		// Get stats from other services
+		long lowStockProducts = productService.countLowStockProducts();
+		long outOfStockProducts = productService.countOutOfStockProducts();
+		long activeCustomers = customerService.countActiveCustomers();
+		long totalProducts = productService.countAllProducts();
+
+		// Add stats to the model
+		model.addAttribute("recentOrders", recentOrders.getContent());
+		model.addAttribute("pendingOrderCount", pendingOrders.getTotalElements());
+		model.addAttribute("lowStockProducts", lowStockProducts);
+		model.addAttribute("outOfStockProducts", outOfStockProducts);
+		model.addAttribute("activeCustomers", activeCustomers);
+		model.addAttribute("totalProducts", totalProducts);
+
+		log.info("Admin dashboard loaded. Pending Orders: {}, Low Stock: {}", pendingOrders.getTotalElements(),
+				lowStockProducts);
+		// --- END NEW STATS LOGIC ---
+
 		return "admin/dashboard"; // Renders dashboard.html
 	}
 

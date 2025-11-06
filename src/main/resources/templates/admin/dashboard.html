@@ -10,43 +10,55 @@
 		<h2 class="section-title mb-4 text-center">Admin Dashboard</h2>
 
 		<div class="row justify-content-center">
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
-						<h5 class="card-title">Daily Orders</h5>
-						<div class="stats-value">0</div>
-						<div class="stats-change text-muted small">+0% from
-							yesterday</div>
+						<h5 class="card-title">Pending Orders</h5>
+						<div class="stats-value text-warning"
+							th:text="${pendingOrderCount}">0</div>
+						<div class="stats-change text-muted small">Orders awaiting
+							processing</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
-						<h5 class="card-title">Daily Revenue</h5>
-						<div class="stats-value">₱0</div>
-						<div class="stats-change text-muted small">+0% from
-							yesterday</div>
+						<h5 class="card-title">Low Stock Products</h5>
+						<div class="stats-value text-warning"
+							th:text="${lowStockProducts}">0</div>
+						<div class="stats-change text-muted small">Products at or
+							below low threshold</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card text-center py-4">
 					<div class="card-body">
-						<h5 class="card-title">Daily Sales</h5>
-						<div class="stats-value">0</div>
-						<div class="stats-change text-muted small">+0% from
-							yesterday</div>
+						<h5 class="card-title">Out of Stock Products</h5>
+						<div class="stats-value text-danger"
+							th:text="${outOfStockProducts}">0</div>
+						<div class="stats-change text-muted small">Products with
+							zero stock</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card text-center py-4">
+					<div class="card-body">
+						<h5 class="card-title">Active Customers</h5>
+						<div class="stats-value text-success" th:text="${activeCustomers}">0</div>
+						<div class="stats-change text-muted small">Customers active
+							recently</div>
 					</div>
 				</div>
 			</div>
 		</div>
-
 		<div class="row justify-content-center">
 			<div class="col-12 mt-4">
 				<div class="card">
 					<div class="card-header text-center">
-						<h5 class="mb-0">Recent Orders (Placeholder Data)</h5>
+						<h5 class="mb-0">Recent Orders</h5>
 					</div>
 					<div class="card-body">
 						<div class="table-responsive">
@@ -57,20 +69,31 @@
 										<th>Customer</th>
 										<th>Amount</th>
 										<th>Status</th>
+										<th>Date</th>
 										<th>Action</th>
 									</tr>
 								</thead>
 								<tbody>
-									<tr>
-										<td>#ORD-XXXX</td>
-										<td>Placeholder Customer</td>
-										<td>₱XXX</td>
-										<td><span class="status-badge status-pending">Pending</span></td>
-										<td><a href="#" class="btn btn-sm btn-custom disabled">View</a></td>
+									<tr th:each="order : ${recentOrders}">
+										<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
+										<td
+											th:text="${order.shippingFirstName + ' ' + order.shippingLastName}">Customer
+											Name</td>
+										<td
+											th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">
+											₱XXX</td>
+										<td><span class="status-badge" th:text="${order.status}"
+											th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">Pending</span>
+										</td>
+										<td
+											th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}">Date</td>
+										<td><a href="#"
+											class="btn btn-sm btn-action-view disabled"
+											title="View Details (coming soon)">View</a></td>
 									</tr>
-									<tr>
-										<td colspan="5" class="text-center text-muted">No recent
-											orders found (or feature not implemented yet).</td>
+									<tr th:if="${#lists.isEmpty(recentOrders)}">
+										<td colspan="6" class="text-center text-muted">No recent
+											orders found.</td>
 									</tr>
 								</tbody>
 							</table>

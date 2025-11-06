@@ -8,56 +8,44 @@
 <body>
 
 	<main class="login-page-content">
-		<!-- Use class for consistent styling if needed -->
 		<div class="container my-5">
 			<div class="row justify-content-center">
 				<div class="col-md-6 col-lg-5">
 					<div class="card shadow-sm p-4 mt-5 auth-card">
-						<!-- Use auth-card class -->
 						<h2 class="text-center mb-3 section-title">Welcome Back!</h2>
 						<p class="text-center text-muted mb-4">Log in to your account
 							to continue.</p>
 
-						<!-- Display error message if login fails -->
 						<div th:if="${param.error}" class="alert alert-danger"
 							role="alert">Invalid username or password.</div>
-						<!-- Display message if logged out -->
 						<div th:if="${param.logout}" class="alert alert-success"
 							role="alert">You have been logged out.</div>
-						<!-- Example for admin/login.html -->
-
-						<!-- Success Message after Signup -->
 						<div th:if="${successMessage}"
-							class="alert alert-success alert-dismissible fade show col-md-6 col-lg-5 mx-auto"
+							class="alert alert-success alert-dismissible fade show"
 							role="alert">
 							<span th:text="${successMessage}"></span>
 							<button type="button" class="btn-close" data-bs-dismiss="alert"
 								aria-label="Close"></button>
 						</div>
 
-						<!-- UPDATED FORM TAG -->
 						<form id="loginForm" method="post" th:action="@{/login}">
 							<div class="mb-3">
-								<label for="username" class="form-label">Username</label>
-								<!-- Spring Security expects name="username" -->
-								<input type="text" class="form-control" id="username"
-									name="username" required>
+								<label for="username" class="form-label">Username</label> <input
+									type="text" class="form-control" id="username" name="username"
+									required>
 							</div>
 
 							<div class="mb-3">
-								<label for="password" class="form-label">Password</label>
-								<!-- Spring Security expects name="password" -->
-								<input type="password" class="form-control" id="password"
+								<label for="password" class="form-label">Password</label> <input
+									type="password" class="form-control" id="password"
 									name="password" required>
 								<div class="text-end mt-1">
 									<a href="#" class="small text-decoration-none">Forgot your
 										password?</a>
-									<!-- Link placeholder -->
 								</div>
 							</div>
 
 							<div class="form-check mb-3">
-								<!-- Spring Security can handle remember-me if configured -->
 								<input type="checkbox" class="form-check-input" id="remember-me"
 									name="remember-me"> <label for="remember-me"
 									class="form-check-label">Remember me</label>
@@ -78,4 +66,3 @@
 
 </body>
 </html>
-

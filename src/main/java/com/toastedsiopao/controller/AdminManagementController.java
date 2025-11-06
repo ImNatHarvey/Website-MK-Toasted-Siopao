@@ -65,9 +65,12 @@ public class AdminManagementController {
 		model.addAttribute("size", size);
 		model.addAttribute("keyword", keyword);
 
-		if (!model.containsAttribute("adminCreateDto")) {
-			model.addAttribute("adminCreateDto", new AdminAccountCreateDto());
+		// --- UPDATED: Use consistent DTO name ---
+		if (!model.containsAttribute("adminAccountCreateDto")) {
+			model.addAttribute("adminAccountCreateDto", new AdminAccountCreateDto());
 		}
+		// --- END UPDATE ---
+
 		if (!model.containsAttribute("adminUpdateDto")) {
 			model.addAttribute("adminUpdateDto", new AdminUpdateDto());
 		}
@@ -90,19 +93,22 @@ public class AdminManagementController {
 		return "admin/admins";
 	}
 
+	// --- UPDATED: Use consistent DTO name ---
 	@PostMapping("/add")
-	public String addAdmin(@Valid @ModelAttribute("adminCreateDto") AdminAccountCreateDto adminDto,
+	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminCreateDto", result);
-			redirectAttributes.addFlashAttribute("adminCreateDto", adminDto);
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
+					result);
+			redirectAttributes.addFlashAttribute("adminAccountCreateDto", adminDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "addAdminModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
+		// --- END UPDATE ---
 
 		try {
 			User savedUser = adminService.createAccount(adminDto, "ROLE_ADMIN");
@@ -114,16 +120,19 @@ public class AdminManagementController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating admin user: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists")) {
-				result.rejectValue("username", "adminCreateDto.username", e.getMessage());
+				result.rejectValue("username", "adminAccountCreateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
-				result.rejectValue("email", "adminCreateDto.email", e.getMessage());
+				result.rejectValue("email", "adminAccountCreateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
-				result.rejectValue("confirmPassword", "adminCreateDto.confirmPassword", e.getMessage());
+				result.rejectValue("confirmPassword", "adminAccountCreateDto.confirmPassword", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error creating admin: " + e.getMessage());
 			}
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminCreateDto", result);
-			redirectAttributes.addFlashAttribute("adminCreateDto", adminDto);
+			// --- UPDATED: Use consistent DTO name ---
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
+					result);
+			redirectAttributes.addFlashAttribute("adminAccountCreateDto", adminDto);
+			// --- END UPDATE ---
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "addAdminModal").build()
 					.toUriString();

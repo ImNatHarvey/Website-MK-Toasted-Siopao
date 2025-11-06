@@ -62,15 +62,19 @@ public class HomeController {
 
 		} catch (IllegalArgumentException e) { // Catch validation errors from the service
 			log.warn("Signup failed (Service level validation): {}", e.getMessage());
+
+			// --- FIX: Use correct BindingResult object name ---
 			if (e.getMessage().contains("Username already exists")) {
-				result.rejectValue("username", "userDto.username", e.getMessage());
+				result.rejectValue("username", "customerSignUpDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
-				result.rejectValue("email", "userDto.email", e.getMessage());
+				result.rejectValue("email", "customerSignUpDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
-				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
+				result.rejectValue("confirmPassword", "customerSignUpDto.confirmPassword", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("errorMessage", "Registration failed: " + e.getMessage());
 			}
+			// --- END FIX ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);

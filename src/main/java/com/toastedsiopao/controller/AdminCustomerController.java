@@ -108,15 +108,19 @@ public class AdminCustomerController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
+
+			// --- FIX: Use correct BindingResult object name ---
 			if (e.getMessage().contains("Username already exists")) {
-				result.rejectValue("username", "userDto.username", e.getMessage());
+				result.rejectValue("username", "customerUserDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
-				result.rejectValue("email", "userDto.email", e.getMessage());
+				result.rejectValue("email", "customerUserDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
-				result.rejectValue("confirmPassword", "userDto.confirmPassword", e.getMessage());
+				result.rejectValue("confirmPassword", "customerUserDto.confirmPassword", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
 			}
+			// --- END FIX ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
@@ -163,9 +167,9 @@ public class AdminCustomerController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating customer: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
-				result.rejectValue("username", "userDto.username", e.getMessage());
+				result.rejectValue("username", "customerUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
-				result.rejectValue("email", "userDto.email", e.getMessage());
+				result.rejectValue("email", "customerUpdateDto.email", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
 			}

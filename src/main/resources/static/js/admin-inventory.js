@@ -26,10 +26,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
 
 		// --- UPDATED: Get containers and inputs for stock ---
-		const itemStockInputContainer = addItemModal.querySelector('#itemStockInputContainer');
-		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer');
-		const itemStockInput = addItemModal.querySelector('#itemCurrentStock'); // The visible input
-		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden'); // The hidden input
+		// const itemStockInputContainer = addItemModal.querySelector('#itemStockInputContainer'); // REMOVED
+		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer'); // KEPT
+		// const itemStockInput = addItemModal.querySelector('#itemCurrentStock'); // REMOVED
+		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden'); // KEPT
 		// --- END UPDATE ---
 
 		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemUnitSelect.value = button.dataset.unitId || '';
 
 				// --- UPDATED: Show/hide logic ---
-				if (itemStockInputContainer) itemStockInputContainer.style.display = 'none';
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+				// if (itemStockInputContainer) itemStockInputContainer.style.display = 'none'; // REMOVED
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block'; // SHOW info box
 				// Populate the *hidden* input for submission
 				if (itemStockHiddenInput) itemStockHiddenInput.value = button.dataset.currentStock || '0.00';
 				// --- END UPDATE ---
@@ -70,8 +70,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemIdInput.value = ''; // Ensure ID is cleared for Add
 
 				// --- UPDATED: Show/hide logic ---
-				if (itemStockInputContainer) itemStockInputContainer.style.display = 'block';
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
+				// if (itemStockInputContainer) itemStockInputContainer.style.display = 'block'; // REMOVED
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none'; // HIDE info box
 				// --- END UPDATE ---
 
 				itemLowThresholdInput.value = ''; // Default to blank
@@ -84,14 +84,14 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (itemIdInput.value) {
 					modalTitle.textContent = 'Edit Inventory Item';
 					// --- UPDATED: Show/hide logic for validation reopen ---
-					if (itemStockInputContainer) itemStockInputContainer.style.display = 'none';
-					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+					// if (itemStockInputContainer) itemStockInputContainer.style.display = 'none'; // REMOVED
+					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block'; // SHOW info box
 					// --- END UPDATE ---
 				} else {
 					modalTitle.textContent = 'Add New Inventory Item';
 					// --- UPDATED: Show/hide logic for validation reopen ---
-					if (itemStockInputContainer) itemStockInputContainer.style.display = 'block';
-					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
+					// if (itemStockInputContainer) itemStockInputContainer.style.display = 'block'; // REMOVED
+					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none'; // HIDE info box
 					// --- END UPDATE ---
 				}
 			}

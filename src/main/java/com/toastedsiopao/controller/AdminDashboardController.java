@@ -6,6 +6,9 @@ import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.PageRequest; // Import PageRequest
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,12 +37,27 @@ public class AdminDashboardController {
 
 	@GetMapping("/orders")
 	public String manageOrders(Model model, @RequestParam(value = "keyword", required = false) String keyword,
-			@RequestParam(value = "status", required = false) String status) {
-		log.info("Fetching orders with keyword: '{}' and status: '{}'", keyword, status); // Add logging
-		List<Order> orders = orderService.searchOrders(keyword, status);
-		model.addAttribute("orders", orders);
+			@RequestParam(value = "status", required = false) String status,
+			@RequestParam(value = "page", defaultValue = "0") int page, // NEW
+			@RequestParam(value = "size", defaultValue = "10") int size) { // NEW (and default 10)
+
+		log.info("Fetching orders with keyword: '{}', status: '{}', page: {}, size: {}", keyword, status, page, size); // Add
+																														// logging
+
+		Pageable pageable = PageRequest.of(page, size); // NEW
+		Page<Order> orderPage = orderService.searchOrders(keyword, status, pageable); // UPDATED
+
+		model.addAttribute("orderPage", orderPage); // NEW: Add the full page object
+		model.addAttribute("orders", orderPage.getContent()); // UPDATED: Get content from page
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("currentStatus", status);
+
+		// NEW: Pass pagination attributes to the model
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", orderPage.getTotalPages());
+		model.addAttribute("totalItems", orderPage.getTotalElements());
+		model.addAttribute("size", size);
+
 		return "admin/orders"; // Renders orders.html
 	}
 

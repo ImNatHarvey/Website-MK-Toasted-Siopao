@@ -42,13 +42,13 @@
 					th:classappend="${activePage == 'inventory' ? 'active' : ''}">
 					<i class="fa-solid fa-boxes-stacked fa-fw"></i> Inventory
 					Management
-				</a> <a class="nav-link" th:href="@{/admin/settings}"
-					th:classappend="${activePage == 'settings' ? 'active' : ''}"> <i
-					class="fa-solid fa-gear fa-fw"></i> Site Management
 				</a> <a class="nav-link" th:href="@{/admin/transactions}"
 					th:classappend="${activePage == 'transactions' ? 'active' : ''}">
 					<i class="fa-solid fa-money-bill-wave fa-fw"></i> Transaction
 					History
+				</a> <a class="nav-link" th:href="@{/admin/settings}"
+					th:classappend="${activePage == 'settings' ? 'active' : ''}"> <i
+					class="fa-solid fa-gear fa-fw"></i> Site Management
 				</a> <a class="nav-link" th:href="@{/admin/activity-log}"
 					th:classappend="${activePage == 'activity-log' ? 'active' : ''}">
 					<i class="fa-solid fa-clipboard-list fa-fw"></i> Activity Log

@@ -96,10 +96,54 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="d-flex justify-content-between align-items-center mt-3">
-					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
-					<span>Page 1 of 1</span>
-					<button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
+
+				<div th:if="${orderPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-3">
+
+					<span class="text-muted small"
+						th:text="'Showing ' + ${orderPage.number * orderPage.size + 1} + 
+                               ' - ' + ${orderPage.number * orderPage.size + orderPage.numberOfElements} + 
+                               ' of ' + ${orderPage.totalElements}">
+					</span>
+
+					<nav aria-label="Order Pagination">
+						<ul class="pagination pagination-sm mb-0">
+
+							<li class="page-item"
+								th:classappend="${orderPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/orders(page=${orderPage.number - 1}, size=${size}, keyword=${keyword}, status=${currentStatus})}">Previous</a>
+							</li>
+
+							<th:block
+								th:each="i : ${#numbers.sequence(0, orderPage.totalPages - 1)}"
+								th:if="${orderPage.totalPages <= 7 || i == 0 || i == orderPage.totalPages - 1 || (i >= orderPage.number - 2 && i <= orderPage.number + 2)}">
+
+								<li class="page-item disabled"
+									th:if="${orderPage.totalPages > 7 && (i == 0 && orderPage.number > 3 || i == orderPage.totalPages - 1 && orderPage.number < orderPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+
+								<li class="page-item"
+									th:classappend="${i == orderPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/admin/orders(page=${i}, size=${size}, keyword=${keyword}, status=${currentStatus})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+
+							<li class="page-item"
+								th:classappend="${orderPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/orders(page=${orderPage.number + 1}, size=${size}, keyword=${keyword}, status=${currentStatus})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+
+					<span class="text-muted small" style="visibility: hidden;"
+						th:text="'Showing ' + ${orderPage.number * orderPage.size + 1} + 
+                               ' - ' + ${orderPage.number * orderPage.size + orderPage.numberOfElements} + 
+                               ' of ' + ${orderPage.totalElements}">
+					</span>
 				</div>
 			</div>
 		</div>

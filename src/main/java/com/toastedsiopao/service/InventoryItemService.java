@@ -2,6 +2,8 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal; // Import BigDecimal
 import java.util.List;
@@ -9,7 +11,9 @@ import java.util.Optional;
 
 public interface InventoryItemService {
 
-	List<InventoryItem> findAll();
+	List<InventoryItem> findAll(); // This remains for dropdowns/modals
+
+	Page<InventoryItem> findAll(Pageable pageable); // NEW: For paginated view
 
 	Optional<InventoryItem> findById(Long id);
 
@@ -19,7 +23,7 @@ public interface InventoryItemService {
 
 	Optional<InventoryItem> findByName(String name);
 
-	List<InventoryItem> searchItems(String keyword, Long categoryId);
+	Page<InventoryItem> searchItems(String keyword, Long categoryId, Pageable pageable); // UPDATED
 
 	// Methods for stock reports
 	List<InventoryItem> findLowStockItems();
@@ -30,9 +34,8 @@ public interface InventoryItemService {
 
 	// --- UNCOMMENTED ---
 	/**
-	 * Adjusts the stock of an inventory item.
+	 * Adjusts the stock of an inventory item. * @param itemId The ID of the item
 	 * 
-	 * @param itemId         The ID of the item
 	 * @param quantityChange The amount to add (positive) or remove (negative)
 	 * @param reason         The reason for the adjustment
 	 * @return The updated InventoryItem

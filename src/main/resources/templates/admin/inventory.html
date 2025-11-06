@@ -125,10 +125,53 @@
 						</tbody>
 					</table>
 				</div>
-				<div class="d-flex justify-content-between align-items-center mt-3">
-					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
-					<span>Page 1 of 1</span>
-					<button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
+				<div th:if="${inventoryPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-3">
+
+					<span class="text-muted small"
+						th:text="'Showing ' + ${inventoryPage.number * inventoryPage.size + 1} + 
+                               ' - ' + ${inventoryPage.number * inventoryPage.size + inventoryPage.numberOfElements} + 
+                               ' of ' + ${inventoryPage.totalElements}">
+					</span>
+
+					<nav aria-label="Inventory Pagination">
+						<ul class="pagination pagination-sm mb-0">
+
+							<li class="page-item"
+								th:classappend="${inventoryPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/inventory(page=${inventoryPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+							</li>
+
+							<th:block
+								th:each="i : ${#numbers.sequence(0, inventoryPage.totalPages - 1)}"
+								th:if="${inventoryPage.totalPages <= 7 || i == 0 || i == inventoryPage.totalPages - 1 || (i >= inventoryPage.number - 2 && i <= inventoryPage.number + 2)}">
+
+								<li class="page-item disabled"
+									th:if="${inventoryPage.totalPages > 7 && (i == 0 && inventoryPage.number > 3 || i == inventoryPage.totalPages - 1 && inventoryPage.number < inventoryPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+
+								<li class="page-item"
+									th:classappend="${i == inventoryPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/admin/inventory(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+
+							<li class="page-item"
+								th:classappend="${inventoryPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/inventory(page=${inventoryPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+
+					<span class="text-muted small" style="visibility: hidden;"
+						th:text="'Showing ' + ${inventoryPage.number * inventoryPage.size + 1} + 
+                               ' - ' + ${inventoryPage.number * inventoryPage.size + inventoryPage.numberOfElements} + 
+                               ' of ' + ${inventoryPage.totalElements}">
+					</span>
 				</div>
 			</div>
 		</div>

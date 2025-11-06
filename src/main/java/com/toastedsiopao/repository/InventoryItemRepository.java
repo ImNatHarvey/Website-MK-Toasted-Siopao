@@ -2,6 +2,8 @@ package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,14 +19,17 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 	Optional<InventoryItem> findByNameIgnoreCase(String name);
 
 	// Find items by category
-	List<InventoryItem> findByCategoryOrderByNameAsc(InventoryCategory category);
+	Page<InventoryItem> findByCategoryOrderByNameAsc(InventoryCategory category, Pageable pageable);
 
 	// Search items by name containing keyword
-	List<InventoryItem> findByNameContainingIgnoreCaseOrderByNameAsc(String keyword);
+	Page<InventoryItem> findByNameContainingIgnoreCaseOrderByNameAsc(String keyword, Pageable pageable);
 
 	// Search items by name containing keyword AND category
-	List<InventoryItem> findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(String keyword,
-			InventoryCategory category);
+	Page<InventoryItem> findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(String keyword,
+			InventoryCategory category, Pageable pageable);
+
+	// --- NEW: For modals, get all items sorted ---
+	List<InventoryItem> findAllByOrderByNameAsc();
 
 	// Find items with stock below or equal to a threshold (useful for reports)
 	@Query("SELECT i FROM InventoryItem i WHERE i.currentStock <= i.lowStockThreshold AND i.currentStock > i.criticalStockThreshold ORDER BY i.name ASC")

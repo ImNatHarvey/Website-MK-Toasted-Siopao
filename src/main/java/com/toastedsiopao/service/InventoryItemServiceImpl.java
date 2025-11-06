@@ -12,6 +12,8 @@ import com.toastedsiopao.repository.UnitOfMeasureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -58,8 +60,16 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findAll() {
-		return itemRepository.findAll();
+		return itemRepository.findAllByOrderByNameAsc(); // UPDATED
 	}
+
+	// --- NEW ---
+	@Override
+	@Transactional(readOnly = true)
+	public Page<InventoryItem> findAll(Pageable pageable) {
+		return itemRepository.findAll(pageable);
+	}
+	// --- END NEW ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -172,27 +182,31 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		log.info("Deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
 
+	// --- UPDATED METHOD ---
 	@Override
 	@Transactional(readOnly = true)
-	public List<InventoryItem> searchItems(String keyword, Long categoryId) {
-		// Logic unchanged
+	public Page<InventoryItem> searchItems(String keyword, Long categoryId, Pageable pageable) {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
 		if (hasKeyword && hasCategory) {
 			InventoryCategory category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId));
-			return itemRepository.findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(keyword.trim(), category);
+					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId)); // <--
+																														// FIX
+																														// HERE
+			return itemRepository.findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(keyword.trim(), category,
+					pageable);
 		} else if (hasKeyword) {
-			return itemRepository.findByNameContainingIgnoreCaseOrderByNameAsc(keyword.trim());
+			return itemRepository.findByNameContainingIgnoreCaseOrderByNameAsc(keyword.trim(), pageable);
 		} else if (hasCategory) {
 			InventoryCategory category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId));
-			return itemRepository.findByCategoryOrderByNameAsc(category);
+			return itemRepository.findByCategoryOrderByNameAsc(category, pageable);
 		} else {
-			return itemRepository.findAll(); // Consider sorting
+			return itemRepository.findAll(pageable); // Use the paged findAll
 		}
 	}
+	// --- END UPDATED METHOD ---
 
 	// --- Stock Report Methods (Unchanged) ---
 	@Override

@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -54,20 +57,34 @@ public class AdminInventoryController {
 		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAll());
 	}
 
+	// --- UPDATED METHOD ---
 	@GetMapping
 	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
-			@RequestParam(value = "category", required = false) Long categoryId) {
-		List<InventoryItem> items = inventoryItemService.searchItems(keyword, categoryId);
+			@RequestParam(value = "category", required = false) Long categoryId,
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) { // Default size 10
+
+		Pageable pageable = PageRequest.of(page, size);
+		Page<InventoryItem> inventoryPage = inventoryItemService.searchItems(keyword, categoryId, pageable);
+
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
-		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll();
+		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll(); // Unchanged: modal needs all items
 
 		model.addAttribute("allInventoryItems", allItemsForStockModal);
-		model.addAttribute("inventoryItems", items);
+		model.addAttribute("inventoryPage", inventoryPage); // Add the full page object
+		model.addAttribute("inventoryItems", inventoryPage.getContent()); // Get content for current page
 		model.addAttribute("inventoryCategories", categories);
 		model.addAttribute("unitsOfMeasure", units);
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
+
+		// Pass pagination attributes to the model
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", inventoryPage.getTotalPages());
+		model.addAttribute("totalItems", inventoryPage.getTotalElements());
+		model.addAttribute("size", size);
+
 		if (!model.containsAttribute("inventoryItemDto")) {
 			model.addAttribute("inventoryItemDto", new InventoryItemDto());
 		}
@@ -79,6 +96,7 @@ public class AdminInventoryController {
 		}
 		return "admin/inventory";
 	}
+	// --- END UPDATED METHOD ---
 
 	@PostMapping("/save")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
@@ -284,10 +302,11 @@ public class AdminInventoryController {
 			return "redirect:/admin/inventory";
 		}
 		InventoryCategory category = categoryOpt.get();
-		List<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id);
+		// Use the new paged search method to check for items
+		Page<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id, PageRequest.of(0, 1));
 		if (!itemsInCategory.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete category '" + category.getName()
-					+ "'. It is associated with " + itemsInCategory.size() + " inventory item(s).");
+					+ "'. It is associated with " + itemsInCategory.getTotalElements() + " inventory item(s).");
 			return "redirect:/admin/inventory";
 		}
 		try {

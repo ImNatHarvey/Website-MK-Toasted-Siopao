@@ -34,4 +34,9 @@ public interface CustomerService {
 
 	void checkForInactiveCustomers();
 
+	// --- NEW: For Dashboard Stats ---
+	/**
+	 * Counts new customers registered this month. * @return Count of new customers.
+	 */
+	long countNewCustomersThisMonth();
 }

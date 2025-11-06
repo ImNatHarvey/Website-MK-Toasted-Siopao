@@ -35,10 +35,40 @@ public interface InventoryItemService {
 	// --- UNCOMMENTED ---
 	/**
 	 * Adjusts the stock of an inventory item. * @param itemId The ID of the item
+	 * * @param quantityChange The amount to add (positive) or remove (negative)
 	 * 
-	 * @param quantityChange The amount to add (positive) or remove (negative)
-	 * @param reason         The reason for the adjustment
+	 * @param reason The reason for the adjustment
 	 * @return The updated InventoryItem
 	 */
 	InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason);
+
+	// --- NEW: For Dashboard Stats ---
+	/**
+	 * Gets the sum of 'currentStock' for all items in inventory. * @return Total
+	 * quantity of all items.
+	 */
+	BigDecimal getTotalStockQuantity();
+
+	/**
+	 * Gets the total calculated value (stock * cost) of all items in inventory.
+	 * * @return Total value of all items.
+	 */
+	BigDecimal getTotalStockValue();
+
+	/**
+	 * Counts all items currently low on stock. * @return Count of low stock items.
+	 */
+	long countLowStockItems();
+
+	/**
+	 * Counts all items currently critical on stock. * @return Count of critical
+	 * stock items.
+	 */
+	long countCriticalStockItems();
+
+	/**
+	 * Counts all items currently out of stock. * @return Count of out-of-stock
+	 * items.
+	 */
+	long countOutOfStockItems();
 }

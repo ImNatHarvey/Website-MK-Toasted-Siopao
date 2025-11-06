@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import com.toastedsiopao.model.User;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,5 +49,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	long countByRoleAndStatus(String role, String status);
 
 	long countByRole(String role); // NEW: Fixes compile error
+
+	// --- NEW: For Dashboard Stats ---
+
+	/**
+	 * Counts users of a specific role created between two dates. * @param role The
+	 * role to check (e.g., "ROLE_CUSTOMER").
+	 * 
+	 * @param start The start timestamp.
+	 * @param end   The end timestamp.
+	 * @return The count of new users.
+	 */
+	long countByRoleAndCreatedAtBetween(String role, @Param("start") LocalDateTime start,
+			@Param("end") LocalDateTime end);
 
 }

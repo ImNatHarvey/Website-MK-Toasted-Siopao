@@ -720,3 +720,209 @@ footer.admin-footer {
 	min-width: 50px;
 }
 /* **** END NEW **** */
+
+/* =============================================== */
+/* == NEW STYLES FOR ADMIN DASHBOARD V2 == */
+/* =============================================== */
+
+/* Main content wrapper */
+#admin-dashboard-content {
+	/* The padding/background is now handled by .admin-content-page */
+	
+}
+
+/* Page Header */
+.dashboard-header {
+	margin-bottom: 1.5rem;
+}
+
+.dashboard-header .section-title {
+	margin-bottom: 0.25rem;
+}
+
+.dashboard-header .text-muted {
+	font-size: 1.1rem;
+}
+
+/* Section Headings */
+.dashboard-section-title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	color: var(--dark);
+	margin-bottom: 1rem;
+	padding-bottom: 0.5rem;
+	border-bottom: 2px solid #e0e0e0;
+}
+
+/* Stat Card */
+.stats-card-v2 {
+	background-color: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 1.5rem;
+	display: flex;
+	align-items: center;
+	transition: all 0.3s ease;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-card-v2:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.stats-card-v2 .stats-icon {
+	font-size: 2.5rem;
+	padding: 1.25rem;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 1.5rem;
+}
+
+.stats-card-v2 .stats-info {
+	flex-grow: 1;
+	text-align: right;
+}
+
+.stats-card-v2 .stats-label {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--muted-text);
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 0.25rem;
+}
+
+.stats-card-v2 .stats-value {
+	font-size: 2rem;
+	font-weight: 700;
+	color: var(--dark);
+	line-height: 1.2;
+}
+
+.stats-card-v2 .stats-sub-value {
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--muted-text);
+}
+
+/* Stat Card Icon Colors */
+.stats-icon.icon-sales {
+	background-color: #e6f7ff;
+	color: #1890ff;
+}
+
+.stats-icon.icon-orders {
+	background-color: #fffbe6;
+	color: #faad14;
+}
+
+.stats-icon.icon-inventory {
+	background-color: #f6ffed;
+	color: #52c41a;
+}
+
+.stats-icon.icon-users {
+	background-color: #fff0f6;
+	color: #eb2f96;
+}
+
+/* Chart Container */
+.chart-card {
+	background-color: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 8px;
+	padding: 1.5rem;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.chart-card-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+}
+
+.chart-card-title {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: var(--dark);
+	margin-bottom: 0;
+}
+
+.chart-container {
+	position: relative;
+	width: 100%;
+}
+
+/* Specific heights */
+#salesChartContainer {
+	height: 350px;
+}
+
+#orderStatusChartContainer {
+	height: 300px;
+	max-width: 300px;
+	margin: 0 auto;
+}
+
+#topProductsChartContainer {
+	height: 300px;
+}
+
+/* Top Products List */
+.top-products-list {
+	list-style: none;
+	padding-left: 0;
+	margin-bottom: 0;
+}
+
+.top-products-list li {
+	display: flex;
+	align-items: center;
+	padding: 0.75rem 0;
+	border-bottom: 1px solid #f0f0f0;
+}
+
+.top-products-list li:last-child {
+	border-bottom: none;
+}
+
+.top-products-list .product-img {
+	width: 50px;
+	height: 50px;
+	border-radius: 6px;
+	object-fit: cover;
+	margin-right: 1rem;
+	border: 1px solid #eee;
+}
+
+.top-products-list .product-info {
+	flex-grow: 1;
+}
+
+.top-products-list .product-name {
+	font-weight: 600;
+	color: var(--dark);
+	display: block;
+	text-decoration: none;
+	margin-bottom: 0.25rem;
+}
+
+.top-products-list .product-name:hover {
+	color: var(--primary);
+}
+
+.top-products-list .product-quantity {
+	font-size: 0.9rem;
+	color: var(--muted-text);
+}
+
+.top-products-list .product-sales {
+	font-size: 1.1rem;
+	font-weight: 700;
+	color: var(--primary);
+	margin-left: 1rem;
+}

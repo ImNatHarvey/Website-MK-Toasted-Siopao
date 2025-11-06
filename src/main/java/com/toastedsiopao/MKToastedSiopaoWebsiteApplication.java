@@ -1,6 +1,8 @@
 package com.toastedsiopao;
 
+import java.time.Clock; // Import Clock
 import java.time.LocalDateTime; // Import LocalDateTime
+import java.time.ZoneId; // Import ZoneId
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -31,6 +33,18 @@ public class MKToastedSiopaoWebsiteApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(MKToastedSiopaoWebsiteApplication.class, args);
 	}
+
+	// --- NEW: Clock Bean ---
+	/**
+	 * Creates a Clock bean set to "Asia/Manila" timezone. This ensures all
+	 * time-sensitive logic (like "Sales Today") is consistent. * @return A Clock
+	 * bean.
+	 */
+	@Bean
+	public Clock clock() {
+		return Clock.system(ZoneId.of("Asia/Manila"));
+	}
+	// --- END NEW ---
 
 	// This bean runs once on application startup
 	@Bean

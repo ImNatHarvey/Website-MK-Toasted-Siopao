@@ -31,4 +31,10 @@ public interface AdminService {
 
 	long countActiveAdmins(); // NEW: Fixes stats error
 
+	// --- NEW: For Dashboard Stats ---
+	/**
+	 * Counts new admins registered this month. * @return Count of new admins.
+	 */
+	long countNewAdminsThisMonth();
+
 }

@@ -1,6 +1,9 @@
 package com.toastedsiopao.service;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -31,6 +34,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private Clock clock; // NEW: Injected clock
 
 	// --- Validation Helpers ---
 	private void validateUsernameDoesNotExist(String username) {
@@ -174,7 +180,7 @@ public class CustomerServiceImpl implements CustomerService {
 		try {
 			User user = findByUsername(username);
 			if (user != null) {
-				user.setLastActivity(LocalDateTime.now());
+				user.setLastActivity(LocalDateTime.now(clock)); // UPDATED: Use clock
 				if ("INACTIVE".equals(user.getStatus())) {
 					user.setStatus("ACTIVE");
 					log.info("User '{}' was INACTIVE, setting to ACTIVE upon login.", username);
@@ -208,7 +214,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public void checkForInactiveCustomers() {
 		log.info("--- Running scheduled check for inactive customers... ---");
-		LocalDateTime cutoffDate = LocalDateTime.now().minusMonths(INACTIVITY_PERIOD_MONTHS);
+		LocalDateTime cutoffDate = LocalDateTime.now(clock).minusMonths(INACTIVITY_PERIOD_MONTHS); // UPDATED: Use clock
 		log.info("Inactivity cutoff date: {}", cutoffDate);
 
 		List<User> activeCustomers = userRepository.findByRoleAndStatus("ROLE_CUSTOMER", "ACTIVE");
@@ -234,5 +240,14 @@ public class CustomerServiceImpl implements CustomerService {
 		} else {
 			log.info("--- Finished inactivity check. No customers required status change. ---");
 		}
+	}
+
+	// --- NEW: Dashboard Stats Implementation ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countNewCustomersThisMonth() {
+		LocalDateTime now = LocalDateTime.now(clock);
+		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
+		return userRepository.countByRoleAndCreatedAtBetween("ROLE_CUSTOMER", startOfMonth, now);
 	}
 }

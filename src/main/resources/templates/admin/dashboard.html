@@ -1,114 +1,289 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'dashboard')}">
+	th:replace="~{admin/base :: layout(~{::#admin-dashboard-content}, ~{::script}, 'dashboard')}">
 <head>
 <title>Admin Dashboard - MK Admin Portal</title>
 </head>
 <body>
 
-	<div id="admin-content-wrapper">
-		<h2 class="section-title mb-4 text-center">Admin Dashboard</h2>
+	<div id="admin-dashboard-content"
+		th:attr="data-sales-labels=${salesChartLabels},
+                 data-sales-data=${salesChartData},
+                 data-order-status-labels=${orderStatusChartLabels},
+                 data-order-status-data=${orderStatusChartData},
+                 data-top-products-labels=${topProductsChartLabels},
+                 data-top-products-data=${topProductsChartData}">
 
-		<div class="row justify-content-center">
-			<div class="col-md-3 mb-3">
-				<div class="stats-card card text-center py-4">
-					<div class="card-body">
-						<h5 class="card-title">Pending Orders</h5>
-						<div class="stats-value text-warning"
-							th:text="${pendingOrderCount}">0</div>
-						<div class="stats-change text-muted small">Orders awaiting
-							processing</div>
+		<div
+			class="dashboard-header d-flex justify-content-between align-items-center">
+			<div>
+				<h1 class="section-title">Admin Dashboard</h1>
+				<p class="text-muted">Welcome back! Here's your business
+					overview.</p>
+			</div>
+		</div>
+
+		<h2 class="dashboard-section-title">Financial Summary</h2>
+		<div class="row">
+			<div class="col-xl-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-sales">
+						<i class="fa-solid fa-peso-sign"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Sales Today</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(salesToday, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-3 mb-3">
-				<div class="stats-card card text-center py-4">
-					<div class="card-body">
-						<h5 class="card-title">Low Stock Products</h5>
-						<div class="stats-value text-warning"
-							th:text="${lowStockProducts}">0</div>
-						<div class="stats-change text-muted small">Products at or
-							below low threshold</div>
+			<div class="col-xl-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-sales">
+						<i class="fa-solid fa-calendar-week"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Sales This Week</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(salesThisWeek, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-md-3 mb-3">
-				<div class="stats-card card text-center py-4">
-					<div class="card-body">
-						<h5 class="card-title">Out of Stock Products</h5>
-						<div class="stats-value text-danger"
-							th:text="${outOfStockProducts}">0</div>
-						<div class="stats-change text-muted small">Products with
-							zero stock</div>
+			<div class="col-xl-4 col-md-12 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-sales">
+						<i class="fa-solid fa-calendar-days"></i>
 					</div>
-				</div>
-			</div>
-			<div class="col-md-3 mb-3">
-				<div class="stats-card card text-center py-4">
-					<div class="card-body">
-						<h5 class="card-title">Active Customers</h5>
-						<div class="stats-value text-success" th:text="${activeCustomers}">0</div>
-						<div class="stats-change text-muted small">Customers active
-							recently</div>
+					<div class="stats-info">
+						<div class="stats-label">Sales This Month</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(salesThisMonth, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 					</div>
 				</div>
 			</div>
 		</div>
-		<div class="row justify-content-center">
-			<div class="col-12 mt-4">
-				<div class="card">
-					<div class="card-header text-center">
-						<h5 class="mb-0">Recent Orders</h5>
+
+		<h2 class="dashboard-section-title">Order Summary</h2>
+		<div class="row">
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders">
+						<i class="fa-solid fa-box"></i>
 					</div>
-					<div class="card-body">
-						<div class="table-responsive">
-							<table class="table table-hover align-middle text-center">
-								<thead class="table-light">
-									<tr>
-										<th>Order ID</th>
-										<th>Customer</th>
-										<th>Amount</th>
-										<th>Status</th>
-										<th>Date</th>
-										<th>Action</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr th:each="order : ${recentOrders}">
-										<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
-										<td
-											th:text="${order.shippingFirstName + ' ' + order.shippingLastName}">Customer
-											Name</td>
-										<td
-											th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">
-											₱XXX</td>
-										<td><span class="status-badge" th:text="${order.status}"
-											th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">Pending</span>
-										</td>
-										<td
-											th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy')}">Date</td>
-										<td><a href="#"
-											class="btn btn-sm btn-action-view disabled"
-											title="View Details (coming soon)">View</a></td>
-									</tr>
-									<tr th:if="${#lists.isEmpty(recentOrders)}">
-										<td colspan="6" class="text-center text-muted">No recent
-											orders found.</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-						<div class="text-center">
-							<a th:href="@{/admin/orders}" class="btn btn-custom mt-3">View
-								All Orders</a>
-						</div>
+					<div class="stats-info">
+						<div class="stats-label">Total Orders</div>
+						<div class="stats-value" th:text="${totalOrders}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
+						style="background-color: #fffbe6; color: #faad14;">
+						<i class="fa-solid fa-clock"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Pending</div>
+						<div class="stats-value" th:text="${pendingOrders}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
+						style="background-color: #e6f7ff; color: #1890ff;">
+						<i class="fa-solid fa-arrows-spin"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Processing</div>
+						<div class="stats-value" th:text="${processingOrders}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
+						style="background-color: #f6ffed; color: #52c41a;">
+						<i class="fa-solid fa-truck-fast"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Delivered</div>
+						<div class="stats-value" th:text="${deliveredOrders}">0</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-xl-8 mb-4">
+				<div class="chart-card">
+					<div class="chart-card-header">
+						<h5 class="chart-card-title">Sales Trend (Last 30 Days)</h5>
+					</div>
+					<div class="chart-container" id="salesChartContainer">
+						<canvas id="salesChart"></canvas>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-4 mb-4">
+				<div class="chart-card">
+					<div class="chart-card-header">
+						<h5 class="chart-card-title">Order Status Breakdown</h5>
+					</div>
+					<div class="chart-container" id="orderStatusChartContainer">
+						<canvas id="orderStatusChart"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h2 class="dashboard-section-title">Inventory Summary</h2>
+		<div class="row">
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-inventory">
+						<i class="fa-solid fa-warehouse"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Total Stock Value</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(totalStockValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+						<div class="stats-sub-value"
+							th:text="${#numbers.formatDecimal(totalStockQuantity, 1, 'COMMA', 2, 'POINT') + ' total units'}">0
+							units</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-2 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-info text-center">
+						<div class="stats-label">Low Stock</div>
+						<div class="stats-value" style="color: #faad14;"
+							th:text="${lowStockItems}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-2 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-info text-center">
+						<div class="stats-label">Critical Stock</div>
+						<div class="stats-value" style="color: #f5222d;"
+							th:text="${criticalStockItems}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-2 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-info text-center">
+						<div class="stats-label">Out of Stock</div>
+						<div class="stats-value" style="color: #595959;"
+							th:text="${outOfStockItems}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-2 col-md-12 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-info text-center">
+						<div class="stats-label">Item Types</div>
+						<div class="stats-value" th:text="${totalInventoryItems}">0</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row">
+			<div class="col-lg-6 mb-4">
+				<div class="chart-card">
+					<div class="chart-card-header">
+						<h5 class="chart-card-title">Top 5 Selling Products</h5>
+					</div>
+					<ul class="top-products-list">
+						<li th:each="item : ${topProducts}"><img
+							th:src="${item.product.imageUrl != null ? item.product.imageUrl : '/img/placeholder.jpg'}"
+							alt="Product" class="product-img"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+							<div class="product-info">
+								<a href="#" class="product-name" th:text="${item.product.name}">Product
+									Name</a> <span class="product-quantity"
+									th:text="'₱' + ${#numbers.formatDecimal(item.product.price, 1, 'COMMA', 2, 'POINT')}">₱0.00</span>
+							</div> <span class="product-sales" th:text="${item.quantity + ' sold'}">0
+								sold</span></li>
+						<li th:if="${#lists.isEmpty(topProducts)}">
+							<p class="text-muted w-100 text-center mb-0">No delivered
+								sales data yet.</p>
+						</li>
+					</ul>
+				</div>
+			</div>
+			<div class="col-lg-6 mb-4">
+				<div class="chart-card">
+					<div class="chart-card-header">
+						<h5 class="chart-card-title">Top 5 Products (by Qty)</h5>
+					</div>
+					<div class="chart-container" id="topProductsChartContainer">
+						<canvas id="topProductsChart"></canvas>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h2 class="dashboard-section-title">User Summary</h2>
+		<div class="row">
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-users">
+						<i class="fa-solid fa-users"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Total Customers</div>
+						<div class="stats-value" th:text="${totalCustomers}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-users"
+						style="background-color: #f6ffed; color: #52c41a;">
+						<i class="fa-solid fa-user-check"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Active Customers</div>
+						<div class="stats-value" th:text="${activeCustomers}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-users"
+						style="background-color: #e6f7ff; color: #1890ff;">
+						<i class="fa-solid fa-user-plus"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">New This Month</div>
+						<div class="stats-value" th:text="${newCustomersThisMonth}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-users"
+						style="background-color: #f9f0ff; color: #722ed1;">
+						<i class="fa-solid fa-user-shield"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Admin Accounts</div>
+						<div class="stats-value" th:text="${totalAdmins}">0</div>
 					</div>
 				</div>
 			</div>
 		</div>
 
 	</div>
+
 	<th:block th:fragment="script">
+		<script
+			src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+		<script th:src="@{/js/admin-dashboard.js}"></script>
 	</th:block>
 
 </body>

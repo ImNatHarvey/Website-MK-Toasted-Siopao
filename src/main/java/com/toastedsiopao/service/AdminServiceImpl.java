@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +32,9 @@ public class AdminServiceImpl implements AdminService {
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private Clock clock; // NEW: Injected clock
 
 	// --- Validation Helpers ---
 	private void validateUsernameDoesNotExist(String username) {
@@ -157,5 +164,14 @@ public class AdminServiceImpl implements AdminService {
 	@Transactional(readOnly = true)
 	public long countActiveAdmins() {
 		return userRepository.countByRoleAndStatus("ROLE_ADMIN", "ACTIVE");
+	}
+
+	// --- NEW: Dashboard Stats Implementation ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countNewAdminsThisMonth() {
+		LocalDateTime now = LocalDateTime.now(clock);
+		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
+		return userRepository.countByRoleAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now);
 	}
 }

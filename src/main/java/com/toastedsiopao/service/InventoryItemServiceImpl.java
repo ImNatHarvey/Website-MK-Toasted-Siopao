@@ -251,4 +251,36 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		return savedItem;
 	}
+
+	// --- NEW: Dashboard Stats Implementation ---
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getTotalStockQuantity() {
+		return itemRepository.sumTotalStockQuantity();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getTotalStockValue() {
+		return itemRepository.sumTotalStockValue();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countLowStockItems() {
+		return itemRepository.countLowStockItems();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countCriticalStockItems() {
+		return itemRepository.countCriticalStockItems();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countOutOfStockItems() {
+		return itemRepository.countOutOfStockItems();
+	}
 }

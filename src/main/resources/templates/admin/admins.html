@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'admins')}">
+<head>
+<title>Manage Admins - MK Admin Portal</title>
+</head>
+<body>
+
+	<div id="admin-content-wrapper"
+		th:attr="data-show-add-admin-modal=${#fields.hasErrors('adminCreateDto.*') ? 'true' : 'false'},
+                 data-show-edit-admin-modal=${#fields.hasErrors('adminUpdateDto.*') ? 'true' : 'false'},
+                 data-show-edit-profile-modal=${#fields.hasErrors('adminProfileDto.*') ? 'true' : 'false'}">
+
+		<div
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+			<h1 class="mb-3 mb-md-0 section-title">Admin Management</h1>
+			<div class="d-flex gap-2">
+				<button class="btn btn-action-add" type="button"
+					data-bs-toggle="modal" data-bs-target="#addAdminModal">
+					<i class="fa-solid fa-plus me-1"></i> Add Admin
+				</button>
+				<button class="btn btn-action-view" type="button"
+					data-bs-toggle="modal" data-bs-target="#editProfileModal">
+					<i class="fa-solid fa-user-pen me-1"></i> Edit My Profile
+				</button>
+			</div>
+		</div>
+
+		<div
+			th:replace="~{admin/fragments/common-alerts :: userAlerts(customerSuccess=${adminSuccess}, customerError=${adminError})}"></div>
+
+		<div class="row text-center mb-4">
+			<div class="col-md-6 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Admins</h5>
+						<p class="display-6 fw-bold" th:text="${totalItems}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-6 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Active Admins</h5>
+						<p class="display-6 fw-bold text-success"
+							th:text="${activeAdminCount}">0</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<form th:action="@{/admin/admins}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="row g-3 align-items-end">
+				<div class="col-md-10">
+					<label for="keyword" class="form-label">Search by Name,
+						Username, or Email</label> <input type="text" class="form-control"
+						id="keyword" name="keyword" th:value="${keyword}"
+						placeholder="Enter search term...">
+				</div>
+				<div class="col-md-2 d-flex justify-content-end">
+					<button type="submit" class="btn btn-action-view me-2">
+						<i class="fa-solid fa-search me-1"></i> Search
+					</button>
+					<a th:href="@{/admin/admins}" class="btn btn-custom-secondary"
+						title="Clear Filters">Clear </a>
+				</div>
+			</div>
+		</form>
+
+		<div class="card">
+			<div class="card-header">
+				<h5 class="mb-0">Admin Accounts</h5>
+			</div>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle text-center">
+						<thead class="table-light">
+							<tr>
+								<th>ID</th>
+								<th>Name</th>
+								<th>Username</th>
+								<th>Email</th>
+								<th>Status</th>
+								<th>Last Activity</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="admin : ${admins}" th:data-id="${admin.id}"
+								th:data-name="${admin.firstName + ' ' + admin.lastName}"
+								th:data-first-name="${admin.firstName}"
+								th:data-last-name="${admin.lastName}"
+								th:data-username="${admin.username}"
+								th:data-email="${admin.email != null ? admin.email : 'N/A'}"
+								th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+								th:data-status="${admin.status}">
+
+								<td th:text="${admin.id}">001</td>
+								<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
+									User</td>
+								<td th:text="${admin.username}">admin_user</td>
+								<td th:text="${admin.email != null ? admin.email : 'N/A'}">N/A</td>
+								<td><span class="status-badge"
+									th:text="${admin.status != null ? admin.status : 'N/A'}"
+									th:classappend="${admin.status == 'ACTIVE' ? 'status-active' : 'status-cancelled'}">Status</span>
+								</td>
+								<td
+									th:text="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyy HH:mm') : 'N/A'}">N/A</td>
+
+								<td class="d-flex justify-content-center gap-2">
+									<button class="btn btn-sm btn-action-view view-admin-btn"
+										data-bs-toggle="modal" data-bs-target="#viewAdminModal">View</button>
+
+									<button type="button"
+										class="btn btn-sm btn-action-edit edit-admin-btn"
+										data-bs-toggle="modal" data-bs-target="#editAdminModal"
+										th:disabled="${admin.username == currentUsername}"
+										title="Cannot edit your own account here. Use 'Edit My Profile'.">Edit</button>
+
+									<form th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
+										method="post"
+										onsubmit="return confirm('Are you sure you want to delete this admin?');">
+										<button type="submit" class="btn btn-sm btn-action-delete"
+											th:disabled="${admin.username == currentUsername}"
+											title="You cannot delete your own account.">Delete</button>
+									</form>
+								</td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(admins)}">
+								<td colspan="7" class="text-center text-muted"
+									th:text="${keyword != null ? 'No admins found matching your search.' : 'No admins found.'}">
+									No admins found.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div th:if="${adminPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-3">
+					<span class="text-muted small"
+						th:text="'Showing ' + ${adminPage.number * adminPage.size + 1} + 
+                               ' - ' + ${adminPage.number * adminPage.size + adminPage.numberOfElements} + 
+                               ' of ' + ${adminPage.totalElements}">
+					</span>
+					<nav aria-label="Admin Pagination">
+						<ul class.pagination pagination-smmb-0">
+							<li class="page-item"
+								th:classappend="${adminPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/admins(page=${adminPage.number - 1}, size=${size}, keyword=${keyword})}">Previous</a>
+							</li>
+							<th:block
+								th:each="i : ${#numbers.sequence(0, adminPage.totalPages - 1)}"
+								th:if="${adminPage.totalPages <= 7 || i == 0 || i == adminPage.totalPages - 1 || (i >= adminPage.number - 2 && i <= adminPage.number + 2)}">
+								<li class="page-item disabled"
+									th:if="${adminPage.totalPages > 7 && (i == 0 && adminPage.number > 3 || i == adminPage.totalPages - 1 && adminPage.number < adminPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+								<li class="page-item"
+									th:classappend="${i == adminPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/admin/admins(page=${i}, size=${size}, keyword=${keyword})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+							<li class="page-item"
+								th:classappend="${adminPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/admins(page=${adminPage.number + 1}, size=${size}, keyword=${keyword})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+					<span class="text-muted small" style="visibility: hidden;"></span>
+				</div>
+			</div>
+		</div>
+
+		<div th:replace="~{admin/fragments/admin-modals :: all-admin-modals}"></div>
+
+	</div>
+	<th:block th:fragment="script">
+		<script th:src="@{/js/admin-admins.js}"></script>
+	</th:block>
+
+</body>
+</html>

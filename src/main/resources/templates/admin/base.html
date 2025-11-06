@@ -31,7 +31,10 @@
 					<i class="fa-solid fa-chart-line fa-fw"></i> Dashboard
 				</a> <a class="nav-link" th:href="@{/admin/customers}"
 					th:classappend="${activePage == 'customers' ? 'active' : ''}">
-					<i class="fa-solid fa-users fa-fw"></i> User Management
+					<i class="fa-solid fa-users fa-fw"></i> Customer Management
+				</a> <a class="nav-link" th:href="@{/admin/admins}"
+					th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
+					class="fa-solid fa-user-shield fa-fw"></i> Admin Management
 				</a> <a class="nav-link" th:href="@{/admin/orders}"
 					th:classappend="${activePage == 'orders' ? 'active' : ''}"> <i
 					class="fa-solid fa-box fa-fw"></i> Order Management

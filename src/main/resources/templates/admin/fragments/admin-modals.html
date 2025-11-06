@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="all-admin-modals">
+
+		<div class="modal fade" id="addAdminModal" tabindex="-1"
+			aria-labelledby="addAdminModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/admins/add}" method="post"
+						th:object="${adminCreateDto}" id="addAdminForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="addAdminModalLabel">Add New
+								Admin Account</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('adminCreateDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Error
+								adding admin. Please check the form below.</div>
+							<div class.="mb-3">
+								<label for="adminFirstName" class="form-label">First
+									Name</label> <input type="text" class="form-control"
+									th:field="*{firstName}" id="adminFirstName"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('firstName')}"
+									th:errors="*{firstName}">FN Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="adminLastName" class="form-label">Last Name</label>
+								<input type="text" class="form-control" th:field="*{lastName}"
+									id="adminLastName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('lastName')}"
+									th:errors="*{lastName}">LN Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="adminUsername" class="form-label">Username</label> <input
+									type="text" class="form-control" th:field="*{username}"
+									id="adminUsername" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">User Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="adminEmail" class="form-label">Email</label> <input
+									type="email" class="form-control" th:field="*{email}"
+									id="adminEmail" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
+									Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="adminPassword" class="form-label">Password</label> <input
+									type="password" class="form-control" th:field="*{password}"
+									id="adminPassword" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('password')}"
+									th:errors="*{password}">PW Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="adminConfirmPassword" class="form-label">Confirm
+									Password</label> <input type="password" class="form-control"
+									th:field="*{confirmPassword}" id="adminConfirmPassword"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('confirmPassword')}"
+									th:errors="*{confirmPassword}">Confirm PW Error</div>
+							</div>
+						</div>
+						<div class.="modal-footer">
+							<button type="submit" class="btn btn-custom">Create
+								Admin</button>
+							<button type="button" class="btn btn-custom-secondary"
+								data-bs-dismiss="modal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="editAdminModal" tabindex="-1"
+			aria-labelledby="editAdminModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/admins/update}" method="post"
+						th:object="${adminUpdateDto}" id="editAdminForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editAdminModalLabel">Edit Admin
+								Account</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('adminUpdateDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Please
+								correct the errors below.</div>
+
+							<input type="hidden" th:field="*{id}" />
+
+							<h5 class="mb-3">Personal Information</h5>
+							<div class.="mb-3">
+								<label for="editAdminFirstName" class="form-label">First
+									Name</label> <input type="text" class="form-control"
+									th:field="*{firstName}" id="editAdminFirstName"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('firstName')}"
+									th:errors="*{firstName}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="editAdminLastName" class="form-label">Last
+									Name</label> <input type="text" class="form-control"
+									th:field="*{lastName}" id="editAdminLastName"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('lastName')}"
+									th:errors="*{lastName}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="editAdminUsername" class="form-label">Username</label>
+								<input type="text" class="form-control" th:field="*{username}"
+									id="editAdminUsername" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="editAdminEmail" class="form-label">Email</label> <input
+									type="email" class="form-control" th:field="*{email}"
+									id="editAdminEmail" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
+							</div>
+							<div class="alert alert-warning small">Password and Role
+								cannot be changed from this form.</div>
+						</div>
+						<div class.="modal-footer">
+							<button type="button" class="btn btn-custom-secondary"
+								data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-custom">Save
+								Changes</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="viewAdminModal" tabindex="-1"
+			aria-labelledby="viewAdminModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewAdminModalLabel">Admin
+							Details</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<h5 id="viewAdminName" class="mb-3">Admin Name</h5>
+						<p>
+							<strong>Username:</strong> <span id="viewAdminUsername"></span>
+						</p>
+						<p>
+							<strong>Email:</strong> <span id="viewAdminEmail"></span>
+						</p>
+						<hr>
+						<p class="mb-1">
+							<strong>Account Created:</strong> <span id="viewAdminCreatedAt"></span>
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="editProfileModal" tabindex="-1"
+			aria-labelledby="editProfileModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/admins/profile/update}" method="post"
+						th:object="${adminProfileDto}" id="editProfileForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editProfileModalLabel">Edit My
+								Profile</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('adminProfileDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Please
+								correct the errors below.</div>
+
+							<input type="hidden" th:field="*{id}" />
+
+							<h5 class="mb-3">Personal Information</h5>
+							<div class.="mb-3">
+								<label for="profileFirstName" class="form-label">First
+									Name</label> <input type="text" class="form-control"
+									th:field="*{firstName}" id="profileFirstName"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('firstName')}"
+									th:errors="*{firstName}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="profileLastName" class="form-label">Last
+									Name</label> <input type="text" class="form-control"
+									th:field="*{lastName}" id="profileLastName"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('lastName')}"
+									th:errors="*{lastName}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="profileUsername" class="form-label">Username</label>
+								<input type="text" class="form-control" th:field="*{username}"
+									id="profileUsername" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('username')}"
+									th:errors="*{username}">Error</div>
+							</div>
+							<div class.="mb-3">
+								<label for="profileEmail" class="form-label">Email</label> <input
+									type="email" class="form-control" th:field="*{email}"
+									id="profileEmail" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
+							</div>
+							<div class="alert alert-warning small">To change your
+								password, please use the "Forgot Password" feature on the login
+								page (feature coming soon).</div>
+						</div>
+						<div class.="modal-footer">
+							<button type="button" class="btn btn-custom-secondary"
+								data-bs-dismiss="modal">Cancel</button>
+							<button type="submit" class="btn btn-custom">Save
+								Changes</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

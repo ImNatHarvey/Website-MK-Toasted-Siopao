@@ -17,20 +17,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByUsername(String username);
 
-	// **** NEW METHOD ****
 	Optional<User> findByEmail(String email);
-	// **** END NEW METHOD ****
 
-	// **** UPDATED METHOD (Re-added) ****
-	// This one is for non-paginated lists like the admin modal
+	// This one is for non-paginated lists
 	List<User> findByRole(String role);
 
-	// **** UPDATED METHOD (Kept for pagination) ****
-	// This one is for the paginated customer list
+	// This one is for paginated lists
 	Page<User> findByRole(String role, Pageable pageable);
 
-	// --- NEW: Search customers by keyword across multiple fields ---
-	// **** UPDATED METHOD ****
+	// --- Search customers ---
 	@Query("SELECT u FROM User u WHERE u.role = 'ROLE_CUSTOMER' AND ("
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
@@ -38,13 +33,20 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			+ "u.phone LIKE CONCAT('%', :keyword, '%'))")
 	Page<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword, Pageable pageable);
 
-	// --- NEW: Method for inactivity check (THE FIX) ---
-	/**
-	 * Finds a list of users by their role and status. * @param role The user role
-	 * (e.g., "ROLE_CUSTOMER"). * @param status The user status (e.g., "ACTIVE").
-	 * * @return A list of matching User entities.
-	 */
+	// --- Search admins ---
+	@Query("SELECT u FROM User u WHERE u.role = 'ROLE_ADMIN' AND ("
+			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+			+ "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+			+ "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+	Page<User> findAdminsBySearchKeyword(@Param("keyword") String keyword, Pageable pageable);
+
+	// --- For inactivity check ---
 	List<User> findByRoleAndStatus(String role, String status);
-	// --- END NEW ---
+
+	// --- For stats cards ---
+	long countByRoleAndStatus(String role, String status);
+
+	long countByRole(String role); // NEW: Fixes compile error
 
 }

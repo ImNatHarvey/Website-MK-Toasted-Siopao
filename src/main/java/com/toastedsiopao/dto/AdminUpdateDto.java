@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class AdminUserCreateDto {
+public class AdminUpdateDto {
+
+	private Long id; // Required for update
 
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
@@ -30,15 +32,4 @@ public class AdminUserCreateDto {
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
 	// **** END NEW FIELD ****
-
-	@NotBlank(message = "Password cannot be blank")
-	@Size(min = 8, message = "Password must be at least 8 characters")
-	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
-	private String password;
-
-	@NotBlank(message = "Confirm password cannot be blank")
-	private String confirmPassword;
-
-	// This will be set by the controller ("ROLE_ADMIN" or "ROLE_CUSTOMER")
-	private String role;
 }

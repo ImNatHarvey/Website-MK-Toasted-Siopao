@@ -1,9 +1,9 @@
 /**
- * JavaScript specific to the Admin Customers/Users page (admin/customers.html)
- * Handles modal population for View Customer, Edit Customer, Edit Admin.
+ * JavaScript specific to the Admin Customers page (admin/customers.html)
+ * Handles modal population for View Customer, Edit Customer.
  */
 document.addEventListener('DOMContentLoaded', function() {
-	console.log("admin-users.js loaded"); // Confirm script is running
+	console.log("admin-customers.js loaded"); // Confirm script is running
 
 	// **** FIX IS HERE ****
 	// Select the specific <div> from customers.html
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	// **** END OF FIX ****
 
 	if (!mainElement) {
-		console.error("Main element not found in admin-users.js!");
+		console.error("Main element not found in admin-customers.js!");
 		return;
 	}
 
@@ -131,61 +131,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 
-	// --- Logic for Edit Admin Modal ---
-	const editAdminModal = document.getElementById('editAdminModal');
-	if (editAdminModal) {
-		const form = editAdminModal.querySelector('#editAdminForm');
-		const modalTitle = editAdminModal.querySelector('#editAdminModalLabel');
-
-		editAdminModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			if (!button || !button.classList.contains('edit-admin-btn')) {
-				console.warn("Edit Admin modal opened without edit button source.");
-				if (form) form.reset();
-				return;
-			}
-			const dataset = button.dataset;
-			console.log("Populating Edit Admin Modal with data:", dataset); // Debug
-
-			modalTitle.textContent = 'Edit Admin: ' + (dataset.firstName || '') + ' ' + (dataset.lastName || '');
-			if (!form) { console.error("Edit admin form not found!"); return; }
-
-			form.querySelector('#id').value = dataset.id || ''; // Hidden ID field assumed
-			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
-			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
-			form.querySelector('#editAdminUsername').value = dataset.username || '';
-			form.querySelector('#editAdminEmail').value = dataset.email || ''; // **** ADDED THIS LINE ****
-
-			// Clear previous validation highlights unless reopening
-			if (mainElement.dataset.showEditAdminModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen)."); // Debug
-				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form.querySelector('.alert.alert-danger'); // General validation alert
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
-				}
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
-			}
-		});
-
-		editAdminModal.addEventListener('hidden.bs.modal', function() {
-			// Clear form state only if not flagged to stay open
-			if (mainElement.dataset.showEditAdminModal !== 'true') {
-				console.log("Clearing Edit Admin modal on hide (not validation reopen).") // Debug
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
-				}
-			} else {
-				console.log("Resetting showEditAdminModal flag on hide.") // Debug
-				mainElement.removeAttribute('data-show-edit-admin-modal');
-			}
-		});
-	}
-
 	// --- Logic for Add Customer Modal (Clear on Hide) ---
 	const addCustomerModal = document.getElementById('addCustomerModal');
 	if (addCustomerModal) {
@@ -203,49 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- Logic for Manage Admins Modal (Clear Add Admin form part on Hide) ---
-	const manageAdminsModal = document.getElementById('manageAdminsModal');
-	if (manageAdminsModal) {
-		const addAdminForm = manageAdminsModal.querySelector('#addAdminForm');
+	// --- REMOVED manageAdminsModal, editAdminModal, viewAdminModal ---
 
-		manageAdminsModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showManageAdminsModal !== 'true') {
-				console.log("Clearing Add Admin form within Manage Admins modal on hide (not validation reopen).") // Debug
-				// Only reset the 'Add New Admin' form part, not the whole modal content
-				if (addAdminForm) addAdminForm.reset();
-				if (addAdminForm) addAdminForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Resetting showManageAdminsModal flag on hide.") // Debug
-				mainElement.removeAttribute('data-show-manage-admins-modal');
-			}
-		});
-	}
-
-	// --- NEW: Logic for "View Admin" Modal ---
-	const viewAdminModal = document.getElementById('viewAdminModal');
-	if (viewAdminModal) {
-		viewAdminModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			const adminRow = button ? button.closest('tr') : null;
-			if (!adminRow) {
-				console.warn("View Admin Modal opened without a valid row source.");
-				return;
-			}
-
-			const dataset = adminRow.dataset;
-			console.log("Populating View Admin Modal with data:", dataset); // Debug
-
-			const name = dataset.name || 'N/A';
-			const username = dataset.username || 'N/A';
-			const email = dataset.email || 'N/A';
-			const createdAt = dataset.createdAt || 'N/A';
-
-			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
-			viewAdminModal.querySelector('#viewAdminName').textContent = name;
-			viewAdminModal.querySelector('#viewAdminUsername').textContent = username;
-			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
-			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
-		});
-	}
-
-}); // End DOMContentLoaded for admin-users.js
+}); // End DOMContentLoaded for admin-customers.js

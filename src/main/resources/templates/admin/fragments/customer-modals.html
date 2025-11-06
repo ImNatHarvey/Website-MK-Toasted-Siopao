@@ -1,145 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
-	<div th:fragment="all-user-modals">
-
-		<div class="modal fade" id="manageAdminsModal" tabindex="-1"
-			aria-labelledby="manageAdminsModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="manageAdminsModalLabel">Manage
-							Admin Accounts</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<div th:if="${#fields.hasErrors('adminUserDto.*')}"
-							class="alert alert-danger small p-2" role="alert">Error
-							adding admin. Please check the form below.</div>
-
-						<h5 class="mb-3">Existing Admins</h5>
-						<div class="table-responsive mb-4">
-							<table class="table table-sm table-hover align-middle">
-								<thead class="table-light">
-									<tr>
-										<th>Name</th>
-										<th>Username</th>
-										<th>Email</th>
-										<th>Actions</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr th:each="admin : ${admins}"
-										th:if="${admin.username != currentUsername}"
-										th:data-name="${admin.firstName + ' ' + admin.lastName}"
-										th:data-username="${admin.username}"
-										th:data-email="${admin.email != null ? admin.email : 'N/A'}"
-										th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}">
-										<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
-											User</td>
-										<td th:text="${admin.username}">admin_user</td>
-										<td th:text="${admin.email != null ? admin.email : 'N/A'}">email@example.com</td>
-										<td class="d-flex gap-2">
-											<button type="button"
-												class="btn btn-sm btn-action-view view-admin-btn"
-												data-bs-toggle="modal" data-bs-target="#viewAdminModal">View</button>
-											<button type="button"
-												class="btn btn-sm btn-action-edit edit-admin-btn"
-												data-bs-toggle="modal" data-bs-target="#editAdminModal"
-												th:data-id="${admin.id}"
-												th:data-first-name="${admin.firstName}"
-												th:data-last-name="${admin.lastName}"
-												th:data-username="${admin.username}"
-												th:data-email="${admin.email}">Edit</button>
-											<form
-												th:action="@{/admin/customers/admin/delete/{id}(id=${admin.id})}"
-												method="post" onsubmit="return confirm('Are you sure?');">
-												<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
-											</form>
-										</td>
-									</tr>
-									<tr th:if="${#lists.size(admins) <= 1}">
-										<td colspan="4" class="text-center text-muted">No other
-											admin accounts found.</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<hr class="my-4">
-
-						<h5 class="mb-3">Add New Admin</h5>
-						<form th:action="@{/admin/customers/add-admin}" method="post"
-							th:object="${adminUserDto}" id="addAdminForm">
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="adminFirstName" class="form-label">First
-										Name</label> <input type="text" class="form-control"
-										th:field="*{firstName}" id="adminFirstName"
-										th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('firstName')}"
-										th:errors="*{firstName}">FN Error</div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="adminLastName" class="form-label">Last Name</label>
-									<input type="text" class="form-control" th:field="*{lastName}"
-										id="adminLastName" th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('lastName')}"
-										th:errors="*{lastName}">LN Error</div>
-								</div>
-							</div>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="adminUsername" class="form-label">Username</label>
-									<input type="text" class="form-control" th:field="*{username}"
-										id="adminUsername" th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('username')}"
-										th:errors="*{username}">User Error</div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="adminEmail" class="form-label">Email</label> <input
-										type="email" class="form-control" th:field="*{email}"
-										id="adminEmail" th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
-										Error</div>
-								</div>
-							</div>
-							<div class="row">
-								<div class="col-md-6 mb-3">
-									<label for="adminPassword" class="form-label">Password</label>
-									<input type="password" class="form-control"
-										th:field="*{password}" id="adminPassword"
-										th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('password')}"
-										th:errors="*{password}">PW Error</div>
-								</div>
-								<div class="col-md-6 mb-3">
-									<label for="adminConfirmPassword" class="form-label">Confirm
-										Password</label> <input type="password" class="form-control"
-										th:field="*{confirmPassword}" id="adminConfirmPassword"
-										th:errorclass="is-invalid">
-									<div class="invalid-feedback"
-										th:if="${#fields.hasErrors('confirmPassword')}"
-										th:errors="*{confirmPassword}">Confirm PW Error</div>
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button type="submit" class="btn btn-custom">Create
-									Admin</button>
-								<button type="button" class="btn btn-custom-secondary"
-									data-bs-dismiss="modal">Cancel</button>
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-		</div>
+	<div th:fragment="all-customer-modals">
 
 		<div class="modal fade" id="addCustomerModal" tabindex="-1"
 			aria-labelledby="addCustomerModalLabel" aria-hidden="true">
@@ -386,13 +248,13 @@
 							<div class="row g-2 mb-3">
 								<div class="col">
 									<label for="barangay" class="form-label">Barangay</label> <input
-										type="text" class="form-control" placeholder="Barangay"
+										type.="text" class="form-control" placeholder="Barangay"
 										th:field="*{barangay}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('barangay')}"
 										th:errors="*{barangay}">Error</div>
 								</div>
-								<div class="col">
+								<div class.="col">
 									<label for="municipality" class="form-label">Municipality</label>
 									<input type="text" class="form-control"
 										placeholder="Municipality" th:field="*{municipality}"
@@ -418,112 +280,6 @@
 								data-bs-dismiss="modal">Cancel</button>
 						</div>
 					</form>
-				</div>
-			</div>
-		</div>
-
-		<div class="modal fade" id="editAdminModal" tabindex="-1"
-			aria-labelledby="editAdminModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<form th:action="@{/admin/customers/admin/update}" method="post"
-						th:object="${adminUpdateDto}" id="editAdminForm">
-						<div class="modal-header">
-							<h5 class="modal-title" id="editAdminModalLabel">Edit Admin
-								Account</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal"
-								aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('adminUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
-							<div th:if="${customerError}"
-								class="alert alert-danger alert-dismissible fade show small p-2"
-								role="alert">
-								<i class="fa-solid fa-triangle-exclamation me-1"></i><span
-									th:text="${customerError}"></span>
-								<button type="button" class="btn-close btn-sm p-2"
-									data-bs-dismiss="alert" aria-label="Close"></button>
-							</div>
-
-							<input type="hidden" th:field="*{id}" />
-
-							<h5 class="mb-3">Personal Information</h5>
-							<div class="mb-3">
-								<label for="editAdminFirstName" class="form-label">First
-									Name</label> <input type="text" class="form-control"
-									th:field="*{firstName}" id="editAdminFirstName"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('firstName')}"
-									th:errors="*{firstName}">Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="editAdminLastName" class="form-label">Last
-									Name</label> <input type="text" class="form-control"
-									th:field="*{lastName}" id="editAdminLastName"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('lastName')}"
-									th:errors="*{lastName}">Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="editAdminUsername" class="form-label">Username</label>
-								<input type="text" class="form-control" th:field="*{username}"
-									id="editAdminUsername" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="editAdminEmail" class="form-label">Email</label> <input
-									type="email" class="form-control" th:field="*{email}"
-									id="editAdminEmail" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
-							</div>
-							<div class="alert alert-warning small">Password and Role
-								cannot be changed from this form.</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-custom-secondary"
-								data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-custom">Save
-								Changes</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
-
-		<div class="modal fade" id="viewAdminModal" tabindex="-1"
-			aria-labelledby="viewAdminModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title" id="viewAdminModalLabel">Admin
-							Details</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal"
-							aria-label="Close"></button>
-					</div>
-					<div class="modal-body">
-						<h5 id="viewAdminName" class="mb-3">Admin Name</h5>
-						<p>
-							<strong>Username:</strong> <span id="viewAdminUsername"></span>
-						</p>
-						<p>
-							<strong>Email:</strong> <span id="viewAdminEmail"></span>
-						</p>
-						<hr>
-						<p class="mb-1">
-							<strong>Account Created:</strong> <span id="viewAdminCreatedAt"></span>
-						</p>
-					</div>
-					<div class="modal-footer">
-						<button type="button" class="btn btn-custom-secondary"
-							data-bs-dismiss="modal">Close</button>
-					</div>
 				</div>
 			</div>
 		</div>

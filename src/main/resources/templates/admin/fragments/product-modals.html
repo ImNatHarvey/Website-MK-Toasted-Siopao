@@ -118,7 +118,8 @@
 										<input type="number" step="0.01" min="0.01"
 											class="form-control form-control-sm ingredient-quantity"
 											th:field="*{ingredients[__${iterStat.index}__].quantityNeeded}"
-											placeholder="Qty " th:errorclass="is-invalid" required>
+											placeholder="Qty per unit" th:errorclass="is-invalid"
+											required>
 										<div class="invalid-feedback"
 											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].quantityNeeded')}"
 											th:errors="*{ingredients[__${iterStat.index}__].quantityNeeded}"></div>
@@ -326,7 +327,8 @@
 										<input type="number" step="0.01" min="0.01"
 											class="form-control form-control-sm ingredient-quantity"
 											th:field="*{ingredients[__${iterStat.index}__].quantityNeeded}"
-											placeholder="Qty Needed" th:errorclass="is-invalid" required>
+											placeholder="Qty per unit" th:errorclass="is-invalid"
+											required>
 										<div class="invalid-feedback"
 											th:if="${#fields.hasErrors('ingredients[__${iterStat.index}__].quantityNeeded')}"
 											th:errors="*{ingredients[__${iterStat.index}__].quantityNeeded}"></div>
@@ -527,8 +529,8 @@
 					<label class="form-label visually-hidden">Quantity</label> <input
 						type="number" step="0.01" min="0.01"
 						class="form-control form-control-sm ingredient-quantity"
-						name="ingredients[INDEX].quantityNeeded" placeholder="Qty Needed"
-						required>
+						name="ingredients[INDEX].quantityNeeded"
+						placeholder="Qty per unit" required>
 				</div>
 				<div class="col-md-2">
 					<button type="button"
@@ -556,8 +558,8 @@
 					<label class="form-label visually-hidden">Quantity</label> <input
 						type="number" step="0.01" min="0.01"
 						class="form-control form-control-sm ingredient-quantity"
-						name="ingredients[INDEX].quantityNeeded" placeholder="Qty Needed"
-						required>
+						name="ingredients[INDEX].quantityNeeded"
+						placeholder="Qty per unit" required>
 				</div>
 				<div class="col-md-2">
 					<button type="button"

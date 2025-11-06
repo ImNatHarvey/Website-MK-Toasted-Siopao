@@ -221,4 +221,31 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
+	// --- NEW: Logic for "View Admin" Modal ---
+	const viewAdminModal = document.getElementById('viewAdminModal');
+	if (viewAdminModal) {
+		viewAdminModal.addEventListener('show.bs.modal', function(event) {
+			const button = event.relatedTarget;
+			const adminRow = button ? button.closest('tr') : null;
+			if (!adminRow) {
+				console.warn("View Admin Modal opened without a valid row source.");
+				return;
+			}
+
+			const dataset = adminRow.dataset;
+			console.log("Populating View Admin Modal with data:", dataset); // Debug
+
+			const name = dataset.name || 'N/A';
+			const username = dataset.username || 'N/A';
+			const email = dataset.email || 'N/A';
+			const createdAt = dataset.createdAt || 'N/A';
+
+			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
+			viewAdminModal.querySelector('#viewAdminName').textContent = name;
+			viewAdminModal.querySelector('#viewAdminUsername').textContent = username;
+			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
+			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
+		});
+	}
+
 }); // End DOMContentLoaded for admin-users.js

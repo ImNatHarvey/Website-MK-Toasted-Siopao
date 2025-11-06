@@ -31,12 +31,19 @@
 								</thead>
 								<tbody>
 									<tr th:each="admin : ${admins}"
-										th:if="${admin.username != currentUsername}">
+										th:if="${admin.username != currentUsername}"
+										th:data-name="${admin.firstName + ' ' + admin.lastName}"
+										th:data-username="${admin.username}"
+										th:data-email="${admin.email != null ? admin.email : 'N/A'}"
+										th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}">
 										<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
 											User</td>
 										<td th:text="${admin.username}">admin_user</td>
 										<td th:text="${admin.email != null ? admin.email : 'N/A'}">email@example.com</td>
 										<td class="d-flex gap-2">
+											<button type="button"
+												class="btn btn-sm btn-action-view view-admin-btn"
+												data-bs-toggle="modal" data-bs-target="#viewAdminModal">View</button>
 											<button type="button"
 												class="btn btn-sm btn-action-edit edit-admin-btn"
 												data-bs-toggle="modal" data-bs-target="#editAdminModal"
@@ -255,7 +262,7 @@
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-custom-secondary"
-							data-bs-dismiss="modal">Cancel</button>
+							data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
 			</div>
@@ -486,6 +493,37 @@
 								Changes</button>
 						</div>
 					</form>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="viewAdminModal" tabindex="-1"
+			aria-labelledby="viewAdminModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewAdminModalLabel">Admin
+							Details</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<h5 id="viewAdminName" class="mb-3">Admin Name</h5>
+						<p>
+							<strong>Username:</strong> <span id="viewAdminUsername"></span>
+						</p>
+						<p>
+							<strong>Email:</strong> <span id="viewAdminEmail"></span>
+						</p>
+						<hr>
+						<p class="mb-1">
+							<strong>Account Created:</strong> <span id="viewAdminCreatedAt"></span>
+						</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
 				</div>
 			</div>
 		</div>

@@ -2,6 +2,8 @@ package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.Product;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,15 +13,19 @@ import java.util.List;
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	// Find products by category
-	List<Product> findByCategory(Category category);
+	Page<Product> findByCategory(Category category, Pageable pageable); // Updated
 
 	// Find products by name containing (for search) - ignoring case
-	List<Product> findByNameContainingIgnoreCase(String keyword);
+	Page<Product> findByNameContainingIgnoreCase(String keyword, Pageable pageable); // Updated
 
 	// Find products by category name (useful for filtering)
-	List<Product> findByCategoryNameIgnoreCase(String categoryName);
+	Page<Product> findByCategoryNameIgnoreCase(String categoryName, Pageable pageable); // Updated
 
 	// Combine search and category filtering
-	List<Product> findByNameContainingIgnoreCaseAndCategoryNameIgnoreCase(String keyword, String categoryName);
+	Page<Product> findByNameContainingIgnoreCaseAndCategoryNameIgnoreCase(String keyword, String categoryName,
+			Pageable pageable); // Updated
+
+	// --- NEW: Combined search by keyword and Category object (more efficient) ---
+	Page<Product> findByNameContainingIgnoreCaseAndCategory(String keyword, Category category, Pageable pageable);
 
 }

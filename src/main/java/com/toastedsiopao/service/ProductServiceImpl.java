@@ -11,6 +11,8 @@ import com.toastedsiopao.service.InventoryItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; // Import StringUtils
@@ -47,13 +49,13 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Product> findAll() {
-		return productRepository.findAll();
+	public Page<Product> findAll(Pageable pageable) { // Updated
+		return productRepository.findAll(pageable);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Optional<Product> findById(Long id) {
+	public Optional<Product> findById(Long id) { // Unchanged
 		return productRepository.findById(id);
 	}
 
@@ -187,7 +189,7 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public void deleteById(Long id) {
+	public void deleteById(Long id) { // Unchanged
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
@@ -205,20 +207,43 @@ public class ProductServiceImpl implements ProductService {
 	// ... (find, search methods unchanged) ...
 	@Override
 	@Transactional(readOnly = true)
-	public List<Product> findByCategory(Long categoryId) {
+	public Page<Product> findByCategory(Long categoryId, Pageable pageable) { // Updated
 		Category category = categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-		return productRepository.findByCategory(category);
+		return productRepository.findByCategory(category, pageable);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Product> searchProducts(String keyword) {
+	public Page<Product> searchProducts(String keyword, Pageable pageable) { // Updated
 		if (keyword == null || keyword.trim().isEmpty()) {
-			return findAll();
+			return findAll(pageable);
 		}
-		return productRepository.findByNameContainingIgnoreCase(keyword.trim());
+		return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
 	}
+
+	// --- NEW: Combined search implementation ---
+	@Override
+	@Transactional(readOnly = true)
+	public Page<Product> searchProducts(String keyword, Long categoryId, Pageable pageable) {
+		boolean hasKeyword = StringUtils.hasText(keyword);
+		boolean hasCategory = categoryId != null;
+
+		if (hasKeyword && hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
+		} else if (hasKeyword) {
+			return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
+		} else if (hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findByCategory(category, pageable);
+		} else {
+			return productRepository.findAll(pageable);
+		}
+	}
+	// --- End NEW ---
 
 	@Override // (Unchanged from original)
 	public Product adjustStock(Long productId, int quantityChange, String reason) {

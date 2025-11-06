@@ -61,16 +61,16 @@
 			</div>
 		</form>
 
-		<div th:if="${#lists.isEmpty(products)}"
+		<div th:if="${productPage.empty}"
 			class="alert alert-warning text-center" role="alert">
 			<span
 				th:text="${(keyword != null or selectedCategoryId != null) ? 'No products found matching your criteria.' : 'No products added yet.'}">No
 				products added yet.</span>
 		</div>
 
-		<div th:unless="${#lists.isEmpty(products)}"
+		<div th:unless="${productPage.empty}"
 			class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
-			<div class="col" th:each="product : ${products}">
+			<div class_("col" th:each="product : ${productPage.content}" )>
 				<div class="card h-100 shadow-sm product-card-admin">
 					<img
 						th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
@@ -141,6 +141,55 @@
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div th:if="${productPage.totalPages > 0}"
+			class="d-flex justify-content-between align-items-center mt-4">
+
+			<span class="text-muted small"
+				th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
+                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
+                       ' of ' + ${productPage.totalElements}">
+			</span>
+
+			<nav aria-label="Product Pagination">
+				<ul class="pagination pagination-sm mb-0">
+
+					<li class="page-item"
+						th:classappend="${productPage.first} ? 'disabled'"><a
+						class="page-link"
+						th:href="@{/admin/products(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+					</li>
+
+					<th:block
+						th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+						th:if="${productPage.totalPages <= 7 || i == 0 || i == productPage.totalPages - 1 || (i >= productPage.number - 2 && i <= productPage.number + 2)}">
+
+						<li class="page-item disabled"
+							th:if="${productPage.totalPages > 7 && (i == 0 && productPage.number > 3 || i == productPage.totalPages - 1 && productPage.number < productPage.totalPages - 4)}">
+							<span class="page-link">...</span>
+						</li>
+
+						<li class="page-item"
+							th:classappend="${i == productPage.number} ? 'active'"><a
+							class="page-link"
+							th:href="@{/admin/products(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+							th:text="${i + 1}"></a></li>
+					</th:block>
+
+					<li class="page-item"
+						th:classappend="${productPage.last} ? 'disabled'"><a
+						class="page-link"
+						th:href="@{/admin/products(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+					</li>
+				</ul>
+			</nav>
+
+			<span class="text-muted small" style="visibility: hidden;"
+				th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
+                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
+                       ' of ' + ${productPage.totalElements}">
+			</span>
 		</div>
 		<div
 			th:replace="~{admin/fragments/product-modals :: all-product-modals}"></div>

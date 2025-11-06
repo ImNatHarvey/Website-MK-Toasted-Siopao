@@ -2,12 +2,15 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.ProductDto;
 import com.toastedsiopao.model.Product;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
+
 import java.math.BigDecimal; // Import BigDecimal
-import java.util.List;
+import java.util.List; // REMOVED (no longer returning List)
 import java.util.Optional;
 
 public interface ProductService {
-	List<Product> findAll();
+	Page<Product> findAll(Pageable pageable); // Updated
 
 	Optional<Product> findById(Long id);
 
@@ -15,11 +18,22 @@ public interface ProductService {
 
 	void deleteById(Long id);
 
-	List<Product> findByCategory(Long categoryId);
+	Page<Product> findByCategory(Long categoryId, Pageable pageable); // Updated
 
-	List<Product> searchProducts(String keyword);
+	Page<Product> searchProducts(String keyword, Pageable pageable); // Updated
 
-	// --- NEW METHOD ---
+	// --- NEW: Combined search method ---
+	/**
+	 * Searches for products based on a keyword and/or category, with pagination.
+	 * * @param keyword The search term (matches product name).
+	 * 
+	 * @param categoryId The category ID to filter by.
+	 * @param pageable   The pagination information.
+	 * @return A paginated list of matching products.
+	 */
+	Page<Product> searchProducts(String keyword, Long categoryId, Pageable pageable);
+
+	// --- FIX: Re-added the missing method signature ---
 	/**
 	 * Adjusts the stock quantity of a specific product.
 	 *
@@ -33,5 +47,5 @@ public interface ProductService {
 	 *                          zero.
 	 */
 	Product adjustStock(Long productId, int quantityChange, String reason);
-	// --- END NEW ---
+	// --- END FIX ---
 }

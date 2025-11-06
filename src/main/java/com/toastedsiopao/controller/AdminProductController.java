@@ -15,6 +15,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.PageRequest; // Import PageRequest
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -57,25 +60,35 @@ public class AdminProductController {
 
 	@GetMapping // Unchanged
 	public String manageProducts(Model model, @RequestParam(value = "category", required = false) Long categoryId,
-			@RequestParam(value = "keyword", required = false) String keyword) {
-		// ... (logic unchanged) ...
-		List<Product> productList;
+			@RequestParam(value = "keyword", required = false) String keyword,
+			@RequestParam(value = "page", defaultValue = "0") int page, // NEW
+			@RequestParam(value = "size", defaultValue = "8") int size) { // NEW, size 8
+
+		Pageable pageable = PageRequest.of(page, size); // NEW
+		Page<Product> productPage; // NEW
+
 		List<Category> categoryList = categoryService.findAll();
 		List<InventoryItem> inventoryItems = inventoryItemService.findAll();
 
-		if (keyword != null && !keyword.isEmpty()) {
-			productList = productService.searchProducts(keyword);
-			model.addAttribute("keyword", keyword);
-		} else if (categoryId != null) {
-			productList = productService.findByCategory(categoryId);
-			model.addAttribute("selectedCategoryId", categoryId);
-		} else {
-			productList = productService.findAll();
-		}
+		// --- UPDATED Search Logic ---
+		log.info("Fetching products with keyword: '{}', categoryId: {}, page: {}, size: {}", keyword, categoryId, page,
+				size);
+		productPage = productService.searchProducts(keyword, categoryId, pageable);
+		model.addAttribute("keyword", keyword);
+		model.addAttribute("selectedCategoryId", categoryId);
+		// --- END UPDATED Logic ---
 
-		model.addAttribute("products", productList);
+		model.addAttribute("productPage", productPage); // NEW: Add page object
+		model.addAttribute("products", productPage.getContent()); // Get content from page
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
+
+		// NEW: Pass pagination attributes
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", productPage.getTotalPages());
+		model.addAttribute("totalItems", productPage.getTotalElements());
+		model.addAttribute("size", size);
+
 		Map<Long, BigDecimal> inventoryStockMap = new HashMap<>();
 		for (InventoryItem item : inventoryItems) {
 			inventoryStockMap.put(item.getId(), item.getCurrentStock());
@@ -215,7 +228,10 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			addCommonAttributesForRedirect(redirectAttributes); // Might need products list too
-			redirectAttributes.addFlashAttribute("products", productService.findAll()); // Add products list back
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8))); // Add
+																											// products
+																											// list
+																											// back
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
@@ -239,7 +255,7 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll());
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
@@ -249,7 +265,7 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll());
+			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
@@ -328,10 +344,11 @@ public class AdminProductController {
 			return "redirect:/admin/products";
 		}
 		Category category = categoryOpt.get();
-		List<Product> productsInCategory = productService.findByCategory(id);
+		// We must use the paginated method to check
+		Page<Product> productsInCategory = productService.findByCategory(id, PageRequest.of(0, 1));
 		if (!productsInCategory.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete '" + category.getName()
-					+ "'. Associated with " + productsInCategory.size() + " product(s).");
+					+ "'. Associated with " + productsInCategory.getTotalElements() + " product(s).");
 			return "redirect:/admin/products";
 		}
 		try {

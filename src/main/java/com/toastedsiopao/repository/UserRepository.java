@@ -1,5 +1,7 @@
 package com.toastedsiopao.repository;
 
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query; // Import Query
 import org.springframework.data.repository.query.Param; // Import Param
@@ -19,22 +21,28 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Optional<User> findByEmail(String email);
 	// **** END NEW METHOD ****
 
+	// **** UPDATED METHOD (Re-added) ****
+	// This one is for non-paginated lists like the admin modal
 	List<User> findByRole(String role);
 
+	// **** UPDATED METHOD (Kept for pagination) ****
+	// This one is for the paginated customer list
+	Page<User> findByRole(String role, Pageable pageable);
+
 	// --- NEW: Search customers by keyword across multiple fields ---
+	// **** UPDATED METHOD ****
 	@Query("SELECT u FROM User u WHERE u.role = 'ROLE_CUSTOMER' AND ("
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "u.phone LIKE CONCAT('%', :keyword, '%'))")
-	List<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword);
+	Page<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 	// --- NEW: Method for inactivity check (THE FIX) ---
 	/**
 	 * Finds a list of users by their role and status. * @param role The user role
 	 * (e.g., "ROLE_CUSTOMER"). * @param status The user status (e.g., "ACTIVE").
-	 * 
-	 * @return A list of matching User entities.
+	 * * @return A list of matching User entities.
 	 */
 	List<User> findByRoleAndStatus(String role, String status);
 	// --- END NEW ---

@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.slf4j.Logger; // Import Logger
 import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -109,10 +111,11 @@ public class UserServiceImpl implements UserService {
 		return userRepository.findByUsername(username).orElse(null);
 	}
 
+	// **** UPDATED METHOD ****
 	@Override
 	@Transactional(readOnly = true)
-	public List<User> findAllCustomers() {
-		return userRepository.findByRole("ROLE_CUSTOMER");
+	public Page<User> findAllCustomers(Pageable pageable) {
+		return userRepository.findByRole("ROLE_CUSTOMER", pageable);
 	}
 
 	@Override
@@ -231,13 +234,14 @@ public class UserServiceImpl implements UserService {
 		return userRepository.save(userToUpdate);
 	}
 
+	// **** UPDATED METHOD ****
 	@Override
 	@Transactional(readOnly = true)
-	public List<User> searchCustomers(String keyword) {
+	public Page<User> searchCustomers(String keyword, Pageable pageable) {
 		if (!StringUtils.hasText(keyword)) {
-			return findAllCustomers();
+			return findAllCustomers(pageable);
 		}
-		return userRepository.findByRoleAndSearchKeyword(keyword.trim());
+		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable);
 	}
 
 	// --- NEW: Implementation of activity tracking methods ---

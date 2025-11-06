@@ -10,6 +10,9 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.PageRequest; // Import PageRequest
+import org.springframework.data.domain.Pageable; // Import Pageable
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -33,20 +36,35 @@ public class AdminUserController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	@GetMapping // Unchanged GET mapping logic
+	// **** UPDATED METHOD ****
+	@GetMapping
 	public String manageCustomers(Model model, Principal principal,
-			@RequestParam(value = "keyword", required = false) String keyword) {
-		List<User> customers;
+			@RequestParam(value = "keyword", required = false) String keyword,
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "10") int size) { // Default size 10
+
+		Pageable pageable = PageRequest.of(page, size);
+		Page<User> customerPage;
+
 		if (StringUtils.hasText(keyword)) {
-			customers = userService.searchCustomers(keyword);
+			customerPage = userService.searchCustomers(keyword, pageable);
 			model.addAttribute("keyword", keyword);
 		} else {
-			customers = userService.findAllCustomers();
+			customerPage = userService.findAllCustomers(pageable);
 		}
-		model.addAttribute("customers", customers);
+
+		model.addAttribute("customerPage", customerPage); // Add the full page object
+		model.addAttribute("customers", customerPage.getContent()); // Add the list of customers for the current page
 		model.addAttribute("admins", userService.findAllAdmins());
 		model.addAttribute("currentUsername", principal.getName());
 
+		// Pass pagination attributes to the model
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", customerPage.getTotalPages());
+		model.addAttribute("totalItems", customerPage.getTotalElements());
+		model.addAttribute("size", size);
+
+		// DTOs for modals
 		if (!model.containsAttribute("adminUserDto")) {
 			model.addAttribute("adminUserDto", new AdminUserCreateDto());
 		}
@@ -64,9 +82,11 @@ public class AdminUserController {
 	}
 
 	// Helper method to add common attributes for redirect-on-error scenarios
+	// **** UPDATED METHOD ****
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
-		redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers()); // Assuming no search keyword
-																							// here
+		// Need to provide a default pageable list for customers
+		Pageable defaultPageable = PageRequest.of(0, 10); // Match user's requested size
+		redirectAttributes.addFlashAttribute("customers", userService.findAllCustomers(defaultPageable).getContent());
 		redirectAttributes.addFlashAttribute("admins", userService.findAllAdmins());
 		// Add other common lists if needed by the main page or other modals
 	}

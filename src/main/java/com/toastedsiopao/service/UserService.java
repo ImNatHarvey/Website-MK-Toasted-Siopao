@@ -5,6 +5,8 @@ import com.toastedsiopao.dto.AdminCustomerUpdateDto;
 import com.toastedsiopao.dto.AdminUserCreateDto;
 import com.toastedsiopao.dto.UserDto;
 import com.toastedsiopao.model.User;
+import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Pageable; // Import Pageable
 
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +17,8 @@ public interface UserService {
 
 	User findByUsername(String username);
 
-	List<User> findAllCustomers();
+	// **** UPDATED METHOD ****
+	Page<User> findAllCustomers(Pageable pageable);
 
 	Optional<User> findUserById(Long id);
 
@@ -30,12 +33,13 @@ public interface UserService {
 	User updateAdmin(AdminAdminUpdateDto userDto);
 
 	// --- NEW METHOD ---
+	// **** UPDATED METHOD ****
 	/**
 	 * Searches for customers based on a keyword matching name, username, or phone.
 	 * * @param keyword The search term. * @return A list of matching customer User
 	 * entities.
 	 */
-	List<User> searchCustomers(String keyword);
+	Page<User> searchCustomers(String keyword, Pageable pageable);
 
 	// --- NEW: Methods for activity tracking ---
 	/**
@@ -46,8 +50,7 @@ public interface UserService {
 
 	/**
 	 * Manually updates the status of a user. * @param userId The ID of the user.
-	 * 
-	 * @param status The new status ("ACTIVE" or "INACTIVE").
+	 * * @param status The new status ("ACTIVE" or "INACTIVE").
 	 */
 	void updateCustomerStatus(Long userId, String status);
 

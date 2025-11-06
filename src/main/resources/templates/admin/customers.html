@@ -53,7 +53,7 @@
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Customers</h5>
-						<p class="display-6 fw-bold" th:text="${#lists.size(customers)}">0</p>
+						<p class="display-6 fw-bold" th:text="${totalItems}">0</p>
 					</div>
 				</div>
 			</div>
@@ -70,7 +70,7 @@
 					<div class="card-body">
 						<h5 class="card-title">Active Customers</h5>
 						<p class="display-6 fw-bold text-muted"
-							th:text="${customers.?[status != null and status == 'ACTIVE'].size()}">?</p>
+							th:text="${customerPage.totalElements - customers.?[status != null and status == 'INACTIVE'].size()}">?</p>
 					</div>
 				</div>
 			</div>
@@ -158,10 +158,53 @@
 					</table>
 				</div>
 
-				<div class="d-flex justify-content-between align-items-center mt-3">
-					<button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
-					<span>Page 1 of 1</span>
-					<button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
+				<div th:if="${customerPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-3">
+
+					<span class="text-muted small"
+						th:text="'Showing ' + ${customerPage.number * customerPage.size + 1} + 
+                               ' - ' + ${customerPage.number * customerPage.size + customerPage.numberOfElements} + 
+                               ' of ' + ${customerPage.totalElements}">
+					</span>
+
+					<nav aria-label="User Pagination">
+						<ul class="pagination pagination-sm mb-0">
+
+							<li class="page-item"
+								th:classappend="${customerPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/customers(page=${customerPage.number - 1}, size=${size}, keyword=${keyword})}">Previous</a>
+							</li>
+
+							<th:block
+								th:each="i : ${#numbers.sequence(0, customerPage.totalPages - 1)}"
+								th:if="${customerPage.totalPages <= 7 || i == 0 || i == customerPage.totalPages - 1 || (i >= customerPage.number - 2 && i <= customerPage.number + 2)}">
+
+								<li class="page-item disabled"
+									th:if="${customerPage.totalPages > 7 && (i == 0 && customerPage.number > 3 || i == customerPage.totalPages - 1 && customerPage.number < customerPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+
+								<li class="page-item"
+									th:classappend="${i == customerPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/admin/customers(page=${i}, size=${size}, keyword=${keyword})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+
+							<li class="page-item"
+								th:classappend="${customerPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/customers(page=${customerPage.number + 1}, size=${size}, keyword=${keyword})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+
+					<span class="text-muted small" style="visibility: hidden;"
+						th:text="'Showing ' + ${customerPage.number * customerPage.size + 1} + 
+                               ' - ' + ${customerPage.number * customerPage.size + customerPage.numberOfElements} + 
+                               ' of ' + ${customerPage.totalElements}">
+					</span>
 				</div>
 			</div>
 		</div>

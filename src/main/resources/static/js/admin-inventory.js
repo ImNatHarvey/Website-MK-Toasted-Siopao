@@ -24,11 +24,16 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemNameInput = addItemModal.querySelector('#itemName');
 		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
-		const itemStockInput = addItemModal.querySelector('#itemCurrentStock');
-		// **** UPDATED: Get slider inputs ****
+
+		// --- UPDATED: Get containers and inputs for stock ---
+		const itemStockInputContainer = addItemModal.querySelector('#itemStockInputContainer');
+		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer');
+		const itemStockInput = addItemModal.querySelector('#itemCurrentStock'); // The visible input
+		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden'); // The hidden input
+		// --- END UPDATE ---
+
 		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
 		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
-		// **** END UPDATE ****
 		const itemCostInput = addItemModal.querySelector('#itemCost');
 
 		addItemModal.addEventListener('show.bs.modal', function(event) {
@@ -46,29 +51,48 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemNameInput.value = button.dataset.name || '';
 				itemCategorySelect.value = button.dataset.categoryId || '';
 				itemUnitSelect.value = button.dataset.unitId || '';
-				itemStockInput.value = button.dataset.currentStock || '0.00';
-				// Use parseFloat for initial population from dataset, as it might be decimal
+
+				// --- UPDATED: Show/hide logic ---
+				if (itemStockInputContainer) itemStockInputContainer.style.display = 'none';
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+				// Populate the *hidden* input for submission
+				if (itemStockHiddenInput) itemStockHiddenInput.value = button.dataset.currentStock || '0.00';
+				// --- END UPDATE ---
+
 				itemLowThresholdInput.value = parseFloat(button.dataset.lowThreshold || '0').toFixed(0);
 				itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
-				// UPDATED: Now required, so default to empty string if missing (shouldn't be)
 				itemCostInput.value = button.dataset.cost || '';
+
 			} else if (!isEdit && !isValidationReopen) {
 				console.log("Populating modal for ADD (resetting form)."); // Debug
 				modalTitle.textContent = 'Add New Inventory Item';
 				if (itemForm) itemForm.reset();
 				itemIdInput.value = ''; // Ensure ID is cleared for Add
-				// --- UPDATED: Set to blank instead of '0' ---
+
+				// --- UPDATED: Show/hide logic ---
+				if (itemStockInputContainer) itemStockInputContainer.style.display = 'block';
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
+				// --- END UPDATE ---
+
 				itemLowThresholdInput.value = ''; // Default to blank
 				itemCriticalThresholdInput.value = ''; // Default to blank
-				// --- END UPDATE ---
+
 			} else if (isValidationReopen) {
 				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-				// We don't reset the form, Thymeleaf has already repopulated it.
-				// We just need to ensure the title is correct.
+				// Thymeleaf has repopulated the form. We just need to fix the title
+				// and the container visibility, which Thymeleaf *can't* do.
 				if (itemIdInput.value) {
 					modalTitle.textContent = 'Edit Inventory Item';
+					// --- UPDATED: Show/hide logic for validation reopen ---
+					if (itemStockInputContainer) itemStockInputContainer.style.display = 'none';
+					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+					// --- END UPDATE ---
 				} else {
 					modalTitle.textContent = 'Add New Inventory Item';
+					// --- UPDATED: Show/hide logic for validation reopen ---
+					if (itemStockInputContainer) itemStockInputContainer.style.display = 'block';
+					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
+					// --- END UPDATE ---
 				}
 			}
 
@@ -286,7 +310,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			// Populate status badge
 			const statusBadge = viewItemModal.querySelector('#viewItemStatusBadge');
 			if (statusBadge) {
-				statusBadge.textContent = dataset.stockStatus || 'N/A';
+				statusBadge.textContent = dataset.stockStatus || 'N/Access-Denied';
 				statusBadge.className = 'status-badge'; // Reset classes
 				if (dataset.stockStatusClass) {
 					statusBadge.classList.add(dataset.stockStatusClass);

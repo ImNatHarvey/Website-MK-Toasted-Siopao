@@ -122,7 +122,9 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		InventoryCategory category = categoryRepository.findById(itemDto.getCategoryId()).orElseThrow(
 				() -> new RuntimeException("Inventory Category not found with id: " + itemDto.getCategoryId()));
 		UnitOfMeasure unit = unitRepository.findById(itemDto.getUnitId())
-				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId()));
+				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId())); // <--
+																														// FIX
+																														// HERE
 
 		// 2. Create or Update Entity
 		InventoryItem item;
@@ -138,8 +140,13 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setName(itemDto.getName().trim()); // Trim name
 		item.setCategory(category);
 		item.setUnit(unit);
-		// Ensure non-null BigDecimal values before setting
-		item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
+
+		// --- UPDATED: Stock is only set on creation ---
+		if (isNew) {
+			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
+		}
+		// --- END UPDATE ---
+
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
 		item.setCostPerUnit(itemDto.getCostPerUnit()); // Allow null cost

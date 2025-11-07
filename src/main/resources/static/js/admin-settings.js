@@ -1,3 +1,6 @@
+/*
+File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-8863827f7dde3d57c4a255585160c67e285a6f88/src/main/resources/static/js/admin-settings.js
+*/
 /**
  * JavaScript specific to the Admin Settings page (admin/settings.html)
  * Handles initializing all the image uploaders.
@@ -21,14 +24,22 @@ document.addEventListener('DOMContentLoaded', function() {
 		const previewContainer = uploader.querySelector('.image-preview-container');
 		const previewImg = uploader.querySelector('.image-preview');
 		const removeBtn = uploader.querySelector('.image-remove-btn');
-		// This form doesn't use the 'removeImage' hidden input,
-		// as replacing the file is the primary action.
-		// If a file is removed, the input is just cleared, and the server will keep the old path.
+		// --- NEW: Find the hidden 'remove' flag ---
+		const removeImageHiddenInput = uploader.querySelector('.image-remove-flag');
+		// --- END NEW ---
 
 		if (!input || !dropZone || !previewContainer || !previewImg || !removeBtn) {
 			console.error(`Uploader #${containerId} is missing required elements.`);
 			return;
 		}
+
+		// --- UPDATED: Check for the new hidden input ---
+		if (!removeImageHiddenInput) {
+			console.error(`Uploader #${containerId} is missing '.image-remove-flag' hidden input.`);
+			// We can let it continue, but 'remove' won't work on the server
+		}
+		// --- END UPDATE ---
+
 
 		// Function to show the preview
 		const showPreview = (fileOrSrc) => {
@@ -37,6 +48,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				previewImg.src = fileOrSrc;
 				uploader.classList.add('preview-active');
 				input.value = ''; // Clear file input
+				// --- NEW: Set remove flag to false ---
+				if (removeImageHiddenInput) {
+					removeImageHiddenInput.value = 'false';
+				}
+				// --- END NEW ---
 			}
 			// Check 2: Is it a File object?
 			else if (typeof fileOrSrc === 'object' && fileOrSrc !== null && fileOrSrc.name) {
@@ -46,6 +62,11 @@ document.addEventListener('DOMContentLoaded', function() {
 					uploader.classList.add('preview-active');
 				};
 				reader.readAsDataURL(fileOrSrc);
+				// --- NEW: Set remove flag to false ---
+				if (removeImageHiddenInput) {
+					removeImageHiddenInput.value = 'false';
+				}
+				// --- END NEW ---
 			}
 			// Check 3: It's null, undefined, "", or "null"
 			else {
@@ -58,6 +79,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			previewImg.src = '';
 			uploader.classList.remove('preview-active');
 			input.value = ''; // Clear the file input
+			// --- NEW: Set remove flag to true ---
+			if (removeImageHiddenInput) {
+				removeImageHiddenInput.value = 'true';
+			}
+			// --- END NEW ---
 		};
 
 		// --- Event Listeners ---
@@ -77,9 +103,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		removeBtn.addEventListener('click', (e) => {
 			e.stopPropagation();
 			resetUploader();
-			// NOTE: Clearing the preview here only clears the *newly selected* file.
-			// On the server, if no file is submitted, the *old* path is kept.
-			// This "Remove" button is for client-side preview only.
+			// --- UPDATED: Comment ---
+			// NOTE: This now sets the hidden 'removeImage' flag to 'true',
+			// telling the server to revert to the default image.
+			// --- END UPDATE ---
 		});
 
 		// Drag and Drop

@@ -1,3 +1,6 @@
+/*
+File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-8863827f7dde3d57c4a255585160c67e285a6f88/src/main/resources/static/css/styles.css
+*/
 :root {
 	--light: #fffdf5;
 	--dark: #213448;
@@ -979,14 +982,14 @@ footer.admin-footer {
 	padding: 0.5rem;
 }
 
+/* --- UPDATED: Set fixed height and object-fit: cover --- */
 .image-uploader-container .image-preview {
 	width: 100%;
-	height: auto;
-	max-height: 300px;
-	object-fit: contain;
+	height: 200px; /* Fixed height */
+	object-fit: cover; /* Cover the area, cropping as needed */
 	border-radius: 6px;
 }
-
+/* --- END UPDATE --- */
 .image-uploader-container .image-remove-btn {
 	position: absolute;
 	top: 1rem;

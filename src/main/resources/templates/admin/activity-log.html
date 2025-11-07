@@ -7,44 +7,78 @@
 <body>
 
 	<div id="admin-content-wrapper">
-		<div class="container mt-4">
-			<h2 class="section-title mb-4 text-center">Admin Activity Log</h2>
+		<div
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+			<h1 class="mb-3 mb-md-0 section-title">Admin Activity Log</h1>
+		</div>
 
-			<div class="card shadow-sm">
-				<div class="card-header">
-					<h5 class="mb-0">Recent Activities</h5>
-				</div>
-				<div class="card-body">
-					<div class="table-responsive">
-						<table class="table table-hover align-middle">
-							<thead class="table-light">
-								<tr>
-									<th>Timestamp</th>
-									<th>Admin User</th>
-									<th>Action</th>
-									<th>Details</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr th:each="logEntry : ${activityLogs}">
-									<td
-										th:text="${#temporals.format(logEntry.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
-									<td th:text="${logEntry.username}"></td>
-									<td th:text="${logEntry.action}"></td>
-									<td th:text="${logEntry.details}"></td>
-								</tr>
-								<tr th:if="${#lists.isEmpty(activityLogs)}">
-									<td colspan="4" class="text-center text-muted">No activity
-										recorded yet.</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-				</div>
+		<div class="card shadow-sm">
+			<div class="card-header">
+				<h5 class="mb-0">Recent Activities</h5>
 			</div>
-			<div class="text-center mt-3">
-				<a th:href="@{/admin/settings}" class="btn btn-secondary">Back
-					to Site Management</a>
+			<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover align-middle">
+						<thead class="table-light">
+							<tr>
+								<th>Timestamp</th>
+								<th>Admin User</th>
+								<th>Action</th>
+								<th>Details</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr th:each="logEntry : ${activityLogs}">
+								<td
+									th:text="${#temporals.format(logEntry.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+								<td th:text="${logEntry.username}"></td>
+								<td th:text="${logEntry.action}"></td>
+								<td th:text="${logEntry.details}"></td>
+							</tr>
+							<tr th:if="${#lists.isEmpty(activityLogs)}">
+								<td colspan="4" class="text-center text-muted">No activity
+									recorded yet.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div th:if="${activityLogPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-3">
+					<span class="text-muted small"
+						th:text="'Showing ' + ${activityLogPage.number * activityLogPage.size + 1} + 
+                               ' - ' + ${activityLogPage.number * activityLogPage.size + activityLogPage.numberOfElements} + 
+                               ' of ' + ${activityLogPage.totalElements}">
+					</span>
+					<nav aria-label="Activity Log Pagination">
+						<ul class="pagination pagination-sm mb-0">
+							<li class="page-item"
+								th:classappend="${activityLogPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/activity-log(page=${activityLogPage.number - 1}, size=${size})}">Previous</a>
+							</li>
+							<th:block
+								th:each="i : ${#numbers.sequence(0, activityLogPage.totalPages - 1)}"
+								th:if="${activityLogPage.totalPages <= 7 || i == 0 || i == activityLogPage.totalPages - 1 || (i >= activityLogPage.number - 2 && i <= activityLogPage.number + 2)}">
+								<li class="page-item disabled"
+									th:if="${activityLogPage.totalPages > 7 && (i == 0 && activityLogPage.number > 3 || i == activityLogPage.totalPages - 1 && activityLogPage.number < activityLogPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+								<li class="page-item"
+									th:classappend="${i == activityLogPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/admin/activity-log(page=${i}, size=${size})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+							<li class="page-item"
+								th:classappend="${activityLogPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/admin/activity-log(page=${activityLogPage.number + 1}, size=${size})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+					<span class="text-muted small" style="visibility: hidden;"></span>
+				</div>
 			</div>
 		</div>
 	</div>

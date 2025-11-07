@@ -177,7 +177,7 @@ public class AdminManagementController {
 			redirectAttributes.addFlashAttribute("adminSuccess",
 					"Admin '" + updatedUser.getUsername() + "' updated successfully!");
 
-		} catch (IllegalArgumentException e) {
+		} catch (RuntimeException e) { // **** CATCH RUNTIME EXCEPTION ****
 			log.warn("Validation error updating admin: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
@@ -250,7 +250,7 @@ public class AdminManagementController {
 					"Updated own profile: " + updatedUser.getUsername());
 			redirectAttributes.addFlashAttribute("adminSuccess", "Your profile has been updated successfully!");
 
-		} catch (IllegalArgumentException e) {
+		} catch (RuntimeException e) { // **** CATCH RUNTIME EXCEPTION ****
 			log.warn("Validation error updating own profile: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminProfileDto.username", e.getMessage());

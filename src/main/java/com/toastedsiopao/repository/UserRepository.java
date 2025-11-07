@@ -26,6 +26,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	// This one is for paginated lists
 	Page<User> findByRole_Name(String roleName, Pageable pageable); // UPDATED
 
+	// --- NEW: Find by role name NOT ---
+	List<User> findByRole_NameNot(String roleName);
+
 	// --- Search customers ---
 	@Query("SELECT u FROM User u WHERE u.role.name = 'ROLE_CUSTOMER' AND (" // UPDATED
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
@@ -35,7 +38,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Page<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 	// --- Search admins ---
-	@Query("SELECT u FROM User u WHERE (u.role.name = 'ROLE_ADMIN' OR u.role.name = 'ROLE_OWNER') AND (" // UPDATED
+	@Query("SELECT u FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND (" // UPDATED: Changed logic
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
@@ -50,14 +53,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	long countByRole_Name(String roleName); // NEW: Fixes compile error (was countByRole)
 
+	// --- NEW: Count active admins ---
+	@Query("SELECT COUNT(u) FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND u.status = 'ACTIVE'")
+	long countActiveAdmins();
+
 	// --- NEW: For Dashboard Stats ---
 
 	/**
 	 * Counts users of a specific role created between two dates. * @param roleName
 	 * The role name to check (e.g., "ROLE_CUSTOMER"). * @param start The start
-	 * timestamp.
+	 * timestamp. * @param end The end timestamp.
 	 * 
-	 * @param end The end timestamp.
 	 * @return The count of new users.
 	 */
 	long countByRole_NameAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start, // UPDATED

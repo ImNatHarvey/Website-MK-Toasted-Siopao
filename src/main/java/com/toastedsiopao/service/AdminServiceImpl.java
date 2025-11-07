@@ -69,11 +69,8 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<User> findAllAdmins() {
-		// We now find both Owner and Admin roles
-		List<User> owners = userRepository.findByRole_Name("ROLE_OWNER"); // UPDATED
-		List<User> admins = userRepository.findByRole_Name("ROLE_ADMIN"); // UPDATED
-		owners.addAll(admins);
-		return owners;
+		// We now find all users who are NOT customers
+		return userRepository.findByRole_NameNot(CUSTOMER_ROLE_NAME); // UPDATED
 	}
 
 	@Override
@@ -96,8 +93,7 @@ public class AdminServiceImpl implements AdminService {
 	/**
 	 * Formats a display name (e.g., "Night Staff") into an internal role name
 	 * (e.g., "ROLE_NIGHT_STAFF"). * @param displayName The name from the DTO.
-	 * 
-	 * @return The formatted internal role name.
+	 * * @return The formatted internal role name.
 	 */
 	private String formatRoleName(String displayName) {
 		if (!StringUtils.hasText(displayName)) {
@@ -112,9 +108,8 @@ public class AdminServiceImpl implements AdminService {
 
 	/**
 	 * Helper method to populate a Role entity with permissions based on DTO
-	 * booleans. * @param role The Role entity to modify.
-	 * 
-	 * @param dto The DTO containing permission flags.
+	 * booleans. * @param role The Role entity to modify. * @param dto The DTO
+	 * containing permission flags.
 	 */
 	private void addPermissionsToRole(Role role, AdminAccountCreateDto dto) {
 		// Clear any existing permissions (for updates)
@@ -168,9 +163,7 @@ public class AdminServiceImpl implements AdminService {
 
 	/**
 	 * Overloaded helper method for the AdminUpdateDto. * @param role The Role
-	 * entity to modify.
-	 * 
-	 * @param dto The DTO containing permission flags.
+	 * entity to modify. * @param dto The DTO containing permission flags.
 	 */
 	private void addPermissionsToRole(Role role, AdminUpdateDto dto) {
 		// Clear any existing permissions (for updates)
@@ -267,9 +260,7 @@ public class AdminServiceImpl implements AdminService {
 		// --- END NEW ---
 
 		// Check if it's an admin/owner role
-		if (userToUpdate.getRole() == null || (!"ROLE_ADMIN".equals(userToUpdate.getRole().getName())
-				&& !"ROLE_OWNER".equals(userToUpdate.getRole().getName())
-				&& !userToUpdate.getRole().getName().startsWith("ROLE_"))) { // Allow custom roles
+		if (userToUpdate.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
 		}
 
@@ -278,6 +269,11 @@ public class AdminServiceImpl implements AdminService {
 		if (roleToUpdate == null) {
 			throw new IllegalStateException(
 					"User " + userToUpdate.getUsername() + " has a null role and cannot be updated.");
+		}
+
+		// Do not allow editing the owner's role
+		if (OWNER_ROLE_NAME.equals(roleToUpdate.getName())) {
+			throw new IllegalArgumentException("The Owner's role cannot be modified.");
 		}
 
 		String newInternalRoleName = formatRoleName(userDto.getRoleName());
@@ -314,9 +310,11 @@ public class AdminServiceImpl implements AdminService {
 		User userToUpdate = userRepository.findById(adminDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + adminDto.getId()));
 
-		// UPDATED: Calls to new service
-		userValidationService.validateUsernameOnUpdate(adminDto.getUsername(), userDto.getId());
-		userValidationService.validateEmailOnUpdate(adminDto.getEmail(), userDto.getId());
+		// UPDATED: calls to new service
+		// **** THIS IS THE FIX ****
+		userValidationService.validateUsernameOnUpdate(adminDto.getUsername(), adminDto.getId());
+		userValidationService.validateEmailOnUpdate(adminDto.getEmail(), adminDto.getId());
+		// **** END OF FIX ****
 
 		userToUpdate.setFirstName(adminDto.getFirstName());
 		userToUpdate.setLastName(adminDto.getLastName());
@@ -396,8 +394,7 @@ public class AdminServiceImpl implements AdminService {
 	@Transactional(readOnly = true)
 	public long countActiveAdmins() {
 		// Count active admins and active owners
-		return userRepository.countByRole_NameAndStatus("ROLE_ADMIN", "ACTIVE") // UPDATED
-				+ userRepository.countByRole_NameAndStatus("ROLE_OWNER", "ACTIVE"); // UPDATED
+		return userRepository.countActiveAdmins(); // UPDATED
 	}
 
 	// --- METHOD REMOVED ---

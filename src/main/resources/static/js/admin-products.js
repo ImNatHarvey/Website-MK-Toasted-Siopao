@@ -1,6 +1,10 @@
 /**
  * JavaScript specific to the Admin Products page (admin/products.html)
  * Handles modal population, recipe ingredients, max button, AND NEW IMAGE UPLOADER.
+ *
+ * Relies on global functions from admin-utils.js:
+ * - setupImageUploader(containerId)
+ * - initThresholdSliders(modalElement)
  */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-products.js loaded"); // Confirm script is running
@@ -12,252 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		return;
 	}
 
-	// **** NEW FUNCTION: Image Uploader Logic ****
-	function setupImageUploader(containerId) {
-		const uploader = document.getElementById(containerId);
-		if (!uploader) {
-			console.warn(`Uploader container #${containerId} not found.`);
-			return;
-		}
-
-		const input = uploader.querySelector('.image-uploader-input');
-		const dropZone = uploader.querySelector('.image-drop-zone');
-		const previewContainer = uploader.querySelector('.image-preview-container');
-		const previewImg = uploader.querySelector('.image-preview');
-		const removeBtn = uploader.querySelector('.image-remove-btn');
-		const form = uploader.closest('form');
-		const removeImageHiddenInput = form ? form.querySelector('input[name="removeImage"]') : null;
-
-		// **** START OF BUG 1 FIX ****
-		// Basic elements must exist
-		if (!input || !dropZone || !previewContainer || !previewImg || !removeBtn) {
-			console.error(`Uploader #${containerId} is missing required elements (input, dropZone, previewContainer, previewImg, or removeBtn).`);
-			return;
-		}
-		// The removeImageHiddenInput is *required* for edit, but *optional* for add.
-		if (form && form.id === 'editProductForm' && !removeImageHiddenInput) {
-			console.error(`Uploader #${containerId} is missing 'removeImage' hidden input.`);
-			return;
-		}
-		// **** END OF BUG 1 FIX ****
-
-		// Function to show the preview
-		const showPreview = (fileOrSrc) => {
-			// Check 1: Is it a valid image URL string?
-			if (typeof fileOrSrc === 'string' && fileOrSrc && fileOrSrc !== "null") {
-				// It's a valid URL (for edit modal)
-				previewImg.src = fileOrSrc;
-				uploader.classList.add('preview-active');
-				input.value = ''; // Clear file input
-				if (removeImageHiddenInput) { // Check if input exists
-					removeImageHiddenInput.value = 'false';
-				}
-			}
-			// Check 2: Is it a File object? (Check for `name` property)
-			else if (typeof fileOrSrc === 'object' && fileOrSrc !== null && fileOrSrc.name) {
-				// It's a File object (from upload or drop)
-				const reader = new FileReader();
-				reader.onload = () => {
-					previewImg.src = reader.result;
-					uploader.classList.add('preview-active');
-					if (removeImageHiddenInput) { // Check if input exists
-						removeImageHiddenInput.value = 'false';
-					}
-				};
-				reader.readAsDataURL(fileOrSrc);
-			}
-			// Check 3: It's null, undefined, "", or "null"
-			else {
-				// It's an invalid source (null, "", or not a file), so reset
-				resetUploader();
-			}
-		};
-
-		// Function to reset the uploader
-		const resetUploader = () => {
-			previewImg.src = '';
-			uploader.classList.remove('preview-active');
-			input.value = ''; // Clear the file input
-			if (removeImageHiddenInput) { // Check if input exists
-				removeImageHiddenInput.value = 'true';
-			}
-		};
-
-		// --- Event Listeners ---
-		// 1. Click on drop zone OR preview container triggers file input click
-		dropZone.addEventListener('click', () => {
-			input.click();
-		});
-		previewContainer.addEventListener('click', (e) => {
-			// Don't trigger if the remove button was clicked
-			if (e.target !== removeBtn && !removeBtn.contains(e.target)) {
-				input.click();
-			}
-		});
-
-
-		// 2. File input change (user selected a file)
-		input.addEventListener('change', () => {
-			if (input.files && input.files[0]) {
-				showPreview(input.files[0]);
-			}
-		});
-
-		// 3. Remove button click
-		removeBtn.addEventListener('click', (e) => {
-			e.stopPropagation();
-			resetUploader();
-		});
-
-		// 4. Drag and Drop events
-		uploader.addEventListener('dragover', (e) => {
-			e.preventDefault();
-			uploader.classList.add('drag-over');
-		});
-		uploader.addEventListener('dragleave', (e) => {
-			e.preventDefault();
-			uploader.classList.remove('drag-over');
-		});
-		uploader.addEventListener('drop', (e) => {
-			e.preventDefault();
-			uploader.classList.remove('drag-over');
-			if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-				// Manually set the file input's files property
-				input.files = e.dataTransfer.files;
-				showPreview(e.dataTransfer.files[0]);
-			}
-		});
-
-		// --- Public API for the modal ---
-		// Add functions to the uploader element itself so modal logic can call them
-		uploader.showPreview = showPreview;
-		uploader.resetUploader = resetUploader;
-
-		// --- Initial Reset (for Add Modal) ---
-		if (containerId === 'addImageUploader' || (form && form.id === 'addProductForm')) {
-			resetUploader();
-		}
-	}
-	// **** END NEW FUNCTION: Image Uploader Logic ****
-
 	// --- Initialize both uploaders on page load ---
+	// Calls global setupImageUploader()
 	setupImageUploader('addImageUploader');
 	setupImageUploader('editImageUploader');
-
-
-	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
-	function initThresholdSliders(modalElement) {
-		console.log("Initializing threshold sliders for modal:", modalElement.id);
-
-		let lowInput, lowSlider, criticalInput, criticalSlider;
-
-		// **** START OF BUG 2 FIX ****
-		// Select inputs based on the modal ID for robustness
-		if (modalElement.id === 'addProductModal') {
-			lowInput = modalElement.querySelector('#addLowThresholdInput');
-			lowSlider = modalElement.querySelector('#addLowThresholdSlider');
-			criticalInput = modalElement.querySelector('#addCriticalThresholdInput');
-			criticalSlider = modalElement.querySelector('#addCriticalThresholdSlider');
-		} else if (modalElement.id === 'editProductModal') {
-			lowInput = modalElement.querySelector('#editLowThresholdInput');
-			lowSlider = modalElement.querySelector('#editLowThresholdSlider');
-			criticalInput = modalElement.querySelector('#editCriticalThresholdInput');
-			criticalSlider = modalElement.querySelector('#editCriticalThresholdSlider');
-		} else {
-			console.warn("initThresholdSliders called on unknown modal:", modalElement.id);
-			return;
-		}
-		// **** END OF BUG 2 FIX ****
-
-		if (!lowInput || !lowSlider || !criticalInput || !criticalSlider) {
-			console.error("Missing one or more threshold inputs/sliders for modal:", modalElement.id);
-			return;
-		}
-
-		// --- Helper Function ---
-		// Syncs slider and input, adjusting slider max if needed
-		const syncSliderAndInput = (input, slider) => {
-			// --- UPDATED: Handle blank/NaN state ---
-			let value = parseInt(input.value, 10);
-			let isBlank = isNaN(value);
-			if (isBlank) {
-				slider.value = 0; // Set slider to 0 if input is blank
-				return; // Don't proceed
-			}
-			// --- END UPDATE ---
-
-			// Adjust slider's max range if input value exceeds it (e.g., user types "200")
-			let sliderMax = parseInt(slider.max, 10);
-			if (value > sliderMax) {
-				slider.max = value;
-			}
-			// But don't let slider max go below a sensible default like 100
-			if (value < 100 && sliderMax > 100) {
-				slider.max = 100;
-			}
-
-			slider.value = value;
-			input.value = value; // Ensure no decimals
-		};
-
-		// --- Helper Function ---
-		// Enforces Critical < Low
-		const enforceThresholdLogic = () => {
-			let lowValue = parseInt(lowInput.value, 10);
-			let criticalValue = parseInt(criticalInput.value, 10);
-
-			// --- UPDATED: If low is blank/NaN, don't do anything ---
-			if (isNaN(lowValue)) {
-				lowValue = 0; // Treat as 0 for max calculation
-			}
-			// --- END UPDATE ---
-			if (isNaN(criticalValue)) {
-				criticalValue = 0; // Treat as 0 for capping
-			}
-
-			// **** START: QUICK FIX ****
-			// Critical max should be one less than low, but not less than 0.
-			let criticalMax = (lowValue > 0) ? lowValue - 1 : 0;
-			// **** END: QUICK FIX ****
-
-			// Set the max attribute for the critical input and slider
-			criticalInput.max = criticalMax;
-			criticalSlider.max = criticalMax;
-
-			// If critical is now higher than its new max, cap it
-			if (criticalValue > criticalMax) {
-				criticalInput.value = criticalMax;
-				criticalSlider.value = criticalMax;
-			}
-		};
-
-		// --- Initial Sync on Modal Show ---
-		syncSliderAndInput(lowInput, lowSlider);
-		syncSliderAndInput(criticalInput, criticalSlider);
-		enforceThresholdLogic(); // Enforce logic right away
-
-		// --- Event Listeners ---
-		// Slider updates Input
-		lowSlider.addEventListener('input', () => {
-			lowInput.value = lowSlider.value;
-			enforceThresholdLogic(); // Check logic
-		});
-		criticalSlider.addEventListener('input', () => {
-			criticalInput.value = criticalSlider.value;
-			// No need to check logic here, slider is already capped
-		});
-
-		// Input updates Slider
-		lowInput.addEventListener('input', () => {
-			syncSliderAndInput(lowInput, lowSlider);
-			enforceThresholdLogic(); // Check logic
-		});
-		criticalInput.addEventListener('input', () => {
-			syncSliderAndInput(criticalInput, criticalSlider);
-			enforceThresholdLogic(); // Check logic (in case user types > low)
-		});
-	}
-	// **** END NEW FUNCTION ****
 
 
 	// --- Logic for Edit Product Modal ---
@@ -423,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 			}
 
-			// **** CALL NEW SLIDER FUNCTION ****
+			// **** CALL GLOBAL SLIDER FUNCTION ****
 			initThresholdSliders(editProductModal);
 		});
 
@@ -575,7 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
 		const addImageUploader = document.getElementById('addImageUploader'); // NEW
 
-		// **** CALL NEW SLIDER FUNCTION ****
+		// **** CALL GLOBAL SLIDER FUNCTION ****
 		addProductModal.addEventListener('show.bs.modal', function() {
 			// --- UPDATED: Check if we are reopening from validation ---
 			const isValidationReopen = mainElement.dataset.showAddProductModal === 'true';

@@ -1,6 +1,9 @@
 /**
  * JavaScript specific to the Admin Inventory page (admin/inventory.html)
  * Handles modal population for Add/Edit Item.
+ *
+ * Relies on global functions from admin-utils.js:
+ * - initThresholdSliders(modalElement)
  */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-inventory.js loaded"); // Confirm script is running
@@ -108,9 +111,8 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
 			}
 
-			// **** NEW: Initialize sliders ****
+			// **** CALL GLOBAL SLIDER FUNCTION ****
 			initThresholdSliders(addItemModal);
-			// **** END NEW ****
 		});
 
 		addItemModal.addEventListener('hidden.bs.modal', function() {
@@ -322,116 +324,4 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	// --- END NEW ---
 
-
-	// **** NEW FUNCTION: Initialize threshold sliders and inputs ****
-	// **** MODIFIED to use parseInt and new critical logic ****
-	function initThresholdSliders(modalElement) {
-		console.log("Initializing threshold sliders for modal:", modalElement.id);
-		const lowThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="low"]');
-		const criticalThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="critical"]');
-
-		if (!lowThresholdGroup || !criticalThresholdGroup) {
-			console.warn("Could not find threshold groups in modal:", modalElement.id);
-			return;
-		}
-
-		// IDs from inventory-modals.html
-		const lowInput = lowThresholdGroup.querySelector('#itemLowThreshold');
-		const lowSlider = lowThresholdGroup.querySelector('#itemLowThresholdSlider');
-		const criticalInput = criticalThresholdGroup.querySelector('#itemCriticalThreshold');
-		const criticalSlider = criticalThresholdGroup.querySelector('#itemCriticalThresholdSlider');
-
-
-		if (!lowInput || !lowSlider || !criticalInput || !criticalSlider) {
-			console.error("Missing one or more threshold inputs/sliders.");
-			return;
-		}
-
-		// --- Helper Function ---
-		// Syncs slider and input, adjusting slider max if needed
-		const syncSliderAndInput = (input, slider) => {
-			// --- UPDATED: Handle blank/NaN state ---
-			let value = parseInt(input.value, 10); // Use parseInt
-			let isBlank = isNaN(value);
-			if (isBlank) {
-				slider.value = 0; // Set slider to 0 if input is blank
-				return; // Don't proceed
-			}
-			// --- END UPDATE ---
-
-			// Adjust slider's max range if input value exceeds it (e.g., user types "200")
-			let sliderMax = parseInt(slider.max, 10);
-			if (value > sliderMax) {
-				slider.max = value;
-			}
-			// But don't let slider max go below a sensible default like 100
-			if (value < 100 && sliderMax > 100) {
-				slider.max = 100;
-			}
-
-			slider.value = value;
-			input.value = value; // Ensure no decimals
-		};
-
-		// --- Helper Function ---
-		// Enforces Critical < Low
-		const enforceThresholdLogic = () => {
-			let lowValue = parseInt(lowInput.value, 10);
-			let criticalValue = parseInt(criticalInput.value, 10);
-
-			// --- UPDATED: If low is blank/NaN, don't do anything ---
-			if (isNaN(lowValue)) {
-				lowValue = 0; // Treat as 0 for max calculation
-			}
-			// --- END UPDATE ---
-			if (isNaN(criticalValue)) {
-				criticalValue = 0; // Treat as 0 for capping
-			}
-
-			// **** MODIFIED LOGIC ****
-			// Critical max should be one less than low, but not less than 0.
-			let criticalMax = (lowValue > 0) ? lowValue - 1 : 0;
-			// **** END MODIFIED LOGIC ****
-
-			// Set the max attribute for the critical input and slider
-			criticalInput.max = criticalMax; // Set max on number input
-			criticalSlider.max = criticalMax; // Set max on range slider
-
-			// If critical is now higher than its new max, cap it
-			if (criticalValue > criticalMax) {
-				criticalInput.value = criticalMax;
-				criticalSlider.value = criticalMax;
-			}
-		};
-
-		// --- Initial Sync on Modal Show ---
-		syncSliderAndInput(lowInput, lowSlider);
-		syncSliderAndInput(criticalInput, criticalSlider);
-		enforceThresholdLogic(); // Enforce logic right away
-
-		// --- Event Listeners ---
-
-		// **** START OF BUG FIX 1 ****
-		// Slider updates Input
-		lowSlider.addEventListener('input', () => {
-			lowInput.value = lowSlider.value;
-			enforceThresholdLogic(); // Check logic
-		});
-		criticalSlider.addEventListener('input', () => {
-			criticalInput.value = criticalSlider.value;
-			// No need to check logic here, slider is already capped
-		});
-		// **** END OF BUG FIX 1 ****
-
-		// Input updates Slider
-		lowInput.addEventListener('input', () => {
-			syncSliderAndInput(lowInput, lowSlider);
-			enforceThresholdLogic(); // Check logic
-		});
-		criticalInput.addEventListener('input', () => {
-			syncSliderAndInput(criticalInput, criticalSlider);
-			enforceThresholdLogic(); // Check logic
-		});
-	}
-	// **** END NEW FUNCTION ****
 });

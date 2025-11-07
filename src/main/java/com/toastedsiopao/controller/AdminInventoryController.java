@@ -398,6 +398,7 @@ public class AdminInventoryController {
 	}
 	// **** END OF UPDATED METHOD ****
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
 	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
@@ -408,22 +409,22 @@ public class AdminInventoryController {
 		}
 		String itemName = itemOpt.get().getName();
 		try {
+			// Service layer now handles validation (e.g., if item is in a recipe)
 			inventoryItemService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
 					"Deleted inventory item: " + itemName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
 		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			log.warn("Could not delete item '{}': {}", itemName, e.getMessage());
 			redirectAttributes.addFlashAttribute("inventoryError",
 					"Could not delete item '" + itemName + "': " + e.getMessage());
-		} catch (Exception e) {
-			log.error("Error deleting inventory item ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("inventoryError",
-					"An unexpected error occurred while deleting the item.");
 		}
 		return "redirect:/admin/inventory";
 	}
+	// **** END OF UPDATED METHOD ****
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/categories/delete/{id}")
 	public String deleteInventoryCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
@@ -432,28 +433,27 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
 			return "redirect:/admin/inventory";
 		}
-		InventoryCategory category = categoryOpt.get();
-		// Use the new paged search method to check for items
-		Page<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id, PageRequest.of(0, 1));
-		if (!itemsInCategory.isEmpty()) {
-			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete category '" + category.getName()
-					+ "'. It is associated with " + itemsInCategory.getTotalElements() + " inventory item(s).");
-			return "redirect:/admin/inventory";
-		}
+		String categoryName = categoryOpt.get().getName();
+
+		// --- VALIDATION LOGIC MOVED TO SERVICE ---
+
 		try {
-			String categoryName = category.getName();
+			// Service layer now handles validation
 			inventoryCategoryService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",
 					"Deleted inventory category: " + categoryName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Category '" + categoryName + "' deleted successfully!");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			log.error("Error deleting inventory category ID {}: {}", id, e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";
 	}
+	// **** END OF UPDATED METHOD ****
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/units/delete/{id}")
 	public String deleteUnitOfMeasure(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
@@ -462,25 +462,22 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("unitError", "Unit not found.");
 			return "redirect:/admin/inventory";
 		}
-		UnitOfMeasure unit = unitOpt.get();
-		List<InventoryItem> itemsUsingUnit = inventoryItemService.findAll().stream()
-				.filter(item -> item.getUnit() != null && item.getUnit().getId().equals(id))
-				.collect(Collectors.toList());
-		if (!itemsUsingUnit.isEmpty()) {
-			redirectAttributes.addFlashAttribute("unitError", "Cannot delete unit '" + unit.getName()
-					+ "'. It is associated with " + itemsUsingUnit.size() + " inventory item(s).");
-			return "redirect:/admin/inventory";
-		}
+		String unitName = unitOpt.get().getName();
+
+		// --- VALIDATION LOGIC MOVED TO SERVICE ---
+
 		try {
-			String unitName = unit.getName();
+			// Service layer now handles validation
 			unitOfMeasureService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_UNIT_OF_MEASURE",
 					"Deleted unit: " + unitName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + unitName + "' deleted successfully!");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			log.error("Error deleting unit ID {}: {}", id, e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("unitError", "Error deleting unit: " + e.getMessage());
 		}
 		return "redirect:/admin/inventory";
 	}
+	// **** END OF UPDATED METHOD ****
 }

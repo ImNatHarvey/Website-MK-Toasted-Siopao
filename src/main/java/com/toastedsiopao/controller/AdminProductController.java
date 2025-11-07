@@ -436,10 +436,10 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... (unchanged) ...
 		Optional<Product> productOpt = productService.findById(id);
 		if (productOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("productError", "Product not found.");
@@ -454,47 +454,46 @@ public class AdminProductController {
 			}
 			// --- END NEW ---
 
+			// Service layer now handles validation (e.g., if product is in an order)
 			productService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
 					"Deleted product: " + productName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + productName + "' deleted successfully!");
 		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			redirectAttributes.addFlashAttribute("productError",
 					"Could not delete product '" + productName + "': " + e.getMessage());
-		} catch (Exception e) {
-			redirectAttributes.addFlashAttribute("productError", "An unexpected error occurred...");
 		}
 		return "redirect:/admin/products";
 	}
+	// **** END OF UPDATED METHOD ****
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/categories/delete/{id}")
 	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		// ... (unchanged) ...
 		Optional<Category> categoryOpt = categoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
 			return "redirect:/admin/products";
 		}
-		Category category = categoryOpt.get();
-		// We must use the paginated method to check
-		Page<Product> productsInCategory = productService.findByCategory(id, PageRequest.of(0, 1));
-		if (!productsInCategory.isEmpty()) {
-			redirectAttributes.addFlashAttribute("categoryError", "Cannot delete '" + category.getName()
-					+ "'. Associated with " + productsInCategory.getTotalElements() + " product(s).");
-			return "redirect:/admin/products";
-		}
+		String categoryName = categoryOpt.get().getName();
+
+		// --- VALIDATION LOGIC MOVED TO SERVICE ---
+
 		try {
-			String categoryName = category.getName();
+			// Service layer now handles validation
 			categoryService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_CATEGORY",
 					"Deleted product category: " + categoryName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("categorySuccess",
 					"Category '" + categoryName + "' deleted successfully!");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
 		}
 		return "redirect:/admin/products";
 	}
+	// **** END OF UPDATED METHOD ****
 }

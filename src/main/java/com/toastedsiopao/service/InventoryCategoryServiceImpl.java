@@ -2,10 +2,13 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.InventoryCategoryDto; // Import DTO
 import com.toastedsiopao.model.InventoryCategory;
+import com.toastedsiopao.model.InventoryItem; // NEW IMPORT
 import com.toastedsiopao.repository.InventoryCategoryRepository;
 import org.slf4j.Logger; // Import Logger
 import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // NEW IMPORT
+import org.springframework.data.domain.PageRequest; // NEW IMPORT
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; // Import StringUtils
@@ -22,6 +25,10 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 
 	@Autowired
 	private InventoryCategoryRepository repository;
+
+	// NEW: Inject InventoryItemService
+	@Autowired
+	private InventoryItemService inventoryItemService;
 
 	// Centralized validation for name uniqueness
 	private void validateNameUniqueness(String name) {
@@ -125,15 +132,23 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 	}
 	// --- End NEW Method ---
 
+	// **** METHOD UPDATED ****
 	@Override
 	public void deleteById(Long id) {
-		// Existing check done in controller is sufficient for now
-		// (Prevent deletion if category is in use by items)
-		if (!repository.existsById(id)) {
-			log.warn("Attempted to delete non-existent inventory category with ID: {}", id);
-			return; // Or throw exception
+		// 1. Find the category first
+		InventoryCategory category = repository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+
+		// 2. Check if any items are using this category
+		Page<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id, PageRequest.of(0, 1));
+		if (!itemsInCategory.isEmpty()) {
+			throw new RuntimeException("Cannot delete category '" + category.getName() + "'. It is associated with "
+					+ itemsInCategory.getTotalElements() + " inventory item(s).");
 		}
+
+		// 3. If no items, proceed with deletion
 		repository.deleteById(id);
 		log.info("Deleted inventory category with ID: {}", id);
 	}
+	// **** END OF UPDATED METHOD ****
 }

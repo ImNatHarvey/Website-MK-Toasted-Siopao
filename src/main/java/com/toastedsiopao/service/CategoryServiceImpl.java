@@ -2,10 +2,14 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.CategoryDto; // Import DTO
 import com.toastedsiopao.model.Category;
+import com.toastedsiopao.model.Product; // NEW IMPORT
 import com.toastedsiopao.repository.CategoryRepository;
 import org.slf4j.Logger; // Import Logger
 import org.slf4j.LoggerFactory; // Import LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy; // NEW IMPORT
+import org.springframework.data.domain.Page; // NEW IMPORT
+import org.springframework.data.domain.PageRequest; // NEW IMPORT
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; // Import StringUtils
@@ -22,6 +26,13 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Autowired
 	private CategoryRepository categoryRepository;
+
+	// NEW: Inject ProductService
+	// Use @Lazy to break circular dependency (CategoryService -> ProductService ->
+	// CategoryService)
+	@Autowired
+	@Lazy
+	private ProductService productService;
 
 	// Centralized validation for name uniqueness
 	private void validateNameUniqueness(String name) {
@@ -117,16 +128,25 @@ public class CategoryServiceImpl implements CategoryService {
 	}
 	// --- End NEW Method ---
 
+	// **** METHOD UPDATED ****
 	@Override
 	public void deleteById(Long id) {
-		// Check done in controller is sufficient (prevent deletion if in use)
-		if (!categoryRepository.existsById(id)) {
-			log.warn("Attempted to delete non-existent product category with ID: {}", id);
-			return; // Or throw
+		// 1. Find the category first
+		Category category = categoryRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
+
+		// 2. Check if any products are using this category
+		Page<Product> productsInCategory = productService.findByCategory(id, PageRequest.of(0, 1));
+		if (!productsInCategory.isEmpty()) {
+			throw new RuntimeException("Cannot delete '" + category.getName() + "'. Associated with "
+					+ productsInCategory.getTotalElements() + " product(s).");
 		}
+
+		// 3. If no products, proceed with deletion
 		categoryRepository.deleteById(id);
 		log.info("Deleted product category with ID: {}", id);
 	}
+	// **** END OF UPDATED METHOD ****
 
 	@Override
 	@Transactional(readOnly = true)

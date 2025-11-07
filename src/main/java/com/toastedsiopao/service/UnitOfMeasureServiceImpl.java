@@ -3,6 +3,7 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.UnitOfMeasureDto; // Import DTO
 // REMOVED: import com.toastedsiopao.dto.InventoryCategoryDto;
 // REMOVED: import com.toastedsiopao.model.InventoryCategory;
+import com.toastedsiopao.model.InventoryItem; // NEW IMPORT
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.repository.UnitOfMeasureRepository;
 import org.slf4j.Logger; // Import Logger
@@ -14,6 +15,7 @@ import org.springframework.util.StringUtils; // Import StringUtils
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors; // NEW IMPORT
 
 @Service
 @Transactional
@@ -24,6 +26,10 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 
 	@Autowired
 	private UnitOfMeasureRepository repository;
+
+	// NEW: Inject InventoryItemService
+	@Autowired
+	private InventoryItemService inventoryItemService;
 
 	// Centralized validation for name/abbreviation uniqueness
 	private void validateUniqueness(String name, String abbreviation) {
@@ -156,17 +162,30 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 	}
 	// --- End NEW Method ---
 
+	// **** METHOD UPDATED ****
 	@Override
 	public void deleteById(Long id) {
-		// Existing check done in controller is sufficient for now
-		// (Prevent deletion if unit is in use by items)
-		if (!repository.existsById(id)) {
-			log.warn("Attempted to delete non-existent unit with ID: {}", id);
-			return; // Or throw exception
+		// 1. Find the unit first
+		UnitOfMeasure unit = repository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Unit not found with id: " + id));
+
+		// 2. Check if any items are using this unit
+		// This is not efficient, but it matches the controller's old logic.
+		// A repository method `countByUnitId` would be better.
+		List<InventoryItem> itemsUsingUnit = inventoryItemService.findAll().stream()
+				.filter(item -> item.getUnit() != null && item.getUnit().getId().equals(id))
+				.collect(Collectors.toList());
+
+		if (!itemsUsingUnit.isEmpty()) {
+			throw new RuntimeException("Cannot delete unit '" + unit.getName() + "'. It is associated with "
+					+ itemsUsingUnit.size() + " inventory item(s).");
 		}
+
+		// 3. If no items, proceed with deletion
 		repository.deleteById(id);
 		log.info("Deleted unit with ID: {}", id);
 	}
+	// **** END OF UPDATED METHOD ****
 
 	// **** ERRONEOUS METHOD REMOVED ****
 

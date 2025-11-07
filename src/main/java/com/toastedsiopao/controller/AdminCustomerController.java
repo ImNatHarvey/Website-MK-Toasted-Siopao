@@ -193,6 +193,7 @@ public class AdminCustomerController {
 		return "redirect:/admin/customers";
 	}
 
+	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
@@ -203,15 +204,18 @@ public class AdminCustomerController {
 		}
 		String username = userOpt.get().getUsername();
 		try {
+			// Service layer now handles validation (e.g., if customer has orders)
 			customerService.deleteCustomerById(id); // UPDATED
 			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
 					"Deleted customer user: " + username + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
 					"Customer '" + username + "' deleted successfully!");
-		} catch (Exception e) {
+		} catch (RuntimeException e) {
+			// Catch exceptions thrown from the service layer
 			log.error("Error deleting customer ID {}: {}", id, e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("customerError", "Error deleting customer: " + e.getMessage());
 		}
 		return "redirect:/admin/customers";
 	}
+	// **** END OF UPDATED METHOD ****
 }

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest; // NEW IMPORT
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,7 +19,9 @@ import org.springframework.util.StringUtils;
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
+import com.toastedsiopao.model.Order; // NEW IMPORT
 import com.toastedsiopao.model.User;
+import com.toastedsiopao.repository.OrderRepository; // NEW IMPORT
 import com.toastedsiopao.repository.UserRepository;
 
 @Service
@@ -31,6 +34,10 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	// NEW: Inject OrderRepository
+	@Autowired
+	private OrderRepository orderRepository;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -161,11 +168,28 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable);
 	}
 
+	// **** METHOD UPDATED ****
 	@Override
 	public void deleteCustomerById(Long id) {
-		// We already confirmed this is a customer in the controller
+		// 1. Find the user first
+		User user = userRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+		if (!"ROLE_CUSTOMER".equals(user.getRole())) {
+			throw new RuntimeException("Cannot delete non-customer user with this method.");
+		}
+
+		// 2. Check if the customer has any orders
+		Page<Order> orders = orderRepository.findByUserOrderByOrderDateDesc(user, PageRequest.of(0, 1));
+		if (!orders.isEmpty()) {
+			throw new RuntimeException("Cannot delete customer '" + user.getUsername() + "'. They have "
+					+ orders.getTotalElements() + " order(s) associated with their account.");
+		}
+
+		// 3. If no orders, proceed with deletion
 		userRepository.deleteById(id);
 	}
+	// **** END OF UPDATED METHOD ****
 
 	@Override
 	@Transactional(readOnly = true)

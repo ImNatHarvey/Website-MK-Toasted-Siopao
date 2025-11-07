@@ -23,7 +23,8 @@
 		<button class="sidebar-toggle-btn" id="sidebarToggle">
 			<i class="fa-solid fa-bars"></i>
 		</button>
-		<a class="mobile-brand" th:href="@{/admin/dashboard}">MK Admin Panel</a>
+		<a class="mobile-brand" th:href="@{/admin/dashboard}">MK Admin
+			Portal</a>
 		<form th:action="@{/logout}" method="post" class="d-inline ms-auto">
 			<button type="submit" class="btn btn-custom-outline btn-sm"
 				style="--bs-btn-color: var(--light); --bs-btn-border-color: var(--light);">
@@ -79,6 +80,13 @@
 			<nav class="admin-content-navbar">
 				<ul
 					class="navbar-nav ms-auto text-center align-items-center flex-row">
+
+					<li class="nav-item"><a th:href="@{/admin/admins}"
+						class="nav-link navbar-text me-3" style="text-decoration: none;">
+							<i class="fa-solid fa-user-circle me-1"></i> <strong
+							sec:authentication="principal.username">Admin</strong>
+					</a></li>
+
 					<li class="nav-item dropdown"><a class="nav-link" href="#"
 						id="notificationDropdown" role="button" data-bs-toggle="dropdown"
 						aria-expanded="false"> <i class="fa-solid fa-bell"></i>
@@ -88,9 +96,7 @@
 							<li><a class="dropdown-item text-muted" href="#">No
 									notifications</a></li>
 						</ul></li>
-					<li class="nav-item"><span class="navbar-text me-3">
-							Welcome, <strong sec:authentication="principal.username">Admin</strong>!
-					</span></li>
+
 					<li class="nav-item"><a th:href="@{/}"
 						class="btn btn-custom me-2">View Site</a></li>
 					<li class="nav-item">

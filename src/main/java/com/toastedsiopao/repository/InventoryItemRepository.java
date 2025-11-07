@@ -1,3 +1,6 @@
+/*
+File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-2de826f8fd7cd99b65487feb9dadc213b6ecccd9/src/main/java/com/toastedsiopao/repository/InventoryItemRepository.java
+*/
 package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.InventoryCategory;
@@ -16,20 +19,36 @@ import java.util.Optional;
 @Repository
 public interface InventoryItemRepository extends JpaRepository<InventoryItem, Long> {
 
+	// --- BASE QUERY TO FETCH ITEMS WITH RELATIONS ---
+	// This query joins item (i) with its category (c) and unit (u).
+	String FIND_ITEM_WITH_RELATIONS = "SELECT i FROM InventoryItem i " + "JOIN FETCH i.category c "
+			+ "JOIN FETCH i.unit u ";
+
 	// Find by name (for duplicate checks)
 	Optional<InventoryItem> findByNameIgnoreCase(String name);
 
+	// --- OVERRIDE findAll(Pageable) to use JOIN FETCH ---
+	@Query(value = FIND_ITEM_WITH_RELATIONS + "ORDER BY i.name ASC")
+	Page<InventoryItem> findAll(Pageable pageable);
+
 	// Find items by category
-	Page<InventoryItem> findByCategoryOrderByNameAsc(InventoryCategory category, Pageable pageable);
+	@Query(value = FIND_ITEM_WITH_RELATIONS + "WHERE i.category = :category ORDER BY i.name ASC")
+	Page<InventoryItem> findByCategoryOrderByNameAsc(@Param("category") InventoryCategory category, Pageable pageable);
 
 	// Search items by name containing keyword
-	Page<InventoryItem> findByNameContainingIgnoreCaseOrderByNameAsc(String keyword, Pageable pageable);
+	@Query(value = FIND_ITEM_WITH_RELATIONS
+			+ "WHERE LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY i.name ASC")
+	Page<InventoryItem> findByNameContainingIgnoreCaseOrderByNameAsc(@Param("keyword") String keyword,
+			Pageable pageable);
 
 	// Search items by name containing keyword AND category
-	Page<InventoryItem> findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(String keyword,
-			InventoryCategory category, Pageable pageable);
+	@Query(value = FIND_ITEM_WITH_RELATIONS
+			+ "WHERE LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND i.category = :category ORDER BY i.name ASC")
+	Page<InventoryItem> findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(@Param("keyword") String keyword,
+			@Param("category") InventoryCategory category, Pageable pageable);
 
 	// --- NEW: For modals, get all items sorted ---
+	@Query(FIND_ITEM_WITH_RELATIONS + "ORDER BY i.name ASC")
 	List<InventoryItem> findAllByOrderByNameAsc();
 
 	// Find items with stock below or equal to a threshold (useful for reports)

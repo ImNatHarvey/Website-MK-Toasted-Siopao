@@ -1,3 +1,6 @@
+/*
+File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-2de826f8fd7cd99b65487feb9dadc213b6ecccd9/src/main/java/com/toastedsiopao/repository/OrderRepository.java
+*/
 package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.Order;
@@ -17,39 +20,64 @@ import java.util.List;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	// Find orders by User, ordered by date descending (newest first)
+	// This page (customer history) does not show items, so no join is needed.
 	Page<Order> findByUserOrderByOrderDateDesc(User user, Pageable pageable); // Updated
 
+	// --- BASE JOIN FOR ADMIN PAGES ---
+	// Fetches Order (o), its list of OrderItems (oi), and each item's Product (p)
+	String ADMIN_ORDER_JOINS = "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p ";
+
 	// Find all orders ordered by date descending (newest first) - Useful for admin
-	@Query("SELECT o FROM Order o WHERE " + "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
-			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE "
+			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
+			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE "
+					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
 	Page<Order> findAllByDate(@Param("startDateTime") LocalDateTime startDateTime,
 			@Param("endDateTime") LocalDateTime endDateTime, Pageable pageable); // Updated
 
 	// --- NEW: Find orders by status ---
-	@Query("SELECT o FROM Order o WHERE o.status = :status AND "
+	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE o.status = :status AND "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
-			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
+			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.status = :status AND "
+					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
 	Page<Order> searchByStatusAndDate(@Param("status") String status,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable); // Updated
 
 	// --- NEW: Search orders by keyword (ID or customer name) ---
-	@Query("SELECT o FROM Order o WHERE " + "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
+	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE "
+			+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
-			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
+			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE "
+					+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
+					+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+					+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
 	Page<Order> searchOrdersByKeyword(@Param("keyword") String keyword,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable); // Updated
 
 	// --- NEW: Search orders by keyword AND status ---
-	@Query("SELECT o FROM Order o WHERE o.status = :status AND "
+	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE o.status = :status AND "
 			+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
-			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
+			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.status = :status AND "
+					+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
+					+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+					+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
 	Page<Order> searchOrdersByKeywordAndStatus(@Param("keyword") String keyword, @Param("status") String status,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable); // Updated

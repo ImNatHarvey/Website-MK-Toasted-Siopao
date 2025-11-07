@@ -78,7 +78,7 @@ public class SecurityConfig {
 						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true).deleteCookies("JSESSIONID")
 						.clearAuthentication(true))
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
-				.headers(headers -> headers.cacheControl(cache -> cache.disable())).csrf(csrf -> csrf.disable());
+				.headers(headers -> headers.cacheControl(cache -> cache.disable()));
 
 		return http.build();
 	}

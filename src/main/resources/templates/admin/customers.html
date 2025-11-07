@@ -128,7 +128,7 @@
 									<form
 										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"
 										method="post"
-										onsubmit="return confirm('Are you sure you want to delete this customer?');">
+										th:data-confirm-message="'Are you sure you want to delete the customer \'' + ${customer.username} + '\'?'">
 										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
 								</td>

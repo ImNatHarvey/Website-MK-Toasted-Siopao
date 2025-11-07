@@ -15,7 +15,8 @@
 
 		<form th:action="@{/admin/settings/update}"
 			th:object="${siteSettings}" method="post"
-			enctype="multipart/form-data">
+			enctype="multipart/form-data"
+			data-confirm-save-message="Are you sure you want to save all changes to the site settings?">
 
 			<div th:replace="~{admin/fragments/common-alerts :: siteAlerts}"></div>
 

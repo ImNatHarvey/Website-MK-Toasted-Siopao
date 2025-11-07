@@ -116,7 +116,7 @@
 										data-bs-toggle="modal" data-bs-target="#editAdminModal">Edit</button>
 									<form th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
-										onsubmit="return confirm('Are you sure you want to delete this admin?');">
+										th:data-confirm-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'?'">
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${admin.username == currentUsername}"
 											title="You cannot delete your own account.">Delete</button>

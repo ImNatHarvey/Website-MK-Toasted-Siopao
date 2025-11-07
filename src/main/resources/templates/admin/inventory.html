@@ -72,7 +72,7 @@
 			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class="card-title">Items Out of Stock</h5>
+						<h5 class_w="card-title">Items Out of Stock</h5>
 						<p class="display-6 fw-bold text-danger"
 							th:text="${outOfStockCount}">0</p>
 					</div>
@@ -169,7 +169,7 @@
 									<form
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
-										onsubmit="return confirm('Are you sure you want to delete this item?');">
+										th:data-confirm-message="'Are you sure you want to delete the item \'' + ${item.name} + '\'?'">
 										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
 								</td>

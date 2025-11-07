@@ -166,7 +166,7 @@
 							<form
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
 								method="post" class="d-inline flex-fill"
-								onsubmit="return confirm('Delete this product?');">
+								th:data-confirm-message="'Are you sure you want to delete the product \'' + ${product.name} + '\'?'">
 								<button type="submit" class="btn btn-sm btn-action-delete w-100">Delete</button>
 							</form>
 						</div>

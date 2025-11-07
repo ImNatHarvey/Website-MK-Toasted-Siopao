@@ -196,7 +196,7 @@
 									<form
 										th:action="@{/admin/inventory/categories/delete/{id}(id=${cat.id})}"
 										method="post"
-										onsubmit="return confirm('Are you sure you want to delete this category? Ensure no items are using it.');">
+										th:data-confirm-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? Ensure no items are using it.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>
@@ -317,7 +317,7 @@
 									<form
 										th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
 										method="post"
-										onsubmit="return confirm('Are you sure you want to delete this unit? Ensure no items are using it.');">
+										th:data-confirm-message="'Are you sure you want to delete the unit \'' + ${unit.name} + '\'? Ensure no items are using it.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>

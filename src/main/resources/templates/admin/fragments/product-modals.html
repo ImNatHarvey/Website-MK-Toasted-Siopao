@@ -11,7 +11,7 @@
 					<form th:action="@{/admin/products/add}" method="post"
 						th:object="${productDto}" id="addProductForm"
 						enctype="multipart/form-data"
-						onsubmit="return confirm('Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified.');">
+						data-confirm-message="Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified. Proceed?">
 						<div class="modal-header">
 							<h5 class="modal-title" id="addProductModalLabel">Add New
 								Product</h5>
@@ -232,7 +232,7 @@
 									<form
 										th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
 										method="post"
-										onsubmit="return confirm('Delete Category? Check if products use it first.');">
+										th:data-confirm-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This cannot be undone.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>
@@ -613,7 +613,7 @@
 						</button>
 						<form th:action="@{/admin/products/delete/0}" method="post"
 							class="d-inline delete-product-form-from-view"
-							onsubmit="return confirm('Delete this product?');">
+							data-confirm-message="Are you sure you want to delete this product?">
 							<input type="hidden" name="productId"
 								class="view-product-id-for-delete" value="" />
 							<button type="submit" class="btn btn-action-delete">

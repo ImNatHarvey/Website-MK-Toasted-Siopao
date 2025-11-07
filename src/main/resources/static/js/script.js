@@ -1,6 +1,7 @@
 /**
  * Main script file - Handles modal reopening based on URL parameters.
  * NEW: Handles mobile sidebar toggle.
+ * NEW: Handles global delete and save confirmation modals.
  */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("Main script.js loaded.");
@@ -199,6 +200,91 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	// =================================================
 	// == END: Admin Sidebar Toggle Logic ==
+	// =================================================
+
+
+	// =================================================
+	// == UPDATED: Global Confirmation Modal Logic ==
+	// =================================================
+	let formToSubmit = null; // Variable to hold the form
+
+	// --- Logic for DELETE Modal ---
+	const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
+	if (confirmDeleteModalEl) {
+		console.log("Delete confirmation modal found. Attaching listeners.");
+		const confirmDeleteModal = new bootstrap.Modal(confirmDeleteModalEl);
+		const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+		const confirmDeleteMessage = document.getElementById('confirmDeleteMessage');
+
+		// 2. Listen for the confirm button click
+		confirmDeleteButton.addEventListener('click', function() {
+			if (formToSubmit) {
+				formToSubmit.submit();
+				formToSubmit = null; // Clear after submitting
+			}
+		});
+
+		// 3. Clear form on hide (if not submitted)
+		confirmDeleteModalEl.addEventListener('hidden.bs.modal', function() {
+			formToSubmit = null;
+		});
+
+		// 1. Intercept form submissions for DELETE
+		document.addEventListener('submit', function(event) {
+			const form = event.target;
+			// Check if it's a form that needs confirmation
+			if (form.dataset.confirmMessage) {
+				event.preventDefault(); // Stop the form from submitting
+				formToSubmit = form; // Store the form
+				const message = form.dataset.confirmMessage || 'Are you sure?';
+				confirmDeleteMessage.textContent = message;
+				confirmDeleteModal.show();
+			}
+		});
+
+	} else {
+		console.log("Delete confirmation modal not found (this is normal on non-admin pages).");
+	}
+
+	// --- NEW: Logic for SAVE Modal ---
+	const confirmSaveModalEl = document.getElementById('confirmSaveModal');
+	if (confirmSaveModalEl) {
+		console.log("Save confirmation modal found. Attaching listeners.");
+		const confirmSaveModal = new bootstrap.Modal(confirmSaveModalEl);
+		const confirmSaveButton = document.getElementById('confirmSaveButton');
+		const confirmSaveMessage = document.getElementById('confirmSaveMessage');
+
+		// 2. Listen for the confirm button click
+		confirmSaveButton.addEventListener('click', function() {
+			if (formToSubmit) {
+				formToSubmit.submit();
+				formToSubmit = null; // Clear after submitting
+			}
+		});
+
+		// 3. Clear form on hide (if not submitted)
+		confirmSaveModalEl.addEventListener('hidden.bs.modal', function() {
+			formToSubmit = null;
+		});
+
+		// 1. Intercept form submissions for SAVE
+		document.addEventListener('submit', function(event) {
+			const form = event.target;
+			// Check if it's a form that needs confirmation
+			if (form.dataset.confirmSaveMessage) {
+				event.preventDefault(); // Stop the form from submitting
+				formToSubmit = form; // Store the form
+				const message = form.dataset.confirmSaveMessage || 'Are you sure?';
+				confirmSaveMessage.textContent = message;
+				confirmSaveModal.show();
+			}
+		});
+
+	} else {
+		console.log("Save confirmation modal not found (this is normal on non-admin pages).");
+	}
+	// =================================================
+	// == END: Global Confirmation Modal Logic ==
 	// =================================================
 
 });

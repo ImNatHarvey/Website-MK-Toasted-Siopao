@@ -9,7 +9,7 @@ import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CategoryService;
-import com.toastedsiopao.service.FileStorageService; // NEW IMPORT
+import com.toastedsiopao.service.FileStorageService;
 import com.toastedsiopao.service.InventoryItemService;
 import com.toastedsiopao.service.ProductService;
 import jakarta.validation.Valid;
@@ -21,10 +21,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.StringUtils; // **** FIX: ADDED MISSING IMPORT ****
+import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile; // NEW IMPORT
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -53,38 +53,31 @@ public class AdminProductController {
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private FileStorageService fileStorageService; // NEW: Inject FileStorageService
+	private FileStorageService fileStorageService;
 
-	// Helper to add common attributes for redirects
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
 		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
-		// We might need the JSON map again too, but it's complex for a redirect
-		// For now, let's rely on the GET mapping to rebuild it.
 	}
 
-	@GetMapping // Unchanged
+	@GetMapping
 	public String manageProducts(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword,
-			@RequestParam(value = "page", defaultValue = "0") int page, // NEW
-			@RequestParam(value = "size", defaultValue = "8") int size) { // NEW, size 8
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "size", defaultValue = "8") int size) {
 
-		Pageable pageable = PageRequest.of(page, size); // NEW
-		Page<Product> productPage; // NEW
+		Pageable pageable = PageRequest.of(page, size);
+		Page<Product> productPage;
 
 		List<Category> categoryList = categoryService.findAll();
 		List<InventoryItem> inventoryItems = inventoryItemService.findAll();
 
-		// --- UPDATED Search Logic ---
 		log.info("Fetching products with keyword: '{}', categoryId: {}, page: {}, size: {}", keyword, categoryId, page,
 				size);
 		productPage = productService.searchProducts(keyword, categoryId, pageable);
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
-		// --- END UPDATED Logic ---
 
-		// --- NEW: Fetch stats ---
-		// Note: These are grand totals, not based on the search/filter
 		long totalProducts = productService.countAllProducts();
 		long lowStockProducts = productService.countLowStockProducts();
 		long outOfStockProducts = productService.countOutOfStockProducts();
@@ -92,17 +85,15 @@ public class AdminProductController {
 		model.addAttribute("totalProducts", totalProducts);
 		model.addAttribute("lowStockProducts", lowStockProducts);
 		model.addAttribute("outOfStockProducts", outOfStockProducts);
-		// --- END NEW ---
 
-		model.addAttribute("productPage", productPage); // NEW: Add page object
-		model.addAttribute("products", productPage.getContent()); // Get content from page
+		model.addAttribute("productPage", productPage);
+		model.addAttribute("products", productPage.getContent());
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
 
-		// NEW: Pass pagination attributes
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", productPage.getTotalPages());
-		model.addAttribute("totalItems", productPage.getTotalElements()); // This is the paged total
+		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
 
 		Map<Long, BigDecimal> inventoryStockMap = new HashMap<>();
@@ -125,21 +116,17 @@ public class AdminProductController {
 		if (!model.containsAttribute("productUpdateDto")) {
 			model.addAttribute("productUpdateDto", new ProductDto());
 		}
-		// --- NEW: Add DTO for category update modal ---
 		if (!model.containsAttribute("categoryUpdateDto")) {
 			model.addAttribute("categoryUpdateDto", new CategoryDto());
 		}
-		// --- END NEW ---
 		return "admin/products";
 	}
 
-	// --- UPDATED METHOD: ADD PRODUCT ---
 	@PostMapping("/add")
 	public String addProduct(@Valid @ModelAttribute("productDto") ProductDto productDto, BindingResult result,
-			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile, // NEW: Added imageFile
+			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
-		// Check DTO validation errors first
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for add. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
@@ -151,11 +138,10 @@ public class AdminProductController {
 		}
 
 		try {
-			// --- NEW: File Handling ---
 			if (imageFile != null && !imageFile.isEmpty()) {
 				try {
 					String imagePath = fileStorageService.store(imageFile);
-					productDto.setImageUrl(imagePath); // Set the path in the DTO
+					productDto.setImageUrl(imagePath);
 				} catch (Exception e) {
 					log.error("Error storing image file during add: {}", e.getMessage());
 					result.reject("global", "Could not save image: " + e.getMessage());
@@ -168,20 +154,17 @@ public class AdminProductController {
 					return "redirect:" + redirectUrl;
 				}
 			}
-			// --- END NEW ---
 
-			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_PRODUCT",
 					"Added new product: " + savedProduct.getName() + " (ID: " + savedProduct.getId() + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + savedProduct.getName() + "' added successfully!");
 
-		} catch (RuntimeException e) { // Catch validation (threshold) or other runtime errors
+		} catch (RuntimeException e) {
 			log.warn("Error adding product: {}", e.getMessage(), e);
-			// Add specific error back to BindingResult or use a generic flash attribute
 			if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage()); // Use global error for threshold issue
+				result.reject("global", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("productError", "Error adding product: " + e.getMessage());
 			}
@@ -196,13 +179,11 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// --- UPDATED METHOD: UPDATE PRODUCT ---
 	@PostMapping("/update")
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, BindingResult result,
-			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile, // NEW: Added imageFile
+			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
-		// Check DTO validation errors first
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for update. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
@@ -218,24 +199,19 @@ public class AdminProductController {
 			if (productDto.getId() == null)
 				throw new IllegalArgumentException("Product ID is missing for update.");
 
-			// --- NEW: File Handling for Update ---
-			String oldImagePath = productDto.getImageUrl(); // Get the existing path from the hidden form field
+			String oldImagePath = productDto.getImageUrl();
 
 			if (productDto.isRemoveImage()) {
-				// 1. User checked "Remove Image"
 				log.info("User requested image removal for product ID: {}", productDto.getId());
 				if (StringUtils.hasText(oldImagePath)) {
 					fileStorageService.delete(oldImagePath);
 				}
-				productDto.setImageUrl(null); // Clear the path
+				productDto.setImageUrl(null);
 			} else if (imageFile != null && !imageFile.isEmpty()) {
-				// 2. User uploaded a new image
 				log.info("User uploaded new image for product ID: {}", productDto.getId());
 				try {
-					// Store the new file
 					String newImagePath = fileStorageService.store(imageFile);
-					productDto.setImageUrl(newImagePath); // Set the new path
-					// Delete the old file if it existed
+					productDto.setImageUrl(newImagePath);
 					if (StringUtils.hasText(oldImagePath)) {
 						fileStorageService.delete(oldImagePath);
 					}
@@ -251,23 +227,19 @@ public class AdminProductController {
 					return "redirect:" + redirectUrl;
 				}
 			} else {
-				// 3. User did nothing (or file was empty)
-				// The productDto.imageUrl (from the hidden field) will just be re-saved.
 				log.debug("No image change for product ID: {}", productDto.getId());
 			}
-			// --- END NEW ---
 
-			// Service method now handles threshold validation
 			Product savedProduct = productService.save(productDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PRODUCT",
 					"Updated product: " + savedProduct.getName() + " (ID: " + savedProduct.getId() + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + savedProduct.getName() + "' updated successfully!");
 
-		} catch (RuntimeException e) { // Catch validation (threshold) or other runtime errors
+		} catch (RuntimeException e) {
 			log.warn("Error updating product: {}", e.getMessage(), e);
 			if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage()); // Use global error for threshold issue
+				result.reject("global", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("productError", "Error updating product: " + e.getMessage());
 			}
@@ -283,130 +255,13 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	@PostMapping("/categories/add")
-	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
-			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
-
-		// --- Removed manual duplicate name check ---
-
-		// Check DTO validation errors first
-		if (result.hasErrors()) {
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
-			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes); // Might need products list too
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8))); // Add
-																											// products
-																											// list
-																											// back
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
-					.build().toUriString();
-			return "redirect:" + redirectUrl;
-		}
-
-		try {
-			// Service method now handles validation and saving
-			Category newCategory = categoryService.saveFromDto(categoryDto);
-			activityLogService.logAdminAction(principal.getName(), "ADD_CATEGORY",
-					"Added new product category: " + newCategory.getName());
-			redirectAttributes.addFlashAttribute("categorySuccess",
-					"Category '" + newCategory.getName() + "' added successfully!");
-
-		} catch (IllegalArgumentException e) { // Catch validation errors from service
-			log.warn("Validation error adding product category: {}", e.getMessage());
-			if (e.getMessage().contains("already exists")) {
-				result.rejectValue("name", "duplicate", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("categoryError", "Error adding category: " + e.getMessage());
-			}
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
-			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
-					.build().toUriString();
-			return "redirect:" + redirectUrl;
-
-		} catch (RuntimeException e) { // Catch other runtime errors
-			log.error("Error adding product category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
-					.build().toUriString();
-			return "redirect:" + redirectUrl;
-		}
-
-		return "redirect:/admin/products";
-	}
-
-	// --- NEW: Update Category Method ---
-	@PostMapping("/categories/update")
-	public String updateCategory(@Valid @ModelAttribute("categoryUpdateDto") CategoryDto categoryDto,
-			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) {
-
-		// Check DTO validation errors first
-		if (result.hasErrors()) {
-			log.warn("Category update DTO validation failed. Errors: {}", result.getAllErrors());
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
-					result);
-			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8))); // Add
-																											// products
-																											// list
-																											// back
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
-					.queryParam("editId", categoryDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
-		}
-
-		try {
-			// Service method now handles validation and updating
-			Category updatedCategory = categoryService.updateFromDto(categoryDto);
-			activityLogService.logAdminAction(principal.getName(), "EDIT_CATEGORY", "Updated product category: "
-					+ updatedCategory.getName() + " (ID: " + updatedCategory.getId() + ")");
-			redirectAttributes.addFlashAttribute("categorySuccess",
-					"Category '" + updatedCategory.getName() + "' updated successfully!");
-
-		} catch (IllegalArgumentException e) { // Catch validation errors from service
-			log.warn("Validation error updating product category: {}", e.getMessage());
-			if (e.getMessage().contains("already exists")) {
-				result.rejectValue("name", "duplicate", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("categoryError", "Error updating category: " + e.getMessage());
-			}
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
-					result);
-			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
-					.queryParam("editId", categoryDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
-
-		} catch (RuntimeException e) { // Catch other runtime errors (e.g., not found)
-			log.error("Error updating product category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			redirectAttributes.addFlashAttribute("products", productService.findAll(PageRequest.of(0, 8)));
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
-					.queryParam("editId", categoryDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
-		}
-
-		return "redirect:/admin/products";
-	}
-	// --- END NEW ---
+	// All /categories/* POST mappings removed
 
 	@PostMapping("/stock/adjust")
-	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity, // CHANGED
-			@RequestParam("action") String action, // ADDED
-			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
+	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
+			@RequestParam("action") String action, RedirectAttributes redirectAttributes, Principal principal,
+			UriComponentsBuilder uriBuilder) {
 
-		// Validate that quantity is positive
 		if (quantity <= 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
@@ -414,7 +269,6 @@ public class AdminProductController {
 			return "redirect:" + redirectUrl;
 		}
 
-		// Determine the final quantity change (positive or negative)
 		int quantityChange = action.equals("deduct") ? -quantity : quantity;
 		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
 
@@ -436,7 +290,6 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
@@ -447,53 +300,20 @@ public class AdminProductController {
 		}
 		String productName = productOpt.get().getName();
 		try {
-			// --- NEW: Delete associated image file ---
 			String imagePath = productOpt.get().getImageUrl();
 			if (StringUtils.hasText(imagePath)) {
 				fileStorageService.delete(imagePath);
 			}
-			// --- END NEW ---
 
-			// Service layer now handles validation (e.g., if product is in an order)
 			productService.deleteById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
 					"Deleted product: " + productName + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("productSuccess",
 					"Product '" + productName + "' deleted successfully!");
 		} catch (RuntimeException e) {
-			// Catch exceptions thrown from the service layer
 			redirectAttributes.addFlashAttribute("productError",
 					"Could not delete product '" + productName + "': " + e.getMessage());
 		}
 		return "redirect:/admin/products";
 	}
-	// **** END OF UPDATED METHOD ****
-
-	// **** METHOD UPDATED ****
-	@PostMapping("/categories/delete/{id}")
-	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
-			Principal principal) {
-		Optional<Category> categoryOpt = categoryService.findById(id);
-		if (categoryOpt.isEmpty()) {
-			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
-			return "redirect:/admin/products";
-		}
-		String categoryName = categoryOpt.get().getName();
-
-		// --- VALIDATION LOGIC MOVED TO SERVICE ---
-
-		try {
-			// Service layer now handles validation
-			categoryService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_CATEGORY",
-					"Deleted product category: " + categoryName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("categorySuccess",
-					"Category '" + categoryName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			// Catch exceptions thrown from the service layer
-			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
-		}
-		return "redirect:/admin/products";
-	}
-	// **** END OF UPDATED METHOD ****
 }

@@ -11,7 +11,7 @@
 					<form th:action="@{/admin/products/add}" method="post"
 						th:object="${productDto}" id="addProductForm"
 						enctype="multipart/form-data"
-						data-confirm-message="Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified. Proceed?">
+						data-confirm-save-message="Adding this product will lock its ingredients. Once added, the ingredients can no longer be modified. Proceed?">
 						<div class="modal-header">
 							<h5 class="modal-title" id="addProductModalLabel">Add New
 								Product</h5>
@@ -405,7 +405,7 @@
 										th:errors="*{criticalStockThreshold}"></div>
 								</div>
 								<div class="col-12 mb-3" th:if="${#fields.hasGlobalErrors()}">
-									<div class="alert alert-danger alert-sm p-2" role="alert"
+									<div class_w="alert alert-danger alert-sm p-2" role="alert"
 										th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global
 										error</div>
 								</div>

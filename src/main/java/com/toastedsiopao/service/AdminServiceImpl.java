@@ -2,7 +2,9 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
+import com.toastedsiopao.model.Role; // NEW IMPORT
 import com.toastedsiopao.model.User;
+import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
 import com.toastedsiopao.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +22,22 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class AdminServiceImpl implements AdminService {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminServiceImpl.class);
+	private static final String OWNER_USERNAME = "mktoastedadmin"; // NEW: Owner protection
+	private static final String OWNER_ROLE_NAME = "ROLE_OWNER"; // NEW: Owner role name
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; // NEW: Customer role name
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private RoleRepository roleRepository; // NEW INJECTION
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -59,13 +68,18 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<User> findAllAdmins() {
-		return userRepository.findByRole("ROLE_ADMIN");
+		// We now find both Owner and Admin roles
+		List<User> owners = userRepository.findByRole_Name("ROLE_OWNER"); // UPDATED
+		List<User> admins = userRepository.findByRole_Name("ROLE_ADMIN"); // UPDATED
+		owners.addAll(admins);
+		return owners;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<User> findAllAdmins(Pageable pageable) {
-		return userRepository.findByRole("ROLE_ADMIN", pageable);
+		// This search is now handled by the custom query in the repository
+		return userRepository.findAdminsBySearchKeyword("", pageable); // UPDATED
 	}
 
 	@Override
@@ -74,15 +88,26 @@ public class AdminServiceImpl implements AdminService {
 		if (!StringUtils.hasText(keyword)) {
 			return findAllAdmins(pageable);
 		}
+		// This search is handled by the custom query
 		return userRepository.findAdminsBySearchKeyword(keyword.trim(), pageable);
 	}
 
 	@Override
-	public User createAccount(AdminAccountCreateDto userDto, String role) {
+	public User createAccount(AdminAccountCreateDto userDto) { // UPDATED signature
 		// UPDATED: Calls to new service
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
+
+		// --- NEW: Find Role by ID from DTO ---
+		Role roleToAssign = roleRepository.findById(userDto.getRoleId()).orElseThrow(
+				() -> new RuntimeException("CRITICAL: Role with ID '" + userDto.getRoleId() + "' not found."));
+
+		// Prevent assigning ROLE_OWNER or ROLE_CUSTOMER
+		if (OWNER_ROLE_NAME.equals(roleToAssign.getName()) || CUSTOMER_ROLE_NAME.equals(roleToAssign.getName())) {
+			throw new IllegalArgumentException("Cannot assign this role through the admin creation form.");
+		}
+		// --- END NEW ---
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -90,7 +115,7 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(role); // Use provided role
+		newUser.setRole(roleToAssign); // Use Role object
 		// Status, CreatedAt, and LastActivity are set by @PrePersist
 
 		return userRepository.save(newUser);
@@ -101,9 +126,28 @@ public class AdminServiceImpl implements AdminService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		if (!"ROLE_ADMIN".equals(userToUpdate.getRole())) {
+		// --- NEW: Owner Protection ---
+		if (OWNER_USERNAME.equals(userToUpdate.getUsername())) {
+			throw new IllegalArgumentException(
+					"The Owner account ('" + OWNER_USERNAME + "') cannot be edited this way.");
+		}
+		// --- END NEW ---
+
+		// Check if it's an admin/owner role
+		if (userToUpdate.getRole() == null || (!"ROLE_ADMIN".equals(userToUpdate.getRole().getName())
+				&& !"ROLE_OWNER".equals(userToUpdate.getRole().getName()))) {
 			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
 		}
+
+		// --- NEW: Find Role by ID from DTO ---
+		Role roleToAssign = roleRepository.findById(userDto.getRoleId()).orElseThrow(
+				() -> new RuntimeException("CRITICAL: Role with ID '" + userDto.getRoleId() + "' not found."));
+
+		// Prevent assigning ROLE_OWNER to another user
+		if (OWNER_ROLE_NAME.equals(roleToAssign.getName()) || CUSTOMER_ROLE_NAME.equals(roleToAssign.getName())) {
+			throw new IllegalArgumentException("Cannot assign the Owner or Customer role to another user.");
+		}
+		// --- END NEW ---
 
 		// UPDATED: Calls to new service
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
@@ -113,40 +157,98 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		// Password and Role are NOT updated here
+		userToUpdate.setRole(roleToAssign); // UPDATED
 
 		return userRepository.save(userToUpdate);
 	}
 
 	@Override
 	public User updateAdminProfile(AdminUpdateDto adminDto) {
-		// This method is identical to updateAdmin for now
-		// We can add password changing logic here later
-		return updateAdmin(adminDto);
+		// This method is for an admin updating *themselves*
+		User userToUpdate = userRepository.findById(adminDto.getId())
+				.orElseThrow(() -> new RuntimeException("User not found with id: " + adminDto.getId()));
+
+		// UPDATED: Calls to new service
+		userValidationService.validateUsernameOnUpdate(adminDto.getUsername(), adminDto.getId());
+		userValidationService.validateEmailOnUpdate(adminDto.getEmail(), adminDto.getId());
+
+		userToUpdate.setFirstName(adminDto.getFirstName());
+		userToUpdate.setLastName(adminDto.getLastName());
+		userToUpdate.setUsername(adminDto.getUsername());
+		userToUpdate.setEmail(adminDto.getEmail());
+
+		// --- NEW: Handle role update for Owner ---
+		// If the user is the Owner, we must ensure their roleId in the DTO
+		// matches their actual role, otherwise validation fails.
+		// We also re-assign their role to prevent it from being accidentally
+		// set to null. This stops an Owner from accidentally de-assigning themselves.
+		if (OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
+			if (!userToUpdate.getRole().getId().equals(adminDto.getRoleId())) {
+				log.warn("Attempt by Owner ({}) to change their own role was blocked.", userToUpdate.getUsername());
+				throw new IllegalArgumentException("Owner account cannot change its own role.");
+			}
+			userToUpdate.setRole(userToUpdate.getRole()); // Re-affirm the role
+		} else {
+			// For non-owners, they cannot change their role from this screen.
+			// We just re-assign their existing role.
+			userToUpdate.setRole(userToUpdate.getRole());
+		}
+		// --- END NEW ---
+
+		return userRepository.save(userToUpdate);
 	}
 
 	@Override
 	public void deleteAdminById(Long id) {
-		// We could add logic to prevent deleting the last admin
-		long adminCount = countAllAdmins();
+		// 1. Find the user
+		User userToDelete = userRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+
+		// --- NEW: Owner Protection ---
+		if (OWNER_USERNAME.equals(userToDelete.getUsername())) {
+			throw new RuntimeException("The Owner account ('" + OWNER_USERNAME + "') cannot be deleted.");
+		}
+		// --- END NEW ---
+
+		// 2. Check if it's an admin
+		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) { // UPDATED
+			throw new RuntimeException("Cannot delete non-admin user with this method.");
+		}
+
+		// 3. We could add logic to prevent deleting the last admin
+		long adminCount = countAllAdmins(); // This now counts ADMIN + OWNER
 		if (adminCount <= 1) {
 			throw new RuntimeException("Cannot delete the last admin account.");
 		}
+
 		userRepository.deleteById(id);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public long countAllAdmins() {
-		// We count all admins regardless of status
-		return userRepository.countByRole("ROLE_ADMIN");
+		// We count all admins and owners
+		return userRepository.countByRole_Name("ROLE_ADMIN") + userRepository.countByRole_Name("ROLE_OWNER"); // UPDATED
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public long countActiveAdmins() {
-		return userRepository.countByRoleAndStatus("ROLE_ADMIN", "ACTIVE");
+		// Count active admins and active owners
+		return userRepository.countByRole_NameAndStatus("ROLE_ADMIN", "ACTIVE") // UPDATED
+				+ userRepository.countByRole_NameAndStatus("ROLE_OWNER", "ACTIVE"); // UPDATED
 	}
+
+	// --- NEW: Implementation for role dropdown ---
+	@Override
+	@Transactional(readOnly = true)
+	public List<Role> findAllAdminRoles() {
+		return roleRepository.findAll().stream().filter(role -> !CUSTOMER_ROLE_NAME.equals(role.getName())) // Exclude
+																											// customer
+																											// role
+				.collect(Collectors.toList());
+	}
+	// --- END NEW ---
 
 	// --- NEW: Dashboard Stats Implementation ---
 	@Override
@@ -154,6 +256,8 @@ public class AdminServiceImpl implements AdminService {
 	public long countNewAdminsThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		return userRepository.countByRoleAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now);
+		// This counts both new admins and new owners (though owners shouldn't be new)
+		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now) // UPDATED
+				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now); // UPDATED
 	}
 }

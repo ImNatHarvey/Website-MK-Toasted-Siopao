@@ -2,6 +2,7 @@ package com.toastedsiopao.dto;
 
 import jakarta.validation.constraints.Email; // **** ADDED IMPORT ****
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -32,4 +33,9 @@ public class AdminUpdateDto {
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
 	// **** END NEW FIELD ****
+
+	// --- NEW: For assigning a role ---
+	@NotNull(message = "A role must be selected")
+	private Long roleId;
+	// --- END NEW ---
 }

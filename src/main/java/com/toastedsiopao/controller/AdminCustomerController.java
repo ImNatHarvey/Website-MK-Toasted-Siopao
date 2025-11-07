@@ -3,6 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.User;
+import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.AdminService; // NEW IMPORT
@@ -38,6 +39,9 @@ public class AdminCustomerController {
 
 	@Autowired
 	private ActivityLogService activityLogService;
+
+	@Autowired
+	private RoleRepository roleRepository; // NEW INJECTION FOR FIX
 
 	@GetMapping
 	public String manageCustomers(Model model, Principal principal,
@@ -99,8 +103,11 @@ public class AdminCustomerController {
 		}
 
 		try {
-			// Use the AdminService to create any new account
-			User savedUser = adminService.createAccount(userDto, "ROLE_CUSTOMER"); // UPDATED SERVICE CALL
+			// --- THIS IS THE FIX ---
+			// Use the CustomerService to create the customer account
+			User savedUser = customerService.createCustomerFromAdmin(userDto);
+			// --- END FIX ---
+
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (CUSTOMER)",
 					"Created new customer user: " + savedUser.getUsername());
 			redirectAttributes.addFlashAttribute("customerSuccess",
@@ -198,7 +205,8 @@ public class AdminCustomerController {
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<User> userOpt = customerService.findUserById(id); // UPDATED
-		if (userOpt.isEmpty() || !"ROLE_CUSTOMER".equals(userOpt.get().getRole())) {
+		if (userOpt.isEmpty() || userOpt.get().getRole() == null
+				|| !"ROLE_CUSTOMER".equals(userOpt.get().getRole().getName())) { // UPDATED
 			redirectAttributes.addFlashAttribute("customerError", "Customer not found or invalid ID.");
 			return "redirect:/admin/customers";
 		}

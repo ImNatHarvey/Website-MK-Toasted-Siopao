@@ -28,11 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
+			const role = adminRow.querySelector('.badge') ? adminRow.querySelector('.badge').textContent.trim() : 'N/A'; // Get role from badge text
 
 			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
 			viewAdminModal.querySelector('#viewAdminName').textContent = name;
 			viewAdminModal.querySelector('#viewAdminUsername').textContent = username;
 			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
+			viewAdminModal.querySelector('#viewAdminRole').textContent = role; // NEW
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
 		});
 	}
@@ -63,6 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
 			form.querySelector('#editAdminUsername').value = dataset.username || '';
 			form.querySelector('#editAdminEmail').value = dataset.email || '';
+			form.querySelector('#editAdminRole').value = dataset.roleId || ''; // NEW: Populate role dropdown
 
 			if (mainElement.dataset.showEditAdminModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -102,8 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		editProfileModal.addEventListener('show.bs.modal', function(event) {
 			// This modal doesn't use a table row, it uses data from the current user
-			// We'll need to fetch this from the server or pass it in a different way.
-			// For now, we'll assume the controller has populated `adminProfileDto`
+			// We'll assume the controller has populated `adminProfileDto`
 			// with the current user's data if it's NOT a validation reopen.
 
 			const isValidationReopen = mainElement.dataset.showEditProfileModal === 'true';

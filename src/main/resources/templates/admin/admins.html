@@ -79,6 +79,7 @@
 								<th>Name</th>
 								<th>Username</th>
 								<th>Email</th>
+								<th>Role</th>
 								<th>Status</th>
 								<th>Last Activity</th>
 								<th>Actions</th>
@@ -91,8 +92,9 @@
 								th:data-last-name="${admin.lastName}"
 								th:data-username="${admin.username}"
 								th:data-email="${admin.email != null ? admin.email : 'N/A'}"
+								th:data-role-id="${admin.role != null ? admin.role.id : ''}"
 								th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
-								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyY HH:mm') : 'N/A'}"
 								th:data-status="${admin.status}">
 
 								<td th:text="${admin.id}">001</td>
@@ -100,6 +102,10 @@
 									User</td>
 								<td th:text="${admin.username}">admin_user</td>
 								<td th:text="${admin.email != null ? admin.email : 'N/A'}">N/A</td>
+								<td><span class="badge"
+									th:text="${admin.role != null ? admin.role.name.replace('ROLE_', '') : 'N/A'}"
+									th:classappend="${admin.role != null and admin.role.name == 'ROLE_OWNER'} ? 'bg-danger' : 'bg-primary'">
+										Role </span></td>
 								<td><span class="status-badge"
 									th:text="${admin.status != null ? admin.status : 'N/A'}"
 									th:classappend="${admin.status == 'ACTIVE' ? 'status-active' : 'status-cancelled'}">Status</span>
@@ -113,18 +119,20 @@
 
 									<button type="button"
 										class="btn btn-sm btn-action-edit edit-admin-btn"
-										data-bs-toggle="modal" data-bs-target="#editAdminModal">Edit</button>
+										data-bs-toggle="modal" data-bs-target="#editAdminModal"
+										th:disabled="${admin.role != null and admin.role.name == 'ROLE_OWNER'}"
+										title="The Owner account cannot be edited.">Edit</button>
 									<form th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'?'">
 										<button type="submit" class="btn btn-sm btn-action-delete"
-											th:disabled="${admin.username == currentUsername}"
-											title="You cannot delete your own account.">Delete</button>
+											th:disabled="${admin.username == currentUsername || (admin.role != null and admin.role.name == 'ROLE_OWNER')}"
+											th:title="${admin.username == currentUsername ? 'You cannot delete your own account.' : (admin.role != null and admin.role.name == 'ROLE_OWNER' ? 'The Owner account cannot be deleted.' : 'Delete Admin')}">Delete</button>
 									</form>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(admins)}">
-								<td colspan="7" class="text-center text-muted"
+								<td colspan="8" class="text-center text-muted"
 									th:text="${keyword != null ? 'No admins found matching your search.' : 'No admins found.'}">
 									No admins found.</td>
 							</tr>

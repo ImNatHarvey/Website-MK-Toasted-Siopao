@@ -2,6 +2,7 @@ package com.toastedsiopao.controller;
 
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.model.Role; // NEW IMPORT
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService;
@@ -22,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
+import java.util.List; // NEW IMPORT
 import java.util.Optional;
 
 @Controller
@@ -42,6 +44,7 @@ public class AdminManagementController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
 		redirectAttributes.addFlashAttribute("admins", adminService.findAllAdmins(defaultPageable).getContent());
+		redirectAttributes.addFlashAttribute("allAdminRoles", adminService.findAllAdminRoles()); // NEW
 	}
 
 	@GetMapping
@@ -52,12 +55,14 @@ public class AdminManagementController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<User> adminPage = adminService.searchAdmins(keyword, pageable);
+		List<Role> allAdminRoles = adminService.findAllAdminRoles(); // NEW
 
 		model.addAttribute("adminPage", adminPage);
 		model.addAttribute("admins", adminPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
+		model.addAttribute("allAdminRoles", allAdminRoles); // NEW
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", adminPage.getTotalPages());
@@ -85,6 +90,9 @@ public class AdminManagementController {
 				profileDto.setLastName(currentUser.getLastName());
 				profileDto.setUsername(currentUser.getUsername());
 				profileDto.setEmail(currentUser.getEmail());
+				if (currentUser.getRole() != null) { // NEW
+					profileDto.setRoleId(currentUser.getRole().getId());
+				}
 			}
 			model.addAttribute("adminProfileDto", profileDto);
 		}
@@ -111,7 +119,7 @@ public class AdminManagementController {
 		// --- END UPDATE ---
 
 		try {
-			User savedUser = adminService.createAccount(adminDto, "ROLE_ADMIN");
+			User savedUser = adminService.createAccount(adminDto); // UPDATED (role is in DTO)
 			activityLogService.logAdminAction(principal.getName(), "ADD_ADMIN",
 					"Created new admin user: " + savedUser.getUsername());
 			redirectAttributes.addFlashAttribute("adminSuccess",
@@ -202,6 +210,13 @@ public class AdminManagementController {
 			return "redirect:/admin/admins";
 		}
 
+		// --- NEW: Manually set roleId for Owner profile update ---
+		// This ensures the service-layer validation passes for the Owner
+		if (currentUser.getRole() != null) {
+			adminDto.setRoleId(currentUser.getRole().getId());
+		}
+		// --- END NEW ---
+
 		try {
 			User updatedUser = adminService.updateAdminProfile(adminDto); // Uses same logic as updateAdmin for now
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE",
@@ -231,7 +246,7 @@ public class AdminManagementController {
 	@PostMapping("/delete/{id}")
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
 		Optional<User> userOpt = adminService.findUserById(id);
-		if (userOpt.isEmpty() || !"ROLE_ADMIN".equals(userOpt.get().getRole())) {
+		if (userOpt.isEmpty()) { // UPDATED: Check for empty optional
 			redirectAttributes.addFlashAttribute("adminError", "Admin not found or invalid ID.");
 			return "redirect:/admin/admins";
 		}

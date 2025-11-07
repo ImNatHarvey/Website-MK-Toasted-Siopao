@@ -2,9 +2,12 @@ package com.toastedsiopao.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
@@ -33,9 +36,11 @@ public class User {
 	@Column(nullable = false, length = 68) // BCrypt hash length
 	private String password;
 
-	@NotBlank(message = "Role cannot be blank")
-	@Column(nullable = false, length = 20)
-	private String role; // "ROLE_CUSTOMER", "ROLE_ADMIN"
+	// --- THIS IS THE MAJOR CHANGE ---
+	@ManyToOne(fetch = FetchType.EAGER) // Eagerly fetch the role, we always need it
+	@JoinColumn(name = "role_id") // This user table will have a "role_id" foreign key
+	private Role role; // e.g., "ROLE_CUSTOMER", "ROLE_ADMIN"
+	// --- END CHANGE ---
 
 	@Column(length = 50)
 	private String firstName;
@@ -86,7 +91,7 @@ public class User {
 	// --- END NEW ---
 
 	// Constructor for convenience (still useful for initial user creation)
-	public User(String username, String password, String role) {
+	public User(String username, String password, Role role) {
 		this.username = username;
 		this.password = password;
 		this.role = role;

@@ -13,12 +13,15 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.toastedsiopao.model.Permission; // NEW IMPORT
 import com.toastedsiopao.model.User;
 // We don't inject UserRepository directly, we use the service
 import com.toastedsiopao.service.CustomerService; // UPDATED IMPORT
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set; // NEW IMPORT
+import java.util.stream.Collectors; // NEW IMPORT
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -54,17 +57,36 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		// --- UPDATED: Use logger ---
 		log.info("--- User found: {} ---", user.getUsername());
 		log.debug("--- Hashed Password from DB: [PROTECTED] ---"); // Don't log password
-		log.info("--- Role from DB: {} ---", user.getRole());
+		if (user.getRole() != null) {
+			log.info("--- Role from DB: {} ---", user.getRole().getName());
+		} else {
+			log.warn("--- User {} has a NULL role! ---", user.getUsername());
+		}
 		// --- END UPDATE ---
+
+		// --- NEW: Get authorities from Role + Permissions ---
+		Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
+		// --- END NEW ---
 
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-				getAuthorities(user.getRole()));
+				authorities); // UPDATED
 	}
 
-	private Collection<? extends GrantedAuthority> getAuthorities(String role) {
-		// --- UPDATED: Use logger ---
-		log.debug("--- Assigning authority: {} ---", role);
-		// --- END UPDATE ---
-		return Collections.singletonList(new SimpleGrantedAuthority(role));
+	private Collection<? extends GrantedAuthority> getAuthorities(User user) {
+		if (user.getRole() == null) {
+			log.error("User {} has no role! Assigning no authorities.", user.getUsername());
+			return Collections.emptyList();
+		}
+
+		// 1. Get all permissions from the role
+		Set<GrantedAuthority> authorities = user.getRole().getPermissions().stream()
+				.map(permission -> new SimpleGrantedAuthority(permission.name())).collect(Collectors.toSet());
+
+		// 2. Add the role name itself (e.g., "ROLE_OWNER") as an authority
+		// This is best practice for Spring Security
+		authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
+
+		log.debug("--- Assigning authorities for {}: {} ---", user.getUsername(), authorities);
+		return authorities;
 	}
 }

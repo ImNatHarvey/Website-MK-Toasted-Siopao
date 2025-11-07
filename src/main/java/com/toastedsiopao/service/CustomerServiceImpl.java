@@ -17,11 +17,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.toastedsiopao.dto.AdminAccountCreateDto; // NEW IMPORT
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.Order; // NEW IMPORT
+import com.toastedsiopao.model.Role; // NEW IMPORT
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.OrderRepository; // NEW IMPORT
+import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
 import com.toastedsiopao.repository.UserRepository;
 
 @Service
@@ -31,6 +34,7 @@ public class CustomerServiceImpl implements CustomerService {
 	private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
 	private static final int INACTIVITY_PERIOD_MONTHS = 1;
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; // NEW
 
 	@Autowired
 	private UserRepository userRepository;
@@ -38,6 +42,9 @@ public class CustomerServiceImpl implements CustomerService {
 	// NEW: Inject OrderRepository
 	@Autowired
 	private OrderRepository orderRepository;
+
+	@Autowired
+	private RoleRepository roleRepository; // NEW INJECTION
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -66,6 +73,11 @@ public class CustomerServiceImpl implements CustomerService {
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
+		// --- NEW: Find the customer role ---
+		Role customerRole = roleRepository.findByName(CUSTOMER_ROLE_NAME)
+				.orElseThrow(() -> new RuntimeException("CRITICAL: 'ROLE_CUSTOMER' not found in database."));
+		// --- END NEW ---
+
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
 		newUser.setLastName(userDto.getLastName());
@@ -73,7 +85,7 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole("ROLE_CUSTOMER");
+		newUser.setRole(customerRole); // UPDATED
 
 		newUser.setHouseNo(userDto.getHouseNo());
 		newUser.setLotNo(userDto.getLotNo());
@@ -85,6 +97,29 @@ public class CustomerServiceImpl implements CustomerService {
 
 		return userRepository.save(newUser);
 	}
+
+	// --- NEW: Implementation for admin panel creation ---
+	@Override
+	public User createCustomerFromAdmin(AdminAccountCreateDto userDto) {
+		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
+		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
+		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
+
+		Role customerRole = roleRepository.findByName(CUSTOMER_ROLE_NAME)
+				.orElseThrow(() -> new RuntimeException("CRITICAL: 'ROLE_CUSTOMER' not found in database."));
+
+		User newUser = new User();
+		newUser.setFirstName(userDto.getFirstName());
+		newUser.setLastName(userDto.getLastName());
+		newUser.setUsername(userDto.getUsername());
+		newUser.setEmail(userDto.getEmail());
+		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
+		newUser.setRole(customerRole);
+		// Note: Address fields are not in this DTO, they will be null
+
+		return userRepository.save(newUser);
+	}
+	// --- END NEW ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -101,7 +136,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<User> findAllCustomers(Pageable pageable) {
-		return userRepository.findByRole("ROLE_CUSTOMER", pageable);
+		return userRepository.findByRole_Name(CUSTOMER_ROLE_NAME, pageable); // UPDATED
 	}
 
 	@Override
@@ -109,7 +144,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		if (!"ROLE_CUSTOMER".equals(userToUpdate.getRole())) {
+		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) { // UPDATED
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
 
@@ -147,7 +182,7 @@ public class CustomerServiceImpl implements CustomerService {
 		if (!StringUtils.hasText(keyword)) {
 			return findAllCustomers(pageable);
 		}
-		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable);
+		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable); // Query was updated in repo
 	}
 
 	// **** METHOD UPDATED ****
@@ -157,7 +192,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-		if (!"ROLE_CUSTOMER".equals(user.getRole())) {
+		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { // UPDATED
 			throw new RuntimeException("Cannot delete non-customer user with this method.");
 		}
 
@@ -176,7 +211,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	@Transactional(readOnly = true)
 	public long countActiveCustomers() {
-		return userRepository.countByRoleAndStatus("ROLE_CUSTOMER", "ACTIVE");
+		return userRepository.countByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE"); // UPDATED
 	}
 
 	// --- Activity Tracking Methods ---
@@ -208,7 +243,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-		if (!"ROLE_CUSTOMER".equals(user.getRole())) {
+		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { // UPDATED
 			throw new IllegalArgumentException("Can only update status for customers.");
 		}
 
@@ -223,7 +258,7 @@ public class CustomerServiceImpl implements CustomerService {
 		LocalDateTime cutoffDate = LocalDateTime.now(clock).minusMonths(INACTIVITY_PERIOD_MONTHS); // UPDATED: Use clock
 		log.info("Inactivity cutoff date: {}", cutoffDate);
 
-		List<User> activeCustomers = userRepository.findByRoleAndStatus("ROLE_CUSTOMER", "ACTIVE");
+		List<User> activeCustomers = userRepository.findByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE"); // UPDATED
 		int markedInactive = 0;
 
 		for (User customer : activeCustomers) {
@@ -254,6 +289,6 @@ public class CustomerServiceImpl implements CustomerService {
 	public long countNewCustomersThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		return userRepository.countByRoleAndCreatedAtBetween("ROLE_CUSTOMER", startOfMonth, now);
+		return userRepository.countByRole_NameAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now); // UPDATED
 	}
 }

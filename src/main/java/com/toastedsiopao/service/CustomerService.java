@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.dto.AdminAccountCreateDto; // NEW IMPORT
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.User;
@@ -10,7 +11,11 @@ import java.util.Optional;
 
 public interface CustomerService {
 
-	User saveCustomer(CustomerSignUpDto customerDto);
+	User saveCustomer(CustomerSignUpDto customerDto); // For public signup
+
+	// --- NEW: For admin panel creation ---
+	User createCustomerFromAdmin(AdminAccountCreateDto userDto);
+	// --- END NEW ---
 
 	User findByUsername(String username);
 

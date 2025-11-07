@@ -2,6 +2,7 @@ package com.toastedsiopao.dto;
 
 import jakarta.validation.constraints.Email; // **** ADDED IMPORT ****
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -39,6 +40,8 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
 
-	// This will be set by the controller ("ROLE_ADMIN" or "ROLE_CUSTOMER")
-	private String role;
+	// --- NEW: For assigning a role ---
+	@NotNull(message = "A role must be selected")
+	private Long roleId;
+	// --- END NEW ---
 }

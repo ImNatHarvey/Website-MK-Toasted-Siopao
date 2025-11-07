@@ -53,6 +53,26 @@
 									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
 									Error</div>
 							</div>
+
+							<div class="mb-3">
+								<label for="adminRole" class="form-label">Assign Role</label> <select
+									class="form-select" th:field="*{roleId}" id="adminRole"
+									th:errorclass="is-invalid">
+									<option value="">-- Select a Role --</option>
+									<th:block th:each="role : ${allAdminRoles}">
+										<option
+											th:if="${role.name != 'ROLE_OWNER' AND role.name != 'ROLE_CUSTOMER'}"
+											th:value="${role.id}"
+											th:text="${role.name.replace('ROLE_', '')}">Role
+											Name</option>
+									</th:block>
+								</select>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}">Role
+									Error</div>
+							</div>
+
+							<hr>
 							<div class="mb-3">
 								<label for="adminPassword" class="form-label">Password</label> <input
 									type="password" class="form-control" th:field="*{password}"
@@ -135,8 +155,27 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 							</div>
-							<div class="alert alert-warning small">Password and Role
-								cannot be changed from this form.</div>
+
+							<div class="mb-3">
+								<label for="editAdminRole" class="form-label">Assign
+									Role</label> <select class="form-select" th:field="*{roleId}"
+									id="editAdminRole" th:errorclass="is-invalid">
+									<option value="">-- Select a Role --</option>
+									<th:block th:each="role : ${allAdminRoles}">
+										<option
+											th:if="${role.name != 'ROLE_OWNER' AND role.name != 'ROLE_CUSTOMER'}"
+											th:value="${role.id}"
+											th:text="${role.name.replace('ROLE_', '')}">Role
+											Name</option>
+									</th:block>
+								</select>
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}">Role
+									Error</div>
+							</div>
+
+							<div class="alert alert-warning small">Password cannot be
+								changed from this form.</div>
 						</div>
 						<div class="modal-footer">
 							<button type="submit" class="btn btn-custom">Save
@@ -166,6 +205,9 @@
 						</p>
 						<p>
 							<strong>Email:</strong> <span id="viewAdminEmail"></span>
+						</p>
+						<p>
+							<strong>Role:</strong> <span id="viewAdminRole"></span>
 						</p>
 						<hr>
 						<p class="mb-1">
@@ -197,8 +239,8 @@
 								class="alert alert-danger small p-2" role="alert">Please
 								correct the errors below.</div>
 
-							<input type="hidden" th:field="*{id}" />
-
+							<input type="hidden" th:field="*{id}" /> <input type="hidden"
+								th:field="*{roleId}" />
 							<h5 class="mb-3">Personal Information</h5>
 							<div class="mb-3">
 								<label for="profileFirstName" class="form-label">First
@@ -233,6 +275,14 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 							</div>
+
+							<div class="mb-3">
+								<label for="profileRole" class="form-label">My Role</label> <input
+									type="text" class="form-control"
+									th:value="${#authentication.principal.authorities.contains('ROLE_OWNER') ? 'Owner' : 'Admin'}"
+									id="profileRole" readonly disabled>
+							</div>
+
 							<div class="alert alert-warning small">To change your
 								password, please use the "Forgot Password" feature on the login
 								page (feature coming soon).</div>

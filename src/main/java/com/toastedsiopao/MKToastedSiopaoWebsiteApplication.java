@@ -3,6 +3,7 @@ package com.toastedsiopao;
 import java.time.Clock; // Import Clock
 import java.time.LocalDateTime; // Import LocalDateTime
 import java.time.ZoneId; // Import ZoneId
+import java.util.Arrays;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -16,6 +17,9 @@ import org.springframework.scheduling.annotation.EnableScheduling; // Import Ena
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.toastedsiopao.model.User;
+import com.toastedsiopao.model.Permission; // NEW IMPORT
+import com.toastedsiopao.model.Role; // NEW IMPORT
+import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
 import com.toastedsiopao.repository.UserRepository;
 
 @SpringBootApplication
@@ -26,6 +30,9 @@ public class MKToastedSiopaoWebsiteApplication {
 
 	@Autowired
 	private UserRepository userRepository;
+
+	@Autowired
+	private RoleRepository roleRepository; // NEW INJECTION
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -50,7 +57,36 @@ public class MKToastedSiopaoWebsiteApplication {
 	@Bean
 	CommandLineRunner initDatabase() {
 		return args -> {
-			// --- Admin User ---
+			// --- NEW: Create Roles ---
+			Role ownerRole = roleRepository.findByName("ROLE_OWNER").orElseGet(() -> {
+				log.info(">>> Creating 'ROLE_OWNER' role...");
+				Role newOwnerRole = new Role("ROLE_OWNER");
+				// Add all permissions from the enum
+				Arrays.stream(Permission.values()).forEach(newOwnerRole::addPermission);
+				return roleRepository.save(newOwnerRole);
+			});
+
+			Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
+				log.info(">>> Creating 'ROLE_ADMIN' role...");
+				Role newAdminRole = new Role("ROLE_ADMIN");
+				// Add some default permissions for a basic admin (can be edited later)
+				newAdminRole.addPermission(Permission.VIEW_DASHBOARD);
+				newAdminRole.addPermission(Permission.VIEW_ORDERS);
+				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS);
+				newAdminRole.addPermission(Permission.VIEW_PRODUCTS);
+				newAdminRole.addPermission(Permission.VIEW_INVENTORY);
+				return roleRepository.save(newAdminRole);
+			});
+
+			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER").orElseGet(() -> {
+				log.info(">>> Creating 'ROLE_CUSTOMER' role...");
+				Role newCustomerRole = new Role("ROLE_CUSTOMER");
+				// Customers have no admin-panel permissions
+				return roleRepository.save(newCustomerRole);
+			});
+			// --- END NEW ROLES ---
+
+			// --- Admin User (OWNER) ---
 			String adminUsername = "mktoastedadmin";
 			String adminPassword = "mktoasted123";
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
@@ -60,7 +96,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				User adminUser = new User();
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				adminUser.setRole("ROLE_ADMIN");
+				adminUser.setRole(ownerRole); // UPDATED
 				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
 				// Status, CreatedAt, LastActivity will be set by @PrePersist
@@ -70,6 +106,10 @@ public class MKToastedSiopaoWebsiteApplication {
 				// --- NEW: Patch existing user if needed ---
 				User adminUser = existingAdminOptional.get();
 				boolean needsUpdate = false;
+				if (adminUser.getRole() == null) { // Check if role is missing
+					adminUser.setRole(ownerRole); // Assign owner role
+					needsUpdate = true;
+				}
 				if (adminUser.getCreatedAt() == null) {
 					adminUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
 					needsUpdate = true;
@@ -83,7 +123,7 @@ public class MKToastedSiopaoWebsiteApplication {
 					needsUpdate = true;
 				}
 				if (needsUpdate) {
-					log.info(">>> Patching existing admin user '{}' with default status/activity dates.",
+					log.info(">>> Patching existing admin user '{}' with default role/status/activity dates.",
 							adminUsername);
 					userRepository.save(adminUser);
 				} else {
@@ -102,7 +142,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				User customerUser = new User();
 				customerUser.setUsername(customerUsername);
 				customerUser.setPassword(passwordEncoder.encode(customerPassword));
-				customerUser.setRole("ROLE_CUSTOMER");
+				customerUser.setRole(customerRole); // UPDATED
 				customerUser.setFirstName("Test");
 				customerUser.setLastName("Customer");
 				// Status, CreatedAt, LastActivity will be set by @PrePersist
@@ -112,6 +152,10 @@ public class MKToastedSiopaoWebsiteApplication {
 				// --- NEW: Patch existing user if needed ---
 				User customerUser = existingCustomerOptional.get();
 				boolean needsUpdate = false;
+				if (customerUser.getRole() == null) { // Check if role is missing
+					customerUser.setRole(customerRole); // Assign customer role
+					needsUpdate = true;
+				}
 				if (customerUser.getCreatedAt() == null) {
 					customerUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
 					needsUpdate = true;
@@ -125,7 +169,7 @@ public class MKToastedSiopaoWebsiteApplication {
 					needsUpdate = true;
 				}
 				if (needsUpdate) {
-					log.info(">>> Patching existing customer user '{}' with default status/activity dates.",
+					log.info(">>> Patching existing customer user '{}' with default role/status/activity dates.",
 							customerUsername);
 					userRepository.save(customerUser);
 				} else {

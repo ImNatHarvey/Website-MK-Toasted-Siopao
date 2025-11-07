@@ -21,13 +21,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Optional<User> findByEmail(String email);
 
 	// This one is for non-paginated lists
-	List<User> findByRole(String role);
+	List<User> findByRole_Name(String roleName); // UPDATED
 
 	// This one is for paginated lists
-	Page<User> findByRole(String role, Pageable pageable);
+	Page<User> findByRole_Name(String roleName, Pageable pageable); // UPDATED
 
 	// --- Search customers ---
-	@Query("SELECT u FROM User u WHERE u.role = 'ROLE_CUSTOMER' AND ("
+	@Query("SELECT u FROM User u WHERE u.role.name = 'ROLE_CUSTOMER' AND (" // UPDATED
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
@@ -35,7 +35,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Page<User> findByRoleAndSearchKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 	// --- Search admins ---
-	@Query("SELECT u FROM User u WHERE u.role = 'ROLE_ADMIN' AND ("
+	@Query("SELECT u FROM User u WHERE (u.role.name = 'ROLE_ADMIN' OR u.role.name = 'ROLE_OWNER') AND (" // UPDATED
 			+ "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(u.username) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
@@ -43,24 +43,24 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	Page<User> findAdminsBySearchKeyword(@Param("keyword") String keyword, Pageable pageable);
 
 	// --- For inactivity check ---
-	List<User> findByRoleAndStatus(String role, String status);
+	List<User> findByRole_NameAndStatus(String roleName, String status); // UPDATED
 
 	// --- For stats cards ---
-	long countByRoleAndStatus(String role, String status);
+	long countByRole_NameAndStatus(String roleName, String status); // UPDATED
 
-	long countByRole(String role); // NEW: Fixes compile error
+	long countByRole_Name(String roleName); // NEW: Fixes compile error (was countByRole)
 
 	// --- NEW: For Dashboard Stats ---
 
 	/**
-	 * Counts users of a specific role created between two dates. * @param role The
-	 * role to check (e.g., "ROLE_CUSTOMER").
+	 * Counts users of a specific role created between two dates. * @param roleName
+	 * The role name to check (e.g., "ROLE_CUSTOMER"). * @param start The start
+	 * timestamp.
 	 * 
-	 * @param start The start timestamp.
-	 * @param end   The end timestamp.
+	 * @param end The end timestamp.
 	 * @return The count of new users.
 	 */
-	long countByRoleAndCreatedAtBetween(String role, @Param("start") LocalDateTime start,
+	long countByRole_NameAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start, // UPDATED
 			@Param("end") LocalDateTime end);
 
 }

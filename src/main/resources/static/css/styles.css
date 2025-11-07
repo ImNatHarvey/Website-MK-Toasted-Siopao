@@ -1,5 +1,5 @@
 /*
-File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-8863827f7dde3d57c4a255585160c67e285a6f88/src/main/resources/static/css/styles.css
+File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-2de826f8fd7cd99b65487feb9dadc213b6ecccd9/src/main/resources/static/css/styles.css
 */
 :root {
 	--light: #fffdf5;
@@ -303,18 +303,18 @@ body {
 	font-weight: bold; /* Make active/hover bold */
 }
 
-/* Search Input Group */
-.input-group .form-control {
+/* --- UPDATED: Made Search Input Group selectors specific --- */
+.search-input-group .form-control {
 	border-radius: 20px 0 0 20px;
 	border-right: 0; /* Remove right border */
 }
 
-.input-group .form-control:focus {
+.search-input-group .form-control:focus {
 	border-color: var(--primary); /* Highlight border on focus */
 	box-shadow: 0 0 0 0.2rem rgba(17, 63, 103, 0.25); /* Focus shadow */
 }
 
-.input-group .btn {
+.search-input-group .btn {
 	border-radius: 0 20px 20px 0;
 	border: 1px solid #ced4da;
 	border-left: 0; /* Remove left border */
@@ -322,11 +322,12 @@ body {
 	color: var(--dark);
 }
 
-.input-group .btn:hover {
+.search-input-group .btn:hover {
 	background-color: var(--primary); /* Theme hover */
 	color: var(--light);
 	border-color: var(--primary);
 }
+/* --- END OF UPDATE --- */
 
 /* Menu/Product Cards */
 .card {

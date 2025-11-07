@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication; // **** NEW IMPORT ****
+import org.springframework.security.core.context.SecurityContextHolder; // **** NEW IMPORT ****
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -288,19 +290,38 @@ public class AdminServiceImpl implements AdminService {
 			throw new IllegalArgumentException("The Owner's role cannot be modified.");
 		}
 
-		String newInternalRoleName = formatRoleName(userDto.getRoleName());
+		// **** NEW: Security Check ****
+		// Check if the *currently logged-in user* is the Owner
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		boolean isOwner = authentication.getAuthorities().stream()
+				.anyMatch(a -> a.getAuthority().equals(OWNER_ROLE_NAME));
 
-		// Check if name changed and if new name is taken
-		if (!roleToUpdate.getName().equals(newInternalRoleName)) {
-			if (roleRepository.findByName(newInternalRoleName).isPresent()) {
-				throw new IllegalArgumentException("Role name '" + userDto.getRoleName() + "' already exists.");
+		if (isOwner) {
+			// Only the Owner can update the role name and permissions
+			String newInternalRoleName = formatRoleName(userDto.getRoleName());
+
+			// Check if name changed and if new name is taken
+			if (!roleToUpdate.getName().equals(newInternalRoleName)) {
+				if (roleRepository.findByName(newInternalRoleName).isPresent()) {
+					throw new IllegalArgumentException("Role name '" + userDto.getRoleName() + "' already exists.");
+				}
+				roleToUpdate.setName(newInternalRoleName);
 			}
-			roleToUpdate.setName(newInternalRoleName);
-		}
 
-		// Update permissions
-		addPermissionsToRole(roleToUpdate, userDto); // Use helper
-		roleRepository.save(roleToUpdate); // Save the updated role
+			// Update permissions
+			addPermissionsToRole(roleToUpdate, userDto); // Use helper
+			roleRepository.save(roleToUpdate); // Save the updated role
+		} else {
+			// Log a warning if a non-owner tries to change permissions
+			if (!userDto.getRoleName().equals(roleToUpdate.getName().replace("ROLE_", ""))) {
+				log.warn("Non-Owner user {} tried to change role name for {}. Blocked.", authentication.getName(),
+						userToUpdate.getUsername());
+			}
+			// Non-owners cannot change roles, so we do nothing to the 'roleToUpdate'
+			// object
+		}
+		// **** END Security Check ****
+
 		// --- END NEW ---
 
 		// UPDATED: Calls to new service
@@ -311,7 +332,7 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		userToUpdate.setRole(roleToUpdate); // UPDATED
+		userToUpdate.setRole(roleToUpdate); // Assign the (potentially updated or unmodified) role
 
 		return userRepository.save(userToUpdate);
 	}

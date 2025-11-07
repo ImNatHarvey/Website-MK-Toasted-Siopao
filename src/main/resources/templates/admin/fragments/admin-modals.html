@@ -67,7 +67,7 @@
 								<label for="adminRoleName" class="form-label">Role Name</label>
 								<input type="text" class="form-control" th:field="*{roleName}"
 									id="adminRoleName" th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager">
+									placeholder="e.g., Staff, Manager, Accountant">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
@@ -230,7 +230,9 @@
 									Name</label> <input type="text" class="form-control"
 									th:field="*{roleName}" id="editAdminRoleName"
 									th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager">
+									placeholder="e.g., Staff, Manager, Accountant"
+									th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
+									th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change role names' : ''}">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
@@ -242,52 +244,68 @@
 								<div class="col-md-6">
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="editManageCustomers">
-										<label class="form-check-label" for="editManageCustomers">Customer
+											th:field="*{manageCustomers}" id="editManageCustomers"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageCustomers"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Customer
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="editManageAdmins"> <label
-											class="form-check-label" for="editManageAdmins">Admin
+											th:field="*{manageAdmins}" id="editManageAdmins"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageAdmins"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Admin
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="editManageOrders"> <label
-											class="form-check-label" for="editManageOrders">Order
+											th:field="*{manageOrders}" id="editManageOrders"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageOrders"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Order
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="editManageProducts">
-										<label class="form-check-label" for="editManageProducts">Product
+											th:field="*{manageProducts}" id="editManageProducts"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageProducts"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Product
 											Management</label>
 									</div>
 								</div>
 								<div class="col-md-6">
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="editManageInventory">
-										<label class="form-check-label" for="editManageInventory">Inventory
+											th:field="*{manageInventory}" id="editManageInventory"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageInventory"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Inventory
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}" id="editManageTransactions">
-										<label class="form-check-label" for="editManageTransactions">Transaction
+											th:field="*{manageTransactions}" id="editManageTransactions"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageTransactions"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Transaction
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="editManageSite"> <label
-											class="form-check-label" for="editManageSite">Site
+											th:field="*{manageSite}" id="editManageSite"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageSite"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Site
 											Management</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}" id="editManageActivityLog">
-										<label class="form-check-label" for="editManageActivityLog">View
+											th:field="*{manageActivityLog}" id="editManageActivityLog"
+											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
+										<label class="form-check-label" for="editManageActivityLog"
+											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">View
 											Activity Log</label>
 									</div>
 								</div>

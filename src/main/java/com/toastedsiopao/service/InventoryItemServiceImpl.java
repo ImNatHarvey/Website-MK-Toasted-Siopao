@@ -290,4 +290,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	public long countOutOfStockItems() {
 		return itemRepository.countOutOfStockItems();
 	}
+
+	// --- NEW: Implementation for deletion check ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countByUnit(UnitOfMeasure unit) {
+		return itemRepository.countByUnit(unit);
+	}
 }

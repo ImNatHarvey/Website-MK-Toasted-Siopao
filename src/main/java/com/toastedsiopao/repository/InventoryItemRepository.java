@@ -5,6 +5,7 @@ package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
+import com.toastedsiopao.model.UnitOfMeasure; // NEW IMPORT
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -94,4 +95,13 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 	 */
 	@Query("SELECT COUNT(i) FROM InventoryItem i WHERE i.currentStock <= 0")
 	long countOutOfStockItems();
+
+	// --- NEW: For deletion check ---
+	/**
+	 * Counts the number of inventory items associated with a specific unit.
+	 * * @param unit The UnitOfMeasure to check for.
+	 * 
+	 * @return The count of items using this unit.
+	 */
+	long countByUnit(UnitOfMeasure unit);
 }

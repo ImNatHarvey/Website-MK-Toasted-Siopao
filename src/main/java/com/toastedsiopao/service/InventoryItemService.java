@@ -2,6 +2,7 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryItem;
+import com.toastedsiopao.model.UnitOfMeasure; // NEW IMPORT
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -36,8 +37,8 @@ public interface InventoryItemService {
 	/**
 	 * Adjusts the stock of an inventory item. * @param itemId The ID of the item
 	 * * @param quantityChange The amount to add (positive) or remove (negative)
+	 * * @param reason The reason for the adjustment
 	 * 
-	 * @param reason The reason for the adjustment
 	 * @return The updated InventoryItem
 	 */
 	InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason);
@@ -71,4 +72,13 @@ public interface InventoryItemService {
 	 * items.
 	 */
 	long countOutOfStockItems();
+
+	// --- NEW: For deletion check ---
+	/**
+	 * Counts the number of inventory items associated with a specific unit.
+	 * * @param unit The UnitOfMeasure to check for.
+	 * 
+	 * @return The count of items using this unit.
+	 */
+	long countByUnit(UnitOfMeasure unit);
 }

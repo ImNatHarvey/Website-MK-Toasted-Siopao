@@ -98,7 +98,7 @@ body {
 .btn-action-edit:hover {
 	background-color: #e0a800;
 	border-color: #d39e00;
-} 
+}
 
 .btn-action-delete {
 	background-color: var(--danger);
@@ -109,7 +109,7 @@ body {
 .btn-action-delete:hover {
 	background-color: #c82333;
 	border-color: #bd2130;
-} 
+}
 
 .btn-action-view {
 	background-color: var(--info);
@@ -120,7 +120,7 @@ body {
 .btn-action-view:hover {
 	background-color: #138496;
 	border-color: #117a8b;
-} 
+}
 
 .btn-action-success {
 	background-color: var(--success);
@@ -131,7 +131,7 @@ body {
 .btn-action-success:hover {
 	background-color: #218838;
 	border-color: #1e7e34;
-} 
+}
 
 /* --- Fix for disabled buttons losing color --- */
 .btn-action-edit:disabled, .btn-action-edit.disabled {
@@ -191,7 +191,8 @@ body {
 	color: var(--dark); /* Dark text on yellow */
 }
 
-.status-badge.status-critical, .status-badge.status-cancelled, .status-badge.status-inactive {
+.status-badge.status-critical, .status-badge.status-cancelled,
+	.status-badge.status-inactive {
 	background-color: var(--danger);
 	color: var(--light);
 }
@@ -233,7 +234,6 @@ body {
 	object-fit: contain; /* Use contain for admin to see full image */
 	padding: 5px;
 }
-
 
 /* Stats Cards (v1 - Used on product/inventory pages) */
 .stats-card {
@@ -786,4 +786,104 @@ footer.admin-footer {
 /* Target selects specifically */
 select.form-control-readonly {
 	pointer-events: none; /* Disables clicking on the select */
+}
+
+/* ================================================= */
+/* == NEW: RESPONSIVE STYLES (MOBILE-FIRST) == */
+/* ================================================= */
+
+/* --- Mobile-Only Nav Bar --- */
+/* Hidden by default on desktop */
+.admin-mobile-nav {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 70px;
+	background-color: var(--primary);
+	z-index: 1020;
+	padding: 0 1rem;
+	align-items: center;
+	border-bottom: 1px solid #4A6D8C;
+}
+
+.sidebar-toggle-btn {
+	background: transparent;
+	border: none;
+	color: var(--light);
+	font-size: 1.5rem;
+	padding: 0.5rem;
+	margin-right: 0.5rem;
+}
+
+.mobile-brand {
+	color: var(--secondary);
+	font-size: 1.25rem;
+	font-weight: bold;
+	text-decoration: none;
+}
+
+/* --- Mobile Overlay --- */
+/* Hidden by default */
+.sidebar-overlay {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 1025; /* Below sidebar (1040), above content (1020) */
+}
+
+/* --- Media Query for small screens (Bootstrap's 'lg' breakpoint) --- */
+@media ( max-width : 991.98px) {
+	/* 1. Show the mobile nav */
+	.admin-mobile-nav {
+		display: flex;
+	}
+
+	/* 2. Hide the desktop-only top-right nav */
+	.admin-content-navbar {
+		display: none;
+	}
+
+	/* 3. Reposition sidebar to be off-canvas */
+	.admin-sidebar {
+		position: fixed;
+		left: -260px; /* Start off-screen */
+		z-index: 1040; /* Highest z-index */
+		transition: left 0.3s ease-in-out;
+		box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+	}
+
+	/* 4. Make content full-width and add padding for mobile nav */
+	.admin-content {
+		margin-left: 0;
+		width: 100%;
+	}
+	.admin-content-page {
+		padding-top: 85px; /* 70px for nav + 15px extra padding */
+		padding-left: 1rem;
+		padding-right: 1rem;
+	}
+
+	/* 5. Footer should also be full-width */
+	.admin-footer {
+		margin-left: 0;
+	}
+
+	/* --- Toggled State --- */
+	/* This class will be added to the <body> tag by JavaScript */
+
+	/* 5. Show the sidebar */
+	body.sidebar-toggled .admin-sidebar {
+		left: 0;
+	}
+
+	/* 6. Show the overlay */
+	body.sidebar-toggled .sidebar-overlay {
+		display: block;
+	}
 }

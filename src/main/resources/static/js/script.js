@@ -1,5 +1,6 @@
 /**
  * Main script file - Handles modal reopening based on URL parameters.
+ * NEW: Handles mobile sidebar toggle.
  */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("Main script.js loaded.");
@@ -160,4 +161,44 @@ document.addEventListener('DOMContentLoaded', function() {
 		// The old, buggy version had a "setTimeout(forceRemoveAllModalState, 150);" here.
 		console.log("No 'showModal' URL parameter found.");
 	}
+
+	// =================================================
+	// == NEW: Admin Sidebar Toggle Logic ==
+	// =================================================
+	const sidebarToggle = document.getElementById('sidebarToggle');
+	const sidebarOverlay = document.getElementById('sidebarOverlay');
+	const adminSidebar = document.getElementById('admin-sidebar');
+	const adminBody = document.getElementById('admin-body');
+
+	if (sidebarToggle && sidebarOverlay && adminSidebar && adminBody) {
+		console.log("Mobile sidebar elements found. Attaching listeners.");
+
+		// 1. Click the hamburger icon
+		sidebarToggle.addEventListener('click', function() {
+			adminBody.classList.toggle('sidebar-toggled');
+		});
+
+		// 2. Click the dark overlay
+		sidebarOverlay.addEventListener('click', function() {
+			adminBody.classList.remove('sidebar-toggled');
+		});
+
+		// 3. Click a link *inside* the sidebar
+		const sidebarLinks = adminSidebar.querySelectorAll('.nav-link');
+		sidebarLinks.forEach(link => {
+			link.addEventListener('click', function() {
+				// Only close if the sidebar is actually open (in mobile view)
+				if (adminBody.classList.contains('sidebar-toggled')) {
+					adminBody.classList.remove('sidebar-toggled');
+				}
+			});
+		});
+
+	} else {
+		console.log("Mobile sidebar elements not found (this is normal on non-admin pages).");
+	}
+	// =================================================
+	// == END: Admin Sidebar Toggle Logic ==
+	// =================================================
+
 });

@@ -17,10 +17,25 @@
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" th:href="@{/css/style-admin.css}">
 </head>
-<body>
+<body id="admin-body">
+
+	<nav class="admin-mobile-nav">
+		<button class="sidebar-toggle-btn" id="sidebarToggle">
+			<i class="fa-solid fa-bars"></i>
+		</button>
+		<a class="mobile-brand" th:href="@{/admin/dashboard}">MK Admin Panel</a>
+		<form th:action="@{/logout}" method="post" class="d-inline ms-auto">
+			<button type="submit" class="btn btn-custom-outline btn-sm"
+				style="--bs-btn-color: var(--light); --bs-btn-border-color: var(--light);">
+				Log Out</button>
+		</form>
+	</nav>
+
+	<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
 	<div class="admin-wrapper">
 
-		<aside class="admin-sidebar">
+		<aside class="admin-sidebar" id="admin-sidebar">
 			<div class="sidebar-header">
 				<a th:href="@{/admin/dashboard}">MK Admin Panel</a>
 			</div>
@@ -59,7 +74,7 @@
 			</nav>
 		</aside>
 
-		<div class="admin-content">
+		<div class="admin-content" id="admin-content">
 
 			<nav class="admin-content-navbar">
 				<ul

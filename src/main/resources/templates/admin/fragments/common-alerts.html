@@ -120,5 +120,23 @@
 				aria-label="Close"></button>
 		</div>
 	</div>
+
+	<div th:fragment="siteAlerts">
+		<div th:if="${siteSuccess}"
+			class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-check-circle me-2"></i> <span
+				th:text="${siteSuccess}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+		<div th:if="${siteError}"
+			class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+				th:text="${siteError}"></span>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"
+				aria-label="Close"></button>
+		</div>
+	</div>
+
 </body>
 </html>

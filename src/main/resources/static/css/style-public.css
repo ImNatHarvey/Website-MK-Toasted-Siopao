@@ -1,0 +1,326 @@
+:root {
+	--light: #fffdf5;
+	--dark: #213448;
+	--primary: #113F67; /* Deep Blue */
+	--secondary: #fdf5aa; /* Light Yellow */
+	--accent: #ffc374; /* Orange/Gold */
+	--success: #28a745; /* Green */
+	--warning: #ffc107; /* Yellow */
+	--danger: #dc3545; /* Red */
+	--info: #17a2b8; /* Teal */
+	--muted-text: #6c757d; /* Standard muted color */
+}
+
+/* Base */
+body {
+	background-color: var(--light);
+	color: var(--dark);
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ================= Navbar (Public) ================= */
+.navbar-custom {
+	background-color: var(--primary);
+}
+
+.navbar-brand {
+	font-weight: bold;
+	color: var(--secondary); /* Light Yellow */
+}
+
+.navbar-brand span {
+	font-weight: normal;
+}
+
+.nav-link {
+	color: var(--light); /* White */
+	margin: 0 10px;
+	transition: color 0.2s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+	color: var(--secondary) !important; /* Light Yellow */
+}
+
+/* This .active style is for the old top-bar, not the sidebar */
+.nav-link.active {
+	font-weight: bold;
+	border-bottom: 2px solid var(--secondary); /* Light Yellow */
+}
+
+.navbar-toggler {
+	background-color: var(--secondary); /* Light Yellow */
+	border-color: var(--primary); /* Deep Blue */
+}
+
+.navbar-toggler-icon {
+	/* Optional: Style the icon itself if needed */
+	background-image:
+		url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(17, 63, 103, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* ================= Buttons (Public Theme) ================= */
+
+/* General Custom Button (Primary Action) */
+.btn-custom {
+	background-color: var(--accent); /* Orange/Gold */
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	margin-left: 10px;
+	/* Keep margin for navbar spacing, adjust elsewhere */
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--accent); /* Add border for consistency */
+}
+
+.btn-custom:hover {
+	background-color: var(--primary); /* Deep Blue on hover */
+	color: var(--light); /* White text */
+	border-color: var(--primary);
+}
+
+/* Secondary Action Button (e.g., Close, Cancel) */
+.btn-custom-secondary {
+	background-color: var(--muted-text); /* Grey */
+	color: var(--light); /* White */
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--muted-text);
+}
+
+.btn-custom-secondary:hover {
+	background-color: var(--dark); /* Dark Blue */
+	color: var(--light);
+	border-color: var(--dark);
+}
+
+/* Outline/Alternative Button */
+.btn-custom-outline {
+	background-color: transparent;
+	color: var(--primary); /* Deep Blue text */
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--primary); /* Deep Blue border */
+}
+
+.btn-custom-outline:hover {
+	background-color: var(--primary); /* Deep Blue background */
+	color: var(--light); /* White text */
+	border-color: var(--primary);
+}
+
+/* ================= Primary Content ================= */
+/* Promo Banner */
+.promo-banner {
+	background-color: var(--secondary); /* Light Yellow */
+	border-radius: 20px;
+	padding: 30px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.promo-banner h4 {
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+}
+
+.promo-banner p {
+	margin: 0;
+	color: var(--dark);
+}
+
+/* Section Title */
+.section-title {
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+}
+
+/* Call to Action */
+.cta-section {
+	background-color: var(--secondary); /* Light Yellow */
+	padding: 50px 20px;
+}
+
+.cta-section h4 {
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+}
+
+/* ================= Menu Page / Cards ================= */
+/* Category Filter Buttons (Re-style outline buttons) */
+.btn-outline-primary {
+	color: var(--primary);
+	border-color: var(--primary);
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-weight: normal; /* Make non-active normal weight */
+	transition: 0.3s ease;
+}
+
+.btn-outline-primary.active, .btn-outline-primary:hover {
+	background-color: var(--primary) !important;
+	color: var(--light) !important;
+	border-color: var(--primary) !important;
+	font-weight: bold; /* Make active/hover bold */
+}
+
+/* --- Search Input Group --- */
+.search-input-group .form-control {
+	border-radius: 20px 0 0 20px;
+	border-right: 0; /* Remove right border */
+}
+
+.search-input-group .form-control:focus {
+	border-color: var(--primary); /* Highlight border on focus */
+	box-shadow: 0 0 0 0.2rem rgba(17, 63, 103, 0.25); /* Focus shadow */
+}
+
+.search-input-group .btn {
+	border-radius: 0 20px 20px 0;
+	border: 1px solid #ced4da;
+	border-left: 0; /* Remove left border */
+	background-color: #e9ecef; /* Default BG */
+	color: var(--dark);
+}
+
+.search-input-group .btn:hover {
+	background-color: var(--primary); /* Theme hover */
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+/* Menu/Product Cards */
+.card {
+	background-color: var(--light); /* Use light background for cards */
+	border: 1px solid #eee; /* Subtle border */
+	border-radius: 15px;
+	overflow: hidden;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+	height: 180px;
+	object-fit: cover;
+}
+
+.card-title {
+	font-weight: bold;
+	color: var(--primary); /* Deep Blue */
+}
+
+.price {
+	color: var(--dark);
+	font-size: 1rem;
+}
+
+/* "Order" button on menu cards */
+.btn-warning { /* Use Bootstrap yellow for 'Order' */
+	color: var(--dark);
+	font-weight: bold;
+	border-radius: 20px;
+	padding: 6px 16px;
+	transition: 0.3s ease;
+	border-color: var(--warning);
+	background-color: var(--warning);
+}
+
+.btn-warning:hover {
+	background-color: #e0a800; /* Darker warning */
+	border-color: #d39e00;
+	color: var(--dark);
+}
+
+/* ================= Order Summary Sidebar ================= */
+.order-summary {
+	background-color: var(--secondary); /* Light Yellow */
+	border-radius: 15px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.order-title {
+	font-weight: bold;
+	color: var(--primary); /* Deep Blue */
+}
+
+.total-price {
+	font-size: 1.1rem;
+	color: var(--primary); /* Deep Blue */
+}
+
+.btn-checkout { /* Keep this as btn-custom style */
+	background-color: var(--accent); /* Orange/Gold */
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+	border-radius: 25px;
+	padding: 10px;
+	transition: 0.3s ease;
+	border: 1px solid var(--accent);
+}
+
+.btn-checkout:hover {
+	background-color: var(--primary); /* Deep Blue */
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.btn-checkout:disabled {
+	background-color: #ccc;
+	border-color: #ccc;
+	color: #666;
+	cursor: not-allowed;
+}
+
+/* ================= Order Page ================= */
+.order-page {
+	/* background-color: var(--light); */ /* Already on body */
+	padding: 50px 0px; /* Reduced side padding */
+}
+
+.order-page h2 {
+	color: var(--primary); /* Deep Blue */
+	font-weight: bold;
+	margin-bottom: 30px;
+}
+/* Ensure form labels are visible */
+.order-page .form-label {
+	color: var(--dark);
+}
+
+/* ================= Login / Auth Pages ================= */
+.auth-page-content {
+	/* No specific styles needed if using card approach */
+	
+}
+
+.auth-card {
+	background-color: var(--secondary); /* Light Yellow */
+	border: none;
+	border-radius: 15px;
+}
+
+.auth-card .section-title {
+	margin-top: 0; /* Adjust spacing if needed */
+}
+
+/* ================= Footer ================= */
+footer {
+	background-color: var(--primary); /* Deep Blue */
+	color: var(--light);
+	text-align: center;
+	padding: 20px;
+	margin-top: auto; /* Push footer down */
+}

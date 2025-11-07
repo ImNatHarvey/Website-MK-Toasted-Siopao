@@ -1,6 +1,3 @@
-/*
-File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-2de826f8fd7cd99b65487feb9dadc213b6ecccd9/src/main/resources/static/css/styles.css
-*/
 :root {
 	--light: #fffdf5;
 	--dark: #213448;
@@ -21,50 +18,9 @@ body {
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ================= Navbar ================= */
-.navbar-custom {
-	background-color: var(--primary);
-}
+/* ================= Admin Buttons ================= */
 
-.navbar-brand {
-	font-weight: bold;
-	color: var(--secondary); /* Light Yellow */
-}
-
-.navbar-brand span {
-	font-weight: normal;
-}
-
-.nav-link {
-	color: var(--light); /* White */
-	margin: 0 10px;
-	transition: color 0.2s ease;
-}
-
-.nav-link:hover, .nav-link.active {
-	color: var(--secondary) !important; /* Light Yellow */
-}
-
-/* This .active style is for the old top-bar, not the sidebar */
-.nav-link.active {
-	font-weight: bold;
-	border-bottom: 2px solid var(--secondary); /* Light Yellow */
-}
-
-.navbar-toggler {
-	background-color: var(--secondary); /* Light Yellow */
-	border-color: var(--primary); /* Deep Blue */
-}
-
-.navbar-toggler-icon {
-	/* Optional: Style the icon itself if needed */
-	background-image:
-		url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(17, 63, 103, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
-}
-
-/* ================= Buttons ================= */
-
-/* General Custom Button (Primary Action) */
+/* General Custom Button (Primary Action) - Used for 'View Site' */
 .btn-custom {
 	background-color: var(--accent); /* Orange/Gold */
 	color: var(--primary); /* Deep Blue */
@@ -72,20 +28,19 @@ body {
 	border-radius: 30px;
 	padding: 8px 20px;
 	margin-left: 10px;
-	/* Keep margin for navbar spacing, adjust elsewhere */
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 	transition: background-color 0.3s ease, color 0.3s ease, border-color
 		0.3s ease;
-	border: 1px solid var(--accent); /* Add border for consistency */
+	border: 1px solid var(--accent);
 }
 
 .btn-custom:hover {
-	background-color: var(--primary); /* Deep Blue on hover */
-	color: var(--light); /* White text */
+	background-color: var(--primary);
+	color: var(--light);
 	border-color: var(--primary);
 }
 
-/* Secondary Action Button (e.g., Close, Cancel) */
+/* Secondary Action Button (e.g., Close, Cancel, Clear) */
 .btn-custom-secondary {
 	background-color: var(--muted-text); /* Grey */
 	color: var(--light); /* White */
@@ -104,7 +59,7 @@ body {
 	border-color: var(--dark);
 }
 
-/* Outline/Alternative Button */
+/* Outline/Alternative Button (e.g., Manage Categories) */
 .btn-custom-outline {
 	background-color: transparent;
 	color: var(--primary); /* Deep Blue text */
@@ -122,8 +77,8 @@ body {
 	border-color: var(--primary);
 }
 
-/* Specific Action Buttons (use sparingly if needed, prefer custom base) */
-.btn-action-add { /* Example: Use primary color scheme */
+/* Specific Action Buttons */
+.btn-action-add {
 	background-color: var(--primary);
 	color: var(--light);
 	border-color: var(--primary);
@@ -134,7 +89,7 @@ body {
 	border-color: var(--dark);
 }
 
-.btn-action-edit { /* Example: Use warning color scheme */
+.btn-action-edit {
 	background-color: var(--warning);
 	color: var(--dark);
 	border-color: var(--warning);
@@ -143,8 +98,9 @@ body {
 .btn-action-edit:hover {
 	background-color: #e0a800;
 	border-color: #d39e00;
-} /* Darker warning */
-.btn-action-delete { /* Example: Use danger color scheme */
+} 
+
+.btn-action-delete {
 	background-color: var(--danger);
 	color: var(--light);
 	border-color: var(--danger);
@@ -153,8 +109,9 @@ body {
 .btn-action-delete:hover {
 	background-color: #c82333;
 	border-color: #bd2130;
-} /* Darker danger */
-.btn-action-view { /* Example: Use info color scheme */
+} 
+
+.btn-action-view {
 	background-color: var(--info);
 	color: var(--light);
 	border-color: var(--info);
@@ -163,8 +120,9 @@ body {
 .btn-action-view:hover {
 	background-color: #138496;
 	border-color: #117a8b;
-} /* Darker info */
-.btn-action-success { /* Example: Use success color scheme */
+} 
+
+.btn-action-success {
 	background-color: var(--success);
 	color: var(--light);
 	border-color: var(--success);
@@ -173,9 +131,9 @@ body {
 .btn-action-success:hover {
 	background-color: #218838;
 	border-color: #1e7e34;
-} /* Darker success */
+} 
 
-/* --- NEW: Fix for disabled buttons losing color --- */
+/* --- Fix for disabled buttons losing color --- */
 .btn-action-edit:disabled, .btn-action-edit.disabled {
 	background-color: var(--warning);
 	border-color: var(--warning);
@@ -189,7 +147,6 @@ body {
 	color: var(--light);
 	opacity: 0.65;
 }
-/* --- END NEW --- */
 
 /* Adjust button padding/margin for specific contexts if needed */
 .table .btn-sm { /* Make small buttons less rounded */
@@ -234,7 +191,7 @@ body {
 	color: var(--dark); /* Dark text on yellow */
 }
 
-.status-badge.status-critical, .status-badge.status-cancelled {
+.status-badge.status-critical, .status-badge.status-cancelled, .status-badge.status-inactive {
 	background-color: var(--danger);
 	color: var(--light);
 }
@@ -249,109 +206,20 @@ body {
 	color: var(--light);
 }
 
-/* ================= Primary Content ================= */
-/* Promo Banner */
-.promo-banner {
-	background-color: var(--secondary); /* Light Yellow */
-	border-radius: 20px;
-	padding: 30px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
+/* ================= Admin Specific Styles ================= */
 
-.promo-banner h4 {
-	color: var(--primary); /* Deep Blue */
-	font-weight: bold;
-}
-
-.promo-banner p {
-	margin: 0;
-	color: var(--dark);
-}
-
-/* Section Title */
+/* Section Title (Used on admin pages) */
 .section-title {
 	color: var(--primary); /* Deep Blue */
 	font-weight: bold;
 }
 
-/* Call to Action */
-.cta-section {
-	background-color: var(--secondary); /* Light Yellow */
-	padding: 50px 20px;
-}
-
-.cta-section h4 {
-	color: var(--primary); /* Deep Blue */
-	font-weight: bold;
-}
-
-/* ================= Menu Page / Cards ================= */
-/* Category Filter Buttons (Re-style outline buttons) */
-.btn-outline-primary {
-	color: var(--primary);
-	border-color: var(--primary);
-	border-radius: 20px;
-	padding: 6px 16px;
-	font-weight: normal; /* Make non-active normal weight */
-	transition: 0.3s ease;
-}
-
-.btn-outline-primary.active, .btn-outline-primary:hover {
-	background-color: var(--primary) !important;
-	color: var(--light) !important;
-	border-color: var(--primary) !important;
-	font-weight: bold; /* Make active/hover bold */
-}
-
-/* --- UPDATED: Made Search Input Group selectors specific --- */
-.search-input-group .form-control {
-	border-radius: 20px 0 0 20px;
-	border-right: 0; /* Remove right border */
-}
-
-.search-input-group .form-control:focus {
-	border-color: var(--primary); /* Highlight border on focus */
-	box-shadow: 0 0 0 0.2rem rgba(17, 63, 103, 0.25); /* Focus shadow */
-}
-
-.search-input-group .btn {
-	border-radius: 0 20px 20px 0;
-	border: 1px solid #ced4da;
-	border-left: 0; /* Remove left border */
-	background-color: #e9ecef; /* Default BG */
-	color: var(--dark);
-}
-
-.search-input-group .btn:hover {
-	background-color: var(--primary); /* Theme hover */
-	color: var(--light);
-	border-color: var(--primary);
-}
-/* --- END OF UPDATE --- */
-
-/* Menu/Product Cards */
+/* Base Card (Used by admin cards) */
 .card {
 	background-color: var(--light); /* Use light background for cards */
 	border: 1px solid #eee; /* Subtle border */
 	border-radius: 15px;
 	overflow: hidden;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-
-.card-img-top {
-	height: 180px;
-	object-fit: cover;
-}
-/* Admin specific card image size */
-.admin-product-img {
-	height: 150px; /* Slightly smaller for admin view */
-	object-fit: contain; /* Use contain for admin to see full image */
-	padding: 5px;
 }
 
 .card-title {
@@ -359,115 +227,15 @@ body {
 	color: var(--primary); /* Deep Blue */
 }
 
-.price {
-	color: var(--dark);
-	font-size: 1rem;
+/* Admin specific card image size */
+.admin-product-img {
+	height: 150px; /* Slightly smaller for admin view */
+	object-fit: contain; /* Use contain for admin to see full image */
+	padding: 5px;
 }
 
-/* "Order" button on menu cards */
-.btn-warning { /* Use Bootstrap yellow for 'Order' */
-	color: var(--dark);
-	font-weight: bold;
-	border-radius: 20px;
-	padding: 6px 16px;
-	transition: 0.3s ease;
-	border-color: var(--warning);
-	background-color: var(--warning);
-}
 
-.btn-warning:hover {
-	background-color: #e0a800; /* Darker warning */
-	border-color: #d39e00;
-	color: var(--dark);
-}
-
-/* ================= Order Summary Sidebar ================= */
-.order-summary {
-	background-color: var(--secondary); /* Light Yellow */
-	border-radius: 15px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.order-title {
-	font-weight: bold;
-	color: var(--primary); /* Deep Blue */
-}
-
-.total-price {
-	font-size: 1.1rem;
-	color: var(--primary); /* Deep Blue */
-}
-
-.btn-checkout { /* Keep this as btn-custom style */
-	background-color: var(--accent); /* Orange/Gold */
-	color: var(--primary); /* Deep Blue */
-	font-weight: bold;
-	border-radius: 25px;
-	padding: 10px;
-	transition: 0.3s ease;
-	border: 1px solid var(--accent);
-}
-
-.btn-checkout:hover {
-	background-color: var(--primary); /* Deep Blue */
-	color: var(--light);
-	border-color: var(--primary);
-}
-
-.btn-checkout:disabled {
-	background-color: #ccc;
-	border-color: #ccc;
-	color: #666;
-	cursor: not-allowed;
-}
-
-/* ================= Sticky Order Summary (If implemented) ================= */
-/* Styles remain the same */
-
-/* ================= Order Page ================= */
-.order-page {
-	/* background-color: var(--light); */ /* Already on body */
-	padding: 50px 0px; /* Reduced side padding */
-}
-
-.order-page h2 {
-	color: var(--primary); /* Deep Blue */
-	font-weight: bold;
-	margin-bottom: 30px;
-}
-/* Ensure form labels are visible */
-.order-page .form-label {
-	color: var(--dark);
-}
-
-/* ================= Login / Auth Pages ================= */
-.auth-page-content {
-	/* No specific styles needed if using card approach */
-	
-}
-
-.auth-card {
-	background-color: var(--secondary); /* Light Yellow */
-	border: none;
-	border-radius: 15px;
-}
-
-.auth-card .section-title {
-	margin-top: 0; /* Adjust spacing if needed */
-}
-
-/* ================= Footer ================= */
-footer {
-	background-color: var(--primary); /* Deep Blue */
-	color: var(--light);
-	text-align: center;
-	padding: 20px;
-	margin-top: auto; /* Push footer down */
-}
-
-/* ================= Admin Specific Styles ================= */
-
-/* Stats Cards */
+/* Stats Cards (v1 - Used on product/inventory pages) */
 .stats-card {
 	border-left: 5px solid var(--primary); /* Accent border */
 	border-radius: 8px;
@@ -492,7 +260,7 @@ footer {
 	color: var(--muted-text);
 }
 
-/* Quick Navigation Cards (Admin Dashboard) */
+/* Quick Navigation Cards (Old Admin Dashboard - maybe reuse?) */
 .quick-nav-card {
 	background-color: var(--secondary); /* Light Yellow */
 	border-radius: 10px;
@@ -578,7 +346,7 @@ footer {
 }
 
 /* ================================================= */
-/* == NEW STYLES FOR ADMIN SIDEBAR LAYOUT == */
+/* == STYLES FOR ADMIN SIDEBAR LAYOUT == */
 /* ================================================= */
 .admin-wrapper {
 	display: flex;
@@ -713,7 +481,7 @@ footer.admin-footer {
 	color: var(--light);
 }
 
-/* **** NEW: Threshold Slider Styling **** */
+/* **** Threshold Slider Styling **** */
 .threshold-group .threshold-input {
 	flex: 0 0 100px; /* Do not grow, do not shrink, base width 100px */
 	min-width: 100px;
@@ -723,10 +491,9 @@ footer.admin-footer {
 	flex: 1 1 auto; /* Grow and shrink as needed */
 	min-width: 50px;
 }
-/* **** END NEW **** */
 
 /* =============================================== */
-/* == NEW STYLES FOR ADMIN DASHBOARD V2 == */
+/* == STYLES FOR ADMIN DASHBOARD V2 == */
 /* =============================================== */
 
 /* Main content wrapper */
@@ -932,7 +699,7 @@ footer.admin-footer {
 }
 
 /* =============================================== */
-/* == NEW STYLES FOR IMAGE UPLOADER == */
+/* == STYLES FOR IMAGE UPLOADER == */
 /* =============================================== */
 .image-uploader-container {
 	position: relative;
@@ -983,14 +750,13 @@ footer.admin-footer {
 	padding: 0.5rem;
 }
 
-/* --- UPDATED: Set fixed height and object-fit: cover --- */
 .image-uploader-container .image-preview {
 	width: 100%;
 	height: 200px; /* Fixed height */
 	object-fit: cover; /* Cover the area, cropping as needed */
 	border-radius: 6px;
 }
-/* --- END UPDATE --- */
+
 .image-uploader-container .image-remove-btn {
 	position: absolute;
 	top: 1rem;
@@ -1009,7 +775,7 @@ footer.admin-footer {
 }
 
 /* =============================================== */
-/* == NEW STYLES FOR READONLY (LOCKED) INPUTS == */
+/* == STYLES FOR READONLY (LOCKED) INPUTS == */
 /* =============================================== */
 .form-control-readonly {
 	background-color: #e9ecef; /* Bootstrap's disabled bg color */

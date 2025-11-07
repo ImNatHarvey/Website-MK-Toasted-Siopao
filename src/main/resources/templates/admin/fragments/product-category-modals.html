@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div th:fragment="all-product-category-modals">
+
+		<div class="modal fade" id="manageCategoriesModal" tabindex="-1"
+			aria-labelledby="manageCategoriesModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageCategoriesModalLabel">Manage
+							Product Categories</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form th:action="@{/admin/products/categories/add}" method="post"
+							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
+							<h6 class="mb-3">Add New Category</h6>
+							<div th:if="${#fields.hasErrors('categoryDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Error
+								adding category. Please check below.</div>
+							<div class="row g-2">
+								<div class="col-md-9">
+									<label for="newCategoryName" class="visually-hidden">New
+										category name</label> <input type="text" class="form-control"
+										placeholder="New category name..." th:field="*{name}"
+										th:errorclass="is-invalid" id="newCategoryName">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
+								</div>
+								<div class="col-md-3">
+									<button class="btn btn-action-add w-100" type="submit">Add</button>
+								</div>
+							</div>
+						</form>
+						<hr>
+						<h6 class="mb-3">Existing Categories</h6>
+						<div th:if="${#lists.isEmpty(categories)}" class="text-muted">No
+							categories created yet.</div>
+						<ul class="list-group" th:unless="${#lists.isEmpty(categories)}">
+							<li th:each="cat : ${categories}"
+								class="list-group-item d-flex justify-content-between align-items-center">
+								<span th:text="${cat.name}">Category Name</span>
+								<div class="d-flex gap-2">
+									<button type="button"
+										class="btn btn-sm btn-action-edit edit-category-btn"
+										data-bs-toggle="modal" data-bs-target="#editCategoryModal"
+										th:data-id="${cat.id}" th:data-name="${cat.name}">
+										Edit</button>
+									<form
+										th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
+										method="post"
+										th:data-confirm-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This cannot be undone.'">
+										<button type="submit" class="btn btn-sm btn-action-delete">
+											Delete</button>
+									</form>
+								</div>
+							</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="editCategoryModal" tabindex="-1"
+			aria-labelledby="editCategoryModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/products/categories/update}"
+						method="post" th:object="${categoryUpdateDto}"
+						id="editCategoryForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editCategoryModalLabel">Edit
+								Category</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('categoryUpdateDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Please
+								correct the error below.</div>
+							<input type="hidden" th:field="*{id}" id="editCategoryId">
+							<div class="mb-3">
+								<label for="editCategoryName" class="form-label">Category
+									Name</label> <input type="text" class="form-control" th:field="*{name}"
+									id="editCategoryName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-custom">Save
+								Changes</button>
+							<button type="button" class="btn btn-custom-secondary"
+								data-bs-dismiss="modal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

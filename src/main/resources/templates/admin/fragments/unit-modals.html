@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div th:fragment="all-unit-modals">
+
+		<div class="modal fade" id="manageUnitsModal" tabindex="-1"
+			aria-labelledby="manageUnitsModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="manageUnitsModalLabel">Manage
+							Units of Measure</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form th:action="@{/admin/inventory/units/add}" method="post"
+							th:object="${unitOfMeasureDto}" id="addUnitForm" class="mb-4">
+							<h6>Add New Unit</h6>
+							<div th:if="${#fields.hasErrors('unitOfMeasureDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Error
+								adding unit. Please check below.</div>
+
+							<div class="invalid-feedback d-block mb-2"
+								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
+								Unit Error</div>
+							<div class="row g-2 mb-2">
+								<div class="col-md-7">
+									<label for="unitName" class="visually-hidden">Unit Name</label>
+									<input type="text" class="form-control"
+										placeholder="Unit name (e.g., Kilogram)" id="unitName"
+										th:field="*{name}" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name
+										error</div>
+								</div>
+								<div class="col-md-3">
+									<label for="unitAbbreviation" class="visually-hidden">Abbreviation</label>
+									<input type="text" class="form-control"
+										placeholder="Abbr. (e.g., kg)" id="unitAbbreviation"
+										th:field="*{abbreviation}" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('abbreviation')}"
+										th:errors="*{abbreviation}">Abbr. error</div>
+								</div>
+								<div class="col-md-2">
+									<button class="btn btn-action-add w-100" type="submit">Add</button>
+								</div>
+							</div>
+						</form>
+						<hr>
+						<h6>Existing Units</h6>
+						<div th:if="${#lists.isEmpty(unitsOfMeasure)}"
+							class="text-muted small">No units added yet.</div>
+						<ul class="list-group list-group-flush"
+							th:unless="${#lists.isEmpty(unitsOfMeasure)}">
+							<li th:each="unit : ${unitsOfMeasure}"
+								class="list-group-item d-flex justify-content-between align-items-center ps-0">
+								<span> <span th:text="${unit.name}">Unit Name</span> (<span
+									th:text="${unit.abbreviation}">abbr</span>)
+							</span>
+								<div class="d-flex gap-2">
+									<button type="button"
+										class="btn btn-sm btn-action-edit edit-unit-btn"
+										data-bs-toggle="modal" data-bs-target="#editUnitModal"
+										th:data-id="${unit.id}" th:data-name="${unit.name}"
+										th:data-abbreviation="${unit.abbreviation}">Edit</button>
+									<form
+										th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
+										method="post"
+										th:data-confirm-message="'Are you sure you want to delete the unit \'' + ${unit.name} + '\'? Ensure no items are using it.'">
+										<button type="submit" class="btn btn-sm btn-action-delete">
+											Delete</button>
+									</form>
+								</div>
+							</li>
+						</ul>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Cancel</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="modal fade" id="editUnitModal" tabindex="-1"
+			aria-labelledby="editUnitModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form th:action="@{/admin/inventory/units/update}" method="post"
+						th:object="${unitOfMeasureUpdateDto}" id="editUnitForm">
+						<div class="modal-header">
+							<h5 class="modal-title" id="editUnitModalLabel">Edit Unit of
+								Measure</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal"
+								aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							<div th:if="${#fields.hasErrors('unitOfMeasureUpdateDto.*')}"
+								class="alert alert-danger small p-2" role="alert">Error
+								updating unit. Please check below.</div>
+
+							<div class="invalid-feedback d-block mb-2"
+								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
+								Unit Error</div>
+							<input type="hidden" th:field="*{id}" id="editUnitId">
+							<div class="mb-3">
+								<label for="editUnitName" class="form-label">Unit Name</label> <input
+									type="text" class="form-control" th:field="*{name}"
+									id="editUnitName" th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Name
+									error</div>
+							</div>
+							<div class="mb-3">
+								<label for="editUnitAbbreviation" class="form-label">Abbreviation</LAbel>
+								<input type="text" class="form-control"
+									th:field="*{abbreviation}" id="editUnitAbbreviation"
+									th:errorclass="is-invalid">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('abbreviation')}"
+									th:errors="*{abbreviation}">Abbr. error</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-custom">Save
+								Changes</button>
+							<button type="button" class="btn btn-custom-secondary"
+								data-bs-dismiss="modal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</body>
+</html>

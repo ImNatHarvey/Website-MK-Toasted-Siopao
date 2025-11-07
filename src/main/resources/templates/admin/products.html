@@ -223,8 +223,11 @@
                        ' of ' + ${productPage.totalElements}">
 			</span>
 		</div>
+
 		<div
 			th:replace="~{admin/fragments/product-modals :: all-product-modals}"></div>
+		<div
+			th:replace="~{admin/fragments/product-category-modals :: all-product-category-modals}"></div>
 
 	</div>
 	<th:block th:fragment="script">

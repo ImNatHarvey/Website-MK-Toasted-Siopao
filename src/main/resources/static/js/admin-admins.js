@@ -36,6 +36,29 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
 			viewAdminModal.querySelector('#viewAdminRole').textContent = role; // UPDATED
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
+
+			// --- NEW: Populate Permissions ---
+			const setPermissionIcon = (id, hasPermission) => {
+				const el = viewAdminModal.querySelector(id);
+				if (el) {
+					const icon = el.querySelector('i');
+					if (hasPermission === 'true') {
+						icon.className = 'fa-solid fa-fw me-2 fa-check';
+					} else {
+						icon.className = 'fa-solid fa-fw me-2 fa-times';
+					}
+				}
+			};
+
+			setPermissionIcon('#viewPermCustomers', dataset.manageCustomers);
+			setPermissionIcon('#viewPermAdmins', dataset.manageAdmins);
+			setPermissionIcon('#viewPermOrders', dataset.manageOrders);
+			setPermissionIcon('#viewPermProducts', dataset.manageProducts);
+			setPermissionIcon('#viewPermInventory', dataset.manageInventory);
+			setPermissionIcon('#viewPermTransactions', dataset.manageTransactions);
+			setPermissionIcon('#viewPermSite', dataset.manageSite);
+			setPermissionIcon('#viewPermActivityLog', dataset.manageActivityLog);
+			// --- END NEW ---
 		});
 	}
 

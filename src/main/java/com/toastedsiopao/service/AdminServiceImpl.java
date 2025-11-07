@@ -222,6 +222,18 @@ public class AdminServiceImpl implements AdminService {
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
+		// **** MOVED VALIDATION HERE ****
+		if (!StringUtils.hasText(userDto.getRoleName())) {
+			throw new IllegalArgumentException("Role name cannot be blank.");
+		}
+		if (!userDto.getRoleName().matches("^[a-zA-Z0-9 ]+$")) {
+			throw new IllegalArgumentException("Role name can only contain letters, numbers, and spaces");
+		}
+		if (userDto.getRoleName().length() > 40) {
+			throw new IllegalArgumentException("Role name cannot exceed 40 characters");
+		}
+		// **** END MOVED VALIDATION ****
+
 		// --- NEW: Create Role from DTO ---
 		String internalRoleName = formatRoleName(userDto.getRoleName());
 

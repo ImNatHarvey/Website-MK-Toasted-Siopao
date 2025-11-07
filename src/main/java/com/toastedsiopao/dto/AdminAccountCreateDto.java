@@ -40,17 +40,9 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
 
-	// --- REMOVED: roleId ---
-	// @NotNull(message = "A role must be selected")
-	// private Long roleId;
-	// --- END REMOVED ---
-
-	// --- NEW: Role Name ---
-	@NotBlank(message = "Role name cannot be blank")
-	@Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Role name can only contain letters, numbers, and spaces")
-	@Size(max = 40, message = "Role name cannot exceed 40 characters")
+	// --- UPDATED: Role Name (validations removed) ---
 	private String roleName;
-	// --- END NEW ---
+	// --- END UPDATED ---
 
 	// --- NEW: Module Permissions ---
 	private boolean manageCustomers;

@@ -805,6 +805,24 @@ select.form-control-readonly {
 	cursor: pointer;
 }
 
+/* --- NEW: Permission List in View Modal --- */
+.permission-list {
+	font-size: 0.95rem;
+}
+
+.permission-list li {
+	margin-bottom: 0.5rem;
+}
+
+.permission-list i.fa-check {
+	color: var(--success);
+}
+
+.permission-list i.fa-times {
+	color: var(--danger);
+}
+/* --- END NEW --- */
+
 /* ================================================= */
 /* == NEW: RESPONSIVE STYLES (MOBILE-FIRST) == */
 /* ================================================= */

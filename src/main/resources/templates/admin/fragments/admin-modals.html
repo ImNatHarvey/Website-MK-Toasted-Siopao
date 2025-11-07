@@ -67,7 +67,7 @@
 								<label for="adminRoleName" class="form-label">Role Name</label>
 								<input type="text" class="form-control" th:field="*{roleName}"
 									id="adminRoleName" th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager, Accountant">
+									placeholder="e.g., Staff, Manager">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
@@ -230,7 +230,7 @@
 									Name</label> <input type="text" class="form-control"
 									th:field="*{roleName}" id="editAdminRoleName"
 									th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager, Accountant">
+									placeholder="e.g., Staff, Manager">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
@@ -329,10 +329,38 @@
 						<p>
 							<strong>Role:</strong> <span id="viewAdminRole"></span>
 						</p>
-						<hr>
 						<p class="mb-1">
 							<strong>Account Created:</strong> <span id="viewAdminCreatedAt"></span>
 						</p>
+
+						<hr>
+						<h6 class="mb-3">Assigned Modules</h6>
+						<div class="row">
+							<div class="col-md-6">
+								<ul class="list-unstyled permission-list">
+									<li id="viewPermCustomers"><i class="fa-solid fa-fw me-2"></i>
+										Customer Mgt.</li>
+									<li id="viewPermAdmins"><i class="fa-solid fa-fw me-2"></i>
+										Admin Mgt.</li>
+									<li id="viewPermOrders"><i class="fa-solid fa-fw me-2"></i>
+										Order Mgt.</li>
+									<li id="viewPermProducts"><i class="fa-solid fa-fw me-2"></i>
+										Product Mgt.</li>
+								</ul>
+							</div>
+							<div class="col-md-6">
+								<ul class="list-unstyled permission-list">
+									<li id="viewPermInventory"><i class="fa-solid fa-fw me-2"></i>
+										Inventory Mgt.</li>
+									<li id="viewPermTransactions"><i
+										class="fa-solid fa-fw me-2"></i> Transaction Mgt.</li>
+									<li id="viewPermSite"><i class="fa-solid fa-fw me-2"></i>
+										Site Mgt.</li>
+									<li id="viewPermActivityLog"><i
+										class="fa-solid fa-fw me-2"></i> Activity Log</li>
+								</ul>
+							</div>
+						</div>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-custom-secondary"

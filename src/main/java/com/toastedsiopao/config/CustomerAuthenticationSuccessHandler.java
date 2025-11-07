@@ -33,14 +33,15 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 		String username = authentication.getName();
 
 		// **** THIS IS THE FIX ****
-		// Added a check for ROLE_OWNER
-		if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_OWNER")) {
+		// We now check for a permission instead of a specific role name.
+		// All admin-level users (Owner, Admin, Staff, etc.) have this permission.
+		if (roles.contains("VIEW_DASHBOARD")) {
 			// **** END OF FIX ****
-			log.info("Admin user {} logged in via general path. Redirecting to /admin/dashboard", username);
+			log.info("Admin user {} logged in. Redirecting to /admin/dashboard", username);
 			// We don't track admin activity on login, only customer
 			response.sendRedirect("/admin/dashboard");
 		} else if (roles.contains("ROLE_CUSTOMER")) {
-			log.info("Customer user {} successfully logged in via general path. Redirecting to /u/dashboard", username);
+			log.info("Customer user {} successfully logged in. Redirecting to /u/dashboard", username);
 
 			try {
 				customerService.updateLastActivity(username); // UPDATED SERVICE CALL
@@ -51,7 +52,7 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 			response.sendRedirect("/u/dashboard");
 		} else {
 			log.warn(
-					"User {} authenticated via general path but has no recognized role. Invalidating session and redirecting.",
+					"User {} authenticated but has no recognized role or permission. Invalidating session and redirecting.",
 					username);
 			this.logoutHandler.logout(request, response, authentication);
 			response.sendRedirect("/login?error=role");

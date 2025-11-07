@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'settings')}">
 <head>
 <title>Site Management - MK Admin Portal</title>
@@ -428,7 +429,8 @@
 				</div>
 			</section>
 
-			<div class="card p-3 shadow-sm text-end mb-3">
+			<div class="card p-3 shadow-sm text-end mb-3"
+				sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
 				<button type="submit" class="btn btn-action-add btn-lg"
 					style="width: 250px; margin-left: auto;">
 					<i class="fa-solid fa-save me-1"></i> Save All Changes

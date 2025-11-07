@@ -138,7 +138,7 @@
 							</tr>
 							<tr th:if="${#lists.isEmpty(orders)}">
 								<td colspan="7" class="text-center text-muted"
-									th:text="${(keyword != null or currentStatus != null) ? 'No orders found matching your criteria.' : 'No orders placed yet.'}">
+									th:text="${(keyword != null or currentStatus != null) ? 'No orders found matching your criteria.' : 'No orders placed yet.' : 'No orders placed yet.'}">
 									No orders placed yet.</td>
 							</tr>
 						</tbody>

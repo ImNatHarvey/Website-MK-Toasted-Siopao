@@ -8,9 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+// import org.springframework.web.bind.annotation.PostMapping; // **** FOR LATER ****
+// import org.springframework.web.bind.annotation.PathVariable; // **** FOR LATER ****
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -27,6 +30,7 @@ public class AdminOrderController {
 
 	// This now maps to GET /admin/orders
 	@GetMapping
+	@PreAuthorize("hasAuthority('VIEW_ORDERS')") // **** ADDED ****
 	public String manageOrders(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "status", required = false) String status,
 			@RequestParam(value = "page", defaultValue = "0") int page, // NEW
@@ -64,11 +68,13 @@ public class AdminOrderController {
 
 	// You can add more order-specific methods here in the future, like:
 	// @GetMapping("/{id}")
+	// @PreAuthorize("hasAuthority('VIEW_ORDERS')")
 	// public String viewOrderDetails(@PathVariable("id") Long id, Model model) {
 	// ...
 	// }
 
 	// @PostMapping("/{id}/updateStatus")
+	// @PreAuthorize("hasAuthority('EDIT_ORDERS')")
 	// public String updateOrderStatus(@PathVariable("id") Long id,
 	// @RequestParam("status") String status) {
 	// ...

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -44,6 +45,7 @@ public class AdminProductCategoryController {
 	}
 
 	@PostMapping("/add")
+	@PreAuthorize("hasAuthority('ADD_PRODUCTS')") // **** ADDED ****
 	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -88,6 +90,7 @@ public class AdminProductCategoryController {
 	}
 
 	@PostMapping("/update")
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") // **** ADDED ****
 	public String updateCategory(@Valid @ModelAttribute("categoryUpdateDto") CategoryDto categoryDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -136,6 +139,7 @@ public class AdminProductCategoryController {
 	}
 
 	@PostMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") // **** ADDED **** (Tied to EDIT_PRODUCTS)
 	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<Category> categoryOpt = categoryService.findById(id);

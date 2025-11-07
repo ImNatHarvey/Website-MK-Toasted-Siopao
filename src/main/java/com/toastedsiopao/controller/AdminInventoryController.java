@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -55,6 +56,7 @@ public class AdminInventoryController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAuthority('VIEW_INVENTORY')") // **** ADDED ****
 	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -110,6 +112,7 @@ public class AdminInventoryController {
 	}
 
 	@PostMapping("/save")
+	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')") // **** ADDED ****
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -155,6 +158,7 @@ public class AdminInventoryController {
 	// All /categories/* and /units/* POST mappings removed
 
 	@PostMapping("/stock/adjust")
+	@PreAuthorize("hasAuthority('ADJUST_INVENTORY_STOCK')") // **** ADDED ****
 	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
 			@RequestParam("quantity") BigDecimal quantity, @RequestParam("action") String action,
 			@RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes,
@@ -191,6 +195,7 @@ public class AdminInventoryController {
 	}
 
 	@PostMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')") // **** ADDED ****
 	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -48,6 +49,7 @@ public class AdminManagementController {
 	}
 
 	@GetMapping
+	@PreAuthorize("hasAuthority('VIEW_ADMINS')") // **** ADDED ****
 	public String manageAdmins(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -103,6 +105,7 @@ public class AdminManagementController {
 
 	// --- UPDATED: Use consistent DTO name ---
 	@PostMapping("/add")
+	@PreAuthorize("hasAuthority('ADD_ADMINS')") // **** ADDED ****
 	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -150,6 +153,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/update")
+	@PreAuthorize("hasAuthority('EDIT_ADMINS')") // **** ADDED ****
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminUpdateDto adminDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -189,6 +193,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/profile/update")
+	@PreAuthorize("isAuthenticated()") // **** ADDED: Any authenticated admin can edit their own profile ****
 	public String updateAdminProfile(@Valid @ModelAttribute("adminProfileDto") AdminUpdateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -244,6 +249,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // **** ADDED ****
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) { // UPDATED: Check for empty optional

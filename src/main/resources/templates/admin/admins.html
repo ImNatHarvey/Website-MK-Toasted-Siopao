@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'admins')}">
 <head>
 <title>Manage Admins - MK Admin Portal</title>
@@ -15,8 +16,9 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Admin Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-action-add" type="button"
-					data-bs-toggle="modal" data-bs-target="#addAdminModal">
+				<button sec:authorize="hasAuthority('ADD_ADMINS')"
+					class="btn btn-action-add" type="button" data-bs-toggle="modal"
+					data-bs-target="#addAdminModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Admin
 				</button>
 				<button class="btn btn-action-view" type="button"
@@ -117,12 +119,16 @@
 									<button class="btn btn-sm btn-action-view view-admin-btn"
 										data-bs-toggle="modal" data-bs-target="#viewAdminModal">View</button>
 
-									<button type="button"
-										class="btn btn-sm btn-action-edit edit-admin-btn"
-										data-bs-toggle="modal" data-bs-target="#editAdminModal"
-										th:disabled="${admin.role != null and admin.role.name == 'ROLE_OWNER'}"
-										title="The Owner account cannot be edited.">Edit</button>
-									<form th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
+									<div sec:authorize="hasAuthority('EDIT_ADMINS')">
+										<button type="button"
+											class="btn btn-sm btn-action-edit edit-admin-btn"
+											data-bs-toggle="modal" data-bs-target="#editAdminModal"
+											th:disabled="${admin.role != null and admin.role.name == 'ROLE_OWNER'}"
+											title="The Owner account cannot be edited.">Edit</button>
+									</div>
+
+									<form sec:authorize="hasAuthority('DELETE_ADMINS')"
+										th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'?'">
 										<button type="submit" class="btn btn-sm btn-action-delete"

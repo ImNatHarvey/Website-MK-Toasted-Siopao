@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -44,6 +45,7 @@ public class AdminCustomerController {
 	private RoleRepository roleRepository; // NEW INJECTION FOR FIX
 
 	@GetMapping
+	@PreAuthorize("hasAuthority('VIEW_CUSTOMERS')") // **** ADDED ****
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -87,6 +89,7 @@ public class AdminCustomerController {
 	}
 
 	@PostMapping("/add-customer")
+	@PreAuthorize("hasAuthority('ADD_CUSTOMERS')") // **** ADDED ****
 	public String addCustomerUser(@Valid @ModelAttribute("customerUserDto") AdminAccountCreateDto userDto, // UPDATED
 																											// DTO
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
@@ -150,6 +153,7 @@ public class AdminCustomerController {
 	}
 
 	@PostMapping("/update") // Update Customer
+	@PreAuthorize("hasAuthority('EDIT_CUSTOMERS')") // **** ADDED ****
 	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") CustomerUpdateDto userDto, // UPDATED DTO
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -202,6 +206,7 @@ public class AdminCustomerController {
 
 	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
+	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')") // **** ADDED ****
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<User> userOpt = customerService.findUserById(id); // UPDATED

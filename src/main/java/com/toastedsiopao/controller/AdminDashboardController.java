@@ -9,6 +9,7 @@ import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,6 +47,7 @@ public class AdminDashboardController {
 	// This controller is now ONLY for the dashboard.
 
 	@GetMapping("/dashboard")
+	@PreAuthorize("hasAuthority('VIEW_DASHBOARD')") // **** ADDED ****
 	public String adminDashboard(Model model) {
 		log.info("Loading admin dashboard...");
 

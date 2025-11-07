@@ -10,6 +10,7 @@ import com.toastedsiopao.service.SiteSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -40,6 +41,7 @@ public class AdminSiteController {
 	private FileStorageService fileStorageService;
 
 	@GetMapping("/settings")
+	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") // **** ADDED ****
 	public String siteSettings(Model model) {
 		log.info("Accessing site settings page");
 		// Load the settings (or create defaults if not exist)
@@ -98,6 +100,7 @@ public class AdminSiteController {
 	}
 
 	@PostMapping("/settings/update")
+	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") // **** ADDED ****
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
 			// --- All 9 image files ---
 			@RequestParam("carouselImage1File") MultipartFile carouselImage1File,

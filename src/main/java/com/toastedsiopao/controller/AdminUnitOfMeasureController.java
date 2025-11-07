@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/inventory/units")
+@PreAuthorize("hasAuthority('MANAGE_UNITS')") // **** ADDED: Secures all methods in this class ****
 public class AdminUnitOfMeasureController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminUnitOfMeasureController.class);

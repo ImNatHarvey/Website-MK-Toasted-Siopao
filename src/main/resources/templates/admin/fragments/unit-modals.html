@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 	<div th:fragment="all-unit-modals">
 
@@ -14,7 +15,8 @@
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<form th:action="@{/admin/inventory/units/add}" method="post"
+						<form sec:authorize="hasAuthority('MANAGE_UNITS')"
+							th:action="@{/admin/inventory/units/add}" method="post"
 							th:object="${unitOfMeasureDto}" id="addUnitForm" class="mb-4">
 							<h6>Add New Unit</h6>
 							<div th:if="${#fields.hasErrors('unitOfMeasureDto.*')}"
@@ -48,7 +50,11 @@
 								</div>
 							</div>
 						</form>
-						<hr>
+
+						<div sec:authorize="hasAuthority('MANAGE_UNITS')">
+							<hr>
+						</div>
+
 						<h6>Existing Units</h6>
 						<div th:if="${#lists.isEmpty(unitsOfMeasure)}"
 							class="text-muted small">No units added yet.</div>
@@ -59,7 +65,8 @@
 								<span> <span th:text="${unit.name}">Unit Name</span> (<span
 									th:text="${unit.abbreviation}">abbr</span>)
 							</span>
-								<div class="d-flex gap-2">
+								<div class="d-flex gap-2"
+									sec:authorize="hasAuthority('MANAGE_UNITS')">
 									<button type="button"
 										class="btn btn-sm btn-action-edit edit-unit-btn"
 										data-bs-toggle="modal" data-bs-target="#editUnitModal"

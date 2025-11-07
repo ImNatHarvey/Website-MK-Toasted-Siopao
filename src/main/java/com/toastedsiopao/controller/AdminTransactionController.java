@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,6 +31,7 @@ public class AdminTransactionController {
 	private OrderService orderService;
 
 	@GetMapping("/transactions")
+	@PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')") // **** ADDED ****
 	public String viewTransactions(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "startDate", required = false) String startDate, // NEW
 			@RequestParam(value = "endDate", required = false) String endDate, // NEW

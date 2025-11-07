@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'customers')}">
 <head>
 <title>Manage Customers - MK Admin Portal</title>
@@ -13,8 +14,9 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Customer Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-action-add" type="button"
-					data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+				<button sec:authorize="hasAuthority('ADD_CUSTOMERS')"
+					class="btn btn-action-add" type="button" data-bs-toggle="modal"
+					data-bs-target="#addCustomerModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Customer
 				</button>
 			</div>
@@ -108,6 +110,7 @@
 										data-bs-toggle="modal" data-bs-target="#viewCustomerModal">View</button>
 
 									<button type="button"
+										sec:authorize="hasAuthority('EDIT_CUSTOMERS')"
 										class="btn btn-sm btn-action-edit edit-customer-btn"
 										data-bs-toggle="modal" data-bs-target="#editCustomerModal"
 										th:data-id="${customer.id}"
@@ -125,7 +128,7 @@
 										th:data-province="${customer.province}"
 										th:data-status="${customer.status}">Edit</button>
 
-									<form
+									<form sec:authorize="hasAuthority('DELETE_CUSTOMERS')"
 										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the customer \'' + ${customer.username} + '\'?'">

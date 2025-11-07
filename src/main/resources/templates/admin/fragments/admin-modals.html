@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 	<div th:fragment="all-admin-modals">
@@ -224,7 +225,7 @@
 
 		<div class="modal fade" id="editProfileModal" tabindex="-1"
 			aria-labelledby="editProfileModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class_w="modal-dialog">
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/profile/update}" method="post"
 						th:object="${adminProfileDto}" id="editProfileForm">
@@ -279,7 +280,7 @@
 							<div class="mb-3">
 								<label for="profileRole" class="form-label">My Role</label> <input
 									type="text" class="form-control"
-									th:value="${#authentication.principal.authorities.contains('ROLE_OWNER') ? 'Owner' : 'Admin'}"
+									th:value="${#authorization.expression('hasAuthority(''ROLE_OWNER'')') ? 'Owner' : 'Admin'}"
 									id="profileRole" readonly disabled>
 							</div>
 

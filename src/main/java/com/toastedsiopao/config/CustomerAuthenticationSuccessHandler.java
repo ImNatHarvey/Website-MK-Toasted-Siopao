@@ -32,7 +32,10 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 		Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 		String username = authentication.getName();
 
-		if (roles.contains("ROLE_ADMIN")) {
+		// **** THIS IS THE FIX ****
+		// Added a check for ROLE_OWNER
+		if (roles.contains("ROLE_ADMIN") || roles.contains("ROLE_OWNER")) {
+			// **** END OF FIX ****
 			log.info("Admin user {} logged in via general path. Redirecting to /admin/dashboard", username);
 			// We don't track admin activity on login, only customer
 			response.sendRedirect("/admin/dashboard");

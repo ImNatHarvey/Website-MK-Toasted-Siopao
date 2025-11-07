@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 	<div th:fragment="all-inventory-category-modals">
 
@@ -14,7 +15,8 @@
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<form th:action="@{/admin/inventory/categories/add}" method="post"
+						<form sec:authorize="hasAuthority('MANAGE_INVENTORY_CATEGORIES')"
+							th:action="@{/admin/inventory/categories/add}" method="post"
 							th:object="${inventoryCategoryDto}" id="addInvCategoryForm"
 							class="mb-4">
 							<h6 class="mb-3">Add New Category</h6>
@@ -35,7 +37,11 @@
 								</div>
 							</div>
 						</form>
-						<hr>
+
+						<div sec:authorize="hasAuthority('MANAGE_INVENTORY_CATEGORIES')">
+							<hr>
+						</div>
+
 						<h6 class="mb-3">Existing Categories</h6>
 						<div th:if="${#lists.isEmpty(inventoryCategories)}"
 							class="text-muted small">No categories added yet.</div>
@@ -44,7 +50,8 @@
 							<li th:each="cat : ${inventoryCategories}"
 								class="list-group-item d-flex justify-content-between align-items-center ps-0">
 								<span th:text="${cat.name}">Category Name</span>
-								<div class="d-flex gap-2">
+								<div class="d-flex gap-2"
+									sec:authorize="hasAuthority('MANAGE_INVENTORY_CATEGORIES')">
 									<button type="button"
 										class="btn btn-sm btn-action-edit edit-inv-category-btn"
 										data-bs-toggle="modal" data-bs-target="#editInvCategoryModal"

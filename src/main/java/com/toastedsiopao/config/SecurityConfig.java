@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+// **** NEW IMPORT ****
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,6 +18,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity // **** ADD THIS ANNOTATION ****
 public class SecurityConfig {
 
 	@Autowired
@@ -66,7 +69,12 @@ public class SecurityConfig {
 						).permitAll() // *** END PUBLIC ACCESS RULES ***
 
 						// Role rules for protected areas
-						.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/u/**").hasRole("CUSTOMER")
+						// **** UPDATED: Use hasAuthority instead of hasRole for the base admin path
+						// ****
+						// This ensures any user with *at least one* admin permission can log in
+						// We will lock down individual pages in the controllers
+						.requestMatchers("/admin/**").hasAuthority("VIEW_DASHBOARD").requestMatchers("/u/**")
+						.hasRole("CUSTOMER")
 
 						// Any other request requires authentication
 						.anyRequest().authenticated())

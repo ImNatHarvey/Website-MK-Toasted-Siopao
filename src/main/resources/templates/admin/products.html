@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'products')}">
 <head>
 <title>Product Management - MK Admin</title>
@@ -18,16 +19,20 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Product Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-action-add" type="button"
-					data-bs-toggle="modal" data-bs-target="#addProductModal">
+				<button sec:authorize="hasAuthority('ADD_PRODUCTS')"
+					class="btn btn-action-add" type="button" data-bs-toggle="modal"
+					data-bs-target="#addProductModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Product
 				</button>
-				<button class="btn btn-custom-outline" type="button"
-					data-bs-toggle="modal" data-bs-target="#manageCategoriesModal">
+				<button
+					sec:authorize="hasAuthority('ADD_PRODUCTS') or hasAuthority('EDIT_PRODUCTS')"
+					class="btn btn-custom-outline" type="button" data-bs-toggle="modal"
+					data-bs-target="#manageCategoriesModal">
 					<i class="fa-solid fa-tags me-1"></i> Manage Categories
 				</button>
-				<button class="btn btn-action-success" type="button"
-					data-bs-toggle="modal" data-bs-target="#manageStockModal">
+				<button sec:authorize="hasAuthority('ADJUST_PRODUCT_STOCK')"
+					class="btn btn-action-success" type="button" data-bs-toggle="modal"
+					data-bs-target="#manageStockModal">
 					<i class="fa-solid fa-boxes-stacked me-1"></i> Manage Stock
 				</button>
 			</div>
@@ -96,7 +101,7 @@
 		<div th:if="${productPage.empty}"
 			class="alert alert-warning text-center" role="alert">
 			<span
-				th:text="${(keyword != null or selectedCategoryId != null) ? 'No products found matching your criteria.' : 'No products added yet.'}">No
+				th:text="${(keyword != null or selectedCategoryId != null) ? 'No products found matching your criteria.' : 'No products found.'}">No
 				products added yet.</span>
 		</div>
 
@@ -151,6 +156,7 @@
 											 data-recipe-locked=${product.recipeLocked}">
 								View</button>
 							<button type="button"
+								sec:authorize="hasAuthority('EDIT_PRODUCTS')"
 								class="btn btn-sm btn-action-edit flex-fill edit-product-btn"
 								data-bs-toggle="modal" data-bs-target="#editProductModal"
 								th:data-id="${product.id}" th:data-name="${product.name}"
@@ -163,7 +169,7 @@
 								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
 											 data-recipe-locked=${product.recipeLocked}">
 								Edit</button>
-							<form
+							<form sec:authorize="hasAuthority('DELETE_PRODUCTS')"
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
 								method="post" class="d-inline flex-fill"
 								th:data-confirm-message="'Are you sure you want to delete the product \'' + ${product.name} + '\'?'">

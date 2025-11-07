@@ -1,5 +1,6 @@
 package com.toastedsiopao.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,7 @@ public class AdminController {
 	 * @return A redirect string to the dashboard.
 	 */
 	@GetMapping
+	@PreAuthorize("hasAuthority('VIEW_DASHBOARD')") // **** ADDED ****
 	public String redirectToDashboard() {
 		return "redirect:/admin/dashboard";
 	}

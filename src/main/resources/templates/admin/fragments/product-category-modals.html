@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 	<div th:fragment="all-product-category-modals">
 
@@ -14,7 +15,8 @@
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
-						<form th:action="@{/admin/products/categories/add}" method="post"
+						<form sec:authorize="hasAuthority('ADD_PRODUCTS')"
+							th:action="@{/admin/products/categories/add}" method="post"
 							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
 							<h6 class="mb-3">Add New Category</h6>
 							<div th:if="${#fields.hasErrors('categoryDto.*')}"
@@ -34,7 +36,8 @@
 								</div>
 							</div>
 						</form>
-						<hr>
+						<hr sec:authorize="hasAuthority('ADD_PRODUCTS')">
+
 						<h6 class="mb-3">Existing Categories</h6>
 						<div th:if="${#lists.isEmpty(categories)}" class="text-muted">No
 							categories created yet.</div>
@@ -44,11 +47,12 @@
 								<span th:text="${cat.name}">Category Name</span>
 								<div class="d-flex gap-2">
 									<button type="button"
+										sec:authorize="hasAuthority('EDIT_PRODUCTS')"
 										class="btn btn-sm btn-action-edit edit-category-btn"
 										data-bs-toggle="modal" data-bs-target="#editCategoryModal"
 										th:data-id="${cat.id}" th:data-name="${cat.name}">
 										Edit</button>
-									<form
+									<form sec:authorize="hasAuthority('EDIT_PRODUCTS')"
 										th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This cannot be undone.'">
@@ -93,7 +97,7 @@
 									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
 							</div>
 						</div>
-						<div class="modal-footer">
+						<div class.modal-footer>
 							<button type="submit" class="btn btn-custom">Save
 								Changes</button>
 							<button type="button" class="btn btn-custom-secondary"

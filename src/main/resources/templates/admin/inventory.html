@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'inventory')}">
 <head>
 <title>Manage Inventory - MK Admin Portal</title>
@@ -17,19 +18,23 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Inventory Management</h1>
 			<div class="d-flex gap-2">
-				<button class="btn btn-action-add" data-bs-toggle="modal"
+				<button sec:authorize="hasAuthority('ADD_INVENTORY_ITEMS')"
+					class="btn btn-action-add" data-bs-toggle="modal"
 					data-bs-target="#addItemModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Item
 				</button>
-				<button class="btn btn-custom-outline" data-bs-toggle="modal"
+				<button sec:authorize="hasAuthority('MANAGE_INVENTORY_CATEGORIES')"
+					class="btn btn-custom-outline" data-bs-toggle="modal"
 					data-bs-target="#manageCategoriesModal">
 					<i class="fa-solid fa-tags me-1"></i> Manage Categories
 				</button>
-				<button class="btn btn-custom-outline" data-bs-toggle="modal"
+				<button sec:authorize="hasAuthority('MANAGE_UNITS')"
+					class="btn btn-custom-outline" data-bs-toggle="modal"
 					data-bs-target="#manageUnitsModal">
 					<i class="fa-solid fa-ruler-combined me-1"></i> Manage Units
 				</button>
-				<button class="btn btn-action-success" data-bs-toggle="modal"
+				<button sec:authorize="hasAuthority('ADJUST_INVENTORY_STOCK')"
+					class="btn btn-action-success" data-bs-toggle="modal"
 					data-bs-target="#manageStockModal">
 					<i class="fa-solid fa-boxes-stacked me-1"></i> Manage Stock
 				</button>
@@ -156,7 +161,8 @@
 										th:data-stock-status-class="'status-' + ${#strings.toLowerCase(item.stockStatus)}"
 										th:data-last-updated="${item.lastUpdated != null ? #temporals.format(item.lastUpdated, 'MMM dd, yyyy HH:mm') : 'N/A'}">
 										View</button>
-									<button class="btn btn-sm btn-action-edit edit-item-btn"
+									<button sec:authorize="hasAuthority('EDIT_INVENTORY_ITEMS')"
+										class="btn btn-sm btn-action-edit edit-item-btn"
 										data-bs-toggle="modal" data-bs-target="#addItemModal"
 										th:data-id="${item.id}" th:data-name="${item.name}"
 										th:data-category-id="${item.category.id}"
@@ -166,7 +172,7 @@
 										th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 2)}"
 										th:data-cost="${item.costPerUnit != null ? #numbers.formatDecimal(item.costPerUnit, 1, 2) : ''}">
 										Edit</button>
-									<form
+									<form sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the item \'' + ${item.name} + '\'?'">

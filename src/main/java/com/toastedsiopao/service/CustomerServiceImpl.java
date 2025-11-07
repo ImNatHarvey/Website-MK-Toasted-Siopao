@@ -45,33 +45,13 @@ public class CustomerServiceImpl implements CustomerService {
 	@Autowired
 	private Clock clock; // NEW: Injected clock
 
-	// --- Validation Helpers ---
-	private void validateUsernameDoesNotExist(String username) {
-		if (userRepository.findByUsername(username).isPresent()) {
-			throw new IllegalArgumentException("Username already exists: " + username);
-		}
-	}
+	// NEW: Injected validation service
+	@Autowired
+	private UserValidationService userValidationService;
 
-	private void validateEmailDoesNotExist(String email) {
-		if (userRepository.findByEmail(email).isPresent()) {
-			throw new IllegalArgumentException("Email already exists: " + email);
-		}
-	}
+	// --- Validation Helpers REMOVED ---
 
-	private void validateUsernameOnUpdate(String username, Long userId) {
-		Optional<User> userWithSameUsername = userRepository.findByUsername(username);
-		if (userWithSameUsername.isPresent() && !userWithSameUsername.get().getId().equals(userId)) {
-			throw new IllegalArgumentException("Username '" + username + "' already exists.");
-		}
-	}
-
-	private void validateEmailOnUpdate(String email, Long userId) {
-		Optional<User> userWithSameEmail = userRepository.findByEmail(email);
-		if (userWithSameEmail.isPresent() && !userWithSameEmail.get().getId().equals(userId)) {
-			throw new IllegalArgumentException("Email '" + email + "' already exists.");
-		}
-	}
-
+	// This helper remains as it's not in the new service
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
 			throw new IllegalArgumentException("Passwords do not match");
@@ -81,8 +61,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public User saveCustomer(CustomerSignUpDto userDto) {
-		validateUsernameDoesNotExist(userDto.getUsername());
-		validateEmailDoesNotExist(userDto.getEmail());
+		// UPDATED: Calls to new service
+		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
+		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
 		User newUser = new User();
@@ -132,8 +113,9 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
 
-		validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
-		validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
+		// UPDATED: Calls to new service
+		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
 
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());

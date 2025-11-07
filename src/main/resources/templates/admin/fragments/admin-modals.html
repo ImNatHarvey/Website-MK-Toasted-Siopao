@@ -7,7 +7,7 @@
 
 		<div class="modal fade" id="addAdminModal" tabindex="-1"
 			aria-labelledby="addAdminModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/add}" method="post"
 						th:object="${adminAccountCreateDto}" id="addAdminForm">
@@ -21,75 +21,136 @@
 							<div th:if="${#fields.hasErrors('adminAccountCreateDto.*')}"
 								class="alert alert-danger small p-2" role="alert">Error
 								adding admin. Please check the form below.</div>
-							<div class="mb-3">
-								<label for="adminFirstName" class="form-label">First
-									Name</label> <input type="text" class="form-control"
-									th:field="*{firstName}" id="adminFirstName"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('firstName')}"
-									th:errors="*{firstName}">FN Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="adminLastName" class="form-label">Last Name</label>
-								<input type="text" class="form-control" th:field="*{lastName}"
-									id="adminLastName" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('lastName')}"
-									th:errors="*{lastName}">LN Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="adminUsername" class="form-label">Username</label> <input
-									type="text" class="form-control" th:field="*{username}"
-									id="adminUsername" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">User Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="adminEmail" class="form-label">Email</label> <input
-									type="email" class="form-control" th:field="*{email}"
-									id="adminEmail" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
-									Error</div>
-							</div>
 
-							<div class="mb-3">
-								<label for="adminRole" class="form-label">Assign Role</label> <select
-									class="form-select" th:field="*{roleId}" id="adminRole"
-									th:errorclass="is-invalid">
-									<option value="">-- Select a Role --</option>
-									<th:block th:each="role : ${allAdminRoles}">
-										<option
-											th:if="${role.name != 'ROLE_OWNER' AND role.name != 'ROLE_CUSTOMER'}"
-											th:value="${role.id}"
-											th:text="${role.name.replace('ROLE_', '')}">Role
-											Name</option>
-									</th:block>
-								</select>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}">Role
-									Error</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminFirstName" class="form-label">First
+										Name</label> <input type="text" class="form-control"
+										th:field="*{firstName}" id="adminFirstName"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('firstName')}"
+										th:errors="*{firstName}">FN Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminLastName" class="form-label">Last Name</label>
+									<input type="text" class="form-control" th:field="*{lastName}"
+										id="adminLastName" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lastName')}"
+										th:errors="*{lastName}">LN Error</div>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminUsername" class="form-label">Username</label>
+									<input type="text" class="form-control" th:field="*{username}"
+										id="adminUsername" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('username')}"
+										th:errors="*{username}">User Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminEmail" class="form-label">Email</label> <input
+										type="email" class="form-control" th:field="*{email}"
+										id="adminEmail" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Email
+										Error</div>
+								</div>
 							</div>
 
 							<hr>
+							<h5 class="mb-3">Access Rights</h5>
+
 							<div class="mb-3">
-								<label for="adminPassword" class="form-label">Password</label> <input
-									type="password" class="form-control" th:field="*{password}"
-									id="adminPassword" th:errorclass="is-invalid">
+								<label for="adminRoleName" class="form-label">Role Name</label>
+								<input type="text" class="form-control" th:field="*{roleName}"
+									id="adminRoleName" th:errorclass="is-invalid"
+									placeholder="e.g., Staff, Manager, Accountant">
 								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('password')}"
-									th:errors="*{password}">PW Error</div>
+									th:if="${#fields.hasErrors('roleName')}"
+									th:errors="*{roleName}">Role Name Error</div>
+								<div class="form-text">This name will define the role
+									(e.g., "STAFF" becomes "ROLE_STAFF").</div>
 							</div>
-							<div class="mb-3">
-								<label for="adminConfirmPassword" class="form-label">Confirm
-									Password</label> <input type="password" class="form-control"
-									th:field="*{confirmPassword}" id="adminConfirmPassword"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('confirmPassword')}"
-									th:errors="*{confirmPassword}">Confirm PW Error</div>
+
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageCustomers}" id="addManageCustomers">
+										<label class="form-check-label" for="addManageCustomers">Customer
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageAdmins}" id="addManageAdmins"> <label
+											class="form-check-label" for="addManageAdmins">Admin
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageOrders}" id="addManageOrders"> <label
+											class="form-check-label" for="addManageOrders">Order
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageProducts}" id="addManageProducts">
+										<label class="form-check-label" for="addManageProducts">Product
+											Management</label>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageInventory}" id="addManageInventory">
+										<label class="form-check-label" for="addManageInventory">Inventory
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageTransactions}" id="addManageTransactions">
+										<label class="form-check-label" for="addManageTransactions">Transaction
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageSite}" id="addManageSite"> <label
+											class="form-check-label" for="addManageSite">Site
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageActivityLog}" id="addManageActivityLog">
+										<label class="form-check-label" for="addManageActivityLog">View
+											Activity Log</label>
+									</div>
+								</div>
+							</div>
+
+							<hr>
+							<h5 class="mb-3">Security</h5>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="adminPassword" class="form-label">Password</label>
+									<input type="password" class="form-control"
+										th:field="*{password}" id="adminPassword"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('password')}"
+										th:errors="*{password}">PW Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="adminConfirmPassword" class="form-label">Confirm
+										Password</label> <input type="password" class="form-control"
+										th:field="*{confirmPassword}" id="adminConfirmPassword"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('confirmPassword')}"
+										th:errors="*{confirmPassword}">Confirm PW Error</div>
+								</div>
 							</div>
 						</div>
 						<div class="modal-footer">
@@ -105,7 +166,7 @@
 
 		<div class="modal fade" id="editAdminModal" tabindex="-1"
 			aria-labelledby="editAdminModalLabel" aria-hidden="true">
-			<div class="modal-dialog">
+			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/update}" method="post"
 						th:object="${adminUpdateDto}" id="editAdminForm">
@@ -123,58 +184,116 @@
 							<input type="hidden" th:field="*{id}" />
 
 							<h5 class="mb-3">Personal Information</h5>
-							<div class="mb-3">
-								<label for="editAdminFirstName" class="form-label">First
-									Name</label> <input type="text" class="form-control"
-									th:field="*{firstName}" id="editAdminFirstName"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('firstName')}"
-									th:errors="*{firstName}">Error</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="editAdminFirstName" class="form-label">First
+										Name</label> <input type="text" class="form-control"
+										th:field="*{firstName}" id="editAdminFirstName"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('firstName')}"
+										th:errors="*{firstName}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="editAdminLastName" class="form-label">Last
+										Name</label> <input type="text" class="form-control"
+										th:field="*{lastName}" id="editAdminLastName"
+										th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('lastName')}"
+										th:errors="*{lastName}">Error</div>
+								</div>
 							</div>
-							<div class="mb-3">
-								<label for="editAdminLastName" class="form-label">Last
-									Name</label> <input type="text" class="form-control"
-									th:field="*{lastName}" id="editAdminLastName"
-									th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('lastName')}"
-									th:errors="*{lastName}">Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="editAdminUsername" class="form-label">Username</label>
-								<input type="text" class="form-control" th:field="*{username}"
-									id="editAdminUsername" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('username')}"
-									th:errors="*{username}">Error</div>
-							</div>
-							<div class="mb-3">
-								<label for="editAdminEmail" class="form-label">Email</label> <input
-									type="email" class="form-control" th:field="*{email}"
-									id="editAdminEmail" th:errorclass="is-invalid">
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
-							</div>
-
-							<div class="mb-3">
-								<label for="editAdminRole" class="form-label">Assign
-									Role</label> <select class="form-select" th:field="*{roleId}"
-									id="editAdminRole" th:errorclass="is-invalid">
-									<option value="">-- Select a Role --</option>
-									<th:block th:each="role : ${allAdminRoles}">
-										<option
-											th:if="${role.name != 'ROLE_OWNER' AND role.name != 'ROLE_CUSTOMER'}"
-											th:value="${role.id}"
-											th:text="${role.name.replace('ROLE_', '')}">Role
-											Name</option>
-									</th:block>
-								</select>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('roleId')}" th:errors="*{roleId}">Role
-									Error</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="editAdminUsername" class="form-label">Username</label>
+									<input type="text" class="form-control" th:field="*{username}"
+										id="editAdminUsername" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('username')}"
+										th:errors="*{username}">Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="editAdminEmail" class="form-label">Email</label> <input
+										type="email" class="form-control" th:field="*{email}"
+										id="editAdminEmail" th:errorclass="is-invalid">
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
+								</div>
 							</div>
 
+							<hr>
+							<h5 class="mb-3">Access Rights</h5>
+
+							<div class="mb-3">
+								<label for="editAdminRoleName" class="form-label">Role
+									Name</label> <input type="text" class="form-control"
+									th:field="*{roleName}" id="editAdminRoleName"
+									th:errorclass="is-invalid"
+									placeholder="e.g., Staff, Manager, Accountant">
+								<div class="invalid-feedback"
+									th:if="${#fields.hasErrors('roleName')}"
+									th:errors="*{roleName}">Role Name Error</div>
+								<div class="form-text">This name will define the role
+									(e.g., "STAFF" becomes "ROLE_STAFF").</div>
+							</div>
+
+							<div class="row">
+								<div class="col-md-6">
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageCustomers}" id="editManageCustomers">
+										<label class="form-check-label" for="editManageCustomers">Customer
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageAdmins}" id="editManageAdmins"> <label
+											class="form-check-label" for="editManageAdmins">Admin
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageOrders}" id="editManageOrders"> <label
+											class="form-check-label" for="editManageOrders">Order
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageProducts}" id="editManageProducts">
+										<label class="form-check-label" for="editManageProducts">Product
+											Management</label>
+									</div>
+								</div>
+								<div class="col-md-6">
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageInventory}" id="editManageInventory">
+										<label class="form-check-label" for="editManageInventory">Inventory
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageTransactions}" id="editManageTransactions">
+										<label class="form-check-label" for="editManageTransactions">Transaction
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageSite}" id="editManageSite"> <label
+											class="form-check-label" for="editManageSite">Site
+											Management</label>
+									</div>
+									<div class="form-check form-switch mb-2">
+										<input class="form-check-input" type="checkbox" role="switch"
+											th:field="*{manageActivityLog}" id="editManageActivityLog">
+										<label class="form-check-label" for="editManageActivityLog">View
+											Activity Log</label>
+									</div>
+								</div>
+							</div>
+
+							<hr>
 							<div class="alert alert-warning small">Password cannot be
 								changed from this form.</div>
 						</div>
@@ -240,8 +359,7 @@
 								class="alert alert-danger small p-2" role="alert">Please
 								correct the errors below.</div>
 
-							<input type="hidden" th:field="*{id}" /> <input type="hidden"
-								th:field="*{roleId}" />
+							<input type="hidden" th:field="*{id}" />
 							<h5 class="mb-3">Personal Information</h5>
 							<div class="mb-3">
 								<label for="profileFirstName" class="form-label">First
@@ -279,14 +397,12 @@
 
 							<div class="mb-3">
 								<label for="profileRole" class="form-label">My Role</label> <input
-									type="text" class="form-control"
-									th:value="${#authorization.expression('hasAuthority(''ROLE_OWNER'')') ? 'Owner' : 'Admin'}"
+									type="text" class="form-control" th:field="*{roleName}"
 									id="profileRole" readonly disabled>
 							</div>
 
-							<div class_w="alert alert-warning small">To change your
-								password, please use the "Forgot Password" feature on the login
-								page (feature coming soon).</div>
+							<div class="alert alert-warning small">To change your
+								password, please contact the System Owner.</div>
 						</div>
 						<div class="modal-footer">
 							<button type="submit" class="btn btn-custom">Save

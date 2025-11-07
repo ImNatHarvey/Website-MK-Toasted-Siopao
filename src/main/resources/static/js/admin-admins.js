@@ -28,13 +28,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
-			const role = adminRow.querySelector('.badge') ? adminRow.querySelector('.badge').textContent.trim() : 'N/A'; // Get role from badge text
+			const role = dataset.roleName || 'N/A'; // UPDATED: Use roleName
 
 			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
 			viewAdminModal.querySelector('#viewAdminName').textContent = name;
 			viewAdminModal.querySelector('#viewAdminUsername').textContent = username;
 			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
-			viewAdminModal.querySelector('#viewAdminRole').textContent = role; // NEW
+			viewAdminModal.querySelector('#viewAdminRole').textContent = role; // UPDATED
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
 		});
 	}
@@ -60,12 +60,34 @@ document.addEventListener('DOMContentLoaded', function() {
 			modalTitle.textContent = 'Edit Admin: ' + (dataset.name || 'User');
 			if (!form) { console.error("Edit admin form not found!"); return; }
 
+			// --- Helper to set checkbox value ---
+			const setCheckbox = (id, value) => {
+				const el = form.querySelector(id);
+				if (el) {
+					el.checked = (value === 'true');
+				}
+			};
+			// --- End Helper ---
+
 			form.querySelector('input[name="id"]').value = dataset.id || '';
 			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
 			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
 			form.querySelector('#editAdminUsername').value = dataset.username || '';
 			form.querySelector('#editAdminEmail').value = dataset.email || '';
-			form.querySelector('#editAdminRole').value = dataset.roleId || ''; // NEW: Populate role dropdown
+			// form.querySelector('#editAdminRole').value = dataset.roleId || ''; // REMOVED
+
+			// --- NEW: Populate Role Name and Permissions ---
+			form.querySelector('#editAdminRoleName').value = dataset.roleName || '';
+			setCheckbox('#editManageCustomers', dataset.manageCustomers);
+			setCheckbox('#editManageAdmins', dataset.manageAdmins);
+			setCheckbox('#editManageOrders', dataset.manageOrders);
+			setCheckbox('#editManageProducts', dataset.manageProducts);
+			setCheckbox('#editManageInventory', dataset.manageInventory);
+			setCheckbox('#editManageTransactions', dataset.manageTransactions);
+			setCheckbox('#editManageSite', dataset.manageSite);
+			setCheckbox('#editManageActivityLog', dataset.manageActivityLog);
+			// --- END NEW ---
+
 
 			if (mainElement.dataset.showEditAdminModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));

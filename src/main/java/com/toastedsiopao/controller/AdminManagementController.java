@@ -45,7 +45,8 @@ public class AdminManagementController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
 		redirectAttributes.addFlashAttribute("admins", adminService.findAllAdmins(defaultPageable).getContent());
-		redirectAttributes.addFlashAttribute("allAdminRoles", adminService.findAllAdminRoles()); // NEW
+		// redirectAttributes.addFlashAttribute("allAdminRoles",
+		// adminService.findAllAdminRoles()); // REMOVED
 	}
 
 	@GetMapping
@@ -57,14 +58,14 @@ public class AdminManagementController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<User> adminPage = adminService.searchAdmins(keyword, pageable);
-		List<Role> allAdminRoles = adminService.findAllAdminRoles(); // NEW
+		// List<Role> allAdminRoles = adminService.findAllAdminRoles(); // REMOVED
 
 		model.addAttribute("adminPage", adminPage);
 		model.addAttribute("admins", adminPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
-		model.addAttribute("allAdminRoles", allAdminRoles); // NEW
+		// model.addAttribute("allAdminRoles", allAdminRoles); // REMOVED
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", adminPage.getTotalPages());
@@ -93,7 +94,8 @@ public class AdminManagementController {
 				profileDto.setUsername(currentUser.getUsername());
 				profileDto.setEmail(currentUser.getEmail());
 				if (currentUser.getRole() != null) { // NEW
-					profileDto.setRoleId(currentUser.getRole().getId());
+					// profileDto.setRoleId(currentUser.getRole().getId()); // REMOVED
+					profileDto.setRoleName(currentUser.getRole().getName().replace("ROLE_", "")); // NEW
 				}
 			}
 			model.addAttribute("adminProfileDto", profileDto);
@@ -123,8 +125,8 @@ public class AdminManagementController {
 
 		try {
 			User savedUser = adminService.createAccount(adminDto); // UPDATED (role is in DTO)
-			activityLogService.logAdminAction(principal.getName(), "ADD_ADMIN",
-					"Created new admin user: " + savedUser.getUsername());
+			activityLogService.logAdminAction(principal.getName(), "ADD_ADMIN", "Created new admin user: "
+					+ savedUser.getUsername() + " with role " + savedUser.getRole().getName());
 			redirectAttributes.addFlashAttribute("adminSuccess",
 					"Admin user '" + savedUser.getUsername() + "' created successfully!");
 
@@ -136,6 +138,8 @@ public class AdminManagementController {
 				result.rejectValue("email", "adminAccountCreateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "adminAccountCreateDto.confirmPassword", e.getMessage());
+			} else if (e.getMessage().contains("Role name")) { // NEW
+				result.rejectValue("roleName", "adminAccountCreateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error creating admin: " + e.getMessage());
 			}
@@ -179,6 +183,8 @@ public class AdminManagementController {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
+			} else if (e.getMessage().contains("Role name")) { // NEW
+				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());
 			}
@@ -198,14 +204,29 @@ public class AdminManagementController {
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
+		// --- Manually clear errors for fields not in this form ---
+		// This is a workaround because we are reusing a DTO that has more fields
+		// than the form.
+		if (result.hasFieldErrors("roleName")) {
+			// We can't easily remove the error, but this is a sign of the problem.
+			// The updateAdminProfile service method will ignore this field anyway.
+		}
+		// --- End Workaround ---
+
 		if (result.hasErrors()) {
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
-					result);
-			redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editProfileModal").build()
-					.toUriString();
-			return "redirect:" + redirectUrl;
+			// Check if the only errors are the ones we expect to ignore
+			boolean onlyRoleErrors = result.getFieldErrors().stream().allMatch(e -> e.getField().equals("roleName"));
+
+			if (!onlyRoleErrors) {
+				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
+						result);
+				redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);
+				addCommonAttributesForRedirect(redirectAttributes);
+				String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editProfileModal")
+						.build().toUriString();
+				return "redirect:" + redirectUrl;
+			}
+			log.warn("Ignoring 'roleName' validation error for self-profile update.");
 		}
 
 		// Security check: ensure the ID in the DTO matches the logged-in user
@@ -218,7 +239,8 @@ public class AdminManagementController {
 		// --- NEW: Manually set roleId for Owner profile update ---
 		// This ensures the service-layer validation passes for the Owner
 		if (currentUser.getRole() != null) {
-			adminDto.setRoleId(currentUser.getRole().getId());
+			// adminDto.setRoleId(currentUser.getRole().getId()); // REMOVED
+			adminDto.setRoleName(currentUser.getRole().getName().replace("ROLE_", "")); // NEW
 		}
 		// --- END NEW ---
 

@@ -80,7 +80,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 		// 1. Get all permissions from the role
 		Set<GrantedAuthority> authorities = user.getRole().getPermissions().stream()
-				.map(permission -> new SimpleGrantedAuthority(permission.name())).collect(Collectors.toSet());
+				.map(permissionString -> new SimpleGrantedAuthority(permissionString)) // UPDATED
+				.collect(Collectors.toSet());
 
 		// 2. Add the role name itself (e.g., "ROLE_OWNER") as an authority
 		// This is best practice for Spring Security

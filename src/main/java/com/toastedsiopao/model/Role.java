@@ -31,15 +31,15 @@ public class Role {
 	@ElementCollection(fetch = FetchType.EAGER) // Eager fetch roles, as we need them for security
 	@CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
 	@Column(name = "permission", nullable = false)
-	@Enumerated(EnumType.STRING)
-	private Set<Permission> permissions = new HashSet<>();
+	// @Enumerated(EnumType.STRING) // REMOVED: No longer an enum
+	private Set<String> permissions = new HashSet<>(); // UPDATED to Set<String>
 
 	public Role(String name) {
 		this.name = name;
 	}
 
 	// Convenience method
-	public void addPermission(Permission permission) {
+	public void addPermission(String permission) { // UPDATED to String
 		this.permissions.add(permission);
 	}
 }

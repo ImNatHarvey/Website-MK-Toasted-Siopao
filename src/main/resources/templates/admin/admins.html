@@ -94,10 +94,18 @@
 								th:data-last-name="${admin.lastName}"
 								th:data-username="${admin.username}"
 								th:data-email="${admin.email != null ? admin.email : 'N/A'}"
-								th:data-role-id="${admin.role != null ? admin.role.id : ''}"
+								th:data-role-name="${admin.role != null ? admin.role.name.replace('ROLE_', '') : ''}"
 								th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
 								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyY HH:mm') : 'N/A'}"
-								th:data-status="${admin.status}">
+								th:data-status="${admin.status}"
+								th:data-manage-customers="${admin.role != null ? admin.role.permissions.contains('VIEW_CUSTOMERS') : 'false'}"
+								th:data-manage-admins="${admin.role != null ? admin.role.permissions.contains('VIEW_ADMINS') : 'false'}"
+								th:data-manage-orders="${admin.role != null ? admin.role.permissions.contains('VIEW_ORDERS') : 'false'}"
+								th:data-manage-products="${admin.role != null ? admin.role.permissions.contains('VIEW_PRODUCTS') : 'false'}"
+								th:data-manage-inventory="${admin.role != null ? admin.role.permissions.contains('VIEW_INVENTORY') : 'false'}"
+								th:data-manage-transactions="${admin.role != null ? admin.role.permissions.contains('VIEW_TRANSACTIONS') : 'false'}"
+								th:data-manage-site="${admin.role != null ? admin.role.permissions.contains('EDIT_SITE_SETTINGS') : 'false'}"
+								th:data-manage-activity-log="${admin.role != null ? admin.role.permissions.contains('VIEW_ACTIVITY_LOG') : 'false'}">
 
 								<td th:text="${admin.id}">001</td>
 								<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin

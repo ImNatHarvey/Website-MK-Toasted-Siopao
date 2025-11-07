@@ -32,13 +32,9 @@ public interface AdminService {
 
 	long countActiveAdmins(); // NEW: Fixes stats error
 
-	// --- NEW: For Admin page dropdowns ---
-	/**
-	 * Finds all roles that can be assigned to an admin (e.g., "Owner", "Admin").
-	 * Excludes "Customer". * @return A list of admin-level roles.
-	 */
-	List<Role> findAllAdminRoles();
-	// --- END NEW ---
+	// --- REMOVED: No longer needed for permission checkboxes ---
+	// List<Role> findAllAdminRoles();
+	// --- END REMOVED ---
 
 	// --- NEW: For Dashboard Stats ---
 	/**

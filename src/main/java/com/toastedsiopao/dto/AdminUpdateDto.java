@@ -34,8 +34,26 @@ public class AdminUpdateDto {
 	private String email;
 	// **** END NEW FIELD ****
 
-	// --- NEW: For assigning a role ---
-	@NotNull(message = "A role must be selected")
-	private Long roleId;
+	// --- REMOVED: roleId ---
+	// @NotNull(message = "A role must be selected")
+	// private Long roleId;
+	// --- END REMOVED ---
+
+	// --- NEW: Role Name ---
+	@NotBlank(message = "Role name cannot be blank")
+	@Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Role name can only contain letters, numbers, and spaces")
+	@Size(max = 40, message = "Role name cannot exceed 40 characters")
+	private String roleName;
+	// --- END NEW ---
+
+	// --- NEW: Module Permissions ---
+	private boolean manageCustomers;
+	private boolean manageAdmins;
+	private boolean manageOrders;
+	private boolean manageProducts;
+	private boolean manageInventory;
+	private boolean manageTransactions;
+	private boolean manageSite;
+	private boolean manageActivityLog;
 	// --- END NEW ---
 }

@@ -62,7 +62,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				log.info(">>> Creating 'ROLE_OWNER' role...");
 				Role newOwnerRole = new Role("ROLE_OWNER");
 				// Add all permissions from the enum
-				Arrays.stream(Permission.values()).forEach(newOwnerRole::addPermission);
+				Arrays.stream(Permission.values()).forEach(permission -> newOwnerRole.addPermission(permission.name())); // UPDATED
 				return roleRepository.save(newOwnerRole);
 			});
 
@@ -70,11 +70,11 @@ public class MKToastedSiopaoWebsiteApplication {
 				log.info(">>> Creating 'ROLE_ADMIN' role...");
 				Role newAdminRole = new Role("ROLE_ADMIN");
 				// Add some default permissions for a basic admin (can be edited later)
-				newAdminRole.addPermission(Permission.VIEW_DASHBOARD);
-				newAdminRole.addPermission(Permission.VIEW_ORDERS);
-				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS);
-				newAdminRole.addPermission(Permission.VIEW_PRODUCTS);
-				newAdminRole.addPermission(Permission.VIEW_INVENTORY);
+				newAdminRole.addPermission(Permission.VIEW_DASHBOARD.name()); // UPDATED
+				newAdminRole.addPermission(Permission.VIEW_ORDERS.name()); // UPDATED
+				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS.name()); // UPDATED
+				newAdminRole.addPermission(Permission.VIEW_PRODUCTS.name()); // UPDATED
+				newAdminRole.addPermission(Permission.VIEW_INVENTORY.name()); // UPDATED
 				return roleRepository.save(newAdminRole);
 			});
 

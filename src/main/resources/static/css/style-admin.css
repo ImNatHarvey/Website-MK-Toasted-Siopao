@@ -792,6 +792,20 @@ select.form-control-readonly {
 }
 
 /* ================================================= */
+/* == NEW: Admin Form Tweaks == */
+/* ================================================= */
+
+/* Add some spacing for the permission checkboxes */
+.form-switch {
+	padding-left: 3.5em; /* Increase padding to avoid label overlap */
+}
+
+.form-switch .form-check-label {
+	padding-top: 0.1rem;
+	cursor: pointer;
+}
+
+/* ================================================= */
 /* == NEW: RESPONSIVE STYLES (MOBILE-FIRST) == */
 /* ================================================= */
 

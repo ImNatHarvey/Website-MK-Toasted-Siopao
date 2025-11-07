@@ -8,7 +8,7 @@
 
 	<div id="admin-content-wrapper">
 		<div
-			class="d-flex flex-column flex-md-row justify-content-between align-items.center mb-4">
+			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Transaction History</h1>
 		</div>
 
@@ -47,17 +47,32 @@
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="row g-3 align-items-end">
 				<div class="col-md-10">
-					<label for="keyword" class="form-label">Search by Order ID
-						or Customer Name</label> <input type="text" class="form-control"
-						id="keyword" name="keyword" th:value="${keyword}"
-						placeholder="Enter search term...">
+					<div class="row g-3">
+						<div class="col-md-6">
+							<label for="keyword" class="form-label">Search by Order
+								ID or Customer Name</label> <input type="text" class="form-control"
+								id="keyword" name="keyword" th:value="${keyword}"
+								placeholder="Enter search term...">
+						</div>
+						<div class="col-md-3">
+							<label for="startDate" class="form-label">From</label> <input
+								type="date" class="form-control" id="startDate" name="startDate"
+								th:value="${startDate}">
+						</div>
+						<div class="col-md-3">
+							<label for="endDate" class="form-label">To</label> <input
+								type="date" class="form-control" id="endDate" name="endDate"
+								th:value="${endDate}">
+						</div>
+					</div>
 				</div>
 				<div class="col-md-2 d-flex justify-content-end">
 					<button type="submit" class="btn btn-action-view me-2">
 						<i class="fa-solid fa-search me-1"></i> Search
 					</button>
 					<a th:href="@{/admin/transactions}"
-						class="btn btn-custom-secondary" title="Clear Search">Clear </a>
+						class="btn btn-custom-secondary" title="Clear Search">
+						Clear </a>
 				</div>
 			</div>
 		</form>
@@ -102,7 +117,7 @@
 							</tr>
 							<tr th:if="${#lists.isEmpty(transactions)}">
 								<td colspan="7" class="text-center text-muted"
-									th:text="${keyword != null ? 'No transactions found matching your search.' : 'No transactions found.'}">
+									th:text="${(keyword != null or startDate != null or endDate != null) ? 'No transactions found matching your criteria.' : 'No transactions found.'}">
 									No transactions found.</td>
 							</tr>
 						</tbody>
@@ -121,7 +136,7 @@
 							<li class="page-item"
 								th:classappend="${transactionPage.first} ? 'disabled'"><a
 								class="page-link"
-								th:href="@{/admin/transactions(page=${transactionPage.number - 1}, size=${size}, keyword=${keyword})}">Previous</a>
+								th:href="@{/admin/transactions(page=${transactionPage.number - 1}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}">Previous</a>
 							</li>
 							<th:block
 								th:each="i : ${#numbers.sequence(0, transactionPage.totalPages - 1)}"
@@ -133,14 +148,14 @@
 								<li class="page-item"
 									th:classappend="${i == transactionPage.number} ? 'active'">
 									<a class="page-link"
-									th:href="@{/admin/transactions(page=${i}, size=${size}, keyword=${keyword})}"
+									th:href="@{/admin/transactions(page=${i}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
 									th:text="${i + 1}"></a>
 								</li>
 							</th:block>
 							<li class="page-item"
 								th:classappend="${transactionPage.last} ? 'disabled'"><a
 								class="page-link"
-								th:href="@{/admin/transactions(page=${transactionPage.number + 1}, size=${size}, keyword=${keyword})}">Next</a>
+								th:href="@{/admin/transactions(page=${transactionPage.number + 1}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}">Next</a>
 							</li>
 						</ul>
 					</nav>

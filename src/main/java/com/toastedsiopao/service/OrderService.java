@@ -36,7 +36,7 @@ public interface OrderService {
 	 * @param status  The status to filter by. Can be null or empty.
 	 * @return A list of matching orders, ordered by date descending.
 	 */
-	Page<Order> searchOrders(String keyword, String status, Pageable pageable); // Updated
+	Page<Order> searchOrders(String keyword, String status, String startDate, String endDate, Pageable pageable); // Updated
 
 	// --- NEW: For Dashboard ---
 
@@ -74,10 +74,8 @@ public interface OrderService {
 
 	/**
 	 * Gets sales data grouped by day for a date range, for use in charts. * @param
-	 * start Start timestamp. * @param end End timestamp.
-	 * 
-	 * @return A Map<String, BigDecimal> where key is date (YYYY-MM-DD) and value is
-	 *         total sales.
+	 * start Start timestamp. * @param end End timestamp. * @return A Map<String,
+	 * BigDecimal> where key is date (YYYY-MM-DD) and value is total sales.
 	 */
 	Map<String, BigDecimal> getSalesDataForChart(LocalDateTime start, LocalDateTime end);
 

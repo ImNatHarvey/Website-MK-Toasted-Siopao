@@ -4,6 +4,8 @@ import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page; // Import Page
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +18,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -29,6 +32,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
+
+	private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
 
 	@Autowired
 	private OrderRepository orderRepository;
@@ -51,7 +56,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findAllOrders(Pageable pageable) { // Updated
-		return orderRepository.findAllByOrderByOrderDateDesc(pageable); // Updated
+		return orderRepository.findAllByDate(null, null, pageable); // Updated
 	}
 
 	// --- NEW: Implementation for finding by status ---
@@ -62,25 +67,49 @@ public class OrderServiceImpl implements OrderService {
 		if (!StringUtils.hasText(status)) {
 			return findAllOrders(pageable); // Updated
 		}
-		return orderRepository.findByStatusOrderByOrderDateDesc(status.toUpperCase(), pageable); // Updated
+		return orderRepository.searchByStatusAndDate(status.toUpperCase(), null, null, pageable); // Updated
 	}
 
 	// --- NEW: Implementation for searching/filtering orders ---
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> searchOrders(String keyword, String status, Pageable pageable) { // Updated
+	public Page<Order> searchOrders(String keyword, String status, String startDate, String endDate,
+			Pageable pageable) { // Updated
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasStatus = StringUtils.hasText(status);
+		boolean hasStartDate = StringUtils.hasText(startDate);
+		boolean hasEndDate = StringUtils.hasText(endDate);
+
+		LocalDateTime startDateTime = null;
+		LocalDateTime endDateTime = null;
+
+		try {
+			if (hasStartDate) {
+				startDateTime = LocalDate.parse(startDate).atStartOfDay();
+			}
+		} catch (Exception e) {
+			log.warn("Invalid start date format: {}. Ignoring.", startDate);
+		}
+
+		try {
+			if (hasEndDate) {
+				endDateTime = LocalDate.parse(endDate).atTime(LocalTime.MAX);
+			}
+		} catch (Exception e) {
+			log.warn("Invalid end date format: {}. Ignoring.", endDate);
+		}
+
 		String upperStatus = hasStatus ? status.toUpperCase() : null;
 
 		if (hasKeyword && hasStatus) {
-			return orderRepository.searchOrdersByKeywordAndStatus(keyword.trim(), upperStatus, pageable); // Updated
+			return orderRepository.searchOrdersByKeywordAndStatus(keyword.trim(), upperStatus, startDateTime,
+					endDateTime, pageable); // Updated
 		} else if (hasKeyword) {
-			return orderRepository.searchOrdersByKeyword(keyword.trim(), pageable); // Updated
+			return orderRepository.searchOrdersByKeyword(keyword.trim(), startDateTime, endDateTime, pageable); // Updated
 		} else if (hasStatus) {
-			return orderRepository.findByStatusOrderByOrderDateDesc(upperStatus, pageable); // Updated
+			return orderRepository.searchByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); // Updated
 		} else {
-			return findAllOrders(pageable); // No keyword, no status -> return all // Updated
+			return orderRepository.findAllByDate(startDateTime, endDateTime, pageable); // Updated
 		}
 	}
 

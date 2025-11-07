@@ -20,25 +20,38 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	Page<Order> findByUserOrderByOrderDateDesc(User user, Pageable pageable); // Updated
 
 	// Find all orders ordered by date descending (newest first) - Useful for admin
-	Page<Order> findAllByOrderByOrderDateDesc(Pageable pageable); // Updated
+	@Query("SELECT o FROM Order o WHERE " + "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+	Page<Order> findAllByDate(@Param("startDateTime") LocalDateTime startDateTime,
+			@Param("endDateTime") LocalDateTime endDateTime, Pageable pageable); // Updated
 
 	// --- NEW: Find orders by status ---
-	Page<Order> findByStatusOrderByOrderDateDesc(String status, Pageable pageable); // Updated
+	@Query("SELECT o FROM Order o WHERE o.status = :status AND "
+			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+	Page<Order> searchByStatusAndDate(@Param("status") String status,
+			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
+			Pageable pageable); // Updated
 
 	// --- NEW: Search orders by keyword (ID or customer name) ---
-	@Query("SELECT o FROM Order o WHERE " + "CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR " // Search by ID
-																										// (converted to
-																										// string)
+	@Query("SELECT o FROM Order o WHERE " + "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
-			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%')) " + "ORDER BY o.orderDate DESC")
-	Page<Order> searchOrdersByKeyword(@Param("keyword") String keyword, Pageable pageable); // Updated
+			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
+	Page<Order> searchOrdersByKeyword(@Param("keyword") String keyword,
+			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
+			Pageable pageable); // Updated
 
 	// --- NEW: Search orders by keyword AND status ---
-	@Query("SELECT o FROM Order o WHERE o.status = :status AND ("
-			+ "CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
+	@Query("SELECT o FROM Order o WHERE o.status = :status AND "
+			+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
-			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " + "ORDER BY o.orderDate DESC")
+			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
+			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
+			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) " + "ORDER BY o.orderDate DESC")
 	Page<Order> searchOrdersByKeywordAndStatus(@Param("keyword") String keyword, @Param("status") String status,
+			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable); // Updated
 
 	// --- NEW: For Dashboard Stats ---

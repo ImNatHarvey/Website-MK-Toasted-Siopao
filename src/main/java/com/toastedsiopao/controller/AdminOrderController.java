@@ -36,7 +36,7 @@ public class AdminOrderController {
 																														// logging
 
 		Pageable pageable = PageRequest.of(page, size); // NEW
-		Page<Order> orderPage = orderService.searchOrders(keyword, status, pageable); // UPDATED
+		Page<Order> orderPage = orderService.searchOrders(keyword, status, null, null, pageable); // UPDATED
 
 		// --- NEW: Get Order Stats ---
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();

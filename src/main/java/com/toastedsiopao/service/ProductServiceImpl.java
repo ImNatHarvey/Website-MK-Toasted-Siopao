@@ -242,9 +242,9 @@ public class ProductServiceImpl implements ProductService {
 					}
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 
-					InventoryItem currentItemState = inventoryItemRepository.findById(item.getId())
+					InventoryItem currentItemState = inventoryItemRepository.findByIdForUpdate(item.getId())
 							.orElseThrow(() -> new RuntimeException(
-									"Inventory item '" + item.getName() + "' not found during stock check."));
+									"Inventory item '" + item.getName() + "' not found and could not be locked."));
 
 					if (currentItemState.getCurrentStock().compareTo(amountToDecrease) < 0) {
 						throw new IllegalArgumentException(
@@ -254,7 +254,7 @@ public class ProductServiceImpl implements ProductService {
 										+ item.getUnit().getAbbreviation() + " available.");
 					}
 				}
-
+				
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();

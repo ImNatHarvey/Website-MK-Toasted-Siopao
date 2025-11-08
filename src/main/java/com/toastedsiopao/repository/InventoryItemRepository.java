@@ -2,14 +2,16 @@ package com.toastedsiopao.repository;
 
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
-import com.toastedsiopao.model.UnitOfMeasure; // NEW IMPORT
+import com.toastedsiopao.model.UnitOfMeasure;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +26,7 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 
 	@Query(value = FIND_ITEM_WITH_RELATIONS + "ORDER BY i.name ASC")
 	Page<InventoryItem> findAll(Pageable pageable);
-	
+
 	@Query(value = FIND_ITEM_WITH_RELATIONS + "WHERE i.category = :category ORDER BY i.name ASC")
 	Page<InventoryItem> findByCategoryOrderByNameAsc(@Param("category") InventoryCategory category, Pageable pageable);
 
@@ -66,4 +68,8 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 	long countOutOfStockItems();
 
 	long countByUnit(UnitOfMeasure unit);
+
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT i FROM InventoryItem i WHERE i.id = :id")
+	Optional<InventoryItem> findByIdForUpdate(@Param("id") Long id);
 }

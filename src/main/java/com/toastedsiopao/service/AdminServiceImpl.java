@@ -3,6 +3,7 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
+import com.toastedsiopao.dto.RoleDto;
 import com.toastedsiopao.model.Permission;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
@@ -26,6 +27,7 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +38,8 @@ public class AdminServiceImpl implements AdminService {
 	private static final String OWNER_USERNAME = "mktoastedadmin";
 	private static final String OWNER_ROLE_NAME = "ROLE_OWNER";
 	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER";
+
+	private static final Set<String> DEFAULT_ROLES = Set.of(OWNER_ROLE_NAME, CUSTOMER_ROLE_NAME);
 
 	@Autowired
 	private UserRepository userRepository;
@@ -66,6 +70,12 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	@Transactional(readOnly = true)
+	public Optional<Role> findRoleById(Long id) {
+		return roleRepository.findById(id);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
 	public List<User> findAllAdmins() {
 		return userRepository.findByRole_NameNot(CUSTOMER_ROLE_NAME);
 	}
@@ -73,7 +83,7 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<Role> findAllAdminRoles() {
-		return roleRepository.findByNameNot(CUSTOMER_ROLE_NAME);
+		return roleRepository.findByNameNotIn(List.of(CUSTOMER_ROLE_NAME, OWNER_ROLE_NAME));
 	}
 
 	@Override
@@ -96,61 +106,23 @@ public class AdminServiceImpl implements AdminService {
 			throw new IllegalArgumentException("Role name cannot be blank.");
 		}
 		String formattedName = "ROLE_" + displayName.toUpperCase().replaceAll("\\s+", "_");
-		if (formattedName.equals(OWNER_ROLE_NAME) || formattedName.equals(CUSTOMER_ROLE_NAME)) {
+		if (DEFAULT_ROLES.contains(formattedName)) {
 			throw new IllegalArgumentException("Cannot create role with reserved name: " + displayName);
 		}
 		return formattedName;
 	}
 
 	private void addPermissionsToRole(Role role, AdminAccountCreateDto dto) {
-		role.getPermissions().clear();
 
-		role.addPermission(Permission.VIEW_DASHBOARD.name());
-
-		if (dto.isManageCustomers()) {
-			role.addPermission(Permission.VIEW_CUSTOMERS.name());
-			role.addPermission(Permission.ADD_CUSTOMERS.name());
-			role.addPermission(Permission.EDIT_CUSTOMERS.name());
-			role.addPermission(Permission.DELETE_CUSTOMERS.name());
-		}
-		if (dto.isManageAdmins()) {
-			role.addPermission(Permission.VIEW_ADMINS.name());
-			role.addPermission(Permission.ADD_ADMINS.name());
-			// EDIT_ADMINS permission is removed
-			role.addPermission(Permission.DELETE_ADMINS.name());
-		}
-		if (dto.isManageOrders()) {
-			role.addPermission(Permission.VIEW_ORDERS.name());
-			role.addPermission(Permission.EDIT_ORDERS.name());
-		}
-		if (dto.isManageProducts()) {
-			role.addPermission(Permission.VIEW_PRODUCTS.name());
-			role.addPermission(Permission.ADD_PRODUCTS.name());
-			role.addPermission(Permission.EDIT_PRODUCTS.name());
-			role.addPermission(Permission.DELETE_PRODUCTS.name());
-			role.addPermission(Permission.ADJUST_PRODUCT_STOCK.name());
-		}
-		if (dto.isManageInventory()) {
-			role.addPermission(Permission.VIEW_INVENTORY.name());
-			role.addPermission(Permission.ADD_INVENTORY_ITEMS.name());
-			role.addPermission(Permission.EDIT_INVENTORY_ITEMS.name());
-			role.addPermission(Permission.DELETE_INVENTORY_ITEMS.name());
-			role.addPermission(Permission.ADJUST_INVENTORY_STOCK.name());
-			role.addPermission(Permission.MANAGE_INVENTORY_CATEGORIES.name());
-			role.addPermission(Permission.MANAGE_UNITS.name());
-		}
-		if (dto.isManageTransactions()) {
-			role.addPermission(Permission.VIEW_TRANSACTIONS.name());
-		}
-		if (dto.isManageSite()) {
-			role.addPermission(Permission.EDIT_SITE_SETTINGS.name());
-		}
-		if (dto.isManageActivityLog()) {
-			role.addPermission(Permission.VIEW_ACTIVITY_LOG.name());
-		}
+		log.debug("Permissions are no longer updated via AdminAccountCreateDto.");
 	}
 
 	private void addPermissionsToRole(Role role, AdminUpdateDto dto) {
+
+		log.debug("Permissions are no longer updated via AdminUpdateDto.");
+	}
+
+	private void mapPermissionsToRole(Role role, RoleDto dto) {
 		role.getPermissions().clear();
 
 		role.addPermission(Permission.VIEW_DASHBOARD.name());
@@ -164,7 +136,6 @@ public class AdminServiceImpl implements AdminService {
 		if (dto.isManageAdmins()) {
 			role.addPermission(Permission.VIEW_ADMINS.name());
 			role.addPermission(Permission.ADD_ADMINS.name());
-			// EDIT_ADMINS permission is removed
 			role.addPermission(Permission.DELETE_ADMINS.name());
 		}
 		if (dto.isManageOrders()) {
@@ -216,10 +187,6 @@ public class AdminServiceImpl implements AdminService {
 		if (roleToAssign.getName().equals(OWNER_ROLE_NAME)) {
 			throw new IllegalArgumentException("Cannot create another Owner account.");
 		}
-
-		log.info("Updating permissions for role '{}' during new admin creation...", roleToAssign.getName());
-		addPermissionsToRole(roleToAssign, userDto);
-		roleRepository.save(roleToAssign);
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -278,8 +245,6 @@ public class AdminServiceImpl implements AdminService {
 				roleToUpdate = newRole;
 			}
 
-			addPermissionsToRole(roleToUpdate, userDto);
-			roleRepository.save(roleToUpdate);
 		} else {
 
 			if (!userDto.getRoleName().equals(roleToUpdate.getName())) {
@@ -357,9 +322,67 @@ public class AdminServiceImpl implements AdminService {
 	public long countNewAdminsThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now)
-				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now)
-				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_STAFF", startOfMonth, now)
-				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_MANAGER", startOfMonth, now);
+
+		return userRepository.countByRole_NameNotAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
+	}
+	
+	@Override
+	public Role createRole(RoleDto roleDto) {
+		String formattedName = formatRoleName(roleDto.getName());
+		Optional<Role> existing = roleRepository.findByName(formattedName);
+		if (existing.isPresent()) {
+			throw new IllegalArgumentException("Role name '" + formattedName + "' already exists.");
+		}
+
+		Role newRole = new Role(formattedName);
+		mapPermissionsToRole(newRole, roleDto);
+
+		log.info("Creating new role: {}", formattedName);
+		return roleRepository.save(newRole);
+	}
+
+	@Override
+	public Role updateRole(RoleDto roleDto) {
+		Long roleId = roleDto.getId();
+		if (roleId == null) {
+			throw new IllegalArgumentException("Role ID is required for an update.");
+		}
+		Role roleToUpdate = roleRepository.findById(roleId)
+				.orElseThrow(() -> new RuntimeException("Role not found with id: " + roleId));
+
+		if (DEFAULT_ROLES.contains(roleToUpdate.getName())) {
+			throw new IllegalArgumentException("Cannot edit the default role: " + roleToUpdate.getName());
+		}
+
+		String newFormattedName = formatRoleName(roleDto.getName());
+		Optional<Role> existing = roleRepository.findByName(newFormattedName);
+		if (existing.isPresent() && !existing.get().getId().equals(roleId)) {
+			throw new IllegalArgumentException("Role name '" + newFormattedName + "' already exists.");
+		}
+
+		roleToUpdate.setName(newFormattedName);
+		mapPermissionsToRole(roleToUpdate, roleDto);
+
+		log.info("Updating role: {}", newFormattedName);
+		return roleRepository.save(roleToUpdate);
+	}
+
+	@Override
+	public void deleteRole(Long id) {
+		Role roleToDelete = roleRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
+
+		if (DEFAULT_ROLES.contains(roleToDelete.getName())) {
+			throw new RuntimeException("Cannot delete a default system role: " + roleToDelete.getName());
+		}
+
+		long userCount = userRepository.countByRole_Name(roleToDelete.getName());
+		if (userCount > 0) {
+			throw new RuntimeException("Cannot delete role '" + roleToDelete.getName() + "'. It is assigned to "
+					+ userCount + " user(s).");
+		}
+
+		log.info("Deleting role: {}", roleToDelete.getName());
+		roleRepository.delete(roleToDelete);
 	}
 }

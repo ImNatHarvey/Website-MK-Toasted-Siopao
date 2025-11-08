@@ -3,6 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.dto.RoleDto; 
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
@@ -59,11 +60,11 @@ public class AdminManagementController {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<User> adminPage = adminService.searchAdmins(keyword, pageable);
 
-		List<Role> allAdminRoles = adminService.findAllAdminRoles(); // --- ADDED ---
+		List<Role> allAdminRoles = adminService.findAllAdminRoles(); 
 
 		model.addAttribute("adminPage", adminPage);
 		model.addAttribute("admins", adminPage.getContent());
-		model.addAttribute("allAdminRoles", allAdminRoles); // --- ADDED ---
+		model.addAttribute("allAdminRoles", allAdminRoles); 
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
@@ -81,6 +82,15 @@ public class AdminManagementController {
 		if (!model.containsAttribute("adminUpdateDto")) {
 			model.addAttribute("adminUpdateDto", new AdminUpdateDto());
 		}
+
+		// --- ADDED FOR NEW ROLE MODALS ---
+		if (!model.containsAttribute("roleDto")) {
+			model.addAttribute("roleDto", new RoleDto());
+		}
+		if (!model.containsAttribute("roleUpdateDto")) {
+			model.addAttribute("roleUpdateDto", new RoleDto());
+		}
+		// --- END ADDED ---
 
 		if (!model.containsAttribute("adminProfileDto")) {
 			User currentUser = customerService.findByUsername(principal.getName());

@@ -3,6 +3,7 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
+import com.toastedsiopao.dto.RoleDto; // ADDED
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
@@ -37,4 +38,11 @@ public interface AdminService {
 
 	long countNewAdminsThisMonth();
 
+	Optional<Role> findRoleById(Long id);
+
+	Role createRole(RoleDto roleDto);
+
+	Role updateRole(RoleDto roleDto);
+
+	void deleteRole(Long id);
 }

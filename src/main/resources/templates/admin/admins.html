@@ -10,7 +10,9 @@
 	<div id="admin-content-wrapper"
 		th:attr="data-show-add-admin-modal=${#fields.hasErrors('adminAccountCreateDto.*') ? 'true' : 'false'},
                  data-show-edit-admin-modal=${#fields.hasErrors('adminUpdateDto.*') ? 'true' : 'false'},
-                 data-show-edit-profile-modal=${#fields.hasErrors('adminProfileDto.*') ? 'true' : 'false'}">
+                 data-show-edit-profile-modal=${#fields.hasErrors('adminProfileDto.*') ? 'true' : 'false'},
+                 data-show-manage-roles-modal=${#fields.hasErrors('roleDto.*') ? 'true' : 'false'},
+                 data-show-edit-role-modal=${#fields.hasErrors('roleUpdateDto.*') ? 'true' : 'false'}">
 
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
@@ -20,6 +22,11 @@
 					type="button" data-bs-toggle="modal"
 					data-bs-target="#addAdminModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Admin
+				</button>
+				<button sec:authorize="hasRole('OWNER')"
+					class="btn btn-custom-outline" type="button" data-bs-toggle="modal"
+					data-bs-target="#manageRolesModal">
+					<i class="fa-solid fa-shield-halved me-1"></i> Manage Roles
 				</button>
 				<button class="btn btn-action-view" type="button"
 					data-bs-toggle="modal" data-bs-target="#editProfileModal">
@@ -206,6 +213,7 @@
 		</div>
 
 		<div th:replace="~{admin/fragments/admin-modals :: all-admin-modals}"></div>
+		<div th:replace="~{admin/fragments/role-modals :: all-role-modals}"></div>
 
 	</div>
 	<th:block th:fragment="script">

@@ -4,6 +4,7 @@ import com.toastedsiopao.model.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +16,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 	Optional<Role> findByNameIgnoreCase(String name);
 
 	List<Role> findByNameNot(String name);
+
+	List<Role> findByNameNotIn(Collection<String> names);
 }

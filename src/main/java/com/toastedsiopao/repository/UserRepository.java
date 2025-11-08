@@ -42,7 +42,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	List<User> findByRole_NameAndStatus(String roleName, String status);
 
-	// --- For stats cards ---
 	long countByRole_NameAndStatus(String roleName, String status);
 
 	long countByRole_Name(String roleName);
@@ -51,6 +50,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	long countActiveAdmins();
 
 	long countByRole_NameAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
+			@Param("end") LocalDateTime end);
+
+	long countByRole_NameNotAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
 			@Param("end") LocalDateTime end);
 
 }

@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
-			const role = dataset.roleName || 'N/A';
+			const role = dataset.roleName.replace('ROLE_', '') || 'N/A'; 
 
 			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
 			viewAdminModal.querySelector('#viewAdminName').textContent = name;
@@ -72,22 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		titlePrefix: 'Edit Admin: ',
 		titleDatasetKey: 'name',
 		onShow: function(form, dataset, isEdit, isValidationReopen) {
-			if (isEdit && dataset && !isValidationReopen) {
-				const setCheckbox = (id, value) => {
-					const el = form.querySelector(id);
-					if (el) {
-						el.checked = (value === 'true');
-					}
-				};
-				setCheckbox('#editManageCustomers', dataset.manageCustomers);
-				setCheckbox('#editManageAdmins', dataset.manageAdmins);
-				setCheckbox('#editManageOrders', dataset.manageOrders);
-				setCheckbox('#editManageProducts', dataset.manageProducts);
-				setCheckbox('#editManageInventory', dataset.manageInventory);
-				setCheckbox('#editManageTransactions', dataset.manageTransactions);
-				setCheckbox('#editManageSite', dataset.manageSite);
-				setCheckbox('#editManageActivityLog', dataset.manageActivityLog);
-			}
 		}
 	});
 
@@ -97,4 +81,42 @@ document.addEventListener('DOMContentLoaded', function() {
 		validationAttribute: 'data-show-edit-profile-modal',
 		wrapperId: 'admin-content-wrapper'
 	});
+
+	initializeModalForm({
+		modalId: 'manageRolesModal',
+		formId: 'addRoleForm',
+		validationAttribute: 'data-show-manage-roles-modal',
+		wrapperId: 'admin-content-wrapper'
+	});
+
+	initializeModalForm({
+		modalId: 'editRoleModal',
+		formId: 'editRoleForm',
+		validationAttribute: 'data-show-edit-role-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-role-btn',
+		modalTitleSelector: '#editRoleModalLabel',
+		titlePrefix: 'Edit Role: ',
+		titleDatasetKey: 'name',
+		onShow: function(form, dataset, isEdit, isValidationReopen) {
+			if (isEdit && dataset && !isValidationReopen) {
+				console.log("Populating Edit Role modal permissions");
+				const setCheckbox = (id, value) => {
+					const el = form.querySelector(id);
+					if (el) {
+						el.checked = (value === 'true');
+					}
+				};
+				setCheckbox('#editRoleManageCustomers', dataset.manageCustomers);
+				setCheckbox('#editRoleManageAdmins', dataset.manageAdmins);
+				setCheckbox('#editRoleManageOrders', dataset.manageOrders);
+				setCheckbox('#editRoleManageProducts', dataset.manageProducts);
+				setCheckbox('#editRoleManageInventory', dataset.manageInventory);
+				setCheckbox('#editRoleManageTransactions', dataset.manageTransactions);
+				setCheckbox('#editRoleManageSite', dataset.manageSite);
+				setCheckbox('#editRoleManageActivityLog', dataset.manageActivityLog);
+			}
+		}
+	});
+
 });

@@ -76,63 +76,8 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">Select the role to assign. The
-									permissions below will be applied to this role.</div>
-							</div>
-
-							<div class="row">
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="addManageCustomers">
-										<label class="form-check-label" for="addManageCustomers">Customer
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="addManageAdmins"> <label
-											class="form-check-label" for="addManageAdmins">Admin
-											Management (View/Delete)</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="addManageOrders"> <label
-											class="form-check-label" for="addManageOrders">Order
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="addManageProducts">
-										<label class="form-check-label" for="addManageProducts">Product
-											Management</label>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="addManageInventory">
-										<label class="form-check-label" for="addManageInventory">Inventory
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}" id="addManageTransactions">
-										<label class="form-check-label" for="addManageTransactions">Transaction
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="addManageSite"> <label
-											class="form-check-label" for="addManageSite">Site
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}" id="addManageActivityLog">
-										<label class="form-check-label" for="addManageActivityLog">View
-											Activity Log</label>
-									</div>
-								</div>
+								<div class="form-text">Select the role to assign.
+									Permissions are managed in the 'Manage Roles' section.</div>
 							</div>
 
 							<hr>
@@ -159,8 +104,7 @@
 							</div>
 						</div>
 						<div class="modal-footer">
-							<button type="submit" class="btn btn-custom">Create
-								Admin</button>
+							<button type="submit" class="btn btn-custom">Add Admin</button>
 							<button type="button" class="btn btn-custom-secondary"
 								data-bs-dismiss="modal">Cancel</button>
 						</div>
@@ -245,78 +189,8 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">Change this admin's assigned role.</div>
-							</div>
-
-							<div class="row">
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="editManageCustomers"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageCustomers"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Customer
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="editManageAdmins"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageAdmins"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Admin
-											Management (View/Delete)</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="editManageOrders"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageOrders"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Order
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="editManageProducts"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageProducts"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Product
-											Management</label>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="editManageInventory"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageInventory"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Inventory
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}" id="editManageTransactions"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageTransactions"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Transaction
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="editManageSite"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageSite"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Site
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}" id="editManageActivityLog"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageActivityLog"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">View
-											Activity Log</label>
-									</div>
-								</div>
+								<div class="form-text">Change this admin's assigned role.
+									Permissions are managed in the 'Manage Roles' section.</div>
 							</div>
 
 							<hr>
@@ -424,7 +298,7 @@
 									th:if="${#fields.hasErrors('firstName')}"
 									th:errors="*{firstName}">Error</div>
 							</div>
-							<div classV="mb-3">
+							<div class="mb-3">
 								<label for="profileLastName" class="form-label">Last
 									Name</label> <input type="text" class="form-control"
 									th:field="*{lastName}" id="profileLastName"

@@ -56,48 +56,6 @@ public class MKToastedSiopaoWebsiteApplication {
 				return roleRepository.save(newOwnerRole);
 			});
 
-			Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
-				log.info(">>> Creating 'ROLE_ADMIN' role...");
-				Role newAdminRole = new Role("ROLE_ADMIN");
-
-				newAdminRole.addPermission(Permission.VIEW_DASHBOARD.name());
-				newAdminRole.addPermission(Permission.VIEW_ORDERS.name());
-				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS.name());
-				newAdminRole.addPermission(Permission.VIEW_PRODUCTS.name());
-				newAdminRole.addPermission(Permission.VIEW_INVENTORY.name());
-				return roleRepository.save(newAdminRole);
-			});
-
-			// --- NEW ROLES ---
-			Role managerRole = roleRepository.findByName("ROLE_MANAGER").orElseGet(() -> {
-				log.info(">>> Creating 'ROLE_MANAGER' role...");
-				Role newRole = new Role("ROLE_MANAGER");
-				newRole.addPermission(Permission.VIEW_DASHBOARD.name());
-				newRole.addPermission(Permission.VIEW_ORDERS.name());
-				newRole.addPermission(Permission.EDIT_ORDERS.name());
-				newRole.addPermission(Permission.VIEW_CUSTOMERS.name());
-				newRole.addPermission(Permission.VIEW_PRODUCTS.name());
-				newRole.addPermission(Permission.ADJUST_PRODUCT_STOCK.name());
-				newRole.addPermission(Permission.VIEW_INVENTORY.name());
-				newRole.addPermission(Permission.ADJUST_INVENTORY_STOCK.name());
-				newRole.addPermission(Permission.VIEW_TRANSACTIONS.name());
-				return roleRepository.save(newRole);
-			});
-
-			Role staffRole = roleRepository.findByName("ROLE_STAFF").orElseGet(() -> {
-				log.info(">>> Creating 'ROLE_STAFF' role...");
-				Role newRole = new Role("ROLE_STAFF");
-				newRole.addPermission(Permission.VIEW_DASHBOARD.name());
-				newRole.addPermission(Permission.VIEW_ORDERS.name());
-				newRole.addPermission(Permission.EDIT_ORDERS.name());
-				newRole.addPermission(Permission.VIEW_PRODUCTS.name());
-				newRole.addPermission(Permission.ADJUST_PRODUCT_STOCK.name());
-				newRole.addPermission(Permission.VIEW_INVENTORY.name());
-				newRole.addPermission(Permission.ADJUST_INVENTORY_STOCK.name());
-				return roleRepository.save(newRole);
-			});
-			// --- END NEW ROLES ---
-
 			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_CUSTOMER' role...");
 				Role newCustomerRole = new Role("ROLE_CUSTOMER");

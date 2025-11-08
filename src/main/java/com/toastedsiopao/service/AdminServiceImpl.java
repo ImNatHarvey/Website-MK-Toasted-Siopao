@@ -2,8 +2,8 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
-import com.toastedsiopao.model.Permission; 
-import com.toastedsiopao.model.Role; 
+import com.toastedsiopao.model.Permission;
+import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
@@ -12,8 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication; 
-import org.springframework.security.core.context.SecurityContextHolder; 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +32,15 @@ import java.util.stream.Collectors;
 public class AdminServiceImpl implements AdminService {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminServiceImpl.class);
-	private static final String OWNER_USERNAME = "mktoastedadmin"; 
+	private static final String OWNER_USERNAME = "mktoastedadmin";
 	private static final String OWNER_ROLE_NAME = "ROLE_OWNER";
-	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; 
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER";
 
 	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
-	private RoleRepository roleRepository; 
+	private RoleRepository roleRepository;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -192,11 +192,11 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public User createAccount(AdminAccountCreateDto userDto) { 
+	public User createAccount(AdminAccountCreateDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
-		
+
 		if (!StringUtils.hasText(userDto.getRoleName())) {
 			throw new IllegalArgumentException("Role name cannot be blank.");
 		}
@@ -206,7 +206,7 @@ public class AdminServiceImpl implements AdminService {
 		if (userDto.getRoleName().length() > 40) {
 			throw new IllegalArgumentException("Role name cannot exceed 40 characters");
 		}
-		
+
 		String internalRoleName = formatRoleName(userDto.getRoleName());
 
 		if (roleRepository.findByName(internalRoleName).isPresent()) {
@@ -215,7 +215,7 @@ public class AdminServiceImpl implements AdminService {
 
 		Role newRole = new Role(internalRoleName);
 		addPermissionsToRole(newRole, userDto);
-		roleRepository.save(newRole); 
+		roleRepository.save(newRole);
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -223,7 +223,7 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(newRole); 
+		newUser.setRole(newRole);
 
 		return userRepository.save(newUser);
 	}
@@ -233,11 +233,10 @@ public class AdminServiceImpl implements AdminService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		if (OWNER_USERNAME.equals(userToUpdate.getUsername())) {
-			throw new IllegalArgumentException(
-					"The Owner account ('" + OWNER_USERNAME + "') cannot be edited this way.");
+		if (userToUpdate.getRole() != null && OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
+			throw new IllegalArgumentException("The Owner account cannot be edited by other admins.");
 		}
-		
+
 		if (userToUpdate.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
 		}
@@ -257,7 +256,7 @@ public class AdminServiceImpl implements AdminService {
 				.anyMatch(a -> a.getAuthority().equals(OWNER_ROLE_NAME));
 
 		if (isOwner) {
-			
+
 			String newInternalRoleName = formatRoleName(userDto.getRoleName());
 
 			if (!roleToUpdate.getName().equals(newInternalRoleName)) {
@@ -268,16 +267,16 @@ public class AdminServiceImpl implements AdminService {
 			}
 
 			addPermissionsToRole(roleToUpdate, userDto);
-			roleRepository.save(roleToUpdate); 
+			roleRepository.save(roleToUpdate);
 		} else {
-			
+
 			if (!userDto.getRoleName().equals(roleToUpdate.getName().replace("ROLE_", ""))) {
 				log.warn("Non-Owner user {} tried to change role name for {}. Blocked.", authentication.getName(),
 						userToUpdate.getUsername());
 			}
-			
+
 		}
-		
+
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
 
@@ -285,14 +284,14 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		userToUpdate.setRole(roleToUpdate); 
+		userToUpdate.setRole(roleToUpdate);
 
 		return userRepository.save(userToUpdate);
 	}
 
 	@Override
 	public User updateAdminProfile(AdminUpdateDto adminDto) {
-		
+
 		User userToUpdate = userRepository.findById(adminDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + adminDto.getId()));
 
@@ -308,7 +307,7 @@ public class AdminServiceImpl implements AdminService {
 			if (adminDto.isManageAdmins() || adminDto.isManageCustomers()) {
 				log.warn("Attempt by Owner ({}) to change their own role was blocked.", userToUpdate.getUsername());
 			}
-			userToUpdate.setRole(userToUpdate.getRole()); 
+			userToUpdate.setRole(userToUpdate.getRole());
 		} else {
 			userToUpdate.setRole(userToUpdate.getRole());
 		}
@@ -321,23 +320,24 @@ public class AdminServiceImpl implements AdminService {
 		User userToDelete = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-		if (OWNER_USERNAME.equals(userToDelete.getUsername())) {
-			throw new RuntimeException("The Owner account ('" + OWNER_USERNAME + "') cannot be deleted.");
+		if (userToDelete.getRole() != null && OWNER_ROLE_NAME.equals(userToDelete.getRole().getName())) {
+			throw new RuntimeException("The Owner account cannot be deleted.");
 		}
-		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) { 
+
+		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) {
 			throw new RuntimeException("Cannot delete non-admin user with this method.");
 		}
 
-		long adminCount = countAllAdmins(); 
+		long adminCount = countAllAdmins();
 		if (adminCount <= 1) {
 			throw new RuntimeException("Cannot delete the last admin account.");
 		}
-		
+
 		Role roleToDelete = userToDelete.getRole();
-		userRepository.deleteById(id); 
+		userRepository.deleteById(id);
 
 		List<User> usersWithRole = userRepository.findByRole_Name(roleToDelete.getName());
-		if (usersWithRole.isEmpty() && !roleToDelete.getName().equals("ROLE_ADMIN")) { 
+		if (usersWithRole.isEmpty() && !roleToDelete.getName().equals("ROLE_ADMIN")) {
 			log.info("Deleting orphaned custom role: {}", roleToDelete.getName());
 			roleRepository.delete(roleToDelete);
 		}
@@ -352,15 +352,15 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public long countActiveAdmins() {
-		return userRepository.countActiveAdmins(); 
+		return userRepository.countActiveAdmins();
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public long countNewAdminsThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now) 
-				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now); 
+		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now)
+				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now);
 	}
 }

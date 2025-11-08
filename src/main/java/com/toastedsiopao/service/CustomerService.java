@@ -1,6 +1,6 @@
 package com.toastedsiopao.service;
 
-import com.toastedsiopao.dto.AdminAccountCreateDto; 
+import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.User;
@@ -13,7 +13,7 @@ public interface CustomerService {
 
 	User saveCustomer(CustomerSignUpDto customerDto); 
 	
-	User createCustomerFromAdmin(AdminAccountCreateDto userDto);
+	User createCustomerFromAdmin(CustomerCreateDto userDto);
 
 	User findByUsername(String username);
 

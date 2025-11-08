@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.toastedsiopao.dto.AdminAccountCreateDto; 
+import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.Order; 
@@ -76,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(customerRole); // UPDATED
+		newUser.setRole(customerRole); 
 
 		newUser.setHouseNo(userDto.getHouseNo());
 		newUser.setLotNo(userDto.getLotNo());
@@ -90,7 +90,7 @@ public class CustomerServiceImpl implements CustomerService {
 	}
 
 	@Override
-	public User createCustomerFromAdmin(AdminAccountCreateDto userDto) {
+	public User createCustomerFromAdmin(CustomerCreateDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());

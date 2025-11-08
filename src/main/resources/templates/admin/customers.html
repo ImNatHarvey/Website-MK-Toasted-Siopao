@@ -8,7 +8,7 @@
 <body>
 
 	<div id="admin-content-wrapper"
-		th:attr="data-show-add-customer-modal=${#fields.hasErrors('customerUserDto.*') ? 'true' : 'false'},
+		th:attr="data-show-add-customer-modal=${#fields.hasErrors('customerCreateDto.*') ? 'true' : 'false'},
                  data-show-edit-customer-modal=${#fields.hasErrors('customerUpdateDto.*') ? 'true' : 'false'}">
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">

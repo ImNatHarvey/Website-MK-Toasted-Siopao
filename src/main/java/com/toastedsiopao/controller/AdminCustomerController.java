@@ -1,9 +1,9 @@
 package com.toastedsiopao.controller;
 
-import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.RoleRepository; 
+import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.AdminService;
@@ -33,19 +33,19 @@ public class AdminCustomerController {
 	private static final Logger log = LoggerFactory.getLogger(AdminCustomerController.class);
 
 	@Autowired
-	private CustomerService customerService; 
+	private CustomerService customerService;
 
 	@Autowired
-	private AdminService adminService; 
-	
+	private AdminService adminService;
+
 	@Autowired
 	private ActivityLogService activityLogService;
 
 	@Autowired
-	private RoleRepository roleRepository; 
+	private RoleRepository roleRepository;
 
 	@GetMapping
-	@PreAuthorize("hasAuthority('VIEW_CUSTOMERS')") 
+	@PreAuthorize("hasAuthority('VIEW_CUSTOMERS')")
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -55,7 +55,7 @@ public class AdminCustomerController {
 		Page<User> customerPage;
 
 		if (StringUtils.hasText(keyword)) {
-			customerPage = customerService.searchCustomers(keyword, pageable); 
+			customerPage = customerService.searchCustomers(keyword, pageable);
 			model.addAttribute("keyword", keyword);
 		} else {
 			customerPage = customerService.findAllCustomers(pageable);
@@ -64,18 +64,18 @@ public class AdminCustomerController {
 		model.addAttribute("customerPage", customerPage);
 		model.addAttribute("customers", customerPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
-		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers()); 
+		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers());
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", customerPage.getTotalPages());
 		model.addAttribute("totalItems", customerPage.getTotalElements());
 		model.addAttribute("size", size);
 
-		if (!model.containsAttribute("customerUserDto")) {
-			model.addAttribute("customerUserDto", new AdminAccountCreateDto()); 
+		if (!model.containsAttribute("customerCreateDto")) {
+			model.addAttribute("customerCreateDto", new CustomerCreateDto());
 		}
 		if (!model.containsAttribute("customerUpdateDto")) {
-			model.addAttribute("customerUpdateDto", new CustomerUpdateDto()); 
+			model.addAttribute("customerUpdateDto", new CustomerUpdateDto());
 		}
 
 		return "admin/customers";
@@ -88,16 +88,16 @@ public class AdminCustomerController {
 	}
 
 	@PostMapping("/add-customer")
-	@PreAuthorize("hasAuthority('ADD_CUSTOMERS')") 
-	public String addCustomerUser(@Valid @ModelAttribute("customerUserDto") AdminAccountCreateDto userDto,
-																											
+	@PreAuthorize("hasAuthority('ADD_CUSTOMERS')")
+	public String addCustomerUser(@Valid @ModelAttribute("customerCreateDto") CustomerCreateDto userDto,
+
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
-			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
+			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
 					.toUriString();
@@ -116,18 +116,18 @@ public class AdminCustomerController {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
 
 			if (e.getMessage().contains("Username already exists")) {
-				result.rejectValue("username", "customerUserDto.username", e.getMessage());
+				result.rejectValue("username", "customerCreateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
-				result.rejectValue("email", "customerUserDto.email", e.getMessage());
+				result.rejectValue("email", "customerCreateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
-				result.rejectValue("confirmPassword", "customerUserDto.confirmPassword", e.getMessage());
+				result.rejectValue("confirmPassword", "customerCreateDto.confirmPassword", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
 			}
 
-			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
-			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
+			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
 					.toUriString();
@@ -136,7 +136,7 @@ public class AdminCustomerController {
 		} catch (Exception e) {
 			log.error("Unexpected error creating customer user: {}", e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("customerUserDto", userDto);
+			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
 					.toUriString();
@@ -146,9 +146,9 @@ public class AdminCustomerController {
 		return "redirect:/admin/customers";
 	}
 
-	@PostMapping("/update") 
-	@PreAuthorize("hasAuthority('EDIT_CUSTOMERS')") 
-	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") CustomerUpdateDto userDto, 
+	@PostMapping("/update")
+	@PreAuthorize("hasAuthority('EDIT_CUSTOMERS')")
+	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") CustomerUpdateDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
@@ -163,7 +163,7 @@ public class AdminCustomerController {
 		}
 
 		try {
-			User updatedUser = customerService.updateCustomer(userDto); 
+			User updatedUser = customerService.updateCustomer(userDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (CUSTOMER)",
 					"Updated customer user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
@@ -199,7 +199,7 @@ public class AdminCustomerController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')") 
+	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')")
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<User> userOpt = customerService.findUserById(id);
@@ -210,7 +210,7 @@ public class AdminCustomerController {
 		}
 		String username = userOpt.get().getUsername();
 		try {
-			customerService.deleteCustomerById(id); // UPDATED
+			customerService.deleteCustomerById(id);
 			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
 					"Deleted customer user: " + username + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",

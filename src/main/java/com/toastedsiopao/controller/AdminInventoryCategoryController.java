@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
+import org.springframework.security.access.prepost.PreAuthorize; 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/inventory/categories")
-@PreAuthorize("hasAuthority('MANAGE_INVENTORY_CATEGORIES')") // **** ADDED: Secures all methods in this class ****
+@PreAuthorize("hasAuthority('MANAGE_INVENTORY_CATEGORIES')") 
 public class AdminInventoryCategoryController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminInventoryCategoryController.class);
@@ -34,7 +34,6 @@ public class AdminInventoryCategoryController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	// Helper to add common DTOs for modal forms
 	@ModelAttribute("inventoryCategoryDto")
 	public InventoryCategoryDto inventoryCategoryDto() {
 		return new InventoryCategoryDto();
@@ -53,7 +52,6 @@ public class AdminInventoryCategoryController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryCategoryDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
-			// No need to add common attributes, redirect will trigger main controller's GET
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;

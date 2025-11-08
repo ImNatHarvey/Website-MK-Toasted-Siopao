@@ -2,18 +2,18 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
-import com.toastedsiopao.model.Permission; // NEW IMPORT
-import com.toastedsiopao.model.Role; // NEW IMPORT
+import com.toastedsiopao.model.Permission; 
+import com.toastedsiopao.model.Role; 
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
+import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.core.Authentication; // **** NEW IMPORT ****
-import org.springframework.security.core.context.SecurityContextHolder; // **** NEW IMPORT ****
+import org.springframework.security.core.Authentication; 
+import org.springframework.security.core.context.SecurityContextHolder; 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,15 +32,15 @@ import java.util.stream.Collectors;
 public class AdminServiceImpl implements AdminService {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminServiceImpl.class);
-	private static final String OWNER_USERNAME = "mktoastedadmin"; // NEW: Owner protection
-	private static final String OWNER_ROLE_NAME = "ROLE_OWNER"; // NEW: Owner role name
-	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; // NEW: Customer role name
+	private static final String OWNER_USERNAME = "mktoastedadmin"; 
+	private static final String OWNER_ROLE_NAME = "ROLE_OWNER";
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; 
 
 	@Autowired
 	private UserRepository userRepository;
 
 	@Autowired
-	private RoleRepository roleRepository; // NEW INJECTION
+	private RoleRepository roleRepository; 
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -48,19 +48,14 @@ public class AdminServiceImpl implements AdminService {
 	@Autowired
 	private Clock clock;
 
-	// NEW: Injected validation service
 	@Autowired
 	private UserValidationService userValidationService;
 
-	// --- Validation Helpers REMOVED ---
-
-	// This helper remains as it's not in the new service
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
 			throw new IllegalArgumentException("Passwords do not match");
 		}
 	}
-	// --- End Validation Helpers ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -71,15 +66,13 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<User> findAllAdmins() {
-		// We now find all users who are NOT customers
-		return userRepository.findByRole_NameNot(CUSTOMER_ROLE_NAME); // UPDATED
+		return userRepository.findByRole_NameNot(CUSTOMER_ROLE_NAME);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<User> findAllAdmins(Pageable pageable) {
-		// This search is now handled by the custom query in the repository
-		return userRepository.findAdminsBySearchKeyword("", pageable); // UPDATED
+		return userRepository.findAdminsBySearchKeyword("", pageable);
 	}
 
 	@Override
@@ -88,15 +81,9 @@ public class AdminServiceImpl implements AdminService {
 		if (!StringUtils.hasText(keyword)) {
 			return findAllAdmins(pageable);
 		}
-		// This search is handled by the custom query
 		return userRepository.findAdminsBySearchKeyword(keyword.trim(), pageable);
 	}
 
-	/**
-	 * Formats a display name (e.g., "Night Staff") into an internal role name
-	 * (e.g., "ROLE_NIGHT_STAFF"). * @param displayName The name from the DTO.
-	 * * @return The formatted internal role name.
-	 */
 	private String formatRoleName(String displayName) {
 		if (!StringUtils.hasText(displayName)) {
 			throw new IllegalArgumentException("Role name cannot be blank.");
@@ -108,16 +95,9 @@ public class AdminServiceImpl implements AdminService {
 		return formattedName;
 	}
 
-	/**
-	 * Helper method to populate a Role entity with permissions based on DTO
-	 * booleans. * @param role The Role entity to modify. * @param dto The DTO
-	 * containing permission flags.
-	 */
 	private void addPermissionsToRole(Role role, AdminAccountCreateDto dto) {
-		// Clear any existing permissions (for updates)
 		role.getPermissions().clear();
 
-		// Add Dashboard by default to all admins
 		role.addPermission(Permission.VIEW_DASHBOARD.name());
 
 		if (dto.isManageCustomers()) {
@@ -163,15 +143,9 @@ public class AdminServiceImpl implements AdminService {
 		}
 	}
 
-	/**
-	 * Overloaded helper method for the AdminUpdateDto. * @param role The Role
-	 * entity to modify. * @param dto The DTO containing permission flags.
-	 */
 	private void addPermissionsToRole(Role role, AdminUpdateDto dto) {
-		// Clear any existing permissions (for updates)
 		role.getPermissions().clear();
 
-		// Add Dashboard by default to all admins
 		role.addPermission(Permission.VIEW_DASHBOARD.name());
 
 		if (dto.isManageCustomers()) {
@@ -218,13 +192,11 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public User createAccount(AdminAccountCreateDto userDto) { // UPDATED implementation
-		// UPDATED: Calls to new service
+	public User createAccount(AdminAccountCreateDto userDto) { 
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
-
-		// **** MOVED VALIDATION HERE ****
+		
 		if (!StringUtils.hasText(userDto.getRoleName())) {
 			throw new IllegalArgumentException("Role name cannot be blank.");
 		}
@@ -234,20 +206,16 @@ public class AdminServiceImpl implements AdminService {
 		if (userDto.getRoleName().length() > 40) {
 			throw new IllegalArgumentException("Role name cannot exceed 40 characters");
 		}
-		// **** END MOVED VALIDATION ****
-
-		// --- NEW: Create Role from DTO ---
+		
 		String internalRoleName = formatRoleName(userDto.getRoleName());
 
-		// Check if internal role name already exists
 		if (roleRepository.findByName(internalRoleName).isPresent()) {
 			throw new IllegalArgumentException("Role name '" + userDto.getRoleName() + "' already exists.");
 		}
 
 		Role newRole = new Role(internalRoleName);
-		addPermissionsToRole(newRole, userDto); // Use helper
-		roleRepository.save(newRole); // Save the new role
-		// --- END NEW ---
+		addPermissionsToRole(newRole, userDto);
+		roleRepository.save(newRole); 
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -255,8 +223,7 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setUsername(userDto.getUsername());
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(newRole); // Use new Role object
-		// Status, CreatedAt, and LastActivity are set by @PrePersist
+		newUser.setRole(newRole); 
 
 		return userRepository.save(newUser);
 	}
@@ -266,41 +233,33 @@ public class AdminServiceImpl implements AdminService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		// --- NEW: Owner Protection ---
 		if (OWNER_USERNAME.equals(userToUpdate.getUsername())) {
 			throw new IllegalArgumentException(
 					"The Owner account ('" + OWNER_USERNAME + "') cannot be edited this way.");
 		}
-		// --- END NEW ---
-
-		// Check if it's an admin/owner role
+		
 		if (userToUpdate.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
 		}
 
-		// --- NEW: Update Role from DTO ---
 		Role roleToUpdate = userToUpdate.getRole();
 		if (roleToUpdate == null) {
 			throw new IllegalStateException(
 					"User " + userToUpdate.getUsername() + " has a null role and cannot be updated.");
 		}
 
-		// Do not allow editing the owner's role
 		if (OWNER_ROLE_NAME.equals(roleToUpdate.getName())) {
 			throw new IllegalArgumentException("The Owner's role cannot be modified.");
 		}
 
-		// **** NEW: Security Check ****
-		// Check if the *currently logged-in user* is the Owner
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isOwner = authentication.getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals(OWNER_ROLE_NAME));
 
 		if (isOwner) {
-			// Only the Owner can update the role name and permissions
+			
 			String newInternalRoleName = formatRoleName(userDto.getRoleName());
 
-			// Check if name changed and if new name is taken
 			if (!roleToUpdate.getName().equals(newInternalRoleName)) {
 				if (roleRepository.findByName(newInternalRoleName).isPresent()) {
 					throw new IllegalArgumentException("Role name '" + userDto.getRoleName() + "' already exists.");
@@ -308,23 +267,17 @@ public class AdminServiceImpl implements AdminService {
 				roleToUpdate.setName(newInternalRoleName);
 			}
 
-			// Update permissions
-			addPermissionsToRole(roleToUpdate, userDto); // Use helper
-			roleRepository.save(roleToUpdate); // Save the updated role
+			addPermissionsToRole(roleToUpdate, userDto);
+			roleRepository.save(roleToUpdate); 
 		} else {
-			// Log a warning if a non-owner tries to change permissions
+			
 			if (!userDto.getRoleName().equals(roleToUpdate.getName().replace("ROLE_", ""))) {
 				log.warn("Non-Owner user {} tried to change role name for {}. Blocked.", authentication.getName(),
 						userToUpdate.getUsername());
 			}
-			// Non-owners cannot change roles, so we do nothing to the 'roleToUpdate'
-			// object
+			
 		}
-		// **** END Security Check ****
-
-		// --- END NEW ---
-
-		// UPDATED: Calls to new service
+		
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
 
@@ -332,47 +285,33 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		userToUpdate.setRole(roleToUpdate); // Assign the (potentially updated or unmodified) role
+		userToUpdate.setRole(roleToUpdate); 
 
 		return userRepository.save(userToUpdate);
 	}
 
 	@Override
 	public User updateAdminProfile(AdminUpdateDto adminDto) {
-		// This method is for an admin updating *themselves*
+		
 		User userToUpdate = userRepository.findById(adminDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + adminDto.getId()));
 
-		// UPDATED: calls to new service
-		// **** THIS IS THE FIX ****
 		userValidationService.validateUsernameOnUpdate(adminDto.getUsername(), adminDto.getId());
 		userValidationService.validateEmailOnUpdate(adminDto.getEmail(), adminDto.getId());
-		// **** END OF FIX ****
 
 		userToUpdate.setFirstName(adminDto.getFirstName());
 		userToUpdate.setLastName(adminDto.getLastName());
 		userToUpdate.setUsername(adminDto.getUsername());
 		userToUpdate.setEmail(adminDto.getEmail());
 
-		// --- NEW: Handle role update for Owner ---
-		// This logic is now safer. It doesn't use roleId anymore.
-		// It just re-assigns the user's existing role, ignoring any
-		// permission/roleName fields that might be on the DTO.
 		if (OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
-			// This check is good, but the "Edit My Profile" form won't
-			// even have the fields to trigger this.
-			if (adminDto.isManageAdmins() || adminDto.isManageCustomers() /* etc */) {
+			if (adminDto.isManageAdmins() || adminDto.isManageCustomers()) {
 				log.warn("Attempt by Owner ({}) to change their own role was blocked.", userToUpdate.getUsername());
-				// We don't throw an error, we just ignore the changes.
 			}
-			userToUpdate.setRole(userToUpdate.getRole()); // Re-affirm the role
+			userToUpdate.setRole(userToUpdate.getRole()); 
 		} else {
-			// For non-owners, they cannot change their role from this screen.
-			// We just re-assign their existing role.
 			userToUpdate.setRole(userToUpdate.getRole());
 		}
-		// --- END NEW ---
-
 		return userRepository.save(userToUpdate);
 	}
 
@@ -382,68 +321,46 @@ public class AdminServiceImpl implements AdminService {
 		User userToDelete = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-		// --- NEW: Owner Protection ---
 		if (OWNER_USERNAME.equals(userToDelete.getUsername())) {
 			throw new RuntimeException("The Owner account ('" + OWNER_USERNAME + "') cannot be deleted.");
 		}
-		// --- END NEW ---
-
-		// 2. Check if it's an admin
-		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) { // UPDATED
+		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) { 
 			throw new RuntimeException("Cannot delete non-admin user with this method.");
 		}
 
-		// 3. We could add logic to prevent deleting the last admin
-		long adminCount = countAllAdmins(); // This now counts ADMIN + OWNER
+		long adminCount = countAllAdmins(); 
 		if (adminCount <= 1) {
 			throw new RuntimeException("Cannot delete the last admin account.");
 		}
-
-		// --- NEW: Delete the associated role ---
-		// We should only delete the role if it's not shared.
-		// For now, we'll assume a 1-to-1 user-to-role mapping for custom roles.
-		// A safer approach would be to check if any other user uses this role.
+		
 		Role roleToDelete = userToDelete.getRole();
-		userRepository.deleteById(id); // Delete the user first
+		userRepository.deleteById(id); 
 
-		// Check if any other user is using this role
 		List<User> usersWithRole = userRepository.findByRole_Name(roleToDelete.getName());
-		if (usersWithRole.isEmpty() && !roleToDelete.getName().equals("ROLE_ADMIN")) { // Don't delete the default
-																						// "ROLE_ADMIN"
+		if (usersWithRole.isEmpty() && !roleToDelete.getName().equals("ROLE_ADMIN")) { 
 			log.info("Deleting orphaned custom role: {}", roleToDelete.getName());
 			roleRepository.delete(roleToDelete);
 		}
-		// --- END NEW ---
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public long countAllAdmins() {
-		// --- THIS IS THE FIX for the error you screenshotted ---
 		return userRepository.findAdminsBySearchKeyword("", Pageable.unpaged()).getTotalElements();
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public long countActiveAdmins() {
-		// Count active admins and active owners
-		return userRepository.countActiveAdmins(); // UPDATED
+		return userRepository.countActiveAdmins(); 
 	}
-
-	// --- METHOD REMOVED ---
-	// @Override
-	// @Transactional(readOnly = true)
-	// public List<Role> findAllAdminRoles() { ... }
-	// --- END METHOD REMOVED ---
-
-	// --- NEW: Dashboard Stats Implementation ---
+	
 	@Override
 	@Transactional(readOnly = true)
 	public long countNewAdminsThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		// This counts both new admins and new owners (though owners shouldn't be new)
-		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now) // UPDATED
-				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now); // UPDATED
+		return userRepository.countByRole_NameAndCreatedAtBetween("ROLE_ADMIN", startOfMonth, now) 
+				+ userRepository.countByRole_NameAndCreatedAtBetween("ROLE_OWNER", startOfMonth, now); 
 	}
 }

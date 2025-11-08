@@ -24,7 +24,7 @@ public class RecipeIngredient {
 	private Product product;
 
 	@NotNull
-	@ManyToOne(fetch = FetchType.EAGER) // Need ingredient details when viewing recipe
+	@ManyToOne(fetch = FetchType.EAGER) 
 	@JoinColumn(name = "inventory_item_id", nullable = false)
 	private InventoryItem inventoryItem;
 
@@ -32,13 +32,7 @@ public class RecipeIngredient {
 	@Positive(message = "Quantity needed must be positive")
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal quantityNeeded;
-
-	// Optional: Store the unit used in the recipe, if different from inventory
-	// item's base unit
-	// @ManyToOne(fetch = FetchType.EAGER)
-	// @JoinColumn(name = "unit_id")
-	// private UnitOfMeasure unitForRecipe;
-
+	
 	public RecipeIngredient(Product product, InventoryItem inventoryItem, BigDecimal quantityNeeded) {
 		this.product = product;
 		this.inventoryItem = inventoryItem;

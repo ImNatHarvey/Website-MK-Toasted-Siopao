@@ -22,24 +22,19 @@ public class Role {
 	@NotBlank(message = "Role name cannot be blank")
 	@Size(max = 50, message = "Role name cannot exceed 50 characters")
 	@Column(nullable = false, unique = true, length = 50)
-	private String name; // e.g., "Owner", "Manager", "Staff"
-
-	/**
-	 * A set of permissions associated with this role. We store the Permission
-	 * enum's name (e.g., "VIEW_DASHBOARD") as a string.
-	 */
+	private String name;
+	
 	@ElementCollection(fetch = FetchType.EAGER) // Eager fetch roles, as we need them for security
 	@CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
 	@Column(name = "permission", nullable = false)
-	// @Enumerated(EnumType.STRING) // REMOVED: No longer an enum
-	private Set<String> permissions = new HashSet<>(); // UPDATED to Set<String>
+	
+	private Set<String> permissions = new HashSet<>();
 
 	public Role(String name) {
 		this.name = name;
 	}
 
-	// Convenience method
-	public void addPermission(String permission) { // UPDATED to String
+	public void addPermission(String permission) {
 		this.permissions.add(permission);
 	}
 }

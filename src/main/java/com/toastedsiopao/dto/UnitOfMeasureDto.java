@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class UnitOfMeasureDto {
 
-	private Long id; // For editing
+	private Long id; 
 
 	@NotBlank(message = "Unit name cannot be blank")
 	@Size(max = 20, message = "Unit name cannot exceed 20 characters")

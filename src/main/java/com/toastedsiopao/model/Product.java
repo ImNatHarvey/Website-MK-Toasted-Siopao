@@ -1,7 +1,7 @@
 package com.toastedsiopao.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin; // Use DecimalMin for BigDecimal validation
+import jakarta.validation.constraints.DecimalMin; 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime; // Import LocalDateTime
+import java.time.LocalDateTime; 
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,34 +48,25 @@ public class Product {
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private List<RecipeIngredient> ingredients = new ArrayList<>();
 
-	// --- NEW: Stock Management Fields ---
 	@NotNull(message = "Current stock cannot be null")
 	@PositiveOrZero(message = "Stock must be zero or positive")
 	@Column(nullable = false)
-	private Integer currentStock = 0; // Use Integer for countable products
+	private Integer currentStock = 0; 
 
 	@NotNull(message = "Low stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false)
-	private Integer lowStockThreshold = 0; // e.g., 10
+	private Integer lowStockThreshold = 0; 
 
 	@NotNull(message = "Critical stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false)
-	private Integer criticalStockThreshold = 0; // e.g., 5
+	private Integer criticalStockThreshold = 0; 
 
 	private LocalDateTime stockLastUpdated;
 
-	// --- NEW: Recipe Lock Field ---
-	// ==================================
-	// == COMMENT UPDATED ==
-	// ==================================
 	@Column(nullable = false)
-	private boolean recipeLocked = false; // Locks recipe on product creation
-	// ==================================
-	// == END UPDATE ==
-	// ==================================
-	// --- END NEW ---
+	private boolean recipeLocked = false;
 
 	@PrePersist
 	@PreUpdate
@@ -87,26 +78,18 @@ public class Product {
 		}
 	}
 
-	// --- NEW: Status Calculation Logic ---
-	// Thresholds define the *point* at which the status changes.
-	// Stock <= Critical Threshold -> CRITICAL (or NO_STOCK if 0)
-	// Stock <= Low Threshold -> LOW
-	// Stock > Low Threshold -> NORMAL
 	@Transient
 	public String getStockStatus() {
 		if (currentStock <= 0) {
-			return "NO_STOCK"; // Black
+			return "NO_STOCK"; 
 		} else if (currentStock <= criticalStockThreshold) {
-			return "CRITICAL"; // Red
+			return "CRITICAL"; 
 		} else if (currentStock <= lowStockThreshold) {
-			return "LOW"; // Yellow
+			return "LOW"; 
 		} else {
-			return "NORMAL"; // Green
+			return "NORMAL"; 
 		}
 	}
-	// --- END NEW ---
-
-	// --- Convenience Methods for Ingredients ---
 	public void addIngredient(RecipeIngredient ingredient) {
 		ingredients.add(ingredient);
 		ingredient.setProduct(this);

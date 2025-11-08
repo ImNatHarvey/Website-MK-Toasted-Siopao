@@ -10,73 +10,64 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest; // NEW IMPORT
+import org.springframework.data.domain.PageRequest; 
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.toastedsiopao.dto.AdminAccountCreateDto; // NEW IMPORT
+import com.toastedsiopao.dto.AdminAccountCreateDto; 
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
-import com.toastedsiopao.model.Order; // NEW IMPORT
-import com.toastedsiopao.model.Role; // NEW IMPORT
+import com.toastedsiopao.model.Order; 
+import com.toastedsiopao.model.Role; 
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.OrderRepository; // NEW IMPORT
-import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
+import com.toastedsiopao.repository.OrderRepository;
+import com.toastedsiopao.repository.RoleRepository; 
 import com.toastedsiopao.repository.UserRepository;
 
 @Service
-@Transactional // Make the whole service transactional
+@Transactional 
 public class CustomerServiceImpl implements CustomerService {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
 	private static final int INACTIVITY_PERIOD_MONTHS = 1;
-	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; // NEW
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; 
 
 	@Autowired
 	private UserRepository userRepository;
 
-	// NEW: Inject OrderRepository
 	@Autowired
 	private OrderRepository orderRepository;
 
 	@Autowired
-	private RoleRepository roleRepository; // NEW INJECTION
+	private RoleRepository roleRepository; 
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
-	private Clock clock; // NEW: Injected clock
+	private Clock clock; 
 
-	// NEW: Injected validation service
 	@Autowired
 	private UserValidationService userValidationService;
 
-	// --- Validation Helpers REMOVED ---
-
-	// This helper remains as it's not in the new service
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
 			throw new IllegalArgumentException("Passwords do not match");
 		}
 	}
-	// --- End Validation Helpers ---
 
 	@Override
 	public User saveCustomer(CustomerSignUpDto userDto) {
-		// UPDATED: Calls to new service
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
-		// --- NEW: Find the customer role ---
 		Role customerRole = roleRepository.findByName(CUSTOMER_ROLE_NAME)
 				.orElseThrow(() -> new RuntimeException("CRITICAL: 'ROLE_CUSTOMER' not found in database."));
-		// --- END NEW ---
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -98,7 +89,6 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.save(newUser);
 	}
 
-	// --- NEW: Implementation for admin panel creation ---
 	@Override
 	public User createCustomerFromAdmin(AdminAccountCreateDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
@@ -115,11 +105,9 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
 		newUser.setRole(customerRole);
-		// Note: Address fields are not in this DTO, they will be null
 
 		return userRepository.save(newUser);
 	}
-	// --- END NEW ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -136,7 +124,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<User> findAllCustomers(Pageable pageable) {
-		return userRepository.findByRole_Name(CUSTOMER_ROLE_NAME, pageable); // UPDATED
+		return userRepository.findByRole_Name(CUSTOMER_ROLE_NAME, pageable); 
 	}
 
 	@Override
@@ -144,11 +132,10 @@ public class CustomerServiceImpl implements CustomerService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) { // UPDATED
+		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) { 
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
 
-		// UPDATED: Calls to new service
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
 
@@ -182,46 +169,40 @@ public class CustomerServiceImpl implements CustomerService {
 		if (!StringUtils.hasText(keyword)) {
 			return findAllCustomers(pageable);
 		}
-		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable); // Query was updated in repo
+		return userRepository.findByRoleAndSearchKeyword(keyword.trim(), pageable);
 	}
 
-	// **** METHOD UPDATED ****
 	@Override
 	public void deleteCustomerById(Long id) {
-		// 1. Find the user first
+		
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { // UPDATED
+		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) {
 			throw new RuntimeException("Cannot delete non-customer user with this method.");
 		}
 
-		// 2. Check if the customer has any orders
 		Page<Order> orders = orderRepository.findByUserOrderByOrderDateDesc(user, PageRequest.of(0, 1));
 		if (!orders.isEmpty()) {
 			throw new RuntimeException("Cannot delete customer '" + user.getUsername() + "'. They have "
 					+ orders.getTotalElements() + " order(s) associated with their account.");
 		}
 
-		// 3. If no orders, proceed with deletion
 		userRepository.deleteById(id);
 	}
-	// **** END OF UPDATED METHOD ****
 
 	@Override
 	@Transactional(readOnly = true)
 	public long countActiveCustomers() {
-		return userRepository.countByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE"); // UPDATED
+		return userRepository.countByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE");
 	}
-
-	// --- Activity Tracking Methods ---
 
 	@Override
 	public void updateLastActivity(String username) {
 		try {
 			User user = findByUsername(username);
 			if (user != null) {
-				user.setLastActivity(LocalDateTime.now(clock)); // UPDATED: Use clock
+				user.setLastActivity(LocalDateTime.now(clock));
 				if ("INACTIVE".equals(user.getStatus())) {
 					user.setStatus("ACTIVE");
 					log.info("User '{}' was INACTIVE, setting to ACTIVE upon login.", username);
@@ -243,7 +224,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { // UPDATED
+		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { 
 			throw new IllegalArgumentException("Can only update status for customers.");
 		}
 
@@ -255,10 +236,10 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public void checkForInactiveCustomers() {
 		log.info("--- Running scheduled check for inactive customers... ---");
-		LocalDateTime cutoffDate = LocalDateTime.now(clock).minusMonths(INACTIVITY_PERIOD_MONTHS); // UPDATED: Use clock
+		LocalDateTime cutoffDate = LocalDateTime.now(clock).minusMonths(INACTIVITY_PERIOD_MONTHS);
 		log.info("Inactivity cutoff date: {}", cutoffDate);
 
-		List<User> activeCustomers = userRepository.findByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE"); // UPDATED
+		List<User> activeCustomers = userRepository.findByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE");
 		int markedInactive = 0;
 
 		for (User customer : activeCustomers) {
@@ -283,12 +264,11 @@ public class CustomerServiceImpl implements CustomerService {
 		}
 	}
 
-	// --- NEW: Dashboard Stats Implementation ---
 	@Override
 	@Transactional(readOnly = true)
 	public long countNewCustomersThisMonth() {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
-		return userRepository.countByRole_NameAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now); // UPDATED
+		return userRepository.countByRole_NameAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
 	}
 }

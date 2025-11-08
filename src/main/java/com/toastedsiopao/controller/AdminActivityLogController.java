@@ -8,16 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
+import org.springframework.security.access.prepost.PreAuthorize; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * Controller to handle the Admin Activity Log page.
- */
 @Controller
 @RequestMapping("/admin")
 public class AdminActivityLogController {
@@ -28,9 +25,9 @@ public class AdminActivityLogController {
 	private ActivityLogService activityLogService;
 
 	@GetMapping("/activity-log")
-	@PreAuthorize("hasAuthority('VIEW_ACTIVITY_LOG')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('VIEW_ACTIVITY_LOG')") 
 	public String showActivityLog(Model model, @RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "20") int size) { // Size 20 as requested
+			@RequestParam(value = "size", defaultValue = "20") int size) { 
 		log.info("Fetching activity log, page {}, size {}", page, size);
 		Pageable pageable = PageRequest.of(page, size);
 		Page<ActivityLogEntry> activityLogPage = activityLogService.getAllLogs(pageable);
@@ -38,12 +35,11 @@ public class AdminActivityLogController {
 		model.addAttribute("activityLogPage", activityLogPage);
 		model.addAttribute("activityLogs", activityLogPage.getContent());
 
-		// Add pagination attributes
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", activityLogPage.getTotalPages());
 		model.addAttribute("totalItems", activityLogPage.getTotalElements());
 		model.addAttribute("size", size);
 
-		return "admin/activity-log"; // Renders activity-log.html
+		return "admin/activity-log";
 	}
 }

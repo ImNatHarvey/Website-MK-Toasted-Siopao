@@ -1,6 +1,6 @@
 package com.toastedsiopao.dto;
 
-import jakarta.validation.constraints.Email; // **** ADDED IMPORT ****
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -25,12 +25,10 @@ public class AdminAccountCreateDto {
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
 	private String username;
 
-	// **** NEW FIELD ****
 	@NotBlank(message = "Email cannot be blank")
 	@Email(message = "Invalid email format")
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
-	// **** END NEW FIELD ****
 
 	@NotBlank(message = "Password cannot be blank")
 	@Size(min = 8, message = "Password must be at least 8 characters")
@@ -40,11 +38,8 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
 
-	// --- UPDATED: Role Name (validations removed) ---
 	private String roleName;
-	// --- END UPDATED ---
-
-	// --- NEW: Module Permissions ---
+	
 	private boolean manageCustomers;
 	private boolean manageAdmins;
 	private boolean manageOrders;
@@ -53,5 +48,4 @@ public class AdminAccountCreateDto {
 	private boolean manageTransactions;
 	private boolean manageSite;
 	private boolean manageActivityLog;
-	// --- END NEW ---
 }

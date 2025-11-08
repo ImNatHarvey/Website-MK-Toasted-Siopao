@@ -1,6 +1,3 @@
-/*
-File: imnatharvey/website-mk-toasted-siopao/Website-MK-Toasted-Siopao-8863827f7dde3d57c4a255585160c67e285a6f88/src/main/java/com/toastedsiopao/controller/AdminSiteController.java
-*/
 package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.SiteSettings;
@@ -10,7 +7,7 @@ import com.toastedsiopao.service.SiteSettingsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -22,11 +19,8 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.function.BiConsumer;
 
-/**
- * Controller to handle general admin pages like Settings.
- */
 @Controller
-@RequestMapping("/admin") // All methods in this class are under /admin
+@RequestMapping("/admin") 
 public class AdminSiteController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminSiteController.class);
@@ -50,38 +44,23 @@ public class AdminSiteController {
 		return "admin/settings"; // Renders settings.html
 	}
 
-	/**
-	 * Helper method to process an image upload for the site settings.
-	 *
-	 * @param file        The new file from the form.
-	 * @param removeImage Flag from the form (if "Remove" was clicked).
-	 * @param currentPath The existing image path from the database.
-	 * @param defaultPath The default/placeholder path for this image slot.
-	 * @param pathSetter  A BiConsumer that takes the (SiteSettings, String) and
-	 *                    sets the new path.
-	 * @param settings    The SiteSettings entity being updated.
-	 */
 	private void processImageUpload(MultipartFile file, boolean removeImage, String currentPath, String defaultPath,
 			BiConsumer<SiteSettings, String> pathSetter, SiteSettings settings) {
 
 		if (removeImage) {
-			// 1. User requested removal
 			log.info("User requested image removal. Reverting to default path: {}", defaultPath);
-			pathSetter.accept(settings, defaultPath); // Set to default
-			// Delete the old custom file, but only if it's not a default path itself
+			pathSetter.accept(settings, defaultPath); 
 			if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 					&& !currentPath.startsWith("/img/")) {
 				log.info("Deleting old custom file: {}", currentPath);
 				fileStorageService.delete(currentPath);
 			}
 		} else if (file != null && !file.isEmpty()) {
-			// 2. New file was uploaded
 			log.info("New file detected. Storing...");
 			try {
 				String newPath = fileStorageService.store(file);
-				pathSetter.accept(settings, newPath); // Set the new path on the entity
+				pathSetter.accept(settings, newPath); 
 				log.info("Set new path to: {}", newPath);
-				// Delete the old file if it existed and wasn't a default path
 				if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 						&& !currentPath.startsWith("/img/")) {
 					log.info("Deleting old custom file: {}", currentPath);
@@ -89,20 +68,17 @@ public class AdminSiteController {
 				}
 			} catch (Exception e) {
 				log.error("Failed to store new image file: {}. Reverting to default path.", e.getMessage(), e);
-				// Fallback to default path on storage error
 				pathSetter.accept(settings, defaultPath);
 			}
 		} else {
-			// 3. No new file, no removal request -> Keep the old/current path
 			log.debug("No image change. Keeping path: {}", currentPath);
 			pathSetter.accept(settings, currentPath);
 		}
 	}
 
 	@PostMapping("/settings/update")
-	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") 
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
-			// --- All 9 image files ---
 			@RequestParam("carouselImage1File") MultipartFile carouselImage1File,
 			@RequestParam("carouselImage2File") MultipartFile carouselImage2File,
 			@RequestParam("carouselImage3File") MultipartFile carouselImage3File,
@@ -112,7 +88,7 @@ public class AdminSiteController {
 			@RequestParam("featureCard4ImageFile") MultipartFile featureCard4ImageFile,
 			@RequestParam("whyUsImageFile") MultipartFile whyUsImageFile,
 			@RequestParam("aboutImageFile") MultipartFile aboutImageFile,
-			// --- All 9 'remove' flags ---
+			
 			@RequestParam(value = "removeCarouselImage1", defaultValue = "false") boolean removeCarouselImage1,
 			@RequestParam(value = "removeCarouselImage2", defaultValue = "false") boolean removeCarouselImage2,
 			@RequestParam(value = "removeCarouselImage3", defaultValue = "false") boolean removeCarouselImage3,
@@ -126,12 +102,10 @@ public class AdminSiteController {
 
 		log.info("Updating site settings...");
 
-		// 1. Get the LIVE settings object from the database
 		SiteSettings settingsToUpdate = siteSettingsService.getSiteSettings();
-		// 2. Create a new default object to get default paths
+		
 		SiteSettings defaultSettings = new SiteSettings();
 
-		// 3. Copy all text fields from the form object to the live object
 		settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
 		settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());
 		settingsToUpdate.setFeatureCard1Title(formSettings.getFeatureCard1Title());
@@ -154,7 +128,6 @@ public class AdminSiteController {
 		settingsToUpdate.setContactPhoneName(formSettings.getContactPhoneName());
 		settingsToUpdate.setContactPhoneUrl(formSettings.getContactPhoneUrl());
 
-		// 4. Process image files
 		try {
 			processImageUpload(carouselImage1File, removeCarouselImage1, settingsToUpdate.getCarouselImage1(),
 					defaultSettings.getCarouselImage1(), SiteSettings::setCarouselImage1, settingsToUpdate);
@@ -183,7 +156,6 @@ public class AdminSiteController {
 			processImageUpload(aboutImageFile, removeAboutImage, settingsToUpdate.getAboutImage(),
 					defaultSettings.getAboutImage(), SiteSettings::setAboutImage, settingsToUpdate);
 
-			// 5. Save the updated entity
 			siteSettingsService.save(settingsToUpdate);
 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_SITE_SETTINGS",

@@ -7,12 +7,12 @@ import com.toastedsiopao.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; // Import Page
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable; // Import Pageable
+import org.springframework.data.domain.Pageable; 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils; // Import StringUtils
+import org.springframework.util.StringUtils; 
 
 import java.math.BigDecimal;
 import java.sql.Date;
@@ -39,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
 	private OrderRepository orderRepository;
 
 	@Autowired
-	private Clock clock; // NEW: Injected clock for time-zone consistency
+	private Clock clock; 
 
 	@Override
 	@Transactional(readOnly = true)
@@ -49,32 +49,29 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findOrdersByUser(User user, Pageable pageable) { // Updated
-		return orderRepository.findByUserOrderByOrderDateDesc(user, pageable); // Updated
+	public Page<Order> findOrdersByUser(User user, Pageable pageable) { 
+		return orderRepository.findByUserOrderByOrderDateDesc(user, pageable); 
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findAllOrders(Pageable pageable) { // Updated
-		return orderRepository.findAllByDate(null, null, pageable); // Updated
+	public Page<Order> findAllOrders(Pageable pageable) { 
+		return orderRepository.findAllByDate(null, null, pageable); 
 	}
 
-	// --- NEW: Implementation for finding by status ---
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findOrdersByStatus(String status, Pageable pageable) { // Updated
-		// Ensure status is not null/empty before querying
+	public Page<Order> findOrdersByStatus(String status, Pageable pageable) { 
 		if (!StringUtils.hasText(status)) {
-			return findAllOrders(pageable); // Updated
+			return findAllOrders(pageable); 
 		}
-		return orderRepository.searchByStatusAndDate(status.toUpperCase(), null, null, pageable); // Updated
+		return orderRepository.searchByStatusAndDate(status.toUpperCase(), null, null, pageable); 
 	}
-
-	// --- NEW: Implementation for searching/filtering orders ---
+	
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> searchOrders(String keyword, String status, String startDate, String endDate,
-			Pageable pageable) { // Updated
+			Pageable pageable) { 
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasStatus = StringUtils.hasText(status);
 		boolean hasStartDate = StringUtils.hasText(startDate);
@@ -103,18 +100,16 @@ public class OrderServiceImpl implements OrderService {
 
 		if (hasKeyword && hasStatus) {
 			return orderRepository.searchOrdersByKeywordAndStatus(keyword.trim(), upperStatus, startDateTime,
-					endDateTime, pageable); // Updated
+					endDateTime, pageable); 
 		} else if (hasKeyword) {
-			return orderRepository.searchOrdersByKeyword(keyword.trim(), startDateTime, endDateTime, pageable); // Updated
+			return orderRepository.searchOrdersByKeyword(keyword.trim(), startDateTime, endDateTime, pageable);
 		} else if (hasStatus) {
-			return orderRepository.searchByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); // Updated
+			return orderRepository.searchByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); 
 		} else {
-			return orderRepository.findAllByDate(startDateTime, endDateTime, pageable); // Updated
+			return orderRepository.findAllByDate(startDateTime, endDateTime, pageable); 
 		}
 	}
-
-	// --- NEW: Dashboard Stats Implementation ---
-
+	
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getSalesToday() {
@@ -142,9 +137,8 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Long> getOrderStatusCounts() {
-		return orderRepository.countOrdersByStatus().stream().collect(Collectors.toMap(row -> (String) row[0], // Key:
-																												// status
-				row -> (Long) row[1] // Value: count
+		return orderRepository.countOrdersByStatus().stream().collect(Collectors.toMap(row -> (String) row[0],
+				row -> (Long) row[1] 
 		));
 	}
 
@@ -164,17 +158,13 @@ public class OrderServiceImpl implements OrderService {
 	public Map<String, BigDecimal> getSalesDataForChart(LocalDateTime start, LocalDateTime end) {
 		List<Object[]> results = orderRepository.findSalesDataBetweenDates(start, end);
 
-		// Use LinkedHashMap to preserve insertion order (which is by date)
 		return results.stream()
-				.collect(Collectors.toMap(row -> ((Date) row[0]).toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE), // Key:
-																															// "YYYY-MM-DD"
-						row -> (BigDecimal) row[1], // Value: Sales
-						(oldValue, newValue) -> oldValue.add(newValue), // Handle potential duplicates (though GROUP BY
-																		// should prevent)
+				.collect(Collectors.toMap(row -> ((Date) row[0]).toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
+						row -> (BigDecimal) row[1], 
+						(oldValue, newValue) -> oldValue.add(newValue),
 						LinkedHashMap::new));
 	}
 
-	// --- NEW: Transaction History Page Implementation ---
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getTotalRevenueAllTime() {

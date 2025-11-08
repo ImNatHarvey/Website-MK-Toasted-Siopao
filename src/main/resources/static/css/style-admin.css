@@ -18,12 +18,9 @@ body {
 	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-/* ================= Admin Buttons ================= */
-
-/* General Custom Button (Primary Action) - Used for 'View Site' */
 .btn-custom {
-	background-color: var(--accent); /* Orange/Gold */
-	color: var(--primary); /* Deep Blue */
+	background-color: var(--accent); 
+	color: var(--primary); 
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
@@ -40,10 +37,9 @@ body {
 	border-color: var(--primary);
 }
 
-/* Secondary Action Button (e.g., Close, Cancel, Clear) */
 .btn-custom-secondary {
-	background-color: var(--muted-text); /* Grey */
-	color: var(--light); /* White */
+	background-color: var(--muted-text); 
+	color: var(--light);
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
@@ -54,30 +50,28 @@ body {
 }
 
 .btn-custom-secondary:hover {
-	background-color: var(--dark); /* Dark Blue */
+	background-color: var(--dark); 
 	color: var(--light);
 	border-color: var(--dark);
 }
 
-/* Outline/Alternative Button (e.g., Manage Categories) */
 .btn-custom-outline {
 	background-color: transparent;
-	color: var(--primary); /* Deep Blue text */
+	color: var(--primary); 
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
 	transition: background-color 0.3s ease, color 0.3s ease, border-color
 		0.3s ease;
-	border: 1px solid var(--primary); /* Deep Blue border */
+	border: 1px solid var(--primary); 
 }
 
 .btn-custom-outline:hover {
-	background-color: var(--primary); /* Deep Blue background */
-	color: var(--light); /* White text */
+	background-color: var(--primary); 
+	color: var(--light); 
 	border-color: var(--primary);
 }
 
-/* Specific Action Buttons */
 .btn-action-add {
 	background-color: var(--primary);
 	color: var(--light);
@@ -133,7 +127,6 @@ body {
 	border-color: #1e7e34;
 }
 
-/* --- Fix for disabled buttons losing color --- */
 .btn-action-edit:disabled, .btn-action-edit.disabled {
 	background-color: var(--warning);
 	border-color: var(--warning);
@@ -148,13 +141,12 @@ body {
 	opacity: 0.65;
 }
 
-/* Adjust button padding/margin for specific contexts if needed */
-.table .btn-sm { /* Make small buttons less rounded */
+.table .btn-sm { 
 	border-radius: 0.2rem;
 	padding: 0.25rem 0.5rem;
 }
 
-.modal-footer .btn { /* Space out modal buttons */
+.modal-footer .btn { 
 	margin-left: 5px;
 }
 
@@ -162,22 +154,21 @@ body {
 	margin-left: 0;
 }
 
-.d-flex.gap-2>.btn { /* Override margin-left for flex gap */
+.d-flex.gap-2>.btn { 
 	margin-left: 0;
 }
 
-/* ================= Status Badges ================= */
 .status-badge {
 	padding: 0.35em 0.65em;
 	font-size: 0.8em;
 	font-weight: 700;
 	line-height: 1;
-	color: var(--dark); /* Default text */
+	color: var(--dark);
 	text-align: center;
 	white-space: nowrap;
 	vertical-align: baseline;
 	border-radius: 0.375rem;
-	background-color: var(--muted-text); /* Default background */
+	background-color: var(--muted-text); 
 }
 
 .status-badge.status-normal, .status-badge.status-active, .status-badge.status-delivered,
@@ -188,7 +179,7 @@ body {
 
 .status-badge.status-low, .status-badge.status-pending {
 	background-color: var(--warning);
-	color: var(--dark); /* Dark text on yellow */
+	color: var(--dark);
 }
 
 .status-badge.status-critical, .status-badge.status-cancelled,
@@ -207,37 +198,31 @@ body {
 	color: var(--light);
 }
 
-/* ================= Admin Specific Styles ================= */
-
-/* Section Title (Used on admin pages) */
 .section-title {
-	color: var(--primary); /* Deep Blue */
+	color: var(--primary); 
 	font-weight: bold;
 }
 
-/* Base Card (Used by admin cards) */
 .card {
-	background-color: var(--light); /* Use light background for cards */
-	border: 1px solid #eee; /* Subtle border */
+	background-color: var(--light); 
+	border: 1px solid #eee; 
 	border-radius: 15px;
 	overflow: hidden;
 }
 
 .card-title {
 	font-weight: bold;
-	color: var(--primary); /* Deep Blue */
+	color: var(--primary); 
 }
 
-/* Admin specific card image size */
 .admin-product-img {
-	height: 150px; /* Slightly smaller for admin view */
-	object-fit: contain; /* Use contain for admin to see full image */
+	height: 150px; 
+	object-fit: contain; 
 	padding: 5px;
 }
 
-/* Stats Cards (v1 - Used on product/inventory pages) */
 .stats-card {
-	border-left: 5px solid var(--primary); /* Accent border */
+	border-left: 5px solid var(--primary); 
 	border-radius: 8px;
 	background-color: var(--light);
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -249,10 +234,10 @@ body {
 	font-weight: bold;
 }
 
-.stats-value, .stats-card .display-6 { /* Target both uses */
+.stats-value, .stats-card .display-6 { 
 	color: var(--dark);
 	font-weight: bold;
-	font-size: 1.8rem; /* Adjust size */
+	font-size: 1.8rem; 
 }
 
 .stats-change {
@@ -260,9 +245,8 @@ body {
 	color: var(--muted-text);
 }
 
-/* Quick Navigation Cards (Old Admin Dashboard - maybe reuse?) */
 .quick-nav-card {
-	background-color: var(--secondary); /* Light Yellow */
+	background-color: var(--secondary); 
 	border-radius: 10px;
 	padding: 20px;
 	transition: transform 0.2s ease;
@@ -277,7 +261,7 @@ body {
 }
 
 .quick-nav-card h4 {
-	color: var(--primary); /* Deep Blue */
+	color: var(--primary); 
 	font-weight: bold;
 	margin-top: 10px;
 }
@@ -288,13 +272,12 @@ body {
 }
 
 .quick-nav-card .btn {
-	margin-top: auto; /* Push button to bottom */
+	margin-top: auto;
 }
 
-/* Admin Tables */
 .table thead th {
-	background-color: var(--primary); /* Header BG */
-	color: var(--light); /* Header Text */
+	background-color: var(--primary); 
+	color: var(--light); 
 	vertical-align: middle;
 }
 
@@ -303,10 +286,9 @@ body {
 }
 
 .table-hover tbody tr:hover {
-	background-color: var(--secondary); /* Row hover color */
+	background-color: var(--secondary); 
 }
 
-/* Modal Styling */
 .modal-header {
 	background-color: var(--primary);
 	color: var(--light);
@@ -321,22 +303,18 @@ body {
 	font-weight: bold;
 }
 
-/* === Fix for specific input groups if needed === */
-/* Ensure these overrides are specific enough */
 #addCategoryForm .input-group .form-control, #manageStockModal .input-group .form-control,
 	#addProductForm #addProductPrice, #itemForm #itemCost input,
-	/* Target cost input in inventory */ #editProductForm #editProductPriceModal
-	/* Target edit product price */ {
-	background-color: #fff !important; /* Force default BG */
-	color: #212529 !important; /* Force default text */
+	#editProductForm #editProductPriceModal {
+	background-color: #fff !important;
+	color: #212529 !important;
 }
 
 #addCategoryForm .input-group .form-control::placeholder,
 	#manageStockModal .input-group .form-control::placeholder {
-	color: #6c757d !important; /* Force default placeholder */
+	color: #6c757d !important;
 }
 
-/* Prevent hover styles on these specific inputs */
 #addCategoryForm .input-group:hover .form-control, #manageStockModal .input-group:hover .form-control,
 	#addProductForm #addProductPrice:hover, #itemForm #itemCost input:hover,
 	#editProductForm #editProductPriceModal:hover {
@@ -345,32 +323,29 @@ body {
 	color: #212529 !important;
 }
 
-/* ================================================= */
-/* == STYLES FOR ADMIN SIDEBAR LAYOUT == */
-/* ================================================= */
 .admin-wrapper {
 	display: flex;
 }
 
 .admin-sidebar {
-	width: 260px; /* EXPANDED sidebar width */
-	height: 100vh; /* Full height */
+	width: 260px;
+	height: 100vh;
 	position: fixed;
 	top: 0;
 	left: 0;
-	background-color: var(--primary); /* Deep Blue */
-	padding: 0; /* Remove padding */
+	background-color: var(--primary);
+	padding: 0;
 	overflow-y: auto;
 	transition: width 0.3s ease;
 	z-index: 1000;
 }
 
 .sidebar-header {
-	height: 70px; /* Match content navbar height */
+	height: 70px;
 	padding: 0 1.5rem;
 	background-color: var(--primary);
-	border-bottom: 1px solid #4A6D8C; /* Lighter blue border */
-	display: flex; /* Use flex to center */
+	border-bottom: 1px solid #4A6D8C;
+	display: flex;
 	align-items: center;
 	justify-content: center;
 }
@@ -383,13 +358,13 @@ body {
 }
 
 .admin-sidebar .nav {
-	padding: 1rem 0; /* FIX: Remove horizontal padding */
+	padding: 1rem 0;
 }
 
 .admin-sidebar .nav-link {
 	color: var(--light);
-	padding: 0.75rem 1.5rem; /* FIX: Add padding to links */
-	border-radius: 0; /* FIX: Remove border-radius */
+	padding: 0.75rem 1.5rem;
+	border-radius: 0;
 	margin-bottom: 5px;
 	font-size: 1rem;
 	white-space: nowrap;
@@ -413,20 +388,18 @@ body {
 	margin-right: 8px;
 }
 
-/* Main content area */
 .admin-content {
-	margin-left: 260px; /* EXPANDED to match sidebar width */
-	width: calc(100% - 260px); /* Full width minus sidebar */
+	margin-left: 260px;
+	width: calc(100% - 260px);
 	padding: 0;
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
 }
 
-/* New top-bar for the content area */
 .admin-content-navbar {
 	height: 70px;
-	background-color: var(--primary); /* CHANGED to navy blue */
+	background-color: var(--primary);
 	border-bottom: 1px solid #dee2e6;
 	padding: 0 1.5rem;
 	display: flex;
@@ -449,63 +422,52 @@ body {
 }
 
 .admin-content-navbar .navbar-text {
-	color: var(--light); /* CHANGED to light text */
+	color: var(--light);
 }
 
 .admin-content-navbar .nav-link {
-	color: var(--light); /* CHANGED to light text (bell icon) */
+	color: var(--light);
 }
 
 .admin-content-navbar .nav-link:hover {
-	color: var(--secondary) !important; /* Light yellow hover */
+	color: var(--secondary) !important;
 }
 
-/* Wrapper for the actual page content */
 .admin-content-page {
 	padding: 1.5rem;
 	flex-grow: 1;
-	background-color: #f8f9fa; /* A very light grey background */
+	background-color: #f8f9fa;
 }
 
-/* Footer adjustment */
 .admin-footer {
 	margin-left: 0;
 	width: 100%;
-	background-color: var(--primary); /* REVERTED to navy blue */
-	color: var(--light); /* REVERTED to light text */
+	background-color: var(--primary);
+	color: var(--light);
 	padding: 20px;
 	text-align: center;
 	flex-shrink: 0;
 }
 
-/* Override base footer */
 footer.admin-footer {
 	background-color: var(--primary);
 	color: var(--light);
 }
 
-/* **** Threshold Slider Styling **** */
 .threshold-group .threshold-input {
-	flex: 0 0 100px; /* Do not grow, do not shrink, base width 100px */
+	flex: 0 0 100px;
 	min-width: 100px;
 }
 
 .threshold-group .threshold-slider {
-	flex: 1 1 auto; /* Grow and shrink as needed */
+	flex: 1 1 auto;
 	min-width: 50px;
 }
 
-/* =============================================== */
-/* == STYLES FOR ADMIN DASHBOARD V2 == */
-/* =============================================== */
-
-/* Main content wrapper */
 #admin-dashboard-content {
-	/* The padding/background is now handled by .admin-content-page */
 	
 }
 
-/* Page Header */
 .dashboard-header {
 	margin-bottom: 1.5rem;
 }
@@ -518,7 +480,6 @@ footer.admin-footer {
 	font-size: 1.1rem;
 }
 
-/* Section Headings */
 .dashboard-section-title {
 	font-size: 1.25rem;
 	font-weight: 600;
@@ -528,7 +489,6 @@ footer.admin-footer {
 	border-bottom: 2px solid #e0e0e0;
 }
 
-/* Stat Card */
 .stats-card-v2 {
 	background-color: #fff;
 	border: 1px solid #e0e0e0;
@@ -582,7 +542,6 @@ footer.admin-footer {
 	color: var(--muted-text);
 }
 
-/* Stat Card Icon Colors */
 .stats-icon.icon-sales {
 	background-color: #e6f7ff;
 	color: #1890ff;
@@ -603,7 +562,6 @@ footer.admin-footer {
 	color: #eb2f96;
 }
 
-/* Chart Container */
 .chart-card {
 	background-color: #fff;
 	border: 1px solid #e0e0e0;
@@ -631,7 +589,6 @@ footer.admin-footer {
 	width: 100%;
 }
 
-/* Specific heights */
 #salesChartContainer {
 	height: 350px;
 }
@@ -646,7 +603,6 @@ footer.admin-footer {
 	height: 300px;
 }
 
-/* Top Products List */
 .top-products-list {
 	list-style: none;
 	padding-left: 0;
@@ -701,24 +657,20 @@ footer.admin-footer {
 	margin-left: 1rem;
 }
 
-/* =============================================== */
-/* == STYLES FOR IMAGE UPLOADER == */
-/* =============================================== */
 .image-uploader-container {
 	position: relative;
 	width: 100%;
-	border: 2px dashed #aab8c5; /* Muted border */
+	border: 2px dashed #aab8c5;
 	border-radius: 8px;
-	background-color: #f5f8fa; /* Very light blue/grey */
+	background-color: #f5f8fa;
 	transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .image-uploader-container.drag-over {
-	background-color: #eaf1f6; /* Lighten on drag over */
+	background-color: #eaf1f6;
 	border-color: var(--primary);
 }
 
-/* Hidden file input */
 .image-uploader-container .image-uploader-input {
 	position: absolute;
 	top: 0;
@@ -730,7 +682,6 @@ footer.admin-footer {
 	z-index: 10;
 }
 
-/* Drop zone "Choose file" UI */
 .image-uploader-container .image-drop-zone {
 	display: flex;
 	flex-direction: column;
@@ -746,17 +697,16 @@ footer.admin-footer {
 	margin-bottom: 0.75rem;
 }
 
-/* Preview container (initially hidden) */
 .image-uploader-container .image-preview-container {
-	display: none; /* Hidden by default */
+	display: none;
 	position: relative;
 	padding: 0.5rem;
 }
 
 .image-uploader-container .image-preview {
 	width: 100%;
-	height: 200px; /* Fixed height */
-	object-fit: cover; /* Cover the area, cropping as needed */
+	height: 200px;
+	object-fit: cover;
 	border-radius: 6px;
 }
 
@@ -767,37 +717,26 @@ footer.admin-footer {
 	z-index: 15;
 }
 
-/* When preview is active, hide the drop zone */
 .image-uploader-container.preview-active .image-drop-zone {
 	display: none;
 }
 
-/* When preview is active, show the preview container */
 .image-uploader-container.preview-active .image-preview-container {
 	display: block;
 }
 
-/* =============================================== */
-/* == STYLES FOR READONLY (LOCKED) INPUTS == */
-/* =============================================== */
 .form-control-readonly {
-	background-color: #e9ecef; /* Bootstrap's disabled bg color */
+	background-color: #e9ecef;
 	opacity: 1;
 	cursor: not-allowed;
 }
 
-/* Target selects specifically */
 select.form-control-readonly {
-	pointer-events: none; /* Disables clicking on the select */
+	pointer-events: none;
 }
 
-/* ================================================= */
-/* == NEW: Admin Form Tweaks == */
-/* ================================================= */
-
-/* Add some spacing for the permission checkboxes */
 .form-switch {
-	padding-left: 3.5em; /* Increase padding to avoid label overlap */
+	padding-left: 3.5em;
 }
 
 .form-switch .form-check-label {
@@ -805,7 +744,6 @@ select.form-control-readonly {
 	cursor: pointer;
 }
 
-/* --- NEW: Permission List in View Modal --- */
 .permission-list {
 	font-size: 0.95rem;
 }
@@ -821,14 +759,7 @@ select.form-control-readonly {
 .permission-list i.fa-times {
 	color: var(--danger);
 }
-/* --- END NEW --- */
 
-/* ================================================= */
-/* == NEW: RESPONSIVE STYLES (MOBILE-FIRST) == */
-/* ================================================= */
-
-/* --- Mobile-Only Nav Bar --- */
-/* Hidden by default on desktop */
 .admin-mobile-nav {
 	display: none;
 	position: fixed;
@@ -859,8 +790,6 @@ select.form-control-readonly {
 	text-decoration: none;
 }
 
-/* --- Mobile Overlay --- */
-/* Hidden by default */
 .sidebar-overlay {
 	display: none;
 	position: fixed;
@@ -869,55 +798,39 @@ select.form-control-readonly {
 	right: 0;
 	bottom: 0;
 	background-color: rgba(0, 0, 0, 0.5);
-	z-index: 1025; /* Below sidebar (1040), above content (1020) */
+	z-index: 1025;
 }
 
-/* --- Media Query for small screens (Bootstrap's 'lg' breakpoint) --- */
 @media ( max-width : 991.98px) {
 	/* 1. Show the mobile nav */
 	.admin-mobile-nav {
 		display: flex;
 	}
-
-	/* 2. Hide the desktop-only top-right nav */
 	.admin-content-navbar {
 		display: none;
 	}
-
-	/* 3. Reposition sidebar to be off-canvas */
 	.admin-sidebar {
 		position: fixed;
-		left: -260px; /* Start off-screen */
-		z-index: 1040; /* Highest z-index */
+		left: -260px;
+		z-index: 1040;
 		transition: left 0.3s ease-in-out;
 		box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 	}
-
-	/* 4. Make content full-width and add padding for mobile nav */
 	.admin-content {
 		margin-left: 0;
 		width: 100%;
 	}
 	.admin-content-page {
-		padding-top: 85px; /* 70px for nav + 15px extra padding */
+		padding-top: 85px;
 		padding-left: 1rem;
 		padding-right: 1rem;
 	}
-
-	/* 5. Footer should also be full-width */
 	.admin-footer {
 		margin-left: 0;
 	}
-
-	/* --- Toggled State --- */
-	/* This class will be added to the <body> tag by JavaScript */
-
-	/* 5. Show the sidebar */
 	body.sidebar-toggled .admin-sidebar {
 		left: 0;
 	}
-
-	/* 6. Show the overlay */
 	body.sidebar-toggled .sidebar-overlay {
 		display: block;
 	}

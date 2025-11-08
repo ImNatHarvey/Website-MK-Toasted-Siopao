@@ -3,10 +3,10 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
+import com.toastedsiopao.repository.RoleRepository; 
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CustomerService;
-import com.toastedsiopao.service.AdminService; // NEW IMPORT
+import com.toastedsiopao.service.AdminService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -33,19 +33,19 @@ public class AdminCustomerController {
 	private static final Logger log = LoggerFactory.getLogger(AdminCustomerController.class);
 
 	@Autowired
-	private CustomerService customerService; // UPDATED
+	private CustomerService customerService; 
 
 	@Autowired
-	private AdminService adminService; // NEW (for creating accounts)
-
+	private AdminService adminService; 
+	
 	@Autowired
 	private ActivityLogService activityLogService;
 
 	@Autowired
-	private RoleRepository roleRepository; // NEW INJECTION FOR FIX
+	private RoleRepository roleRepository; 
 
 	@GetMapping
-	@PreAuthorize("hasAuthority('VIEW_CUSTOMERS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('VIEW_CUSTOMERS')") 
 	public String manageCustomers(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -55,16 +55,16 @@ public class AdminCustomerController {
 		Page<User> customerPage;
 
 		if (StringUtils.hasText(keyword)) {
-			customerPage = customerService.searchCustomers(keyword, pageable); // UPDATED
+			customerPage = customerService.searchCustomers(keyword, pageable); 
 			model.addAttribute("keyword", keyword);
 		} else {
-			customerPage = customerService.findAllCustomers(pageable); // UPDATED
+			customerPage = customerService.findAllCustomers(pageable);
 		}
 
 		model.addAttribute("customerPage", customerPage);
 		model.addAttribute("customers", customerPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
-		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers()); // UPDATED
+		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers()); 
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", customerPage.getTotalPages());
@@ -72,11 +72,10 @@ public class AdminCustomerController {
 		model.addAttribute("size", size);
 
 		if (!model.containsAttribute("customerUserDto")) {
-			// This DTO is used by the "Add Customer" form
-			model.addAttribute("customerUserDto", new AdminAccountCreateDto()); // UPDATED DTO
+			model.addAttribute("customerUserDto", new AdminAccountCreateDto()); 
 		}
 		if (!model.containsAttribute("customerUpdateDto")) {
-			model.addAttribute("customerUpdateDto", new CustomerUpdateDto()); // UPDATED DTO
+			model.addAttribute("customerUpdateDto", new CustomerUpdateDto()); 
 		}
 
 		return "admin/customers";
@@ -85,13 +84,13 @@ public class AdminCustomerController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
 		redirectAttributes.addFlashAttribute("customers",
-				customerService.findAllCustomers(defaultPageable).getContent()); // UPDATED
+				customerService.findAllCustomers(defaultPageable).getContent());
 	}
 
 	@PostMapping("/add-customer")
-	@PreAuthorize("hasAuthority('ADD_CUSTOMERS')") // **** ADDED ****
-	public String addCustomerUser(@Valid @ModelAttribute("customerUserDto") AdminAccountCreateDto userDto, // UPDATED
-																											// DTO
+	@PreAuthorize("hasAuthority('ADD_CUSTOMERS')") 
+	public String addCustomerUser(@Valid @ModelAttribute("customerUserDto") AdminAccountCreateDto userDto,
+																											
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
@@ -106,10 +105,7 @@ public class AdminCustomerController {
 		}
 
 		try {
-			// --- THIS IS THE FIX ---
-			// Use the CustomerService to create the customer account
 			User savedUser = customerService.createCustomerFromAdmin(userDto);
-			// --- END FIX ---
 
 			activityLogService.logAdminAction(principal.getName(), "ADD_USER (CUSTOMER)",
 					"Created new customer user: " + savedUser.getUsername());
@@ -119,7 +115,6 @@ public class AdminCustomerController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
 
-			// --- FIX: Use correct BindingResult object name ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "customerUserDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
@@ -129,7 +124,6 @@ public class AdminCustomerController {
 			} else {
 				redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
 			}
-			// --- END FIX ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUserDto",
 					result);
@@ -152,9 +146,9 @@ public class AdminCustomerController {
 		return "redirect:/admin/customers";
 	}
 
-	@PostMapping("/update") // Update Customer
-	@PreAuthorize("hasAuthority('EDIT_CUSTOMERS')") // **** ADDED ****
-	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") CustomerUpdateDto userDto, // UPDATED DTO
+	@PostMapping("/update") 
+	@PreAuthorize("hasAuthority('EDIT_CUSTOMERS')") 
+	public String updateCustomer(@Valid @ModelAttribute("customerUpdateDto") CustomerUpdateDto userDto, 
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
@@ -169,7 +163,7 @@ public class AdminCustomerController {
 		}
 
 		try {
-			User updatedUser = customerService.updateCustomer(userDto); // UPDATED SERVICE CALL
+			User updatedUser = customerService.updateCustomer(userDto); 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_USER (CUSTOMER)",
 					"Updated customer user: " + updatedUser.getUsername() + " (ID: " + updatedUser.getId() + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
@@ -204,31 +198,27 @@ public class AdminCustomerController {
 		return "redirect:/admin/customers";
 	}
 
-	// **** METHOD UPDATED ****
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')") 
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
-		Optional<User> userOpt = customerService.findUserById(id); // UPDATED
+		Optional<User> userOpt = customerService.findUserById(id);
 		if (userOpt.isEmpty() || userOpt.get().getRole() == null
-				|| !"ROLE_CUSTOMER".equals(userOpt.get().getRole().getName())) { // UPDATED
+				|| !"ROLE_CUSTOMER".equals(userOpt.get().getRole().getName())) {
 			redirectAttributes.addFlashAttribute("customerError", "Customer not found or invalid ID.");
 			return "redirect:/admin/customers";
 		}
 		String username = userOpt.get().getUsername();
 		try {
-			// Service layer now handles validation (e.g., if customer has orders)
 			customerService.deleteCustomerById(id); // UPDATED
 			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
 					"Deleted customer user: " + username + " (ID: " + id + ")");
 			redirectAttributes.addFlashAttribute("customerSuccess",
 					"Customer '" + username + "' deleted successfully!");
 		} catch (RuntimeException e) {
-			// Catch exceptions thrown from the service layer
 			log.error("Error deleting customer ID {}: {}", id, e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("customerError", "Error deleting customer: " + e.getMessage());
 		}
 		return "redirect:/admin/customers";
 	}
-	// **** END OF UPDATED METHOD ****
 }

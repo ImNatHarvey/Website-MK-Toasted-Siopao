@@ -20,25 +20,19 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
 	@Override
 	public SiteSettings getSiteSettings() {
-		// Try to find settings with ID 1, or create new default settings if not found
 		return settingsRepository.findById(SETTINGS_ID).orElseGet(this::createDefaultSettings);
 	}
 
 	@Override
 	public SiteSettings save(SiteSettings settings) {
-		// Ensure the ID is always 1 when saving
 		settings.setId(SETTINGS_ID);
 		return settingsRepository.save(settings);
 	}
 
-	/**
-	 * A private method to create and persist the default settings row if it doesn't
-	 * exist on first load.
-	 */
 	private SiteSettings createDefaultSettings() {
 		log.info("No site settings found with ID 1. Creating default settings...");
 		SiteSettings defaultSettings = new SiteSettings();
-		defaultSettings.setId(SETTINGS_ID); // Explicitly set ID 1
+		defaultSettings.setId(SETTINGS_ID); 
 		return settingsRepository.save(defaultSettings);
 	}
 }

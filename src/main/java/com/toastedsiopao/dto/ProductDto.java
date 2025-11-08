@@ -3,7 +3,7 @@ package com.toastedsiopao.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty; // **** IMPORT ADDED ****
+import jakarta.validation.constraints.NotEmpty; 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
@@ -28,7 +28,7 @@ public class ProductDto {
 	private String description;
 
 	@NotNull(message = "Price cannot be null")
-	@PositiveOrZero(message = "Price must be zero or positive") // Keep for BigDecimal
+	@PositiveOrZero(message = "Price must be zero or positive") 
 	private BigDecimal price;
 
 	@NotNull(message = "Category must be selected")
@@ -37,32 +37,17 @@ public class ProductDto {
 	private String imageUrl;
 
 	@Valid
-	// --- UPDATED: Added @NotEmpty validation ---
 	@NotEmpty(message = "A product must have at least one ingredient")
 	// --- END UPDATE ---
 	private List<RecipeIngredientDto> ingredients = new ArrayList<>();
 
-	// --- NEW: Stock Management Fields ---
-	// Current stock is usually adjusted separately, not set directly in
-	// create/update DTO
-	// We might add it later if needed for initial creation, but thresholds are
-	// primary here.
-
-	// --- UPDATED: Changed from @PositiveOrZero to @Min(1) ---
 	@NotNull(message = "Low stock threshold cannot be null")
 	@Min(value = 1, message = "Low threshold must be at least 1")
 	private Integer lowStockThreshold;
-	// --- END UPDATE ---
-
-	// --- UPDATED: Changed from @PositiveOrZero to @Min(1) ---
+	
 	@NotNull(message = "Critical stock threshold cannot be null")
 	@Min(value = 1, message = "Critical threshold must be at least 1")
 	private Integer criticalStockThreshold;
-	// --- END UPDATE ---
-	// --- END NEW ---
-
-	// --- NEW: Flag for image removal ---
+	
 	private boolean removeImage = false;
-	// --- END NEW ---
-
 }

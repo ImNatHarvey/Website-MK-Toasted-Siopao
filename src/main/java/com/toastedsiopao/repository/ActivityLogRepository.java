@@ -11,12 +11,6 @@ import java.util.List;
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, Long> {
 
-	// Find logs ordered by timestamp descending (newest first)
 	Page<ActivityLogEntry> findAllByOrderByTimestampDesc(Pageable pageable);
 
-	// You could add methods to find by username or date range later if needed
-	// List<ActivityLogEntry> findByUsernameOrderByTimestampDesc(String username);
-	// List<ActivityLogEntry>
-	// findByTimestampBetweenOrderByTimestampDesc(LocalDateTime start, LocalDateTime
-	// end);
 }

@@ -20,14 +20,13 @@ public class UnitOfMeasure {
 	@NotBlank(message = "Unit name cannot be blank")
 	@Size(max = 20, message = "Unit name cannot exceed 20 characters")
 	@Column(nullable = false, unique = true, length = 20)
-	private String name; // e.g., "Kilograms", "Pieces"
+	private String name; 
 
 	@NotBlank(message = "Abbreviation cannot be blank")
 	@Size(max = 10, message = "Abbreviation cannot exceed 10 characters")
 	@Column(nullable = false, unique = true, length = 10)
-	private String abbreviation; // e.g., "kg", "pcs"
+	private String abbreviation; 
 
-	// Relationship: One Unit can be used by many Inventory Items
 	@OneToMany(mappedBy = "unit", fetch = FetchType.LAZY)
 	private List<InventoryItem> items;
 

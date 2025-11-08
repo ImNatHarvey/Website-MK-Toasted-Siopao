@@ -15,7 +15,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime; // Import LocalDateTime
+import java.time.LocalDateTime; 
 
 @Entity
 @Table(name = "users")
@@ -33,14 +33,12 @@ public class User {
 	private String username;
 
 	@NotBlank(message = "Password cannot be blank")
-	@Column(nullable = false, length = 68) // BCrypt hash length
+	@Column(nullable = false, length = 68)
 	private String password;
 
-	// --- THIS IS THE MAJOR CHANGE ---
-	@ManyToOne(fetch = FetchType.EAGER) // Eagerly fetch the role, we always need it
-	@JoinColumn(name = "role_id") // This user table will have a "role_id" foreign key
-	private Role role; // e.g., "ROLE_CUSTOMER", "ROLE_ADMIN"
-	// --- END CHANGE ---
+	@ManyToOne(fetch = FetchType.EAGER) 
+	@JoinColumn(name = "role_id")
+	private Role role;
 
 	@Column(length = 50)
 	private String firstName;
@@ -48,16 +46,13 @@ public class User {
 	@Column(length = 50)
 	private String lastName;
 
-	// **** NEW FIELD ****
-	@Column(unique = true, length = 100) // Email should be unique
+	@Column(unique = true, length = 100) 
 	private String email;
-	// **** END NEW FIELD ****
 
 	@Column(length = 20)
 	private String phone;
 
-	// --- NEW ADDRESS FIELDS ---
-	@Column(length = 50, nullable = true) // Optional fields
+	@Column(length = 50, nullable = true) 
 	private String houseNo;
 
 	@Column(length = 50, nullable = true)
@@ -66,31 +61,27 @@ public class User {
 	@Column(length = 50, nullable = true)
 	private String blockNo;
 
-	@Column(length = 100, nullable = true) // Made nullable, adjust if street is required
+	@Column(length = 100, nullable = true)
 	private String street;
 
-	@Column(length = 100, nullable = true) // Made nullable, adjust if barangay is required
+	@Column(length = 100, nullable = true) 
 	private String barangay;
 
-	@Column(length = 100, nullable = true) // Made nullable, adjust if municipality is required
+	@Column(length = 100, nullable = true) 
 	private String municipality;
 
-	@Column(length = 100, nullable = true) // Made nullable, adjust if province is required
+	@Column(length = 100, nullable = true) 
 	private String province;
-	// --- END NEW ADDRESS FIELDS ---
 
-	// --- NEW: Status and Activity Tracking (Made nullable for migration) ---
-	@Column(nullable = true, length = 20) // FIX: Was nullable=false
-	private String status; // "ACTIVE", "INACTIVE"
+	@Column(nullable = true, length = 20) 
+	private String status; 
 
-	@Column(nullable = true, updatable = false) // FIX: Was nullable=false
+	@Column(nullable = true, updatable = false) 
 	private LocalDateTime createdAt;
 
-	@Column(nullable = true) // This one was already correct
+	@Column(nullable = true) 
 	private LocalDateTime lastActivity;
-	// --- END NEW ---
-
-	// Constructor for convenience (still useful for initial user creation)
+	
 	public User(String username, String password, Role role) {
 		this.username = username;
 		this.password = password;
@@ -103,10 +94,10 @@ public class User {
 			createdAt = LocalDateTime.now();
 		}
 		if (lastActivity == null) {
-			lastActivity = LocalDateTime.now(); // Set initial activity to creation time
+			lastActivity = LocalDateTime.now();
 		}
 		if (status == null) {
-			status = "ACTIVE"; // Default status
+			status = "ACTIVE"; 
 		}
 	}
 }

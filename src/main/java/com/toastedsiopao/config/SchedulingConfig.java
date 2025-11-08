@@ -1,6 +1,6 @@
 package com.toastedsiopao.config;
 
-import com.toastedsiopao.service.CustomerService; // UPDATED IMPORT
+import com.toastedsiopao.service.CustomerService; 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,18 +13,13 @@ public class SchedulingConfig {
 	private static final Logger log = LoggerFactory.getLogger(SchedulingConfig.class);
 
 	@Autowired
-	private CustomerService customerService; // UPDATED INJECTION
+	private CustomerService customerService; 
 
-	/**
-	 * Runs once every day at 3:00 AM. The cron expression means: 0 - second 0 -
-	 * minute 3 - hour (3 AM) * - day of month (every) * - month (every) ? - day of
-	 * week (any)
-	 */
 	@Scheduled(cron = "0 0 3 * * ?")
 	public void runDailyInactivityCheck() {
 		log.info("--- [SCHEDULER] Starting daily inactivity check... ---");
 		try {
-			customerService.checkForInactiveCustomers(); // UPDATED SERVICE CALL
+			customerService.checkForInactiveCustomers();
 		} catch (Exception e) {
 			log.error("--- [SCHEDULER] Error during daily inactivity check: {} ---", e.getMessage(), e);
 		}

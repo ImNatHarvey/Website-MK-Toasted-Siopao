@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class InventoryCategoryDto {
 
-	private Long id; // For editing
+	private Long id; 
 
 	@NotBlank(message = "Category name cannot be blank")
 	@Size(max = 50, message = "Category name cannot exceed 50 characters")

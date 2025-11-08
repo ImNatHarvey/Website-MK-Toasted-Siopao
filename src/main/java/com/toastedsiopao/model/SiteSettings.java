@@ -12,13 +12,11 @@ import lombok.NoArgsConstructor;
 public class SiteSettings {
 
 	@Id
-	private Long id = 1L; // We will only ever have one row, with ID 1
+	private Long id = 1L; 
 
-	// 6. Website Name
 	@Column(length = 50)
 	private String websiteName = "MK Toasted Siopao";
 
-	// 1. Carousel Images (3)
 	@Column(length = 255)
 	private String carouselImage1 = "/img/carousel1.jpg";
 	@Column(length = 255)
@@ -26,11 +24,9 @@ public class SiteSettings {
 	@Column(length = 255)
 	private String carouselImage3 = "/img/carousel3.jpg";
 
-	// 2. Featured Products Title
 	@Column(length = 100)
 	private String featuredProductsTitle = "Our Featured Products";
 
-	// 3. Feature Cards (4)
 	@Column(length = 255)
 	private String featureCard1Image = "/img/favorites.jpg";
 	@Column(length = 50)
@@ -59,13 +55,11 @@ public class SiteSettings {
 	@Column(length = 200)
 	private String featureCard4Text = "Refreshing drinks to pair with your favorite siopao.";
 
-	// 4. Special Promo
 	@Column(length = 100)
 	private String promoTitle = "Special Promo!";
 	@Column(length = 200)
 	private String promoText = "Get 2 Toasted Siopao + 1 Drink for only ₱99";
 
-	// 5. "Why Us" Section
 	@Column(length = 100)
 	private String whyUsTitle = "Why Toasted Siopao?";
 	@Column(length = 255)
@@ -73,7 +67,6 @@ public class SiteSettings {
 	@Column(length = 255)
 	private String whyUsImage = "/img/siopao.jpg";
 
-	// 7. About Page
 	@Column(length = 100)
 	private String aboutTitle = "About MK Toasted Siopao";
 	@Column(length = 1000)
@@ -83,7 +76,6 @@ public class SiteSettings {
 	@Column(length = 255)
 	private String aboutImage = "/img/carousel1.jpg";
 
-	// 7. Contact Us Details
 	@Column(length = 100)
 	private String contactFacebookName = "MK Toasted Siopao";
 	@Column(length = 255)

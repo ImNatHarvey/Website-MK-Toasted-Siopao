@@ -1,7 +1,7 @@
 package com.toastedsiopao.controller;
 
-import org.slf4j.Logger; // Import Logger
-import org.slf4j.LoggerFactory; // Import LoggerFactory
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,20 +11,18 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.toastedsiopao.dto.CustomerSignUpDto; // UPDATED IMPORT
-import com.toastedsiopao.service.CustomerService; // UPDATED IMPORT
+import com.toastedsiopao.dto.CustomerSignUpDto; 
+import com.toastedsiopao.service.CustomerService; 
 
 import jakarta.validation.Valid;
 
 @Controller
 public class HomeController {
 
-	// --- Add Logger ---
 	private static final Logger log = LoggerFactory.getLogger(HomeController.class);
-	// --- End Logger ---
 
 	@Autowired
-	private CustomerService customerService; // UPDATED INJECTION
+	private CustomerService customerService; 
 
 	@GetMapping("/")
 	public String home() {
@@ -33,7 +31,6 @@ public class HomeController {
 
 	@GetMapping("/signup")
 	public String showSignupForm(Model model) {
-		// We use "customerSignUpDto" as the object name to match the form
 		if (!model.containsAttribute("customerSignUpDto")) {
 			model.addAttribute("customerSignUpDto", new CustomerSignUpDto());
 		}
@@ -44,7 +41,6 @@ public class HomeController {
 	public String processSignup(@Valid @ModelAttribute("customerSignUpDto") CustomerSignUpDto userDto,
 			BindingResult result, RedirectAttributes redirectAttributes) {
 
-		// 1. Check for standard validation errors
 		if (result.hasErrors()) {
 			log.warn("Signup form validation failed (DTO level). Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
@@ -53,17 +49,15 @@ public class HomeController {
 			return "redirect:/signup";
 		}
 
-		// 2. Try saving
 		try {
-			customerService.saveCustomer(userDto); // UPDATED SERVICE CALL
+			customerService.saveCustomer(userDto); 
 			log.info("Signup successful for username: {}", userDto.getUsername());
 			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
 			return "redirect:/login";
 
-		} catch (IllegalArgumentException e) { // Catch validation errors from the service
+		} catch (IllegalArgumentException e) { 
 			log.warn("Signup failed (Service level validation): {}", e.getMessage());
 
-			// --- FIX: Use correct BindingResult object name ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "customerSignUpDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
@@ -73,14 +67,13 @@ public class HomeController {
 			} else {
 				redirectAttributes.addFlashAttribute("errorMessage", "Registration failed: " + e.getMessage());
 			}
-			// --- END FIX ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
 			return "redirect:/signup";
 
-		} catch (Exception e) { // Catch unexpected errors
+		} catch (Exception e) { 
 			log.error("Unexpected error during signup for username {}: {}", userDto.getUsername(), e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("errorMessage",
 					"An unexpected error occurred during registration. Please try again later.");
@@ -89,7 +82,6 @@ public class HomeController {
 		}
 	}
 
-	// --- Other mappings remain unchanged ---
 	@GetMapping("/login")
 	public String showLoginForm() {
 		return "login";

@@ -22,7 +22,6 @@ public class InventoryCategory {
 	@Column(nullable = false, unique = true, length = 50)
 	private String name;
 
-	// Relationship: One Category can have many Inventory Items
 	@OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
 	private List<InventoryItem> items;
 

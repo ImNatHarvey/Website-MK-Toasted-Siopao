@@ -20,8 +20,6 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		// This makes files in the "mk-uploads" directory accessible via
-		// "http://localhost:8080/img/uploads/filename.png"
 
 		Path uploadPath = Paths.get(uploadDir);
 		String uploadPathAbsolute = uploadPath.toFile().getAbsolutePath();

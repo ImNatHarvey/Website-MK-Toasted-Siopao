@@ -1,8 +1,8 @@
 package com.toastedsiopao;
 
-import java.time.Clock; // Import Clock
-import java.time.LocalDateTime; // Import LocalDateTime
-import java.time.ZoneId; // Import ZoneId
+import java.time.Clock; 
+import java.time.LocalDateTime; 
+import java.time.ZoneId; 
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -13,17 +13,17 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.scheduling.annotation.EnableScheduling; // Import EnableScheduling
+import org.springframework.scheduling.annotation.EnableScheduling; 
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.model.Permission; // NEW IMPORT
-import com.toastedsiopao.model.Role; // NEW IMPORT
-import com.toastedsiopao.repository.RoleRepository; // NEW IMPORT
+import com.toastedsiopao.model.Permission; 
+import com.toastedsiopao.model.Role; 
+import com.toastedsiopao.repository.RoleRepository; 
 import com.toastedsiopao.repository.UserRepository;
 
 @SpringBootApplication
-@EnableScheduling // --- NEW: Enable scheduled tasks ---
+@EnableScheduling 
 public class MKToastedSiopaoWebsiteApplication {
 
 	private static final Logger log = LoggerFactory.getLogger(MKToastedSiopaoWebsiteApplication.class);
@@ -32,7 +32,7 @@ public class MKToastedSiopaoWebsiteApplication {
 	private UserRepository userRepository;
 
 	@Autowired
-	private RoleRepository roleRepository; // NEW INJECTION
+	private RoleRepository roleRepository; 
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
@@ -41,52 +41,38 @@ public class MKToastedSiopaoWebsiteApplication {
 		SpringApplication.run(MKToastedSiopaoWebsiteApplication.class, args);
 	}
 
-	// --- NEW: Clock Bean ---
-	/**
-	 * Creates a Clock bean set to "Asia/Manila" timezone. This ensures all
-	 * time-sensitive logic (like "Sales Today") is consistent. * @return A Clock
-	 * bean.
-	 */
 	@Bean
 	public Clock clock() {
 		return Clock.system(ZoneId.of("Asia/Manila"));
 	}
-	// --- END NEW ---
 
-	// This bean runs once on application startup
 	@Bean
 	CommandLineRunner initDatabase() {
 		return args -> {
-			// --- NEW: Create Roles ---
 			Role ownerRole = roleRepository.findByName("ROLE_OWNER").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_OWNER' role...");
 				Role newOwnerRole = new Role("ROLE_OWNER");
-				// Add all permissions from the enum
-				Arrays.stream(Permission.values()).forEach(permission -> newOwnerRole.addPermission(permission.name())); // UPDATED
+				Arrays.stream(Permission.values()).forEach(permission -> newOwnerRole.addPermission(permission.name())); 
 				return roleRepository.save(newOwnerRole);
 			});
 
 			Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_ADMIN' role...");
 				Role newAdminRole = new Role("ROLE_ADMIN");
-				// Add some default permissions for a basic admin (can be edited later)
-				newAdminRole.addPermission(Permission.VIEW_DASHBOARD.name()); // UPDATED
-				newAdminRole.addPermission(Permission.VIEW_ORDERS.name()); // UPDATED
-				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS.name()); // UPDATED
-				newAdminRole.addPermission(Permission.VIEW_PRODUCTS.name()); // UPDATED
-				newAdminRole.addPermission(Permission.VIEW_INVENTORY.name()); // UPDATED
+
+				newAdminRole.addPermission(Permission.VIEW_DASHBOARD.name());
+				newAdminRole.addPermission(Permission.VIEW_ORDERS.name()); 
+				newAdminRole.addPermission(Permission.VIEW_CUSTOMERS.name()); 
+				newAdminRole.addPermission(Permission.VIEW_PRODUCTS.name()); 
+				newAdminRole.addPermission(Permission.VIEW_INVENTORY.name()); 
 				return roleRepository.save(newAdminRole);
 			});
 
 			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_CUSTOMER' role...");
 				Role newCustomerRole = new Role("ROLE_CUSTOMER");
-				// Customers have no admin-panel permissions
 				return roleRepository.save(newCustomerRole);
 			});
-			// --- END NEW ROLES ---
-
-			// --- Admin User (OWNER) ---
 			String adminUsername = "mktoastedadmin";
 			String adminPassword = "mktoasted123";
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
@@ -96,22 +82,20 @@ public class MKToastedSiopaoWebsiteApplication {
 				User adminUser = new User();
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				adminUser.setRole(ownerRole); // UPDATED
+				adminUser.setRole(ownerRole);
 				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
-				// Status, CreatedAt, LastActivity will be set by @PrePersist
 				userRepository.save(adminUser);
 				log.info(">>> Admin user created.");
 			} else {
-				// --- NEW: Patch existing user if needed ---
 				User adminUser = existingAdminOptional.get();
 				boolean needsUpdate = false;
-				if (adminUser.getRole() == null) { // Check if role is missing
-					adminUser.setRole(ownerRole); // Assign owner role
+				if (adminUser.getRole() == null) { 
+					adminUser.setRole(ownerRole);
 					needsUpdate = true;
 				}
 				if (adminUser.getCreatedAt() == null) {
-					adminUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
+					adminUser.setCreatedAt(LocalDateTime.now().minusDays(1));
 					needsUpdate = true;
 				}
 				if (adminUser.getLastActivity() == null) {
@@ -129,10 +113,8 @@ public class MKToastedSiopaoWebsiteApplication {
 				} else {
 					log.info(">>> Admin user '{}' already exists and is up-to-date.", adminUsername);
 				}
-				// --- END NEW ---
 			}
 
-			// --- Test Customer User ---
 			String customerUsername = "testcustomer";
 			String customerPassword = "password123";
 			Optional<User> existingCustomerOptional = userRepository.findByUsername(customerUsername);
@@ -142,22 +124,20 @@ public class MKToastedSiopaoWebsiteApplication {
 				User customerUser = new User();
 				customerUser.setUsername(customerUsername);
 				customerUser.setPassword(passwordEncoder.encode(customerPassword));
-				customerUser.setRole(customerRole); // UPDATED
+				customerUser.setRole(customerRole); 
 				customerUser.setFirstName("Test");
 				customerUser.setLastName("Customer");
-				// Status, CreatedAt, LastActivity will be set by @PrePersist
 				userRepository.save(customerUser);
 				log.info(">>> Test customer user created.");
 			} else {
-				// --- NEW: Patch existing user if needed ---
 				User customerUser = existingCustomerOptional.get();
 				boolean needsUpdate = false;
-				if (customerUser.getRole() == null) { // Check if role is missing
-					customerUser.setRole(customerRole); // Assign customer role
+				if (customerUser.getRole() == null) { 
+					customerUser.setRole(customerRole); 
 					needsUpdate = true;
 				}
 				if (customerUser.getCreatedAt() == null) {
-					customerUser.setCreatedAt(LocalDateTime.now().minusDays(1)); // Set to arbitrary past date
+					customerUser.setCreatedAt(LocalDateTime.now().minusDays(1)); 
 					needsUpdate = true;
 				}
 				if (customerUser.getLastActivity() == null) {
@@ -175,7 +155,6 @@ public class MKToastedSiopaoWebsiteApplication {
 				} else {
 					log.info(">>> Test customer user '{}' already exists and is up-to-date.", customerUsername);
 				}
-				// --- END NEW ---
 			}
 		};
 	}

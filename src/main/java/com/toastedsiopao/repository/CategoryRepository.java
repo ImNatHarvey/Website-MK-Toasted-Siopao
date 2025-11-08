@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-    // Find category by name (useful for checking duplicates)
+	
     Optional<Category> findByNameIgnoreCase(String name);
 }

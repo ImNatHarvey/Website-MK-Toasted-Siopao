@@ -1,6 +1,6 @@
 package com.toastedsiopao.dto;
 
-import jakarta.validation.constraints.Email; // **** ADDED IMPORT ****
+import jakarta.validation.constraints.Email; 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AdminUpdateDto {
 
-	private Long id; // Required for update
+	private Long id; 
 
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
@@ -27,26 +27,16 @@ public class AdminUpdateDto {
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
 	private String username;
 
-	// **** NEW FIELD ****
 	@NotBlank(message = "Email cannot be blank")
 	@Email(message = "Invalid email format")
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
-	// **** END NEW FIELD ****
 
-	// --- REMOVED: roleId ---
-	// @NotNull(message = "A role must be selected")
-	// private Long roleId;
-	// --- END REMOVED ---
-
-	// --- NEW: Role Name ---
 	@NotBlank(message = "Role name cannot be blank")
 	@Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Role name can only contain letters, numbers, and spaces")
 	@Size(max = 40, message = "Role name cannot exceed 40 characters")
 	private String roleName;
-	// --- END NEW ---
 
-	// --- NEW: Module Permissions ---
 	private boolean manageCustomers;
 	private boolean manageAdmins;
 	private boolean manageOrders;
@@ -55,5 +45,4 @@ public class AdminUpdateDto {
 	private boolean manageTransactions;
 	private boolean manageSite;
 	private boolean manageActivityLog;
-	// --- END NEW ---
 }

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal; // For potential cost tracking
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -24,43 +24,37 @@ public class InventoryItem {
 	@NotBlank(message = "Item name cannot be blank")
 	@Size(max = 100, message = "Item name cannot exceed 100 characters")
 	@Column(nullable = false, length = 100)
-	private String name; // e.g., "All-Purpose Flour", "Ground Pork"
+	private String name;
 
 	@NotNull(message = "Category must be selected")
-	@ManyToOne(fetch = FetchType.EAGER) // Usually want to see category name
+	@ManyToOne(fetch = FetchType.EAGER) 
 	@JoinColumn(name = "category_id", nullable = false)
 	private InventoryCategory category;
 
 	@NotNull(message = "Unit must be selected")
-	@ManyToOne(fetch = FetchType.EAGER) // Usually want to see unit name/abbreviation
+	@ManyToOne(fetch = FetchType.EAGER) 
 	@JoinColumn(name = "unit_id", nullable = false)
 	private UnitOfMeasure unit;
 
 	@NotNull(message = "Current stock cannot be null")
 	@PositiveOrZero(message = "Stock must be zero or positive")
-	@Column(nullable = false, precision = 10, scale = 2) // Allow decimals for units like kg
+	@Column(nullable = false, precision = 10, scale = 2) 
 	private BigDecimal currentStock = BigDecimal.ZERO;
 
-	// --- Thresholds ---
-	// Represents the quantity below which stock is considered "Low"
 	@NotNull(message = "Low stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal lowStockThreshold = BigDecimal.ZERO;
 
-	// Represents the quantity below which stock is considered "Critical"
 	@NotNull(message = "Critical stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal criticalStockThreshold = BigDecimal.ZERO;
 
-	// --- Optional Cost ---
-	// --- UPDATED: Made NotNull ---
 	@NotNull(message = "Cost per unit cannot be null")
 	@PositiveOrZero(message = "Cost must be zero or positive")
 	@Column(nullable = false, precision = 10, scale = 2)
-	private BigDecimal costPerUnit; // Cost for one unit (e.g., cost per kg)
-	// --- END UPDATE ---
+	private BigDecimal costPerUnit;
 
 	private LocalDateTime lastUpdated;
 
@@ -68,28 +62,23 @@ public class InventoryItem {
 	@PreUpdate
 	protected void onUpdate() {
 		lastUpdated = LocalDateTime.now();
-		// Ensure critical is not higher than low
 		if (criticalStockThreshold.compareTo(lowStockThreshold) > 0) {
 			criticalStockThreshold = lowStockThreshold;
 		}
 	}
 
-	// --- Status Calculation Logic ---
-	// Not stored in DB, calculated on the fly
-	@Transient // Tells JPA not to map this field to a database column
 	public String getStockStatus() {
 		if (currentStock.compareTo(BigDecimal.ZERO) <= 0) {
-			return "NO_STOCK"; // Black
+			return "NO_STOCK"; 
 		} else if (currentStock.compareTo(criticalStockThreshold) <= 0) {
-			return "CRITICAL"; // Red
+			return "CRITICAL"; 
 		} else if (currentStock.compareTo(lowStockThreshold) <= 0) {
-			return "LOW"; // Yellow
+			return "LOW"; 
 		} else {
-			return "NORMAL"; // Green
+			return "NORMAL"; 
 		}
 	}
 
-	// --- NEW: Total Cost Calculation ---
 	@Transient
 	public BigDecimal getTotalCostValue() {
 		if (costPerUnit == null || currentStock == null) {
@@ -97,25 +86,18 @@ public class InventoryItem {
 		}
 		return costPerUnit.multiply(currentStock);
 	}
-	// --- END NEW ---
 
-	// --- Threshold Percentages (Calculated for default view) ---
-	// These are approximations if a 'max capacity' isn't defined
-	// For simplicity, let's assume 'low' maps to 20% and 'critical' to 5%
-	// of some reference point (e.g., the low threshold itself * 5)
 	@Transient
 	public int getLowStockPercentage() {
-		// This is a simplification; a better approach might involve a max stock level.
-		// If low threshold is 10, critical is 2, this returns 20.
 		if (lowStockThreshold.compareTo(BigDecimal.ZERO) > 0) {
 			return criticalStockThreshold.multiply(BigDecimal.valueOf(100))
 					.divide(lowStockThreshold, 0, BigDecimal.ROUND_HALF_UP).intValue();
 		}
-		return 20; // Default if low threshold is 0
+		return 20;
 	}
 
 	@Transient
 	public int getCriticalStockPercentage() {
-		return 5; // Default critical percentage representation
+		return 5;
 	}
 }

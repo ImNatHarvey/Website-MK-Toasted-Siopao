@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize; // **** NEW IMPORT ****
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -62,7 +62,7 @@ public class AdminProductController {
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAuthority('VIEW_PRODUCTS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('VIEW_PRODUCTS')") 
 	public String manageProducts(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -125,7 +125,7 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasAuthority('ADD_PRODUCTS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('ADD_PRODUCTS')")
 	public String addProduct(@Valid @ModelAttribute("productDto") ProductDto productDto, BindingResult result,
 			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
@@ -183,7 +183,7 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") 
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, BindingResult result,
 			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
@@ -259,10 +259,8 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
-	// All /categories/* POST mappings removed
-
 	@PostMapping("/stock/adjust")
-	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')") 
 	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
 			@RequestParam("action") String action, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -296,7 +294,7 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 		Optional<Product> productOpt = productService.findById(id);

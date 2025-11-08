@@ -38,16 +38,14 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	@Autowired
 	private RecipeIngredientRepository recipeIngredientRepository;
 
-	// --- Centralized Validation Methods ---
 	private void validateThresholds(BigDecimal lowThreshold, BigDecimal criticalThreshold) {
-		// --- UPDATED: Added checks for > 0 ---
+		
 		if (lowThreshold == null || lowThreshold.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
 		}
 		if (criticalThreshold == null || criticalThreshold.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalArgumentException("Critical stock threshold must be greater than 0.");
 		}
-		// --- END UPDATE ---
 
 		if (criticalThreshold.compareTo(lowThreshold) > 0) {
 			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
@@ -58,27 +56,23 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		Optional<InventoryItem> existingItemOpt = itemRepository.findByNameIgnoreCase(name.trim());
 		if (existingItemOpt.isPresent()) {
 			InventoryItem existingItem = existingItemOpt.get();
-			// Allow saving if it's the same item being updated, otherwise throw error
 			if (currentItemId == null || !existingItem.getId().equals(currentItemId)) {
 				throw new IllegalArgumentException("Inventory item name '" + name.trim() + "' already exists.");
 			}
 		}
 	}
-	// --- End Validation Methods ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findAll() {
-		return itemRepository.findAllByOrderByNameAsc(); // UPDATED
+		return itemRepository.findAllByOrderByNameAsc();
 	}
 
-	// --- NEW ---
 	@Override
 	@Transactional(readOnly = true)
 	public Page<InventoryItem> findAll(Pageable pageable) {
 		return itemRepository.findAll(pageable);
 	}
-	// --- END NEW ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -99,8 +93,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 			throw new IllegalArgumentException("Inventory item data cannot be null.");
 		}
 		if (!StringUtils.hasText(itemDto.getName())) {
-			throw new IllegalArgumentException("Item name cannot be blank."); // Should be caught by @NotBlank but good
-																				// practice
+			throw new IllegalArgumentException("Item name cannot be blank."); 
 		}
 		if (itemDto.getCategoryId() == null) {
 			throw new IllegalArgumentException("Category must be selected.");
@@ -108,25 +101,17 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		if (itemDto.getUnitId() == null) {
 			throw new IllegalArgumentException("Unit must be selected.");
 		}
-		// Basic null checks for numbers (should be caught by @NotNull, but defense)
 		if (itemDto.getCurrentStock() == null)
 			itemDto.setCurrentStock(BigDecimal.ZERO);
-		// --- End Input Validation ---
-
-		// --- Moved Validations Here ---
+		
 		validateThresholds(itemDto.getLowStockThreshold(), itemDto.getCriticalStockThreshold());
 		validateNameUniqueness(itemDto.getName(), itemDto.getId());
-		// --- End Moved Validations ---
-
-		// 1. Fetch related entities (Throw exception if not found)
+		
 		InventoryCategory category = categoryRepository.findById(itemDto.getCategoryId()).orElseThrow(
 				() -> new RuntimeException("Inventory Category not found with id: " + itemDto.getCategoryId()));
 		UnitOfMeasure unit = unitRepository.findById(itemDto.getUnitId())
-				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId())); // <--
-																														// FIX
-																														// HERE
-
-		// 2. Create or Update Entity
+				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId())); 
+		
 		InventoryItem item;
 		boolean isNew = itemDto.getId() == null;
 		if (!isNew) {
@@ -135,23 +120,19 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		} else {
 			item = new InventoryItem();
 		}
-
-		// 3. Map DTO to Entity
-		item.setName(itemDto.getName().trim()); // Trim name
+		
+		item.setName(itemDto.getName().trim()); 
 		item.setCategory(category);
 		item.setUnit(unit);
 
-		// --- UPDATED: Stock is only set on creation ---
 		if (isNew) {
 			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
 		}
-		// --- END UPDATE ---
 
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
-		item.setCostPerUnit(itemDto.getCostPerUnit()); // Allow null cost
+		item.setCostPerUnit(itemDto.getCostPerUnit()); 
 
-		// Save the item
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
 			log.info("{} inventory item: ID={}, Name='{}'", isNew ? "Created" : "Updated", savedItem.getId(),
@@ -159,7 +140,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 			return savedItem;
 		} catch (Exception e) {
 			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
-			// Re-throw a more specific or wrapped exception if needed
+			
 			throw new RuntimeException("Could not save inventory item due to a database error.", e);
 		}
 	}
@@ -169,18 +150,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		InventoryItem item = itemRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
 
-		// Check if this item is used in any recipes
 		List<RecipeIngredient> recipes = recipeIngredientRepository.findByInventoryItem(item);
 		if (!recipes.isEmpty()) {
-			// Provide more context in the error
+			
 			String productNames = recipes.stream()
-					.map(r -> r.getProduct() != null ? r.getProduct().getName() : "Unknown Product").distinct().limit(3) // Limit
-																															// the
-																															// number
-																															// of
-																															// product
-																															// names
-																															// listed
+					.map(r -> r.getProduct() != null ? r.getProduct().getName() : "Unknown Product").distinct().limit(3)
 					.collect(Collectors.joining(", "));
 			if (recipes.size() > 3)
 				productNames += ", ...";
@@ -193,7 +167,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		log.info("Deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
 
-	// --- UPDATED METHOD ---
 	@Override
 	@Transactional(readOnly = true)
 	public Page<InventoryItem> searchItems(String keyword, Long categoryId, Pageable pageable) {
@@ -202,9 +175,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (hasKeyword && hasCategory) {
 			InventoryCategory category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId)); // <--
-																														// FIX
-																														// HERE
+					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId)); 
 			return itemRepository.findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(keyword.trim(), category,
 					pageable);
 		} else if (hasKeyword) {
@@ -214,12 +185,10 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId));
 			return itemRepository.findByCategoryOrderByNameAsc(category, pageable);
 		} else {
-			return itemRepository.findAll(pageable); // Use the paged findAll
+			return itemRepository.findAll(pageable); 
 		}
 	}
-	// --- END UPDATED METHOD ---
-
-	// --- Stock Report Methods (Unchanged) ---
+	
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findLowStockItems() {
@@ -259,8 +228,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return savedItem;
 	}
 
-	// --- NEW: Dashboard Stats Implementation ---
-
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getTotalStockQuantity() {
@@ -291,7 +258,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.countOutOfStockItems();
 	}
 
-	// --- NEW: Implementation for deletion check ---
 	@Override
 	@Transactional(readOnly = true)
 	public long countByUnit(UnitOfMeasure unit) {

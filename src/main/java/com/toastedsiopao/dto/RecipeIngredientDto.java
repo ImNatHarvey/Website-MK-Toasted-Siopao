@@ -11,13 +11,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class RecipeIngredientDto {
 
-	private Long inventoryItemId; // ID of the InventoryItem used
+	private Long inventoryItemId;
 
 	@NotNull(message = "Quantity needed cannot be null")
 	@Positive(message = "Quantity needed must be positive")
 	private BigDecimal quantityNeeded;
-
-	// Optional: Add unit abbreviation if needed for display, though it comes from
-	// InventoryItem
-	// private String unitAbbreviation;
 }

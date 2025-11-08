@@ -19,21 +19,19 @@ public class ActivityLogEntry {
 	private LocalDateTime timestamp;
 
 	@Column(nullable = false, length = 50)
-	private String username; // Username of the admin performing the action
+	private String username; 
 
 	@Column(nullable = false, length = 255)
-	private String action; // Description of the action
+	private String action;
 
-	@Column(length = 1000) // Optional: For extra details if needed
+	@Column(length = 1000) 
 	private String details;
 
-	// Automatically set the timestamp before saving
 	@PrePersist
 	protected void onCreate() {
 		timestamp = LocalDateTime.now();
 	}
-
-	// Constructor for convenience
+	
 	public ActivityLogEntry(String username, String action, String details) {
 		this.username = username;
 		this.action = action;

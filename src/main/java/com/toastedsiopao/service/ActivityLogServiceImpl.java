@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Import Transactional
+import org.springframework.transaction.annotation.Transactional; 
 
 import java.util.List;
 
@@ -21,17 +21,17 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 	private ActivityLogRepository activityLogRepository;
 
 	@Override
-	@Transactional // Ensure the save operation is transactional
+	@Transactional 
 	public void logAdminAction(String username, String action) {
 		logAdminAction(username, action, null);
 	}
 
 	@Override
-	@Transactional // Ensure the save operation is transactional
+	@Transactional 
 	public void logAdminAction(String username, String action, String details) {
 		if (username == null || username.isBlank() || action == null || action.isBlank()) {
 			log.warn("Attempted to log an invalid admin action (null/blank username or action)");
-			return; // Don't save invalid logs
+			return; 
 		}
 		try {
 			ActivityLogEntry entry = new ActivityLogEntry(username, action, details);
@@ -40,13 +40,12 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 		} catch (Exception e) {
 			log.error("Failed to save activity log entry for user '{}', action '{}': {}", username, action,
 					e.getMessage());
-			// Depending on requirements, you might re-throw or handle differently
 		}
 	}
 
 	@Override
 	public Page<ActivityLogEntry> getAllLogs(Pageable pageable) {
-		// Return logs newest first
+		
 		return activityLogRepository.findAllByOrderByTimestampDesc(pageable);
 	}
 }

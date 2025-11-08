@@ -1,13 +1,5 @@
-/**
- * JavaScript specific to the Admin Products page (admin/products.html)
- * Handles modal population, recipe ingredients, max button, AND NEW IMAGE UPLOADER.
- *
- * Relies on global functions from admin-utils.js:
- * - setupImageUploader(containerId)
- * - initThresholdSliders(modalElement)
- */
 document.addEventListener('DOMContentLoaded', function() {
-	console.log("admin-products.js loaded"); // Confirm script is running
+	console.log("admin-products.js loaded"); 
 
 	const mainElement = document.getElementById('admin-content-wrapper');
 
@@ -16,13 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		return;
 	}
 
-	// --- Initialize both uploaders on page load ---
-	// Calls global setupImageUploader()
 	setupImageUploader('addImageUploader');
 	setupImageUploader('editImageUploader');
 
-
-	// --- Logic for Edit Product Modal ---
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
 		// ...
@@ -31,44 +19,38 @@ document.addEventListener('DOMContentLoaded', function() {
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
 		const recipeLockedWarning = editProductModal.querySelector('#editRecipeLockedWarning');
 		const addIngredientBtn = editProductModal.querySelector('#addIngredientBtnEditModal');
-		const editImageUploader = document.getElementById('editImageUploader'); // NEW
+		const editImageUploader = document.getElementById('editImageUploader');
 
 
 		editProductModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
 			let dataset;
 
-			// --- UPDATED: Check if we are reopening from validation ---
 			const isValidationReopen = mainElement.dataset.showEditProductModal === 'true';
-			console.log("Edit Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+			console.log("Edit Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
 
-
-			// ... (Omitted unchanged dataset logic for view/edit buttons) ...
 			if (button && button.classList.contains('edit-product-btn-from-view')) {
 				const viewModal = document.getElementById('viewProductModal');
 				const originalButton = viewModal ? viewModal.relatedTarget : null;
 				dataset = originalButton ? originalButton.dataset : {};
 			} else if (button && button.classList.contains('edit-product-btn')) {
 				dataset = button.dataset;
-			} else if (!isValidationReopen) { // Only warn if not a validation reopen
+			} else if (!isValidationReopen) {
 				console.warn("Edit Product modal opened without expected button source.");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (editImageUploader) editImageUploader.resetUploader(); // NEW
+				if (editImageUploader) editImageUploader.resetUploader(); 
 				return;
 			}
 
 			if (isValidationReopen) {
 				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-				// We just need to ensure the title is correct.
 				const nameInput = form.querySelector('#editProductNameModal');
 				modalTitle.textContent = 'Edit: ' + (nameInput.value || 'Product');
 
-				// **** NEW: Re-initialize image uploader state from form ****
 				const existingImageUrl = form.querySelector('#editProductImageUrlHidden').value;
 				const removeImage = form.querySelector('#editProductRemoveImageHidden').value === 'true';
 
-				// *** FIX: Check removeImage flag first
 				if (removeImage) {
 					editImageUploader.resetUploader();
 				} else if (existingImageUrl) {
@@ -76,31 +58,25 @@ document.addEventListener('DOMContentLoaded', function() {
 				} else {
 					editImageUploader.resetUploader();
 				}
-				// **** END NEW ****
 
 			} else if (dataset) {
 				console.log("Populating Edit Product Modal with data:", dataset);
 
-				// ... (Omitted unchanged form population logic) ...
 				modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 				form.querySelector('#id').value = dataset.id || '';
 				form.querySelector('#editProductNameModal').value = dataset.name || '';
 				form.querySelector('#editProductCategoryModal').value = dataset.categoryId || '';
 				form.querySelector('#editProductPriceModal').value = dataset.price || '0.00';
 				form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
-				// form.querySelector('#editProductImageUrlModal').value = dataset.imageUrl || ''; // OLD
-				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0'; // UPDATED ID
-				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0'; // UPDATED ID
+				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0'; 
+				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0'; 
 
-				// **** NEW: Populate image uploader ****
 				const imageUrl = dataset.imageUrl;
-				// *** FIX: Use showPreview for ALL cases to handle null/empty ***
+				
 				editImageUploader.showPreview(imageUrl);
-				// **** END NEW ****
-
-				// ... (Omitted unchanged ingredients logic) ...
+				
 				if (ingredientsContainer) {
-					ingredientsContainer.innerHTML = ''; // Clear previous rows
+					ingredientsContainer.innerHTML = '';
 				}
 
 				let ingredients = [];
@@ -130,15 +106,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 			}
 
-			// --- This logic runs for both edit and validation reopen ---
-			// UPDATED: Check form for recipeLocked value if dataset is not present (validation reopen)
 			let isRecipeLocked = (dataset && dataset.recipeLocked === 'true');
 
-			// **** START OF BUG FIX 2 ****
 			if (isValidationReopen && !dataset) {
-				// If validation fails, dataset might be null. We must re-check the original button's data.
-				// This is tricky. A simpler assumption: if the form has an ID, the recipe *is* locked
-				// (as all products are locked on creation).
 				if (form.querySelector('#id').value) {
 					console.log("Validation reopen: Assuming recipe is locked because product exists.");
 					isRecipeLocked = true;
@@ -150,32 +120,30 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (isRecipeLocked) {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
 				if (addIngredientBtn) addIngredientBtn.style.display = 'none';
-				if (ingredientsContainer) { // Check if container exists
+				if (ingredientsContainer) { 
 					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
-						el.readOnly = true; // <-- SET TO READONLY
-						el.classList.add('form-control-readonly'); // <-- Add a class for styling
+						el.readOnly = true; 
+						el.classList.add('form-control-readonly'); 
 					});
 					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
-						btn.disabled = true; // <-- Disable the button
+						btn.disabled = true; 
 						btn.style.display = 'none';
 					});
 				}
 			} else {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'none';
 				if (addIngredientBtn) addIngredientBtn.style.display = 'block';
-				if (ingredientsContainer) { // Check if container exists
+				if (ingredientsContainer) {
 					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
-						el.readOnly = false; // <-- SET TO NOT READONLY
-						el.classList.remove('form-control-readonly'); // <-- Remove class
+						el.readOnly = false; 
+						el.classList.remove('form-control-readonly'); 
 					});
 					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
-						btn.disabled = false; // <-- Enable the button
+						btn.disabled = false; 
 						btn.style.display = 'block';
 					});
 				}
 			}
-			// **** END OF BUG FIX 2 ****
-
 
 			if (mainElement.dataset.showEditProductModal !== 'true') {
 				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
@@ -185,11 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 			}
 
-			// **** CALL GLOBAL SLIDER FUNCTION ****
 			initThresholdSliders(editProductModal);
 		});
 
-		// ... (Omitted unchanged 'hidden.bs.modal' listener) ...
 		editProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditProductModal !== 'true') {
 				console.log("Clearing Edit Product modal on hide (not validation reopen).")
@@ -201,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (editImageUploader) editImageUploader.resetUploader(); // NEW
+				if (editImageUploader) editImageUploader.resetUploader(); 
 			} else {
 				console.log("Resetting showEditProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-edit-product-modal');
@@ -209,8 +175,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- Logic for View Product Modal ---
-	// ... (Omitted unchanged 'show.bs.modal' listener) ...
 	const viewProductModal = document.getElementById('viewProductModal');
 	if (viewProductModal) {
 		viewProductModal.addEventListener('show.bs.modal', function(event) {
@@ -221,9 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			const dataset = button.dataset;
-			viewProductModal.relatedTarget = button; // Store button for Edit button inside
+			viewProductModal.relatedTarget = button; 
 
-			console.log("Populating View Product Modal with data:", dataset); // Debug log
+			console.log("Populating View Product Modal with data:", dataset); 
 
 			viewProductModal.querySelector('#viewProductModalLabel').textContent = 'Details for ' + (dataset.name || 'Product');
 			viewProductModal.querySelector('#viewProductName').textContent = dataset.name || 'N/A';
@@ -247,22 +211,15 @@ document.addEventListener('DOMContentLoaded', function() {
 				lastUpdatedEl.style.display = 'none';
 			}
 
-			// ==================================
-			// == QUICK FIX MOVED HERE ==
-			// ==================================
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
-			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading'); // Find heading
+			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading'); 
 
-			// --- Clear previous badge ---
 			const existingBadge = ingredientsHeading ? ingredientsHeading.querySelector('.badge') : null;
 			if (existingBadge) {
 				existingBadge.remove();
 			}
 
-			ingredientsListDiv.innerHTML = ''; // Clear ingredients list
-			// ==================================
-			// == END FIX ==
-			// ==================================
+			ingredientsListDiv.innerHTML = ''; 
 
 			let ingredientsDataView = [];
 			if (dataset.ingredientsView && dataset.ingredientsView.length > 0) {
@@ -282,27 +239,19 @@ document.addEventListener('DOMContentLoaded', function() {
 					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredientsView);
 				}
 			}
-			console.log("Parsed ingredients for View:", ingredientsDataView); // Debug log
-
-			// ==================================
-			// == QUICK FIX MOVED HERE ==
-			// ==================================
-			// --- NEW: Add Lock Status to View Modal ---
+			console.log("Parsed ingredients for View:", ingredientsDataView); 
+			
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
 			if (isRecipeLocked && ingredientsHeading) {
 				const lockBadge = document.createElement('span');
-				lockBadge.className = 'badge bg-warning text-dark ms-2'; // This matches the user's image style
+				lockBadge.className = 'badge bg-warning text-dark ms-2'; 
 				lockBadge.textContent = 'Recipe Locked';
-				ingredientsHeading.appendChild(lockBadge); // Append inside the h5
+				ingredientsHeading.appendChild(lockBadge); 
 			}
-			// --- END NEW ---
-			// ==================================
-			// == END FIX ==
-			// ==================================
 
 			if (ingredientsDataView.length > 0) {
 				const table = document.createElement('table');
-				table.className = 'table table-sm table-striped mt-2'; // Added margin-top
+				table.className = 'table table-sm table-striped mt-2'; 
 				table.innerHTML = `<thead><tr><th>Ingredient</th><th>Qty Needed</th><th>Unit</th></tr></thead><tbody></tbody>`;
 				const tbody = table.querySelector('tbody');
 				ingredientsDataView.forEach(ing => {
@@ -314,13 +263,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				ingredientsListDiv.innerHTML = '<p class="text-muted small">No ingredients assigned.</p>';
 			}
-
-			// ... (Omitted unchanged delete form logic) ...
+			
 			const deleteForm = viewProductModal.querySelector('.delete-product-form-from-view');
-			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete'); // Assuming input exists for ID
+			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete'); 
 			if (deleteForm && dataset.id) {
-				deleteForm.action = `/admin/products/delete/${dataset.id}`; // Update action dynamically
-				if (deleteInput) { // If using a hidden input for ID
+				deleteForm.action = `/admin/products/delete/${dataset.id}`; 
+				if (deleteInput) { 
 					deleteInput.value = dataset.id;
 				}
 				console.log("Set delete form action to:", deleteForm.action);
@@ -330,46 +278,36 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- Logic for Add Product Modal (Clear on Hide) ---
 	const addProductModal = document.getElementById('addProductModal');
 	if (addProductModal) {
 		const form = addProductModal.querySelector('#addProductForm');
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
-		const addImageUploader = document.getElementById('addImageUploader'); // NEW
-
-		// **** CALL GLOBAL SLIDER FUNCTION ****
+		const addImageUploader = document.getElementById('addImageUploader'); 
+		
 		addProductModal.addEventListener('show.bs.modal', function() {
-			// --- UPDATED: Check if we are reopening from validation ---
 			const isValidationReopen = mainElement.dataset.showAddProductModal === 'true';
-			console.log("Add Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+			console.log("Add Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen);
 
-			// Only init sliders if it's NOT a reopen from validation
 			if (!isValidationReopen) {
-				// --- UPDATED: Reset form *before* initializing sliders ---
-				console.log("Populating modal for ADD (resetting form)."); // Debug
+				console.log("Populating modal for ADD (resetting form)."); 
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (addImageUploader) addImageUploader.resetUploader(); // NEW
-
-				// --- NEW: Manually reset threshold inputs to blank ---
+				if (addImageUploader) addImageUploader.resetUploader(); 
+				
 				const lowInput = form.querySelector('#addLowThresholdInput');
 				const critInput = form.querySelector('#addCriticalThresholdInput');
 				if (lowInput) lowInput.value = '';
 				if (critInput) critInput.value = '';
-				// --- END NEW ---
 
 				initThresholdSliders(addProductModal);
 			} else {
 				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-				// Sliders still need to be initialized to match the (invalid) values
 				initThresholdSliders(addProductModal);
-				// Image uploader state is lost on validation error, user must re-select
 				if (addImageUploader) addImageUploader.resetUploader();
 			}
 		});
 
 		addProductModal.addEventListener('hidden.bs.modal', function() {
-			// ... (Omitted unchanged 'hidden.bs.modal' listener) ...
 			if (mainElement.dataset.showAddProductModal !== 'true') {
 				console.log("Clearing Add Product modal on hide (not validation reopen).")
 				if (form) form.reset();
@@ -379,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (addImageUploader) addImageUploader.resetUploader(); // NEW
+				if (addImageUploader) addImageUploader.resetUploader(); 
 			} else {
 				console.log("Resetting showAddProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-product-modal');
@@ -387,25 +325,22 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- NEW: Logic for Manage Categories Modal (Clear on Hide) ---
 	const manageCategoriesModal = document.getElementById('manageCategoriesModal');
 	if (manageCategoriesModal) {
 		const form = manageCategoriesModal.querySelector('#addCategoryForm');
 
 		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
-				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).") // Debug
+				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).") 
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showManageCategoriesModal flag on hide.") // Debug
+				console.log("Resetting showManageCategoriesModal flag on hide.") 
 				mainElement.removeAttribute('data-show-manage-categories-modal');
 			}
 		});
 	}
-	// --- END NEW ---
-
-	// --- NEW: Logic for Edit Category Modal ---
+	
 	const editCategoryModal = document.getElementById('editCategoryModal');
 	if (editCategoryModal) {
 		const form = editCategoryModal.querySelector('#editCategoryForm');
@@ -413,11 +348,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		editCategoryModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
 			const isValidationReopen = mainElement.dataset.showEditCategoryModal === 'true';
-			console.log("Edit Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); // Debug
+			console.log("Edit Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
 
 			if (button && button.classList.contains('edit-category-btn') && !isValidationReopen) {
 				const dataset = button.dataset;
-				console.log("Populating Edit Category Modal with data:", dataset); // Debug
+				console.log("Populating Edit Category Modal with data:", dataset); 
 				if (form) {
 					form.querySelector('#editCategoryId').value = dataset.id || '';
 					form.querySelector('#editCategoryName').value = dataset.name || '';
@@ -426,32 +361,26 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
 			}
 
-			// Clear previous validation highlights unless reopening
 			if (mainElement.dataset.showEditCategoryModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen)."); // Debug
+				console.log("Clearing validation highlights on modal show (not validation reopen).");
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights."); // Debug
+				console.log("Modal is being reopened due to validation, NOT clearing highlights."); 
 			}
 		});
 
 		editCategoryModal.addEventListener('hidden.bs.modal', function() {
-			// Clear form state only if not flagged to stay open
 			if (mainElement.dataset.showEditCategoryModal !== 'true') {
-				console.log("Clearing Edit Category modal on hide (not validation reopen).") // Debug
+				console.log("Clearing Edit Category modal on hide (not validation reopen).") 
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showEditCategoryModal flag on hide.") // Debug
+				console.log("Resetting showEditCategoryModal flag on hide.") 
 				mainElement.removeAttribute('data-show-edit-category-modal');
 			}
 		});
 	}
-	// --- END NEW ---
-
-
-	// --- Recipe Ingredient Management ---
-	// ... (addIngredientRow, removeIngredientRow, renumberIngredientRows functions remain unchanged) ...
+	
 	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
@@ -518,25 +447,19 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-
-	// Add Ingredient Button Listeners
 	document.getElementById('addIngredientBtn')?.addEventListener('click', () => addIngredientRow('addIngredientsContainer', 'ingredientRowTemplate'));
 	document.getElementById('addIngredientBtnEditModal')?.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
 
-	// **** START: CONSOLIDATED CLICK LISTENER ****
-	// Event delegation for Remove buttons AND Max buttons
 	document.addEventListener('click', function(event) {
 
-		// --- Handle Remove Ingredient ---
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {
 			removeIngredientRow(removeBtn);
-			return; // Stop processing this click
+			return; 
 		}
 
-		// --- Handle MAX BUTTON LOGIC ---
 		const maxBtn = event.target.closest('.max-quantity-btn');
-		if (!maxBtn) return; // Not a max button, stop processing
+		if (!maxBtn) return; 
 
 		console.log("--- Max button clicked (product page) ---");
 
@@ -627,6 +550,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		} catch (error) { console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
 	});
-	// **** END: CONSOLIDATED CLICK LISTENER ****
-
 });

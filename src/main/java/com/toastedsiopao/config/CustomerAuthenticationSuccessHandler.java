@@ -1,6 +1,6 @@
 package com.toastedsiopao.config;
 
-import com.toastedsiopao.service.CustomerService; // UPDATED IMPORT
+import com.toastedsiopao.service.CustomerService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,7 +23,7 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 	private SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
 
 	@Autowired
-	private CustomerService customerService; // UPDATED INJECTION
+	private CustomerService customerService; 
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -32,19 +32,14 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 		Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 		String username = authentication.getName();
 
-		// **** THIS IS THE FIX ****
-		// We now check for a permission instead of a specific role name.
-		// All admin-level users (Owner, Admin, Staff, etc.) have this permission.
 		if (roles.contains("VIEW_DASHBOARD")) {
-			// **** END OF FIX ****
 			log.info("Admin user {} logged in. Redirecting to /admin/dashboard", username);
-			// We don't track admin activity on login, only customer
 			response.sendRedirect("/admin/dashboard");
 		} else if (roles.contains("ROLE_CUSTOMER")) {
 			log.info("Customer user {} successfully logged in. Redirecting to /u/dashboard", username);
 
 			try {
-				customerService.updateLastActivity(username); // UPDATED SERVICE CALL
+				customerService.updateLastActivity(username); 
 			} catch (Exception e) {
 				log.error("Failed to update last activity for user {} on login: {}", username, e.getMessage());
 			}

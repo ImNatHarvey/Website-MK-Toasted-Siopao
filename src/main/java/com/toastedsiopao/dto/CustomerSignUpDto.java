@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CustomerSignUpDto {
 
-	// --- Basic Info ---
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
 	private String firstName;
@@ -22,18 +21,15 @@ public class CustomerSignUpDto {
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Username can only contain letters, numbers, and underscores")
 	private String username;
 
-	// **** NEW FIELD ****
 	@NotBlank(message = "Email cannot be blank")
 	@Email(message = "Invalid email format")
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
-	// **** END NEW FIELD ****
 
 	@NotBlank(message = "Phone number cannot be blank")
 	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "Invalid Philippine phone number format (e.g., 09xxxxxxxxx or +639xxxxxxxxx)")
 	private String phone;
 
-	// --- Location Details (Add @NotBlank if a field is truly required) ---
 	@Size(max = 50, message = "House No. cannot exceed 50 characters")
 	private String houseNo;
 
@@ -59,7 +55,6 @@ public class CustomerSignUpDto {
 	@Size(max = 100, message = "Province cannot exceed 100 characters")
 	private String province;
 
-	// --- Password ---
 	@NotBlank(message = "Password cannot be blank")
 	@Size(min = 8, message = "Password must be at least 8 characters")
 	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
@@ -68,7 +63,6 @@ public class CustomerSignUpDto {
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
 
-	// --- Terms ---
 	@AssertTrue(message = "You must agree to the terms of service")
 	private boolean terms;
 }

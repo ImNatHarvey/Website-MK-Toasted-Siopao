@@ -54,7 +54,6 @@ public class FileStorageServiceImpl implements FileStorageService {
 			throw new IllegalArgumentException("Cannot store file with relative path: " + originalFilename);
 		}
 
-		// Generate a unique filename
 		String fileExtension = "";
 		try {
 			fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
@@ -66,22 +65,16 @@ public class FileStorageServiceImpl implements FileStorageService {
 		try (InputStream inputStream = file.getInputStream()) {
 			Path destinationFile = this.rootLocation.resolve(newFilename);
 
-			// **** START OF FIX ****
-			// The previous check was too strict.
-			// This new check ensures the normalized absolute path of the file
-			// starts with the normalized absolute path of the root directory.
 			Path absoluteDestination = destinationFile.normalize().toAbsolutePath();
 			Path absoluteRoot = this.rootLocation.normalize().toAbsolutePath();
 
 			if (!absoluteDestination.startsWith(absoluteRoot)) {
 				throw new IllegalArgumentException("Cannot store file outside current directory.");
 			}
-			// **** END OF FIX ****
-
+			
 			Files.copy(inputStream, destinationFile, StandardCopyOption.REPLACE_EXISTING);
 			log.info("Stored file: {}", newFilename);
 
-			// Return the web-accessible path
 			return "/img/uploads/" + newFilename;
 
 		} catch (IOException e) {
@@ -98,8 +91,6 @@ public class FileStorageServiceImpl implements FileStorageService {
 		}
 
 		try {
-			// Extract just the filename from the path (e.g., /img/uploads/file.png ->
-			// file.png)
 			String actualFilename = Paths.get(filename).getFileName().toString();
 			Path file = rootLocation.resolve(actualFilename);
 			if (Files.exists(file)) {

@@ -9,6 +9,5 @@ import java.util.Optional;
 @Repository
 public interface SiteSettingsRepository extends JpaRepository<SiteSettings, Long> {
 
-	// We'll always be looking for the settings with ID = 1
 	Optional<SiteSettings> findById(Long id);
 }

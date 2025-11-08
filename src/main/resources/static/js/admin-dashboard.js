@@ -1,18 +1,12 @@
-/**
- * JavaScript for the new Admin Dashboard (admin/dashboard.html)
- * Handles parsing data from the DOM and initializing all charts.
- */
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-dashboard.js loaded");
 
-	// Find the main dashboard element which holds all our data
 	const dashboardElement = document.getElementById('admin-dashboard-content');
 	if (!dashboardElement) {
 		console.error("Dashboard content element not found!");
 		return;
 	}
 
-	// Helper function to parse JSON data from data-attributes
 	const getChartData = (element, attributeName) => {
 		try {
 			const data = element.dataset[attributeName];
@@ -27,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	};
 
-	// Helper function to format currency
 	const formatCurrency = (value) => {
 		return new Intl.NumberFormat('en-PH', {
 			style: 'currency',
@@ -35,7 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		}).format(value);
 	};
 
-	// 1. Initialize Sales Trend Line Chart
 	const initSalesChart = () => {
 		const ctx = document.getElementById('salesChart');
 		if (!ctx) {
@@ -59,8 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
 					label: 'Daily Sales',
 					data: data,
 					fill: true,
-					backgroundColor: 'rgba(23, 162, 184, 0.2)', // --info with alpha
-					borderColor: 'rgba(23, 162, 184, 1)', // --info
+					backgroundColor: 'rgba(23, 162, 184, 0.2)',
+					borderColor: 'rgba(23, 162, 184, 1)',
 					tension: 0.1,
 					pointRadius: 4,
 					pointBackgroundColor: 'rgba(23, 162, 184, 1)',
@@ -99,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	};
 
-	// 2. Initialize Order Status Donut Chart
 	const initOrderStatusChart = () => {
 		const ctx = document.getElementById('orderStatusChart');
 		if (!ctx) {
@@ -123,11 +114,11 @@ document.addEventListener('DOMContentLoaded', function() {
 					label: 'Order Status',
 					data: data,
 					backgroundColor: [
-						'rgba(255, 193, 7, 0.8)',   // Pending (Warning)
-						'rgba(23, 162, 184, 0.8)',  // Processing (Info)
-						'rgba(40, 167, 69, 0.8)',  // Delivered (Success)
-						'rgba(220, 53, 69, 0.8)',  // Cancelled (Danger)
-						'rgba(108, 117, 125, 0.8)' // Other (Muted)
+						'rgba(255, 193, 7, 0.8)',
+						'rgba(23, 162, 184, 0.8)',
+						'rgba(40, 167, 69, 0.8)',
+						'rgba(220, 53, 69, 0.8)',
+						'rgba(108, 117, 125, 0.8)'
 					],
 					borderColor: '#fff',
 					borderWidth: 2
@@ -145,7 +136,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	};
 
-	// 3. Initialize Top Selling Products Bar Chart
 	const initTopProductsChart = () => {
 		const ctx = document.getElementById('topProductsChart');
 		if (!ctx) {
@@ -169,11 +159,11 @@ document.addEventListener('DOMContentLoaded', function() {
 					label: 'Quantity Sold',
 					data: data,
 					backgroundColor: [
-						'rgba(17, 63, 103, 0.7)',  // --primary
-						'rgba(255, 195, 116, 0.7)', // --accent
-						'rgba(23, 162, 184, 0.7)',  // --info
-						'rgba(253, 245, 170, 0.7)', // --secondary
-						'rgba(33, 52, 72, 0.7)'   // --dark
+						'rgba(17, 63, 103, 0.7)',
+						'rgba(255, 195, 116, 0.7)',
+						'rgba(23, 162, 184, 0.7)',
+						'rgba(253, 245, 170, 0.7)',
+						'rgba(33, 52, 72, 0.7)'
 					],
 					borderColor: [
 						'rgba(17, 63, 103, 1)',
@@ -186,27 +176,26 @@ document.addEventListener('DOMContentLoaded', function() {
 				}]
 			},
 			options: {
-				indexAxis: 'y', // Make it a horizontal bar chart
+				indexAxis: 'y',
 				responsive: true,
 				maintainAspectRatio: false,
 				scales: {
 					x: {
 						beginAtZero: true,
 						ticks: {
-							stepSize: 1 // Ensure we only count in whole numbers
+							stepSize: 1
 						}
 					}
 				},
 				plugins: {
 					legend: {
-						display: false // Hide legend, as the axis labels are clear
+						display: false
 					}
 				}
 			}
 		});
 	};
 
-	// --- Initialize all charts ---
 	initSalesChart();
 	initOrderStatusChart();
 	initTopProductsChart();

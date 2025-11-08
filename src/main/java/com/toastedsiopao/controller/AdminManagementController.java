@@ -46,6 +46,7 @@ public class AdminManagementController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
 		redirectAttributes.addFlashAttribute("admins", adminService.findAllAdmins(defaultPageable).getContent());
+		redirectAttributes.addFlashAttribute("allAdminRoles", adminService.findAllAdminRoles()); // --- ADDED ---
 	}
 
 	@GetMapping
@@ -58,8 +59,11 @@ public class AdminManagementController {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<User> adminPage = adminService.searchAdmins(keyword, pageable);
 
+		List<Role> allAdminRoles = adminService.findAllAdminRoles(); // --- ADDED ---
+
 		model.addAttribute("adminPage", adminPage);
 		model.addAttribute("admins", adminPage.getContent());
+		model.addAttribute("allAdminRoles", allAdminRoles); // --- ADDED ---
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
@@ -125,7 +129,7 @@ public class AdminManagementController {
 				result.rejectValue("email", "adminAccountCreateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "adminAccountCreateDto.confirmPassword", e.getMessage());
-			} else if (e.getMessage().contains("Role name")) { // NEW
+			} else if (e.getMessage().contains("role")) { // --- UPDATED CATCH ---
 				result.rejectValue("roleName", "adminAccountCreateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error creating admin: " + e.getMessage());
@@ -168,7 +172,7 @@ public class AdminManagementController {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
-			} else if (e.getMessage().contains("Role name")) {
+			} else if (e.getMessage().contains("role")) { // --- UPDATED CATCH ---
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());

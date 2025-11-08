@@ -17,6 +17,8 @@ public interface AdminService {
 
 	List<User> findAllAdmins();
 
+	List<Role> findAllAdminRoles();
+
 	Page<User> findAllAdmins(Pageable pageable);
 
 	Page<User> searchAdmins(String keyword, Pageable pageable);

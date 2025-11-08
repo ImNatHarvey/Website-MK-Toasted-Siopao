@@ -1,6 +1,6 @@
 package com.toastedsiopao.dto;
 
-import jakarta.validation.constraints.Email; 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AdminUpdateDto {
 
-	private Long id; 
+	private Long id;
 
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
@@ -33,8 +33,6 @@ public class AdminUpdateDto {
 	private String email;
 
 	@NotBlank(message = "Role name cannot be blank")
-	@Pattern(regexp = "^[a-zA-Z0-9 ]+$", message = "Role name can only contain letters, numbers, and spaces")
-	@Size(max = 40, message = "Role name cannot exceed 40 characters")
 	private String roleName;
 
 	private boolean manageCustomers;

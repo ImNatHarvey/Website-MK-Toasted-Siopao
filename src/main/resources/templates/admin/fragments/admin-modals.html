@@ -64,15 +64,20 @@
 							<h5 class="mb-3">Access Rights</h5>
 
 							<div class="mb-3">
-								<label for="adminRoleName" class="form-label">Role Name</label>
-								<input type="text" class="form-control" th:field="*{roleName}"
-									id="adminRoleName" th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager, Accountant">
+								<label for="adminRoleName" class="form-label">Assign
+									Role</label> <select class="form-select" th:field="*{roleName}"
+									id="adminRoleName" th:errorclass="is-invalid">
+									<option value="">-- Select a Role --</option>
+									<option th:each="role : ${allAdminRoles}"
+										th:if="${role.name != 'ROLE_OWNER'}" th:value="${role.name}"
+										th:text="${role.name.replace('ROLE_', '')}">Role Name
+									</option>
+								</select>
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">This name will define the role
-									(e.g., "STAFF" becomes "ROLE_STAFF").</div>
+								<div class="form-text">Select the role to assign. The
+									permissions below will be applied to this role.</div>
 							</div>
 
 							<div class="row">
@@ -226,18 +231,21 @@
 							<h5 class="mb-3">Access Rights</h5>
 
 							<div class="mb-3">
-								<label for="editAdminRoleName" class="form-label">Role
-									Name</label> <input type="text" class="form-control"
-									th:field="*{roleName}" id="editAdminRoleName"
-									th:errorclass="is-invalid"
-									placeholder="e.g., Staff, Manager, Accountant"
+								<label for="editAdminRoleName" class="form-label">Role</label> <select
+									class="form-select" th:field="*{roleName}"
+									id="editAdminRoleName" th:errorclass="is-invalid"
 									th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
-									th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change role names' : ''}">
+									th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change roles' : 'Select a role'}">
+									<option value="">-- Select a Role --</option>
+									<option th:each="role : ${allAdminRoles}"
+										th:if="${role.name != 'ROLE_OWNER'}" th:value="${role.name}"
+										th:text="${role.name.replace('ROLE_', '')}">Role Name
+									</option>
+								</select>
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">This name will define the role
-									(e.g., "STAFF" becomes "ROLE_STAFF").</div>
+								<div class="form-text">Change this admin's assigned role.</div>
 							</div>
 
 							<div class="row">
@@ -416,7 +424,7 @@
 									th:if="${#fields.hasErrors('firstName')}"
 									th:errors="*{firstName}">Error</div>
 							</div>
-							<div class="mb-3">
+							<div classV="mb-3">
 								<label for="profileLastName" class="form-label">Last
 									Name</label> <input type="text" class="form-control"
 									th:field="*{lastName}" id="profileLastName"

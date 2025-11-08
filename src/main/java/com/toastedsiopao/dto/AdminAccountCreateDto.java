@@ -38,8 +38,9 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
 
+	@NotBlank(message = "A role must be selected")
 	private String roleName;
-	
+
 	private boolean manageCustomers;
 	private boolean manageAdmins;
 	private boolean manageOrders;

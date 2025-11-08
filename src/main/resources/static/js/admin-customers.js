@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-customers.js loaded");
 
 	const mainElement = document.getElementById('admin-content-wrapper');
-
 	if (!mainElement) {
 		console.error("Main element not found in admin-customers.js!");
 		return;
@@ -54,80 +53,27 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	const editCustomerModal = document.getElementById('editCustomerModal');
-	if (editCustomerModal) {
-		const form = editCustomerModal.querySelector('#editCustomerForm');
-		const modalTitle = editCustomerModal.querySelector('#editCustomerModalLabel');
-
-		editCustomerModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			if (!button || !button.classList.contains('edit-customer-btn')) {
-				console.warn("Edit Customer modal opened without edit button source.");
-				if (form) form.reset();
-				return;
-			}
-			const dataset = button.dataset;
-			console.log("Populating Edit Customer Modal with data:", dataset); // Debug
-
-			modalTitle.textContent = 'Edit Customer: ' + (dataset.firstName || '') + ' ' + (dataset.lastName || '');
-			if (!form) { console.error("Edit customer form not found!"); return; }
-
-			form.querySelector('#id').value = dataset.id || '';
-			form.querySelector('#firstName').value = dataset.firstName || '';
-			form.querySelector('#lastName').value = dataset.lastName || '';
-			form.querySelector('#username').value = dataset.username || '';
-			form.querySelector('#email').value = dataset.email || '';
-			form.querySelector('#phone').value = dataset.phone || '';
-			form.querySelector('#houseNo').value = dataset.houseNo || '';
-			form.querySelector('#lotNo').value = dataset.lotNo || '';
-			form.querySelector('#blockNo').value = dataset.blockNo || '';
-			form.querySelector('#street').value = dataset.street || '';
-			form.querySelector('#barangay').value = dataset.barangay || '';
-			form.querySelector('#municipality').value = dataset.municipality || '';
-			form.querySelector('#province').value = dataset.province || '';
-			form.querySelector('#status').value = dataset.status || 'ACTIVE';
-
-			if (mainElement.dataset.showEditCustomerModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen).");
-				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form.querySelector('.alert.alert-danger');
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
+	initializeModalForm({
+		modalId: 'editCustomerModal',
+		formId: 'editCustomerForm',
+		validationAttribute: 'data-show-edit-customer-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-customer-btn',
+		modalTitleSelector: '#editCustomerModalLabel',
+		onShow: function(form, dataset, isEdit, isValidationReopen) {
+			if (isEdit && dataset && !isValidationReopen) {
+				const titleElement = document.getElementById('editCustomerModalLabel');
+				if (titleElement) {
+					titleElement.textContent = 'Edit Customer: ' + (dataset.firstName || '') + ' ' + (dataset.lastName || '');
 				}
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights.");
 			}
-		});
+		}
+	});
 
-		editCustomerModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditCustomerModal !== 'true') {
-				console.log("Clearing Edit Customer modal on hide (not validation reopen).")
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
-				}
-			} else {
-				console.log("Resetting showEditCustomerModal flag on hide.")
-				mainElement.removeAttribute('data-show-edit-customer-modal');
-			}
-		});
-	}
-
-	const addCustomerModal = document.getElementById('addCustomerModal');
-	if (addCustomerModal) {
-		const form = addCustomerModal.querySelector('#addCustomerForm');
-
-		addCustomerModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showAddCustomerModal !== 'true') {
-				console.log("Clearing Add Customer modal on hide (not validation reopen).")
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Resetting showAddCustomerModal flag on hide.")
-				mainElement.removeAttribute('data-show-add-customer-modal');
-			}
-		});
-	}
+	initializeModalForm({
+		modalId: 'addCustomerModal',
+		formId: 'addCustomerForm',
+		validationAttribute: 'data-show-add-customer-modal',
+		wrapperId: 'admin-content-wrapper'
+	});
 });

@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-	console.log("admin-inventory.js loaded"); 
+	console.log("admin-inventory.js loaded");
 
 	const mainElement = document.getElementById('admin-content-wrapper');
 
@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		return;
 	}
 
+	// --- addItemModal (Complex) - Refactored 'show.bs.modal' listener for Bug 2 ---
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -17,9 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
 
-		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer'); 
-		
-		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden'); 
+		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer');
+
+		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden');
 
 		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
 		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
@@ -29,207 +30,158 @@ document.addEventListener('DOMContentLoaded', function() {
 			const button = event.relatedTarget;
 			const isEdit = button && button.classList.contains('edit-item-btn');
 
+			// This is the flag set by Thymeleaf on validation error
 			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
-			console.log("Add/Edit Item Modal 'show.bs.modal' event. IsEdit:", isEdit, "IsValidationReopen:", isValidationReopen); 
+			console.log("Add/Edit Item Modal 'show.bs.modal' event. IsEdit:", isEdit, "IsValidationReopen:", isValidationReopen);
 
-			if (isEdit && button.dataset && !isValidationReopen) {
-				console.log("Populating modal for EDIT with data:", button.dataset); 
-				modalTitle.textContent = 'Edit Inventory Item';
-				itemIdInput.value = button.dataset.id || '';
-				itemNameInput.value = button.dataset.name || '';
-				itemCategorySelect.value = button.dataset.categoryId || '';
-				itemUnitSelect.value = button.dataset.unitId || '';
+			// --- BUG FIX 2 (ENHANCED) START ---
+			// We must explicitly clear validation and reset the form on ANY fresh open
+			// (i.e., any open that is NOT a validation reopen)
+			if (!isValidationReopen) {
+				console.log("Fresh open (Not validation reopen). Forcing form reset and clearing validation.");
+				if (itemForm) {
+					itemForm.reset();
+					// 1. Remove invalid classes
+					itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block'; 
-				
-				if (itemStockHiddenInput) itemStockHiddenInput.value = button.dataset.currentStock || '0.00';
-
-				itemLowThresholdInput.value = parseFloat(button.dataset.lowThreshold || '0').toFixed(0);
-				itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
-				itemCostInput.value = button.dataset.cost || '';
-
-			} else if (!isEdit && !isValidationReopen) {
-				console.log("Populating modal for ADD (resetting form)."); 
-				modalTitle.textContent = 'Add New Inventory Item';
-				if (itemForm) itemForm.reset();
-				itemIdInput.value = ''; 
-
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none'; 
-
-				itemLowThresholdInput.value = ''; 
-				itemCriticalThresholdInput.value = ''; 
-
-			} else if (isValidationReopen) {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-				
-				if (itemIdInput.value) {
-					modalTitle.textContent = 'Edit Inventory Item';
-					
-					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block'; 
-					
-				} else {
-					modalTitle.textContent = 'Add New Inventory Item';
-					if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none'; 
+					// 2. Erase old error message text
+					// This prevents script.js from re-adding 'is-invalid' on 'shown.bs.modal'
+					itemForm.querySelectorAll('.invalid-feedback').forEach(el => {
+						if (el.getAttribute('th:if') === null) { // Don't clear Thymeleaf-generated errors
+							el.textContent = '';
+							el.classList.remove('d-block');
+						}
+					});
 				}
-			}
-
-			if (mainElement.dataset.showAddItemModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen)."); 
-				if (itemForm) itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const globalError = itemForm ? itemForm.querySelector('.alert.alert-danger') : null; 
+				// 3. Also clear any global error alerts that might be lingering
+				const globalError = itemForm ? itemForm.querySelector('.alert.alert-danger') : null;
 				if (globalError && globalError.getAttribute('th:if') === null) {
 					globalError.remove();
 				}
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights.");
 			}
-			
+			// --- BUG FIX 2 (ENHANCED) END ---
+
+			if (isEdit && button.dataset) {
+				// This is a fresh Edit, or a validation reopen of an Edit
+				console.log("Populating modal for EDIT with data:", button.dataset);
+				modalTitle.textContent = 'Edit Inventory Item';
+
+				if (!isValidationReopen) {
+					// Populate form only if it's a fresh edit
+					// (if validation reopen, Thymeleaf already populated it)
+					itemIdInput.value = button.dataset.id || '';
+					itemNameInput.value = button.dataset.name || '';
+					itemCategorySelect.value = button.dataset.categoryId || '';
+					itemUnitSelect.value = button.dataset.unitId || '';
+					if (itemStockHiddenInput) itemStockHiddenInput.value = button.dataset.currentStock || '0.00';
+					itemLowThresholdInput.value = parseFloat(button.dataset.lowThreshold || '0').toFixed(0);
+					itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
+					itemCostInput.value = button.dataset.cost || '';
+				}
+
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+
+			} else {
+				// This is a fresh Add, or a validation reopen of an Add
+				console.log("Populating modal for ADD.");
+				modalTitle.textContent = 'Add New Inventory Item';
+				itemIdInput.value = ''; // Ensure ID is clear
+
+				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
+
+				if (isValidationReopen) {
+					console.log("Modal is reopening from ADD validation.");
+					// Values are already set by Thymeleaf
+				} else {
+					// Fresh Add, form was already reset
+					itemLowThresholdInput.value = '';
+					itemCriticalThresholdInput.value = '';
+				}
+			}
+
 			initThresholdSliders(addItemModal);
 		});
 
 		addItemModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showAddItemModal !== 'true') {
-				console.log("Clearing Add/Edit Item modal on hide (not validation reopen).") 
-				if (itemForm) itemForm.reset();
-				itemIdInput.value = ''; 
-				if (itemForm) itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-				const globalError = itemForm ? itemForm.querySelector('.alert.alert-danger') : null;
-				if (globalError && globalError.getAttribute('th:if') === null) { 
-					globalError.remove();
-				}
-			} else {
-				console.log("Resetting showAddItemModal flag on hide.") 
+			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
+
+			if (isValidationReopen) {
+				console.log("Resetting showAddItemModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-item-modal');
 			}
+
+			// We no longer need to reset the form here,
+			// the 'show.bs.modal' listener does it robustly before showing.
 		});
 	}
 
+	// --- manageCategoriesModal (Complex) - Left as-is ---
 	const manageCategoriesModal = document.getElementById('manageCategoriesModal');
 	if (manageCategoriesModal) {
 		const form = manageCategoriesModal.querySelector('#addInvCategoryForm');
 
 		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
-				console.log("Clearing Manage Categories modal on hide (not validation reopen).") 
+				console.log("Clearing Manage Categories modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showManageCategoriesModal flag on hide.") 
+				console.log("Resetting showManageCategoriesModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-categories-modal');
 			}
 		});
 	}
-	
-	const editInvCategoryModal = document.getElementById('editInvCategoryModal');
-	if (editInvCategoryModal) {
-		const form = editInvCategoryModal.querySelector('#editInvCategoryForm');
 
-		editInvCategoryModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			const isValidationReopen = mainElement.dataset.showEditInvCategoryModal === 'true';
-			console.log("Edit Inv Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
+	// --- editInvCategoryModal (Simple) - REFACTORED ---
+	initializeModalForm({
+		modalId: 'editInvCategoryModal',
+		formId: 'editInvCategoryForm',
+		validationAttribute: 'data-show-edit-inv-category-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-inv-category-btn'
+	});
 
-			if (button && button.classList.contains('edit-inv-category-btn') && !isValidationReopen) {
-				const dataset = button.dataset;
-				console.log("Populating Edit Inv Category Modal with data:", dataset);
-				if (form) {
-					form.querySelector('#editInvCategoryId').value = dataset.id || '';
-					form.querySelector('#editInvCategoryName').value = dataset.name || '';
-				}
-			} else if (isValidationReopen) {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-			}
-
-			if (mainElement.dataset.showEditInvCategoryModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen)."); 
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights."); 
-			}
-		});
-
-		editInvCategoryModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditInvCategoryModal !== 'true') {
-				console.log("Clearing Edit Inv Category modal on hide (not validation reopen).")
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Resetting showEditInvCategoryModal flag on hide.")
-				mainElement.removeAttribute('data-show-edit-inv-category-modal');
-			}
-		});
-	}
-	
+	// --- manageUnitsModal (Complex) - Left as-is ---
 	const manageUnitsModal = document.getElementById('manageUnitsModal');
 	if (manageUnitsModal) {
-		const form = manageUnitsModal.querySelector('#addUnitForm'); 
+		const form = manageUnitsModal.querySelector('#addUnitForm');
 
 		manageUnitsModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageUnitsModal !== 'true') {
-				console.log("Clearing Manage Units modal on hide (not validation reopen).") 
+				console.log("Clearing Manage Units modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const globalError = form ? form.querySelector('.invalid-feedback.d-block') : null;
-				if (globalError) globalError.textContent = ''; 
+				if (globalError) globalError.textContent = '';
 			} else {
-				console.log("Resetting showManageUnitsModal flag on hide.") 
+				console.log("Resetting showManageUnitsModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-units-modal');
 			}
 		});
 	}
 
-	const editUnitModal = document.getElementById('editUnitModal');
-	if (editUnitModal) {
-		const form = editUnitModal.querySelector('#editUnitForm');
+	// --- editUnitModal (Simple) - REFACTORED ---
+	initializeModalForm({
+		modalId: 'editUnitModal',
+		formId: 'editUnitForm',
+		validationAttribute: 'data-show-edit-unit-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-unit-btn'
+	});
 
-		editUnitModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			const isValidationReopen = mainElement.dataset.showEditUnitModal === 'true';
-			console.log("Edit Unit Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
-
-			if (button && button.classList.contains('edit-unit-btn') && !isValidationReopen) {
-				const dataset = button.dataset;
-				console.log("Populating Edit Unit Modal with data:", dataset); 
-				if (form) {
-					form.querySelector('#editUnitId').value = dataset.id || '';
-					form.querySelector('#editUnitName').value = dataset.name || '';
-					form.querySelector('#editUnitAbbreviation').value = dataset.abbreviation || '';
-				}
-			} else if (isValidationReopen) {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-			}
-
-			if (mainElement.dataset.showEditUnitModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen).");
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights."); 
-			}
-		});
-
-		editUnitModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditUnitModal !== 'true') {
-				console.log("Clearing Edit Unit modal on hide (not validation reopen).") 
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Resetting showEditUnitModal flag on hide.") 
-				mainElement.removeAttribute('data-show-edit-unit-modal');
-			}
-		});
-	}
-	
+	// --- manageStockModal (Complex) - Left as-is ---
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
 		manageStockModal.addEventListener('hidden.bs.modal', function() {
-			console.log("Clearing Manage Stock (Inventory) modal inputs on hide.") 
+			console.log("Clearing Manage Stock (Inventory) modal inputs on hide.")
 			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
 				input.value = '';
 			});
-			mainElement.removeAttribute('data-show-manage-stock-modal'); 
+			mainElement.removeAttribute('data-show-manage-stock-modal');
 		});
 	}
 
+	// --- viewItemModal (Custom) - Left as-is ---
 	const viewItemModal = document.getElementById('viewItemModal');
 	if (viewItemModal) {
 		viewItemModal.addEventListener('show.bs.modal', function(event) {
@@ -241,7 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const dataset = button.dataset;
 			console.log("Populating View Item Modal with data:", dataset);
-			
+
 			const setText = (id, value) => {
 				const el = viewItemModal.querySelector(id);
 				if (el) {

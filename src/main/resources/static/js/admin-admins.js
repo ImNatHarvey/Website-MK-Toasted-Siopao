@@ -23,13 +23,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
-			const role = dataset.roleName || 'N/A'; 
+			const role = dataset.roleName || 'N/A';
 
 			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
 			viewAdminModal.querySelector('#viewAdminName').textContent = name;
 			viewAdminModal.querySelector('#viewAdminUsername').textContent = username;
 			viewAdminModal.querySelector('#viewAdminEmail').textContent = email;
-			viewAdminModal.querySelector('#viewAdminRole').textContent = role; 
+			viewAdminModal.querySelector('#viewAdminRole').textContent = role;
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
 
 			const setPermissionIcon = (id, hasPermission) => {
@@ -55,104 +55,46 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	const editAdminModal = document.getElementById('editAdminModal');
-	if (editAdminModal) {
-		const form = editAdminModal.querySelector('#editAdminForm');
-		const modalTitle = editAdminModal.querySelector('#editAdminModalLabel');
+	initializeModalForm({
+		modalId: 'addAdminModal',
+		formId: 'addAdminForm',
+		validationAttribute: 'data-show-add-admin-modal',
+		wrapperId: 'admin-content-wrapper'
+	});
 
-		editAdminModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			const adminRow = button ? button.closest('tr') : null;
-
-			if (!adminRow || !button.classList.contains('edit-admin-btn')) {
-				console.warn("Edit Admin modal opened without edit button source.");
-				if (form) form.reset();
-				return;
+	initializeModalForm({
+		modalId: 'editAdminModal',
+		formId: 'editAdminForm',
+		validationAttribute: 'data-show-edit-admin-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-admin-btn',
+		modalTitleSelector: '#editAdminModalLabel',
+		titlePrefix: 'Edit Admin: ',
+		titleDatasetKey: 'name',
+		onShow: function(form, dataset, isEdit, isValidationReopen) {
+			if (isEdit && dataset && !isValidationReopen) {
+				const setCheckbox = (id, value) => {
+					const el = form.querySelector(id);
+					if (el) {
+						el.checked = (value === 'true');
+					}
+				};
+				setCheckbox('#editManageCustomers', dataset.manageCustomers);
+				setCheckbox('#editManageAdmins', dataset.manageAdmins);
+				setCheckbox('#editManageOrders', dataset.manageOrders);
+				setCheckbox('#editManageProducts', dataset.manageProducts);
+				setCheckbox('#editManageInventory', dataset.manageInventory);
+				setCheckbox('#editManageTransactions', dataset.manageTransactions);
+				setCheckbox('#editManageSite', dataset.manageSite);
+				setCheckbox('#editManageActivityLog', dataset.manageActivityLog);
 			}
-			const dataset = adminRow.dataset;
-			console.log("Populating Edit Admin Modal with data:", dataset);
+		}
+	});
 
-			modalTitle.textContent = 'Edit Admin: ' + (dataset.name || 'User');
-			if (!form) { console.error("Edit admin form not found!"); return; }
-
-			const setCheckbox = (id, value) => {
-				const el = form.querySelector(id);
-				if (el) {
-					el.checked = (value === 'true');
-				}
-			};
-
-			form.querySelector('input[name="id"]').value = dataset.id || '';
-			form.querySelector('#editAdminFirstName').value = dataset.firstName || '';
-			form.querySelector('#editAdminLastName').value = dataset.lastName || '';
-			form.querySelector('#editAdminUsername').value = dataset.username || '';
-			form.querySelector('#editAdminEmail').value = dataset.email || '';
-
-			form.querySelector('#editAdminRoleName').value = dataset.roleName || '';
-			setCheckbox('#editManageCustomers', dataset.manageCustomers);
-			setCheckbox('#editManageAdmins', dataset.manageAdmins);
-			setCheckbox('#editManageOrders', dataset.manageOrders);
-			setCheckbox('#editManageProducts', dataset.manageProducts);
-			setCheckbox('#editManageInventory', dataset.manageInventory);
-			setCheckbox('#editManageTransactions', dataset.manageTransactions);
-			setCheckbox('#editManageSite', dataset.manageSite);
-			setCheckbox('#editManageActivityLog', dataset.manageActivityLog);
-			
-			if (mainElement.dataset.showEditAdminModal !== 'true') {
-				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			}
-		});
-
-		editAdminModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditAdminModal !== 'true') {
-				console.log("Clearing Edit Admin modal on hide (not validation reopen).")
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				mainElement.removeAttribute('data-show-edit-admin-modal');
-			}
-		});
-	}
-
-	const addAdminModal = document.getElementById('addAdminModal');
-	if (addAdminModal) {
-		const form = addAdminModal.querySelector('#addAdminForm');
-		addAdminModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showAddAdminModal !== 'true') {
-				console.log("Clearing Add Admin modal on hide (not validation reopen).")
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				mainElement.removeAttribute('data-show-add-admin-modal');
-			}
-		});
-	}
-
-	const editProfileModal = document.getElementById('editProfileModal');
-	if (editProfileModal) {
-		const form = editProfileModal.querySelector('#editProfileForm');
-
-		editProfileModal.addEventListener('show.bs.modal', function(event) {
-
-			const isValidationReopen = mainElement.dataset.showEditProfileModal === 'true';
-			console.log("Edit Profile Modal show.bs.modal. Validation Reopen:", isValidationReopen);
-
-			if (isValidationReopen) {
-				console.log("Edit Profile modal reopening from validation.");
-			} else {
-				console.log("Populating Edit Profile modal.");
-				form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			}
-		});
-
-		editProfileModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditProfileModal !== 'true') {
-				console.log("Clearing Edit Profile modal on hide (not validation reopen).")
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				mainElement.removeAttribute('data-show-edit-profile-modal');
-			}
-		});
-	}
-
+	initializeModalForm({
+		modalId: 'editProfileModal',
+		formId: 'editProfileForm',
+		validationAttribute: 'data-show-edit-profile-modal',
+		wrapperId: 'admin-content-wrapper'
+	});
 });

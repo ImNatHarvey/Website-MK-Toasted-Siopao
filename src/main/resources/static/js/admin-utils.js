@@ -1,7 +1,102 @@
-/**
- * Re-usable function to set up an image uploader.
- * @param {string} containerId 
- */
+function initializeModalForm(options) {
+	const modalElement = document.getElementById(options.modalId);
+	const wrapperElement = document.getElementById(options.wrapperId || 'admin-content-wrapper');
+	if (!modalElement || !wrapperElement) {
+		console.error(`initializeModalForm: Could not find modal #${options.modalId} or wrapper.`);
+		return;
+	}
+
+	const formElement = document.getElementById(options.formId);
+	if (!formElement) {
+		console.error(`initializeModalForm: Could not find form #${options.formId}.`);
+		return;
+	}
+
+	modalElement.addEventListener('show.bs.modal', function(event) {
+		const isValidationReopen = wrapperElement.getAttribute(options.validationAttribute) === 'true';
+		const button = event.relatedTarget;
+		const isEdit = button && options.editTriggerClass && button.classList.contains(options.editTriggerClass);
+		const dataset = button ? button.dataset : null;
+
+		if (isEdit && dataset && !isValidationReopen) {
+			console.log(`Populating modal ${options.modalId} for EDIT with data:`, dataset);
+			populateFormFromDataset(formElement, dataset);
+
+			if (options.modalTitleSelector && options.titlePrefix && options.titleDatasetKey) {
+				const titleElement = modalElement.querySelector(options.modalTitleSelector);
+				if (titleElement && dataset[options.titleDatasetKey]) {
+					titleElement.textContent = options.titlePrefix + dataset[options.titleDatasetKey];
+				}
+			}
+		} else if (!isEdit && !isValidationReopen) {
+			console.log(`Populating modal ${options.modalId} for ADD (resetting form).`);
+			formElement.reset();
+			if (options.modalTitleSelector) {
+			}
+		} else if (isValidationReopen) {
+			console.log(`Modal ${options.modalId} is reopening from validation.`);
+		}
+
+		if (options.onShow) {
+			options.onShow(formElement, dataset, isEdit, isValidationReopen);
+		}
+
+		if (!isValidationReopen) {
+			formElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			const errorAlert = formElement.querySelector('.alert.alert-danger');
+			if (errorAlert && errorAlert.getAttribute('th:if') === null) {
+				errorAlert.remove();
+			}
+		}
+	});
+
+	modalElement.addEventListener('hidden.bs.modal', function() {
+		const isValidationReopen = wrapperElement.getAttribute(options.validationAttribute) === 'true';
+
+		if (options.onHide) {
+			options.onHide(formElement, isValidationReopen);
+		}
+
+		if (!isValidationReopen) {
+			console.log(`Clearing modal ${options.modalId} on hide (not validation reopen).`);
+			formElement.reset();
+			formElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			const errorAlert = formElement.querySelector('.alert.alert-danger');
+			if (errorAlert && errorAlert.getAttribute('th:if') === null) {
+				errorAlert.remove();
+			}
+		} else {
+			console.log(`Resetting ${options.validationAttribute} flag on hide.`);
+			wrapperElement.removeAttribute(options.validationAttribute);
+		}
+	});
+}
+
+function populateFormFromDataset(form, dataset) {
+	for (const key in dataset) {
+		if (Object.prototype.hasOwnProperty.call(dataset, key)) {
+			let field = form.querySelector(`[name="${key}"]`);
+			if (!field) {
+				field = form.querySelector(`#${key}`);
+			}
+
+			if (field) {
+				const value = dataset[key];
+				if (field.type === 'checkbox') {
+					field.checked = (value === 'true');
+				} else if (field.type === 'radio') {
+					const radioToSelect = form.querySelector(`input[name="${key}"][value="${value}"]`);
+					if (radioToSelect) {
+						radioToSelect.checked = true;
+					}
+				} else {
+					field.value = value;
+				}
+			}
+		}
+	}
+}
+
 function setupImageUploader(containerId) {
 	const uploader = document.getElementById(containerId);
 	if (!uploader) {
@@ -22,14 +117,14 @@ function setupImageUploader(containerId) {
 	}
 
 	if (!removeImageHiddenInput) {
-		console.error(`Uploader #${containerId} is missing '.image-remove-flag' hidden input.`);
+		console.warn(`Uploader #${containerId} is missing '.image-remove-flag' hidden input. Remove logic will not be tracked.`);
 	}
 
 	const showPreview = (fileOrSrc) => {
 		if (typeof fileOrSrc === 'string' && fileOrSrc && fileOrSrc !== "null") {
 			previewImg.src = fileOrSrc;
 			uploader.classList.add('preview-active');
-			input.value = ''; 
+			input.value = '';
 			if (removeImageHiddenInput) {
 				removeImageHiddenInput.value = 'false';
 			}
@@ -53,7 +148,7 @@ function setupImageUploader(containerId) {
 	const resetUploader = () => {
 		previewImg.src = '';
 		uploader.classList.remove('preview-active');
-		input.value = ''; 
+		input.value = '';
 		if (removeImageHiddenInput) {
 			removeImageHiddenInput.value = 'true';
 		}
@@ -98,13 +193,6 @@ function setupImageUploader(containerId) {
 	uploader.resetUploader = resetUploader;
 }
 
-/**
- * Initializes the linked input[type=number] and input[type=range] sliders
- * for setting thresholds.
- * Assumes inputs are inside a `.threshold-group` with classes
- * `.threshold-input` and `.threshold-slider`.
- * @param {HTMLElement} modalElement The modal element containing the sliders.
- */
 function initThresholdSliders(modalElement) {
 	console.log("Initializing threshold sliders for modal:", modalElement.id);
 	const lowThresholdGroup = modalElement.querySelector('.threshold-group[data-threshold-type="low"]');
@@ -127,11 +215,11 @@ function initThresholdSliders(modalElement) {
 	}
 
 	const syncSliderAndInput = (input, slider) => {
-		let value = parseInt(input.value, 10); 
+		let value = parseInt(input.value, 10);
 		let isBlank = isNaN(value);
 		if (isBlank) {
-			slider.value = 0; 
-			return; 
+			slider.value = 0;
+			return;
 		}
 
 		let sliderMax = parseInt(slider.max, 10);
@@ -143,7 +231,7 @@ function initThresholdSliders(modalElement) {
 		}
 
 		slider.value = value;
-		input.value = value; 
+		input.value = value;
 	};
 
 	const enforceThresholdLogic = () => {
@@ -151,16 +239,16 @@ function initThresholdSliders(modalElement) {
 		let criticalValue = parseInt(criticalInput.value, 10);
 
 		if (isNaN(lowValue)) {
-			lowValue = 0; 
+			lowValue = 0;
 		}
 		if (isNaN(criticalValue)) {
-			criticalValue = 0; 
+			criticalValue = 0;
 		}
 
 		let criticalMax = (lowValue > 0) ? lowValue - 1 : 0;
 
 		criticalInput.max = criticalMax;
-		criticalSlider.max = criticalMax; 
+		criticalSlider.max = criticalMax;
 
 		if (criticalValue > criticalMax) {
 			criticalInput.value = criticalMax;
@@ -170,11 +258,11 @@ function initThresholdSliders(modalElement) {
 
 	syncSliderAndInput(lowInput, lowSlider);
 	syncSliderAndInput(criticalInput, criticalSlider);
-	enforceThresholdLogic(); 
-	
+	enforceThresholdLogic();
+
 	lowSlider.addEventListener('input', () => {
 		lowInput.value = lowSlider.value;
-		enforceThresholdLogic(); 
+		enforceThresholdLogic();
 	});
 	criticalSlider.addEventListener('input', () => {
 		criticalInput.value = criticalSlider.value;
@@ -182,10 +270,10 @@ function initThresholdSliders(modalElement) {
 
 	lowInput.addEventListener('input', () => {
 		syncSliderAndInput(lowInput, lowSlider);
-		enforceThresholdLogic(); 
+		enforceThresholdLogic();
 	});
 	criticalInput.addEventListener('input', () => {
 		syncSliderAndInput(criticalInput, criticalSlider);
-		enforceThresholdLogic(); 
+		enforceThresholdLogic();
 	});
 }

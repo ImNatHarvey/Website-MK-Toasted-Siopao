@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-	console.log("admin-products.js loaded"); 
+	console.log("admin-products.js loaded");
 
 	const mainElement = document.getElementById('admin-content-wrapper');
 
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			let dataset;
 
 			const isValidationReopen = mainElement.dataset.showEditProductModal === 'true';
-			console.log("Edit Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
+			console.log("Edit Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen);
 
 			if (button && button.classList.contains('edit-product-btn-from-view')) {
 				const viewModal = document.getElementById('viewProductModal');
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.warn("Edit Product modal opened without expected button source.");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (editImageUploader) editImageUploader.resetUploader(); 
+				if (editImageUploader) editImageUploader.resetUploader();
 				return;
 			}
 
@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelector('#editProductCategoryModal').value = dataset.categoryId || '';
 				form.querySelector('#editProductPriceModal').value = dataset.price || '0.00';
 				form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
-				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0'; 
-				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0'; 
+				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0';
+				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0';
 
 				const imageUrl = dataset.imageUrl;
-				
+
 				editImageUploader.showPreview(imageUrl);
-				
+
 				if (ingredientsContainer) {
 					ingredientsContainer.innerHTML = '';
 				}
@@ -120,13 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (isRecipeLocked) {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
 				if (addIngredientBtn) addIngredientBtn.style.display = 'none';
-				if (ingredientsContainer) { 
+				if (ingredientsContainer) {
 					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
-						el.readOnly = true; 
-						el.classList.add('form-control-readonly'); 
+						el.readOnly = true;
+						el.classList.add('form-control-readonly');
 					});
 					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
-						btn.disabled = true; 
+						btn.disabled = true;
 						btn.style.display = 'none';
 					});
 				}
@@ -135,11 +135,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (addIngredientBtn) addIngredientBtn.style.display = 'block';
 				if (ingredientsContainer) {
 					ingredientsContainer.querySelectorAll('select, input').forEach(el => {
-						el.readOnly = false; 
-						el.classList.remove('form-control-readonly'); 
+						el.readOnly = false;
+						el.classList.remove('form-control-readonly');
 					});
 					ingredientsContainer.querySelectorAll('.remove-ingredient-btn').forEach(btn => {
-						btn.disabled = false; 
+						btn.disabled = false;
 						btn.style.display = 'block';
 					});
 				}
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (editImageUploader) editImageUploader.resetUploader(); 
+				if (editImageUploader) editImageUploader.resetUploader();
 			} else {
 				console.log("Resetting showEditProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-edit-product-modal');
@@ -185,9 +185,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			const dataset = button.dataset;
-			viewProductModal.relatedTarget = button; 
+			viewProductModal.relatedTarget = button;
 
-			console.log("Populating View Product Modal with data:", dataset); 
+			console.log("Populating View Product Modal with data:", dataset);
 
 			viewProductModal.querySelector('#viewProductModalLabel').textContent = 'Details for ' + (dataset.name || 'Product');
 			viewProductModal.querySelector('#viewProductName').textContent = dataset.name || 'N/A';
@@ -212,14 +212,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
-			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading'); 
+			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading');
 
 			const existingBadge = ingredientsHeading ? ingredientsHeading.querySelector('.badge') : null;
 			if (existingBadge) {
 				existingBadge.remove();
 			}
 
-			ingredientsListDiv.innerHTML = ''; 
+			ingredientsListDiv.innerHTML = '';
 
 			let ingredientsDataView = [];
 			if (dataset.ingredientsView && dataset.ingredientsView.length > 0) {
@@ -239,19 +239,19 @@ document.addEventListener('DOMContentLoaded', function() {
 					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredientsView);
 				}
 			}
-			console.log("Parsed ingredients for View:", ingredientsDataView); 
-			
+			console.log("Parsed ingredients for View:", ingredientsDataView);
+
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
 			if (isRecipeLocked && ingredientsHeading) {
 				const lockBadge = document.createElement('span');
-				lockBadge.className = 'badge bg-warning text-dark ms-2'; 
+				lockBadge.className = 'badge bg-warning text-dark ms-2';
 				lockBadge.textContent = 'Recipe Locked';
-				ingredientsHeading.appendChild(lockBadge); 
+				ingredientsHeading.appendChild(lockBadge);
 			}
 
 			if (ingredientsDataView.length > 0) {
 				const table = document.createElement('table');
-				table.className = 'table table-sm table-striped mt-2'; 
+				table.className = 'table table-sm table-striped mt-2';
 				table.innerHTML = `<thead><tr><th>Ingredient</th><th>Qty Needed</th><th>Unit</th></tr></thead><tbody></tbody>`;
 				const tbody = table.querySelector('tbody');
 				ingredientsDataView.forEach(ing => {
@@ -263,12 +263,12 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				ingredientsListDiv.innerHTML = '<p class="text-muted small">No ingredients assigned.</p>';
 			}
-			
+
 			const deleteForm = viewProductModal.querySelector('.delete-product-form-from-view');
-			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete'); 
+			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete');
 			if (deleteForm && dataset.id) {
-				deleteForm.action = `/admin/products/delete/${dataset.id}`; 
-				if (deleteInput) { 
+				deleteForm.action = `/admin/products/delete/${dataset.id}`;
+				if (deleteInput) {
 					deleteInput.value = dataset.id;
 				}
 				console.log("Set delete form action to:", deleteForm.action);
@@ -282,18 +282,18 @@ document.addEventListener('DOMContentLoaded', function() {
 	if (addProductModal) {
 		const form = addProductModal.querySelector('#addProductForm');
 		const ingredientsContainer = addProductModal.querySelector('#addIngredientsContainer');
-		const addImageUploader = document.getElementById('addImageUploader'); 
-		
+		const addImageUploader = document.getElementById('addImageUploader');
+
 		addProductModal.addEventListener('show.bs.modal', function() {
 			const isValidationReopen = mainElement.dataset.showAddProductModal === 'true';
 			console.log("Add Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen);
 
 			if (!isValidationReopen) {
-				console.log("Populating modal for ADD (resetting form)."); 
+				console.log("Populating modal for ADD (resetting form).");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (addImageUploader) addImageUploader.resetUploader(); 
-				
+				if (addImageUploader) addImageUploader.resetUploader();
+
 				const lowInput = form.querySelector('#addLowThresholdInput');
 				const critInput = form.querySelector('#addCriticalThresholdInput');
 				if (lowInput) lowInput.value = '';
@@ -317,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
-				if (addImageUploader) addImageUploader.resetUploader(); 
+				if (addImageUploader) addImageUploader.resetUploader();
 			} else {
 				console.log("Resetting showAddProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-product-modal');
@@ -331,56 +331,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
-				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).") 
+				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showManageCategoriesModal flag on hide.") 
+				console.log("Resetting showManageCategoriesModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-categories-modal');
 			}
 		});
 	}
-	
-	const editCategoryModal = document.getElementById('editCategoryModal');
-	if (editCategoryModal) {
-		const form = editCategoryModal.querySelector('#editCategoryForm');
 
-		editCategoryModal.addEventListener('show.bs.modal', function(event) {
-			const button = event.relatedTarget;
-			const isValidationReopen = mainElement.dataset.showEditCategoryModal === 'true';
-			console.log("Edit Category Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen); 
+	initializeModalForm({
+		modalId: 'editCategoryModal',
+		formId: 'editCategoryForm',
+		validationAttribute: 'data-show-edit-category-modal',
+		wrapperId: 'admin-content-wrapper',
+		editTriggerClass: 'edit-category-btn'
+	});
 
-			if (button && button.classList.contains('edit-category-btn') && !isValidationReopen) {
-				const dataset = button.dataset;
-				console.log("Populating Edit Category Modal with data:", dataset); 
-				if (form) {
-					form.querySelector('#editCategoryId').value = dataset.id || '';
-					form.querySelector('#editCategoryName').value = dataset.name || '';
-				}
-			} else if (isValidationReopen) {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
-			}
-
-			if (mainElement.dataset.showEditCategoryModal !== 'true') {
-				console.log("Clearing validation highlights on modal show (not validation reopen).");
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Modal is being reopened due to validation, NOT clearing highlights."); 
-			}
-		});
-
-		editCategoryModal.addEventListener('hidden.bs.modal', function() {
-			if (mainElement.dataset.showEditCategoryModal !== 'true') {
-				console.log("Clearing Edit Category modal on hide (not validation reopen).") 
-				if (form) form.reset();
-				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-			} else {
-				console.log("Resetting showEditCategoryModal flag on hide.") 
-				mainElement.removeAttribute('data-show-edit-category-modal');
-			}
-		});
-	}
-	
 	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
@@ -455,11 +423,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {
 			removeIngredientRow(removeBtn);
-			return; 
+			return;
 		}
 
 		const maxBtn = event.target.closest('.max-quantity-btn');
-		if (!maxBtn) return; 
+		if (!maxBtn) return;
 
 		console.log("--- Max button clicked (product page) ---");
 

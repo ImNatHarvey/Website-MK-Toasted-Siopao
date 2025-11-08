@@ -401,8 +401,7 @@
 									</tr>
 								</thead>
 								<tbody>
-									<tr th:each="prod : ${products}"
-										th:data-product-ingredients="${prod.ingredients != null ? #strings.listJoin(prod.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''}"
+									<tr th:each="prod : ${allProductsForStockModal}"
 										th:data-product-id="${prod.id}">
 										<form th:action="@{/admin/products/stock/adjust}"
 											method="post" class="stock-adjust-form">
@@ -427,7 +426,7 @@
 											</td>
 										</form>
 									</tr>
-									<tr th:if="${#lists.isEmpty(products)}">
+									<tr th:if="${#lists.isEmpty(allProductsForStockModal)}">
 										<td colspan="4" class="text-center text-muted">No
 											products found.</td>
 									</tr>

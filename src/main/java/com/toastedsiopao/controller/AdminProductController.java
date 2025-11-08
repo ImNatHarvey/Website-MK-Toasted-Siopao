@@ -7,6 +7,7 @@ import com.toastedsiopao.dto.ProductDto;
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
+import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.CategoryService;
 import com.toastedsiopao.service.FileStorageService;
@@ -52,6 +53,8 @@ public class AdminProductController {
 	private ActivityLogService activityLogService;
 	@Autowired
 	private ObjectMapper objectMapper;
+	@Autowired
+	private ProductRepository productRepository;
 
 	@Autowired
 	private FileStorageService fileStorageService;
@@ -92,23 +95,19 @@ public class AdminProductController {
 		model.addAttribute("products", productPage.getContent());
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
+		
+		// This replaces the old inventoryStockMapJson logic.
+		// It fetches ALL products with their ingredients to populate the "Manage Stock"
+		// modal,
+		// addressing a bug where the modal only showed paginated products.
+		Page<Product> allProductsPage = productRepository.findAll(Pageable.unpaged());
+		model.addAttribute("allProductsForStockModal", allProductsPage.getContent());
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", productPage.getTotalPages());
 		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
 
-		Map<Long, BigDecimal> inventoryStockMap = new HashMap<>();
-		for (InventoryItem item : inventoryItems) {
-			inventoryStockMap.put(item.getId(), item.getCurrentStock());
-		}
-		String inventoryStockMapJson = "{}";
-		try {
-			inventoryStockMapJson = objectMapper.writeValueAsString(inventoryStockMap);
-		} catch (JsonProcessingException e) {
-			log.error("Error converting inventory stock map to JSON", e);
-		}
-		model.addAttribute("inventoryStockMapJson", inventoryStockMapJson);
 		if (!model.containsAttribute("productDto")) {
 			model.addAttribute("productDto", new ProductDto());
 		}
@@ -319,5 +318,18 @@ public class AdminProductController {
 					"Could not delete product '" + productName + "': " + e.getMessage());
 		}
 		return "redirect:/admin/products";
+	}
+
+	@GetMapping("/calculate-max/{id}")
+	@ResponseBody
+	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')")
+	public Map<String, Integer> getCalculatedMax(@PathVariable("id") Long id) {
+		try {
+			int max = productService.calculateMaxProducible(id);
+			return Map.of("maxQuantity", max);
+		} catch (Exception e) {
+			log.error("Error calculating max producible for product ID {}: {}", id, e.getMessage());
+			return Map.of("maxQuantity", 0);
+		}
 	}
 }

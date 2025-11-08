@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const mainElement = document.getElementById('admin-content-wrapper');
 
 	if (!mainElement) {
-		console.error("Main element with data-inventory-stock-map not found in admin-products.js!");
+		console.error("Main element #admin-content-wrapper not found in admin-products.js!");
 		return;
 	}
 
@@ -467,87 +467,36 @@ document.addEventListener('DOMContentLoaded', function() {
 		const quantityInput = row ? row.querySelector('.quantity-change-input') : null;
 		const productId = row ? row.dataset.productId : null;
 
-		if (!mainElement) {
-			console.error("Main element not found inside Max button listener.");
-			alert("Internal error: Configuration data missing.");
-			return;
-		}
-		const inventoryStockJson = mainElement.dataset.inventoryStockMap;
-		const ingredientsData = row ? row.dataset.productIngredients : null;
-
 		if (!row) { alert("Internal error: Could not identify product row."); return; }
 		if (!quantityInput) { alert("Internal error: Could not find quantity field."); return; }
 		if (!productId) { alert("Internal error: Product ID missing."); return; }
-		if (!ingredientsData || ingredientsData.trim() === '') { alert("Could not calculate maximum: Product recipe data is missing."); return; }
-		if (!inventoryStockJson || inventoryStockJson.trim() === '') { alert("Could not calculate maximum: Inventory stock data missing."); return; }
 
+		maxBtn.disabled = true;
+		maxBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
-		try {
-			console.log(`Parsing recipe for product ${productId}:`, ingredientsData);
-			const recipe = ingredientsData.split(',')
-				.map(item => item.trim())
-				.filter(item => item.includes(':'))
-				.map(item => {
-					const [idStr, qtyNeededStr] = item.split(':');
-					const parsedId = parseInt(idStr, 10);
-					const parsedQty = parseFloat(qtyNeededStr);
-					if (isNaN(parsedId) || isNaN(parsedQty) || parsedQty <= 0) {
-						console.warn(`Invalid ingredient format skipped: id='${idStr}', qty='${qtyNeededStr}'`); return null;
-					}
-					return { itemId: parsedId, quantityNeeded: parsedQty };
-				})
-				.filter(item => item !== null);
-
-			console.log("Parsed recipe:", recipe);
-			if (recipe.length === 0) { alert("Product has no valid ingredients."); quantityInput.value = 0; return; }
-
-			console.log("Parsing inventory stock JSON:", inventoryStockJson);
-			let inventoryStockMap = {};
-			try {
-				if (!inventoryStockJson.startsWith('{') || !inventoryStockJson.endsWith('}')) throw new Error("Invalid JSON format");
-				const rawMap = JSON.parse(inventoryStockJson);
-				for (const key in rawMap) {
-					if (rawMap.hasOwnProperty(key)) {
-						const numKey = parseInt(key, 10);
-						const numVal = parseFloat(rawMap[key]);
-						if (!isNaN(numKey) && !isNaN(numVal)) {
-							inventoryStockMap[numKey] = numVal;
-						} else { console.warn(`Skipping invalid inventory entry: key='${key}', value='${rawMap[key]}'`); }
-					}
+		fetch(`/admin/products/calculate-max/${productId}`)
+			.then(response => {
+				if (!response.ok) {
+					throw new Error(`Server error: ${response.statusText}`);
 				}
-			} catch (jsonError) { console.error("Error parsing inventory stock JSON:", jsonError); alert("Inventory data error."); quantityInput.value = ''; return; }
-
-			console.log("Parsed inventory map:", inventoryStockMap);
-			if (Object.keys(inventoryStockMap).length === 0) { alert("Inventory data appears empty."); quantityInput.value = 0; return; }
-
-
-			console.log("Calculating maximum...");
-			let maxPossible = Infinity;
-			for (const ingredient of recipe) {
-				const availableStock = inventoryStockMap[ingredient.itemId];
-				console.log(`Ingredient ID ${ingredient.itemId}: Need ${ingredient.quantityNeeded}, Available: ${availableStock}`);
-
-				if (availableStock === undefined || availableStock === null || isNaN(availableStock)) {
-					console.error(`Stock not found/invalid for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
+				return response.json();
+			})
+			.then(data => {
+				if (data && data.maxQuantity !== undefined) {
+					console.log(`Received max quantity for product ${productId}: ${data.maxQuantity}`);
+					quantityInput.value = data.maxQuantity;
+				} else {
+					throw new Error("Invalid JSON response from server.");
 				}
-				if (availableStock <= 0 || availableStock < ingredient.quantityNeeded) {
-					console.log(`Insufficient stock for ingredient ID ${ingredient.itemId}.`); maxPossible = 0; break;
-				}
-
-				const possibleUnits = Math.floor(availableStock / ingredient.quantityNeeded);
-				maxPossible = Math.min(maxPossible, possibleUnits);
-			}
-
-			console.log(`Max Possible = ${maxPossible}`);
-
-			if (maxPossible === Infinity || maxPossible < 0) {
-				console.warn("Max calculation result invalid, setting to 0.");
+			})
+			.catch(error => {
+				console.error("Error fetching max quantity:", error);
+				alert(`Could not calculate maximum: ${error.message}`);
 				quantityInput.value = 0;
-			} else {
-				quantityInput.value = maxPossible;
-			}
-			console.log(`Set quantity input to: ${quantityInput.value}`);
-
-		} catch (error) { console.error("Unexpected error during Max calculation:", error); alert("Calculation error."); quantityInput.value = ''; }
+			})
+			.finally(() => {
+				maxBtn.disabled = false;
+				maxBtn.textContent = 'Max';
+			});
 	});
 });

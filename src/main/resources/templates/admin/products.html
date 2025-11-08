@@ -8,8 +8,7 @@
 <body>
 
 	<div id="admin-content-wrapper"
-		th:attr="data-inventory-stock-map=${inventoryStockMapJson != null ? inventoryStockMapJson : '{}'},
-                 data-show-add-product-modal=${#fields.hasErrors('productDto.*') ? 'true' : 'false'},
+		th:attr="data-show-add-product-modal=${#fields.hasErrors('productDto.*') ? 'true' : 'false'},
                  data-show-edit-product-modal=${#fields.hasErrors('productUpdateDto.*') ? 'true' : 'false'},
                  data-show-manage-categories-modal=${#fields.hasErrors('categoryDto.*') ? 'true' : 'false'},
                  data-show-edit-category-modal=${#fields.hasErrors('categoryUpdateDto.*') ? 'true' : 'false'},

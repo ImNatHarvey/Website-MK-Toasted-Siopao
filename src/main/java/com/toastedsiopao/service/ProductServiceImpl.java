@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -228,6 +229,8 @@ public class ProductServiceImpl implements ProductService {
 			} else {
 				BigDecimal productionAmount = new BigDecimal(quantityChange);
 
+				// --- RACE CONDITION FIX: START ---
+				// This loop now CHECKS and LOCKS inventory items.
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					if (item == null) {
@@ -242,11 +245,15 @@ public class ProductServiceImpl implements ProductService {
 					}
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 
+					// Find and lock the inventory item row for this transaction.
+					// This call will block if another transaction has locked the same row.
 					InventoryItem currentItemState = inventoryItemRepository.findByIdForUpdate(item.getId())
 							.orElseThrow(() -> new RuntimeException(
 									"Inventory item '" + item.getName() + "' not found and could not be locked."));
 
 					if (currentItemState.getCurrentStock().compareTo(amountToDecrease) < 0) {
+						// Because we have a lock, this check is definitive for this transaction.
+						// The transaction will roll back, releasing the lock.
 						throw new IllegalArgumentException(
 								"Insufficient inventory for '" + item.getName() + "'. Need " + amountToDecrease + " "
 										+ item.getUnit().getAbbreviation() + " to produce " + quantityChange + " '"
@@ -254,7 +261,11 @@ public class ProductServiceImpl implements ProductService {
 										+ item.getUnit().getAbbreviation() + " available.");
 					}
 				}
-				
+				// --- RACE CONDITION FIX: END ---
+
+				// This second loop performs the deduction.
+				// It will re-use the entities already locked and loaded into the
+				// persistence context by the loop above.
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
@@ -266,6 +277,7 @@ public class ProductServiceImpl implements ProductService {
 					String deductionReason = "Production of " + quantityChange + "x " + product.getName() + " (ID: "
 							+ productId + ")";
 
+					// This service call will find the already-locked item and update it.
 					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
 
 					log.info("Deducted {} {} of '{}' from inventory for production.", amountToDecrease,
@@ -307,5 +319,56 @@ public class ProductServiceImpl implements ProductService {
 	@Transactional(readOnly = true)
 	public long countOutOfStockProducts() {
 		return productRepository.countOutOfStockProducts();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public int calculateMaxProducible(Long productId) {
+		Optional<Product> productOpt = productRepository.findById(productId);
+		if (productOpt.isEmpty()) {
+			log.warn("calculateMaxProducible: Product not found with ID {}", productId);
+			return 0;
+		}
+
+		List<RecipeIngredient> ingredients = productOpt.get().getIngredients();
+		if (ingredients == null || ingredients.isEmpty()) {
+			log.warn("calculateMaxProducible: Product '{}' has no ingredients.", productOpt.get().getName());
+			return 0;
+		}
+
+		int maxPossible = Integer.MAX_VALUE;
+
+		for (RecipeIngredient ingredient : ingredients) {
+			Optional<InventoryItem> itemOpt = inventoryItemService.findById(ingredient.getInventoryItem().getId());
+
+			if (itemOpt.isEmpty()) {
+				log.warn("calculateMaxProducible: Ingredient item ID {} not found.",
+						ingredient.getInventoryItem().getId());
+				return 0; 
+			}
+
+			BigDecimal availableStock = itemOpt.get().getCurrentStock();
+			BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
+
+			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) {
+				log.warn("calculateMaxProducible: Ingredient '{}' has invalid quantity needed ({}).",
+						itemOpt.get().getName(), quantityNeeded);
+				continue; 
+			}
+
+			if (availableStock.compareTo(quantityNeeded) < 0) {
+				log.debug("calculateMaxProducible: Not enough stock for '{}'. Need {}, have {}.",
+						itemOpt.get().getName(), quantityNeeded, availableStock);
+				return 0; 
+			}
+
+			int possibleUnits = availableStock.divide(quantityNeeded, 0, RoundingMode.FLOOR).intValue();
+
+			if (possibleUnits < maxPossible) {
+				maxPossible = possibleUnits;
+			}
+		}
+
+		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
 	}
 }

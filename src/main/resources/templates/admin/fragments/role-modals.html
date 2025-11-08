@@ -57,15 +57,7 @@
 										th:disabled="${role.name == 'ROLE_OWNER'}"
 										th:title="${role.name == 'ROLE_OWNER' ? 'Owner role cannot be edited.' : 'Edit Role'}"
 										th:data-id="${role.id}"
-										th:data-name="${role.name.replace('ROLE_', '')}"
-										th:data-manage-customers="${role.permissions.contains('VIEW_CUSTOMERS')}"
-										th:data-manage-admins="${role.permissions.contains('VIEW_ADMINS')}"
-										th:data-manage-orders="${role.permissions.contains('VIEW_ORDERS')}"
-										th:data-manage-products="${role.permissions.contains('VIEW_PRODUCTS')}"
-										th:data-manage-inventory="${role.permissions.contains('VIEW_INVENTORY')}"
-										th:data-manage-transactions="${role.permissions.contains('VIEW_TRANSACTIONS')}"
-										th:data-manage-site="${role.permissions.contains('EDIT_SITE_SETTINGS')}"
-										th:data-manage-activity-log="${role.permissions.contains('VIEW_ACTIVITY_LOG')}">
+										th:data-name="${role.name.replace('ROLE_', '')}">
 										Edit</button>
 									<form
 										th:action="@{/admin/admins/roles/delete/{id}(id=${role.id})}"
@@ -90,7 +82,7 @@
 
 		<div class="modal fade" id="editRoleModal" tabindex="-1"
 			aria-labelledby="editRoleModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
+			<div class="modal-dialog">
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/roles/update}" method="post"
 						th:object="${roleUpdateDto}" id="editRoleForm">
@@ -115,66 +107,6 @@
 									Error</div>
 								<div class="form-text">Role name must be uppercase,
 									letters and underscores only.</div>
-							</div>
-
-							<hr>
-							<h5 class="mb-3">Role Permissions</h5>
-
-							<div class="row">
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="editRoleManageCustomers">
-										<label class="form-check-label" for="editRoleManageCustomers">Customer
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="editRoleManageAdmins">
-										<label class="form-check-label" for="editRoleManageAdmins">Admin
-											Management (View/Add/Delete)</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="editRoleManageOrders">
-										<label class="form-check-label" for="editRoleManageOrders">Order
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="editRoleManageProducts">
-										<label class="form-check-label" for="editRoleManageProducts">Product
-											Management</label>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="editRoleManageInventory">
-										<label class="form-check-label" for="editRoleManageInventory">Inventory
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}"
-											id="editRoleManageTransactions"> <label
-											class="form-check-label" for="editRoleManageTransactions">Transaction
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="editRoleManageSite"> <label
-											class="form-check-label" for="editRoleManageSite">Site
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}"
-											id="editRoleManageActivityLog"> <label
-											class="form-check-label" for="editRoleManageActivityLog">View
-											Activity Log</label>
-									</div>
-								</div>
 							</div>
 
 						</div>

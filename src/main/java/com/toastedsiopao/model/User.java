@@ -1,6 +1,8 @@
 package com.toastedsiopao.model;
 
+import jakarta.persistence.CollectionTable; // ADDED
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection; // ADDED
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -10,12 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient; // ADDED
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime; 
+import java.time.LocalDateTime;
+import java.util.HashSet; // ADDED
+import java.util.Set; // ADDED
 
 @Entity
 @Table(name = "users")
@@ -36,9 +41,16 @@ public class User {
 	@Column(nullable = false, length = 68)
 	private String password;
 
-	@ManyToOne(fetch = FetchType.EAGER) 
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "role_id")
 	private Role role;
+
+	// --- ADDED: Individual permission overrides ---
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
+	@Column(name = "permission", nullable = false)
+	private Set<String> permissions = new HashSet<>();
+	// --- END ADDED ---
 
 	@Column(length = 50)
 	private String firstName;
@@ -46,13 +58,13 @@ public class User {
 	@Column(length = 50)
 	private String lastName;
 
-	@Column(unique = true, length = 100) 
+	@Column(unique = true, length = 100)
 	private String email;
 
 	@Column(length = 20)
 	private String phone;
 
-	@Column(length = 50, nullable = true) 
+	@Column(length = 50, nullable = true)
 	private String houseNo;
 
 	@Column(length = 50, nullable = true)
@@ -64,24 +76,24 @@ public class User {
 	@Column(length = 100, nullable = true)
 	private String street;
 
-	@Column(length = 100, nullable = true) 
+	@Column(length = 100, nullable = true)
 	private String barangay;
 
-	@Column(length = 100, nullable = true) 
+	@Column(length = 100, nullable = true)
 	private String municipality;
 
-	@Column(length = 100, nullable = true) 
+	@Column(length = 100, nullable = true)
 	private String province;
 
-	@Column(nullable = true, length = 20) 
-	private String status; 
+	@Column(nullable = true, length = 20)
+	private String status;
 
-	@Column(nullable = true, updatable = false) 
+	@Column(nullable = true, updatable = false)
 	private LocalDateTime createdAt;
 
-	@Column(nullable = true) 
+	@Column(nullable = true)
 	private LocalDateTime lastActivity;
-	
+
 	public User(String username, String password, Role role) {
 		this.username = username;
 		this.password = password;
@@ -97,7 +109,22 @@ public class User {
 			lastActivity = LocalDateTime.now();
 		}
 		if (status == null) {
-			status = "ACTIVE"; 
+			status = "ACTIVE";
 		}
+	}
+
+	// --- ADDED: Helper method for permissions ---
+	public void addPermission(String permission) {
+		this.permissions.add(permission);
+	}
+
+	@Transient
+	public Set<String> getCombinedPermissions() {
+		Set<String> combined = new HashSet<>();
+		if (role != null) {
+			combined.addAll(role.getPermissions());
+		}
+		combined.addAll(this.permissions); // Add individual overrides
+		return combined;
 	}
 }

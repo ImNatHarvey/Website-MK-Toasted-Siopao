@@ -41,6 +41,7 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "A role must be selected")
 	private String roleName;
 
+	// --- PERMISSIONS ADDED BACK ---
 	private boolean manageCustomers;
 	private boolean manageAdmins;
 	private boolean manageOrders;

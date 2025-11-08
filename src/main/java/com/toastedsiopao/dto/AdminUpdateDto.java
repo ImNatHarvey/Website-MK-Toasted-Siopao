@@ -35,6 +35,7 @@ public class AdminUpdateDto {
 	@NotBlank(message = "Role name cannot be blank")
 	private String roleName;
 
+	// --- PERMISSIONS ADDED BACK ---
 	private boolean manageCustomers;
 	private boolean manageAdmins;
 	private boolean manageOrders;

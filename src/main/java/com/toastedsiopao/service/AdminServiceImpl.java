@@ -83,6 +83,7 @@ public class AdminServiceImpl implements AdminService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<Role> findAllAdminRoles() {
+
 		return roleRepository.findByNameNotIn(List.of(CUSTOMER_ROLE_NAME, OWNER_ROLE_NAME));
 	}
 
@@ -112,15 +113,7 @@ public class AdminServiceImpl implements AdminService {
 		return formattedName;
 	}
 
-	private void addPermissionsToRole(Role role, AdminAccountCreateDto dto) {
-
-		log.debug("Permissions are no longer updated via AdminAccountCreateDto.");
-	}
-
-	private void addPermissionsToRole(Role role, AdminUpdateDto dto) {
-
-		log.debug("Permissions are no longer updated via AdminUpdateDto.");
-	}
+	// --- HELPER METHODS REMOVED, as logic is now in create/update ---
 
 	private void mapPermissionsToRole(Role role, RoleDto dto) {
 		role.getPermissions().clear();
@@ -196,6 +189,26 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
 		newUser.setRole(roleToAssign);
 
+		// --- ADDED: Save individual permission overrides ---
+		newUser.getPermissions().clear();
+		if (userDto.isManageCustomers())
+			newUser.addPermission(Permission.VIEW_CUSTOMERS.name());
+		if (userDto.isManageAdmins())
+			newUser.addPermission(Permission.VIEW_ADMINS.name());
+		if (userDto.isManageOrders())
+			newUser.addPermission(Permission.VIEW_ORDERS.name());
+		if (userDto.isManageProducts())
+			newUser.addPermission(Permission.VIEW_PRODUCTS.name());
+		if (userDto.isManageInventory())
+			newUser.addPermission(Permission.VIEW_INVENTORY.name());
+		if (userDto.isManageTransactions())
+			newUser.addPermission(Permission.VIEW_TRANSACTIONS.name());
+		if (userDto.isManageSite())
+			newUser.addPermission(Permission.EDIT_SITE_SETTINGS.name());
+		if (userDto.isManageActivityLog())
+			newUser.addPermission(Permission.VIEW_ACTIVITY_LOG.name());
+		// --- END ADDED ---
+
 		return userRepository.save(newUser);
 	}
 
@@ -244,15 +257,37 @@ public class AdminServiceImpl implements AdminService {
 				userToUpdate.setRole(newRole);
 				roleToUpdate = newRole;
 			}
-
 		} else {
-
 			if (!userDto.getRoleName().equals(roleToUpdate.getName())) {
 				log.warn("Non-Owner user {} tried to change role for {}. Blocked.", authentication.getName(),
 						userToUpdate.getUsername());
 			}
-
 		}
+
+		// --- ADDED: Save individual permission overrides ---
+		// Note: Non-owners can't change permissions, but we'll let them save *other*
+		// fields.
+		// We only update permissions if the current user is an OWNER.
+		if (isOwner) {
+			userToUpdate.getPermissions().clear();
+			if (userDto.isManageCustomers())
+				userToUpdate.addPermission(Permission.VIEW_CUSTOMERS.name());
+			if (userDto.isManageAdmins())
+				userToUpdate.addPermission(Permission.VIEW_ADMINS.name());
+			if (userDto.isManageOrders())
+				userToUpdate.addPermission(Permission.VIEW_ORDERS.name());
+			if (userDto.isManageProducts())
+				userToUpdate.addPermission(Permission.VIEW_PRODUCTS.name());
+			if (userDto.isManageInventory())
+				userToUpdate.addPermission(Permission.VIEW_INVENTORY.name());
+			if (userDto.isManageTransactions())
+				userToUpdate.addPermission(Permission.VIEW_TRANSACTIONS.name());
+			if (userDto.isManageSite())
+				userToUpdate.addPermission(Permission.EDIT_SITE_SETTINGS.name());
+			if (userDto.isManageActivityLog())
+				userToUpdate.addPermission(Permission.VIEW_ACTIVITY_LOG.name());
+		}
+		// --- END ADDED ---
 
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
@@ -325,7 +360,9 @@ public class AdminServiceImpl implements AdminService {
 
 		return userRepository.countByRole_NameNotAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
 	}
-	
+
+	// --- ROLE MANAGEMENT METHODS ---
+
 	@Override
 	public Role createRole(RoleDto roleDto) {
 		String formattedName = formatRoleName(roleDto.getName());

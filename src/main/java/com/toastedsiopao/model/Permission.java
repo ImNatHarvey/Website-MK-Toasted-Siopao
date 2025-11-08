@@ -1,17 +1,15 @@
 package com.toastedsiopao.model;
 
-
 public enum Permission {
-	
+
 	VIEW_DASHBOARD("View Dashboard"),
-	
+
 	VIEW_CUSTOMERS("View Customer Management"), ADD_CUSTOMERS("Add Customers"), EDIT_CUSTOMERS("Edit Customers"),
 	DELETE_CUSTOMERS("Delete Customers"),
 
-	VIEW_ADMINS("View Admin Management"), ADD_ADMINS("Add Admins"), EDIT_ADMINS("Edit Admin Roles/Permissions"),
-	DELETE_ADMINS("Delete Admins"),
+	VIEW_ADMINS("View Admin Management"), ADD_ADMINS("Add Admins"), DELETE_ADMINS("Delete Admins"),
 
-	VIEW_ORDERS("View Order Management"), EDIT_ORDERS("Update Order Status"), 
+	VIEW_ORDERS("View Order Management"), EDIT_ORDERS("Update Order Status"),
 
 	VIEW_PRODUCTS("View Product Management"), ADD_PRODUCTS("Add Products"), EDIT_PRODUCTS("Edit Products"),
 	DELETE_PRODUCTS("Delete Products"), ADJUST_PRODUCT_STOCK("Adjust Product Stock (Production/Wastage)"),
@@ -24,7 +22,7 @@ public enum Permission {
 	VIEW_TRANSACTIONS("View Transaction History"),
 
 	EDIT_SITE_SETTINGS("Edit Site Management"),
-	
+
 	VIEW_ACTIVITY_LOG("View Activity Log");
 
 	private final String description;

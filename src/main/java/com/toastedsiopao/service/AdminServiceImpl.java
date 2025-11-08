@@ -1,6 +1,7 @@
 package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.model.Permission;
 import com.toastedsiopao.model.Role;
@@ -109,7 +110,7 @@ public class AdminServiceImpl implements AdminService {
 		if (dto.isManageAdmins()) {
 			role.addPermission(Permission.VIEW_ADMINS.name());
 			role.addPermission(Permission.ADD_ADMINS.name());
-			role.addPermission(Permission.EDIT_ADMINS.name());
+			// EDIT_ADMINS permission is removed
 			role.addPermission(Permission.DELETE_ADMINS.name());
 		}
 		if (dto.isManageOrders()) {
@@ -157,7 +158,7 @@ public class AdminServiceImpl implements AdminService {
 		if (dto.isManageAdmins()) {
 			role.addPermission(Permission.VIEW_ADMINS.name());
 			role.addPermission(Permission.ADD_ADMINS.name());
-			role.addPermission(Permission.EDIT_ADMINS.name());
+			// EDIT_ADMINS permission is removed
 			role.addPermission(Permission.DELETE_ADMINS.name());
 		}
 		if (dto.isManageOrders()) {
@@ -233,9 +234,12 @@ public class AdminServiceImpl implements AdminService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
+		// --- FIX ---
+		// Protection must be based on Role, not username.
 		if (userToUpdate.getRole() != null && OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("The Owner account cannot be edited by other admins.");
 		}
+		// --- END FIX ---
 
 		if (userToUpdate.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-admin user with this method.");
@@ -290,7 +294,7 @@ public class AdminServiceImpl implements AdminService {
 	}
 
 	@Override
-	public User updateAdminProfile(AdminUpdateDto adminDto) {
+	public User updateAdminProfile(AdminProfileUpdateDto adminDto) {
 
 		User userToUpdate = userRepository.findById(adminDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + adminDto.getId()));
@@ -303,14 +307,6 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setUsername(adminDto.getUsername());
 		userToUpdate.setEmail(adminDto.getEmail());
 
-		if (OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
-			if (adminDto.isManageAdmins() || adminDto.isManageCustomers()) {
-				log.warn("Attempt by Owner ({}) to change their own role was blocked.", userToUpdate.getUsername());
-			}
-			userToUpdate.setRole(userToUpdate.getRole());
-		} else {
-			userToUpdate.setRole(userToUpdate.getRole());
-		}
 		return userRepository.save(userToUpdate);
 	}
 
@@ -320,9 +316,12 @@ public class AdminServiceImpl implements AdminService {
 		User userToDelete = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
+		// --- FIX ---
+		// Protection must be based on Role, not username.
 		if (userToDelete.getRole() != null && OWNER_ROLE_NAME.equals(userToDelete.getRole().getName())) {
 			throw new RuntimeException("The Owner account cannot be deleted.");
 		}
+		// --- END FIX ---
 
 		if (userToDelete.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToDelete.getRole().getName())) {
 			throw new RuntimeException("Cannot delete non-admin user with this method.");

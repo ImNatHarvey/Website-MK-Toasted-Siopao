@@ -1,8 +1,9 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
-import com.toastedsiopao.model.Role; 
+import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService;
@@ -14,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize; 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -24,7 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
-import java.util.List; 
+import java.util.List;
 import java.util.Optional;
 
 @Controller
@@ -37,7 +38,7 @@ public class AdminManagementController {
 	private AdminService adminService;
 
 	@Autowired
-	private CustomerService customerService; 
+	private CustomerService customerService;
 
 	@Autowired
 	private ActivityLogService activityLogService;
@@ -48,7 +49,7 @@ public class AdminManagementController {
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAuthority('VIEW_ADMINS')") 
+	@PreAuthorize("hasAuthority('VIEW_ADMINS')")
 	public String manageAdmins(Model model, Principal principal,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -79,16 +80,13 @@ public class AdminManagementController {
 
 		if (!model.containsAttribute("adminProfileDto")) {
 			User currentUser = customerService.findByUsername(principal.getName());
-			AdminUpdateDto profileDto = new AdminUpdateDto();
+			AdminProfileUpdateDto profileDto = new AdminProfileUpdateDto();
 			if (currentUser != null) {
 				profileDto.setId(currentUser.getId());
 				profileDto.setFirstName(currentUser.getFirstName());
 				profileDto.setLastName(currentUser.getLastName());
 				profileDto.setUsername(currentUser.getUsername());
 				profileDto.setEmail(currentUser.getEmail());
-				if (currentUser.getRole() != null) {
-					profileDto.setRoleName(currentUser.getRole().getName().replace("ROLE_", "")); 
-				}
 			}
 			model.addAttribute("adminProfileDto", profileDto);
 		}
@@ -97,7 +95,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasAuthority('ADD_ADMINS')") 
+	@PreAuthorize("hasRole('OWNER')")
 	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -144,7 +142,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasAuthority('EDIT_ADMINS')") 
+	@PreAuthorize("hasRole('OWNER')")
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminUpdateDto adminDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -164,13 +162,13 @@ public class AdminManagementController {
 			redirectAttributes.addFlashAttribute("adminSuccess",
 					"Admin '" + updatedUser.getUsername() + "' updated successfully!");
 
-		} catch (RuntimeException e) { 
+		} catch (RuntimeException e) {
 			log.warn("Validation error updating admin: {}", e.getMessage());
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
-			} else if (e.getMessage().contains("Role name")) { 
+			} else if (e.getMessage().contains("Role name")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());
@@ -187,26 +185,18 @@ public class AdminManagementController {
 
 	@PostMapping("/profile/update")
 	@PreAuthorize("isAuthenticated()")
-	public String updateAdminProfile(@Valid @ModelAttribute("adminProfileDto") AdminUpdateDto adminDto,
+	public String updateAdminProfile(@Valid @ModelAttribute("adminProfileDto") AdminProfileUpdateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
-		if (result.hasFieldErrors("roleName")) {
-		}
-
 		if (result.hasErrors()) {
-			boolean onlyRoleErrors = result.getFieldErrors().stream().allMatch(e -> e.getField().equals("roleName"));
-
-			if (!onlyRoleErrors) {
-				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
-						result);
-				redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);
-				addCommonAttributesForRedirect(redirectAttributes);
-				String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editProfileModal")
-						.build().toUriString();
-				return "redirect:" + redirectUrl;
-			}
-			log.warn("Ignoring 'roleName' validation error for self-profile update.");
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
+					result);
+			redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);
+			addCommonAttributesForRedirect(redirectAttributes);
+			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editProfileModal").build()
+					.toUriString();
+			return "redirect:" + redirectUrl;
 		}
 
 		User currentUser = customerService.findByUsername(principal.getName());
@@ -214,12 +204,9 @@ public class AdminManagementController {
 			redirectAttributes.addFlashAttribute("adminError", "Security error: Profile mismatch.");
 			return "redirect:/admin/admins";
 		}
-		if (currentUser.getRole() != null) {
-			adminDto.setRoleName(currentUser.getRole().getName().replace("ROLE_", ""));
-		}
 
 		try {
-			User updatedUser = adminService.updateAdminProfile(adminDto); 
+			User updatedUser = adminService.updateAdminProfile(adminDto);
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE",
 					"Updated own profile: " + updatedUser.getUsername());
 			redirectAttributes.addFlashAttribute("adminSuccess", "Your profile has been updated successfully!");

@@ -87,7 +87,7 @@
 										<input class="form-check-input" type="checkbox" role="switch"
 											th:field="*{manageAdmins}" id="addManageAdmins"> <label
 											class="form-check-label" for="addManageAdmins">Admin
-											Management</label>
+											Management (View/Delete)</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
@@ -256,7 +256,7 @@
 											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
 										<label class="form-check-label" for="editManageAdmins"
 											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Admin
-											Management</label>
+											Management (View/Delete)</label>
 									</div>
 									<div class="form-check form-switch mb-2">
 										<input class="form-check-input" type="checkbox" role="switch"
@@ -441,14 +441,8 @@
 									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 							</div>
 
-							<div class="mb-3">
-								<label for="profileRole" class="form-label">My Role</label> <input
-									type="text" class="form-control" th:field="*{roleName}"
-									id="profileRole" readonly disabled>
-							</div>
-
 							<div class="alert alert-warning small">To change your
-								password, please contact the System Owner.</div>
+								password or role, please contact the System Owner.</div>
 						</div>
 						<div class="modal-footer">
 							<button type="submit" class="btn btn-custom">Save

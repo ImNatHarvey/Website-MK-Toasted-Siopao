@@ -51,7 +51,7 @@
 			<div class="col-lg col-md-6 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class...="card-title">Cancelled</h5>
+						<h5 class="card-title">Cancelled</h5>
 						<p class="display-6 fw-bold text-danger"
 							th:text="${cancelledOrders}">0</p>
 					</div>
@@ -60,19 +60,22 @@
 		</div>
 		<form th:action="@{/admin/orders}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
-			<div class="row g-3 align-items-end">
-				<div class="col-md-10">
+			<div class="d-flex flex-column flex-md-row gap-2">
+				<div class="flex-grow-1">
 					<label for="keyword" class="form-label">Search by Order ID
 						or Customer Name</label> <input type="text" class="form-control"
 						id="keyword" name="keyword" th:value="${keyword}"
 						placeholder="Enter search term...">
 				</div>
-				<div class="col-md-2 d-flex justify-content-end">
-					<button type="submit" class="btn btn-action-view me-2">
-						<i class="fa-solid fa-search me-1"></i> Search
+				<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
+					<button type="submit" class="btn btn-action-view" title="Search">
+						<i class="fa-solid fa-search"></i> <span
+							class="d-none d-md-inline ms-1">Search</span>
 					</button>
 					<a th:href="@{/admin/orders}" class="btn btn-custom-secondary"
-						title="Clear Search & Filters">Clear </a>
+						title="Clear Search & Filters"> <i class="fa-solid fa-times"></i>
+						<span class="d-none d-md-inline ms-1">Clear</span>
+					</a>
 				</div>
 				<input type="hidden" name="status" th:value="${currentStatus}" />
 			</div>

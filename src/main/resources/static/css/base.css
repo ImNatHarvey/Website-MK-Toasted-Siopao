@@ -1,0 +1,25 @@
+:root {
+	/* Color Palette */
+	--light: #fffdf5;
+	--dark: #213448;
+	--primary: #113F67; /* Deep Blue */
+	--secondary: #fdf5aa; /* Light Yellow */
+	--accent: #ffc374; /* Orange/Gold */
+	--success: #28a745; /* Green */
+	--warning: #ffc107; /* Yellow */
+	--danger: #dc3545; /* Red */
+	--info: #17a2b8; /* Teal */
+	--muted-text: #6c757d; /* Standard muted color */
+	/* Admin Layout Variables */
+	--sidebar-width: 260px;
+	--sidebar-width-mini: 80px;
+	--top-nav-height: 70px;
+}
+
+body {
+	/* Modern System Font Stack */
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+		Roboto, "Helvetica Neue", Arial, sans-serif;
+	color: var(--dark);
+	background-color: var(--light);
+}

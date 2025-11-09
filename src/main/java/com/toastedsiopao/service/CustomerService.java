@@ -11,13 +11,13 @@ import java.util.Optional;
 
 public interface CustomerService {
 
-	User saveCustomer(CustomerSignUpDto customerDto); 
-	
+	User saveCustomer(CustomerSignUpDto customerDto);
+
 	User createCustomerFromAdmin(CustomerCreateDto userDto);
 
 	User findByUsername(String username);
 
-	Optional<User> findUserById(Long id); 
+	Optional<User> findUserById(Long id);
 
 	Page<User> findAllCustomers(Pageable pageable);
 
@@ -27,7 +27,9 @@ public interface CustomerService {
 
 	long countActiveCustomers();
 
-	void deleteCustomerById(Long id); 
+	long countInactiveCustomers(); 
+
+	void deleteCustomerById(Long id);
 
 	void updateLastActivity(String username);
 

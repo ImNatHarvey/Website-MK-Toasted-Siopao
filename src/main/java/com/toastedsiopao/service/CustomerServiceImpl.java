@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,21 +20,21 @@ import org.springframework.util.StringUtils;
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
-import com.toastedsiopao.model.Order; 
-import com.toastedsiopao.model.Role; 
+import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.OrderRepository;
-import com.toastedsiopao.repository.RoleRepository; 
+import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
 
 @Service
-@Transactional 
+@Transactional
 public class CustomerServiceImpl implements CustomerService {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomerServiceImpl.class);
 
 	private static final int INACTIVITY_PERIOD_MONTHS = 1;
-	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER"; 
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER";
 
 	@Autowired
 	private UserRepository userRepository;
@@ -43,13 +43,13 @@ public class CustomerServiceImpl implements CustomerService {
 	private OrderRepository orderRepository;
 
 	@Autowired
-	private RoleRepository roleRepository; 
+	private RoleRepository roleRepository;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
 	@Autowired
-	private Clock clock; 
+	private Clock clock;
 
 	@Autowired
 	private UserValidationService userValidationService;
@@ -76,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setEmail(userDto.getEmail());
 		newUser.setPhone(userDto.getPhone());
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
-		newUser.setRole(customerRole); 
+		newUser.setRole(customerRole);
 
 		newUser.setHouseNo(userDto.getHouseNo());
 		newUser.setLotNo(userDto.getLotNo());
@@ -124,7 +124,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<User> findAllCustomers(Pageable pageable) {
-		return userRepository.findByRole_Name(CUSTOMER_ROLE_NAME, pageable); 
+		return userRepository.findByRole_Name(CUSTOMER_ROLE_NAME, pageable);
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User userToUpdate = userRepository.findById(userDto.getId())
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
-		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) { 
+		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
 
@@ -174,7 +174,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void deleteCustomerById(Long id) {
-		
+
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
@@ -195,6 +195,12 @@ public class CustomerServiceImpl implements CustomerService {
 	@Transactional(readOnly = true)
 	public long countActiveCustomers() {
 		return userRepository.countByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "ACTIVE");
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countInactiveCustomers() {
+		return userRepository.countByRole_NameAndStatus(CUSTOMER_ROLE_NAME, "INACTIVE");
 	}
 
 	@Override
@@ -224,7 +230,7 @@ public class CustomerServiceImpl implements CustomerService {
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) { 
+		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) {
 			throw new IllegalArgumentException("Can only update status for customers.");
 		}
 

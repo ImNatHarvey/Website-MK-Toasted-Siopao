@@ -101,7 +101,7 @@ public class AdminCustomerController {
 			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
-					toUriString();
+					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
 

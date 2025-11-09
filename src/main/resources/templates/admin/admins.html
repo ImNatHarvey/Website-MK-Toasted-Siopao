@@ -18,8 +18,8 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Admin Management</h1>
 			<div class="d-flex gap-2">
-				<button sec:authorize="hasRole('OWNER')" class="btn btn-action-add"
-					type="button" data-bs-toggle="modal"
+				<button sec:authorize="hasAuthority('ADD_ADMINS')"
+					class="btn btn-action-add" type="button" data-bs-toggle="modal"
 					data-bs-target="#addAdminModal">
 					<i class="fa-solid fa-plus me-1"></i> Add Admin
 				</button>
@@ -102,7 +102,8 @@
 								th:data-email="${admin.email != null ? admin.email : 'N/A'}"
 								th:data-role-name="${admin.role != null ? admin.role.name : ''}"
 								th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
-								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyY HH:mm') : 'N/A'}">
+								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyY HH:mm') : 'N/A'}"
+								th:data-permissions="${admin.role != null ? #strings.listJoin(admin.role.permissions, ',') : ''}">
 
 								<td th:text="${admin.id}">001</td>
 								<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
@@ -124,12 +125,12 @@
 									<button class="btn btn-sm btn-action-view view-admin-btn"
 										data-bs-toggle="modal" data-bs-target="#viewAdminModal">View</button>
 
-									<div sec:authorize="hasRole('OWNER')">
+									<div sec:authorize="hasAuthority('EDIT_ADMINS')">
 										<button type="button"
 											class="btn btn-sm btn-action-edit edit-admin-btn"
 											data-bs-toggle="modal" data-bs-target="#editAdminModal"
 											th:disabled="${admin.role != null and admin.role.name == 'ROLE_OWNER'}"
-											title="The Owner account cannot be edited."
+											th:title="${(admin.role != null and admin.role.name == 'ROLE_OWNER') ? 'The Owner account cannot be edited.' : 'Edit Admin'}"
 											th:data-id="${admin.id}"
 											th:data-name="${admin.firstName + ' ' + admin.lastName}"
 											th:data-first-name="${admin.firstName}"
@@ -139,7 +140,7 @@
 											th:data-role-name="${admin.role != null ? admin.role.name : ''}">Edit</button>
 									</div>
 
-									<form sec:authorize="hasRole('OWNER')"
+									<form sec:authorize="hasAuthority('DELETE_ADMINS')"
 										th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
 										th:data-confirm-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'?'">

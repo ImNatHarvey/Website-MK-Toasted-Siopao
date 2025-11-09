@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
-			const role = dataset.roleName.replace('ROLE_', '') || 'N/A'; // Clean up role name
+			const role = dataset.roleName.replace('ROLE_', '') || 'N/A';
+			const permissionsString = dataset.permissions || ''; // Get the string of permissions
 
 			viewAdminModal.querySelector('#viewAdminModalLabel').textContent = 'Details for ' + name;
 			viewAdminModal.querySelector('#viewAdminName').textContent = name;
@@ -32,7 +33,55 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewAdminModal.querySelector('#viewAdminRole').textContent = role;
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
 
-			// --- REMOVED PERMISSION ICON LOGIC ---
+			// --- UPDATED LOGIC FOR POPULATING 8 MANAGEMENT MODULES ---
+			const permissionGrid = viewAdminModal.querySelector('#viewAdminPermissionGrid');
+			permissionGrid.innerHTML = ''; // Clear old content
+
+			// Define the 8 management modules and their corresponding key permission
+			const managementModules = {
+				'VIEW_CUSTOMERS': 'Customer Management',
+				'VIEW_ADMINS': 'Admin Management',
+				'VIEW_ORDERS': 'Order Management',
+				'VIEW_PRODUCTS': 'Product Management',
+				'VIEW_INVENTORY': 'Inventory MManagement',
+				'VIEW_TRANSACTIONS': 'Transaction History',
+				'EDIT_SITE_SETTINGS': 'Site Management',
+				'VIEW_ACTIVITY_LOG': 'Activity Log'
+			};
+
+			// Create a Set for quick lookup of assigned permissions
+			const assignedPermSet = new Set(permissionsString.split(',').filter(p => p.trim() !== ''));
+
+			// Iterate over the 8 management modules
+			for (const permKey in managementModules) {
+				const hasPermission = assignedPermSet.has(permKey);
+				const friendlyName = managementModules[permKey];
+
+				const permItem = document.createElement('div');
+				permItem.className = 'd-flex align-items-center gap-2 mb-2';
+				// Use col-6 to make it two columns
+				permItem.style.flexBasis = 'calc(50% - 0.5rem)';
+
+				const icon = document.createElement('i');
+				icon.className = hasPermission ? 'fa-solid fa-check text-success' : 'fa-solid fa-times text-danger';
+				icon.style.width = '20px'; // Ensure alignment
+
+				const text = document.createElement('span');
+				text.textContent = friendlyName;
+
+				permItem.appendChild(icon);
+				permItem.appendChild(text);
+				permissionGrid.appendChild(permItem);
+			}
+
+			// Handle case where no permissions are found
+			if (assignedPermSet.size === 0) {
+				const noPermsDiv = document.createElement('div');
+				noPermsDiv.className = 'text-muted col-12';
+				noPermsDiv.textContent = 'No management modules assigned to this role.';
+				permissionGrid.appendChild(noPermsDiv);
+			}
+			// --- END UPDATED LOGIC ---
 		});
 	}
 

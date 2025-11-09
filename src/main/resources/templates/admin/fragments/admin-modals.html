@@ -225,17 +225,17 @@
 							<strong>Email:</strong> <span id="viewAdminEmail"></span>
 						</p>
 						<p>
-							<strong>Role:</strong> <span id="viewAdminRole"></span>
+							<strong>Role:</strong> <span id="viewAdminRole" class="fw-bold"></span>
 						</p>
 						<p class="mb-1">
 							<strong>Account Created:</strong> <span id="viewAdminCreatedAt"></span>
 						</p>
 
 						<hr>
-						<h6 class="mb-3">Assigned Modules</h6>
-						<p class="text-muted small">Permissions are now managed by
-							Role. To see this user's permissions, view the details for their
-							assigned role.</p>
+						<h6 class="mb-3">Assigned Permissions</h6>
+						<div id="viewAdminPermissionGrid" class="d-flex flex-wrap gap-3">
+							<div class="text-muted col-12">Loading permissions...</div>
+						</div>
 
 					</div>
 					<div class="modal-footer">

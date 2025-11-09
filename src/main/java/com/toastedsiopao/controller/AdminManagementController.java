@@ -109,7 +109,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
+	@PreAuthorize("hasAuthority('ADD_ADMINS')") // --- UPDATED ---
 	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -156,7 +156,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
+	@PreAuthorize("hasAuthority('EDIT_ADMINS')") // --- UPDATED ---
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminUpdateDto adminDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -246,7 +246,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
+	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // --- UPDATED ---
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) {

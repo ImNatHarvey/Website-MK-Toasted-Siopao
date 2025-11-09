@@ -302,25 +302,32 @@ function showToastNotifications() {
 
 			const toastId = `toast-${key}-${toastCounter++}`;
 
-			// Create Toast HTML
+			// --- MODIFIED: Create Toast HTML with Header ---
 			const toastEl = document.createElement('div');
 			toastEl.id = toastId;
-			toastEl.className = `toast align-items-center ${isError ? 'text-bg-danger' : 'text-bg-success'} border-0`;
+			// Remove background color from main toast element
+			toastEl.className = `toast`;
 			toastEl.setAttribute('role', 'alert');
 			toastEl.setAttribute('aria-live', 'assertive');
 			toastEl.setAttribute('aria-atomic', 'true');
 
-			let iconClass = isError ? 'fa-triangle-exclamation' : 'fa-check-circle';
+			const headerClass = isError ? 'text-bg-danger' : 'text-bg-success';
+			const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-check-circle';
+			const title = isError ? 'Error' : 'Success';
+			const startTime = Date.now(); // Record start time
 
 			toastEl.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body d-flex align-items-center">
-						<i class="fa-solid ${iconClass} me-2"></i>
-                        <strong class="me-auto">${message}</strong>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <div class="toast-header ${headerClass} text-white">
+                    <i class="fa-solid ${iconClass} me-2"></i>
+                    <strong class="me-auto">${title}</strong>
+                    <small class="ms-2 toast-time">now</small>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body">
+                    ${message}
                 </div>
             `;
+			// --- END MODIFICATION ---
 
 			// Append to container
 			toastContainer.appendChild(toastEl);
@@ -330,10 +337,34 @@ function showToastNotifications() {
 				delay: isError ? 8000 : 5000 // Longer for errors
 			});
 
-			// Remove element after it's hidden
+			// --- ADDED: Timer Logic ---
+			const timeElement = toastEl.querySelector('.toast-time');
+			let timerInterval = null;
+			if (timeElement) {
+				const updateTimer = () => {
+					const now = Date.now();
+					const elapsed = Math.round((now - startTime) / 1000); // seconds
+
+					if (elapsed < 60) {
+						timeElement.textContent = elapsed < 5 ? 'now' : `${elapsed} secs ago`;
+					} else {
+						const minutes = Math.floor(elapsed / 60);
+						timeElement.textContent = `${minutes} min ago`;
+					}
+				};
+				// Set an interval to update the time
+				timerInterval = setInterval(updateTimer, 5000); // Update every 5 seconds
+			}
+			// --- END ADDED ---
+
+			// --- MODIFIED: Clear interval on hide ---
 			toastEl.addEventListener('hidden.bs.toast', () => {
+				if (timerInterval) {
+					clearInterval(timerInterval);
+				}
 				toastEl.remove();
 			});
+			// --- END MODIFICATION ---
 
 			toast.show();
 			console.log(`Showing ${isError ? 'error' : 'success'} toast: ${message}`);

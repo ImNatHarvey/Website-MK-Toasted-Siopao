@@ -61,7 +61,7 @@
 							</div>
 
 							<hr>
-							<h5 class="mb-3">Access Rights</h5>
+							<h5 class="mb-3">Role</h5>
 
 							<div class="mb-3">
 								<label for="adminRoleName" class="form-label">Assign
@@ -76,63 +76,8 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">Select a role to apply a template,
-									then add or remove individual permission overrides below.</div>
-							</div>
-
-							<div class="row">
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="addManageCustomers">
-										<label class="form-check-label" for="addManageCustomers">Customer
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="addManageAdmins"> <label
-											class="form-check-label" for="addManageAdmins">Admin
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="addManageOrders"> <label
-											class="form-check-label" for="addManageOrders">Order
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="addManageProducts">
-										<label class="form-check-label" for="addManageProducts">Product
-											Management</label>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="addManageInventory">
-										<label class="form-check-label" for="addManageInventory">Inventory
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}" id="addManageTransactions">
-										<label class="form-check-label" for="addManageTransactions">Transaction
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="addManageSite"> <label
-											class="form-check-label" for="addManageSite">Site
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}" id="addManageActivityLog">
-										<label class="form-check-label" for="addManageActivityLog">View
-											Activity Log</label>
-									</div>
-								</div>
+								<div class="form-text">Permissions are managed in the
+									"Manage Roles" modal.</div>
 							</div>
 
 							<hr>
@@ -244,79 +189,6 @@
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('roleName')}"
 									th:errors="*{roleName}">Role Name Error</div>
-								<div class="form-text">Select a role to apply a template,
-									then add or remove individual permission overrides below.</div>
-							</div>
-
-							<div class="row">
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageCustomers}" id="editManageCustomers"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageCustomers"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Customer
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageAdmins}" id="editManageAdmins"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageAdmins"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Admin
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageOrders}" id="editManageOrders"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageOrders"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Order
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageProducts}" id="editManageProducts"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageProducts"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Product
-											Management</label>
-									</div>
-								</div>
-								<div class="col-md-6">
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageInventory}" id="editManageInventory"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageInventory"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Inventory
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageTransactions}" id="editManageTransactions"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageTransactions"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Transaction
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageSite}" id="editManageSite"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageSite"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">Site
-											Management</label>
-									</div>
-									<div class="form-check form-switch mb-2">
-										<input class="form-check-input" type="checkbox" role="switch"
-											th:field="*{manageActivityLog}" id="editManageActivityLog"
-											th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}">
-										<label class="form-check-label" for="editManageActivityLog"
-											th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change permissions' : ''}">View
-											Activity Log</label>
-									</div>
-								</div>
 							</div>
 
 							<hr>
@@ -360,33 +232,11 @@
 						</p>
 
 						<hr>
-						<h6 class="mb-3">Assigned Modules (Role + Overrides)</h6>
-						<div class="row">
-							<div class="col-md-6">
-								<ul class="list-unstyled permission-list">
-									<li id="viewPermCustomers"><i class="fa-solid fa-fw me-2"></i>
-										Customer Management</li>
-									<li id="viewPermAdmins"><i class="fa-solid fa-fw me-2"></i>
-										Admin Management</li>
-									<li id="viewPermOrders"><i class="fa-solid fa-fw me-2"></i>
-										Order Management</li>
-									<li id="viewPermProducts"><i class="fa-solid fa-fw me-2"></i>
-										Product Mgt.</li>
-								</ul>
-							</div>
-							<div class="col-md-6">
-								<ul class="list-unstyled permission-list">
-									<li id="viewPermInventory"><i class="fa-solid fa-fw me-2"></i>
-										Inventory Management</li>
-									<li id="viewPermTransactions"><i
-										class="fa-solid fa-fw me-2"></i> Transaction History</li>
-									<li id="viewPermSite"><i class="fa-solid fa-fw me-2"></i>
-										Site Management</li>
-									<li id="viewPermActivityLog"><i
-										class="fa-solid fa-fw me-2"></i> Activity Log</li>
-								</ul>
-							</div>
-						</div>
+						<h6 class="mb-3">Assigned Modules</h6>
+						<p class="text-muted small">Permissions are now managed by
+							Role. To see this user's permissions, view the details for their
+							assigned role.</p>
+
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-custom-secondary"

@@ -61,7 +61,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 	}
 
 	private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-		// --- UPDATED FOR HYBRID PERMISSIONS ---
+		// --- UPDATED FOR ROLE-BASED ONLY PERMISSIONS ---
 		Set<GrantedAuthority> authorities = new HashSet<>();
 
 		// 1. Add the Role name itself (e.g., "ROLE_STAFF")
@@ -75,11 +75,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 			log.error("User {} has no role! Assigning no authorities.", user.getUsername());
 		}
 
-		// 3. Add all individual permission overrides from the User
-		authorities.addAll(user.getPermissions().stream()
-				.map(permissionString -> new SimpleGrantedAuthority(permissionString)).collect(Collectors.toSet()));
+		// 3. REMOVED: Individual permission overrides
 
-		log.debug("--- Assigning combined authorities for {}: {} ---", user.getUsername(), authorities);
+		log.debug("--- Assigning role-based authorities for {}: {} ---", user.getUsername(), authorities);
 		return authorities;
 		// --- END UPDATE ---
 	}

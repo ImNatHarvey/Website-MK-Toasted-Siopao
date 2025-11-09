@@ -1,8 +1,8 @@
 package com.toastedsiopao.model;
 
-import jakarta.persistence.CollectionTable; // ADDED
+import jakarta.persistence.CollectionTable; // REMOVED
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection; // ADDED
+import jakarta.persistence.ElementCollection; // REMOVED
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -12,15 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient; // ADDED
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.HashSet; // ADDED
-import java.util.Set; // ADDED
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -45,12 +45,13 @@ public class User {
 	@JoinColumn(name = "role_id")
 	private Role role;
 
-	// --- ADDED: Individual permission overrides ---
-	@ElementCollection(fetch = FetchType.EAGER)
-	@CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
-	@Column(name = "permission", nullable = false)
-	private Set<String> permissions = new HashSet<>();
-	// --- END ADDED ---
+	// --- REMOVED: Individual permission overrides ---
+	// @ElementCollection(fetch = FetchType.EAGER)
+	// @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name =
+	// "user_id"))
+	// @Column(name = "permission", nullable = false)
+	// private Set<String> permissions = new HashSet<>();
+	// --- END REMOVED ---
 
 	@Column(length = 50)
 	private String firstName;
@@ -113,10 +114,10 @@ public class User {
 		}
 	}
 
-	// --- ADDED: Helper method for permissions ---
-	public void addPermission(String permission) {
-		this.permissions.add(permission);
-	}
+	// --- UPDATED: Helper method for permissions ---
+	// public void addPermission(String permission) {
+	// this.permissions.add(permission);
+	// }
 
 	@Transient
 	public Set<String> getCombinedPermissions() {
@@ -124,7 +125,7 @@ public class User {
 		if (role != null) {
 			combined.addAll(role.getPermissions());
 		}
-		combined.addAll(this.permissions); // Add individual overrides
+		// combined.addAll(this.permissions); // Removed user overrides
 		return combined;
 	}
 }

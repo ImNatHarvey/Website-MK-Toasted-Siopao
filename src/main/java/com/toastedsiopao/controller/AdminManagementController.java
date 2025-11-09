@@ -3,7 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.dto.AdminAccountCreateDto;
-import com.toastedsiopao.dto.RoleDto; 
+import com.toastedsiopao.dto.RoleDto;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
@@ -47,7 +47,7 @@ public class AdminManagementController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
 		redirectAttributes.addFlashAttribute("admins", adminService.findAllAdmins(defaultPageable).getContent());
-		redirectAttributes.addFlashAttribute("allAdminRoles", adminService.findAllAdminRoles()); // --- ADDED ---
+		redirectAttributes.addFlashAttribute("allAdminRoles", adminService.findAllAdminRoles());
 	}
 
 	@GetMapping
@@ -60,11 +60,11 @@ public class AdminManagementController {
 		Pageable pageable = PageRequest.of(page, size);
 		Page<User> adminPage = adminService.searchAdmins(keyword, pageable);
 
-		List<Role> allAdminRoles = adminService.findAllAdminRoles(); 
+		List<Role> allAdminRoles = adminService.findAllAdminRoles();
 
 		model.addAttribute("adminPage", adminPage);
 		model.addAttribute("admins", adminPage.getContent());
-		model.addAttribute("allAdminRoles", allAdminRoles); 
+		model.addAttribute("allAdminRoles", allAdminRoles);
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
@@ -109,7 +109,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasRole('OWNER')")
+	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
 	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -125,7 +125,7 @@ public class AdminManagementController {
 		}
 
 		try {
-			User savedUser = adminService.createAccount(adminDto); // UPDATED (role is in DTO)
+			User savedUser = adminService.createAccount(adminDto);
 			activityLogService.logAdminAction(principal.getName(), "ADD_ADMIN", "Created new admin user: "
 					+ savedUser.getUsername() + " with role " + savedUser.getRole().getName());
 			redirectAttributes.addFlashAttribute("adminSuccess",
@@ -139,7 +139,7 @@ public class AdminManagementController {
 				result.rejectValue("email", "adminAccountCreateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "adminAccountCreateDto.confirmPassword", e.getMessage());
-			} else if (e.getMessage().contains("role")) { // --- UPDATED CATCH ---
+			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminAccountCreateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error creating admin: " + e.getMessage());
@@ -156,7 +156,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasRole('OWNER')")
+	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminUpdateDto adminDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -182,7 +182,7 @@ public class AdminManagementController {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
-			} else if (e.getMessage().contains("role")) { // --- UPDATED CATCH ---
+			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
 			} else {
 				redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());
@@ -246,7 +246,7 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_ADMINS')")
+	@PreAuthorize("hasRole('OWNER')") // --- REVERTED TO OWNER ---
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) {

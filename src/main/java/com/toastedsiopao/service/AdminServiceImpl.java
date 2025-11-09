@@ -113,11 +113,10 @@ public class AdminServiceImpl implements AdminService {
 		return formattedName;
 	}
 
-	// --- HELPER METHODS REMOVED, as logic is now in create/update ---
-
 	private void mapPermissionsToRole(Role role, RoleDto dto) {
 		role.getPermissions().clear();
 
+		// All admin roles get dashboard access by default
 		role.addPermission(Permission.VIEW_DASHBOARD.name());
 
 		if (dto.isManageCustomers()) {
@@ -129,6 +128,7 @@ public class AdminServiceImpl implements AdminService {
 		if (dto.isManageAdmins()) {
 			role.addPermission(Permission.VIEW_ADMINS.name());
 			role.addPermission(Permission.ADD_ADMINS.name());
+			role.addPermission(Permission.EDIT_ADMINS.name());
 			role.addPermission(Permission.DELETE_ADMINS.name());
 		}
 		if (dto.isManageOrders()) {
@@ -189,25 +189,7 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
 		newUser.setRole(roleToAssign);
 
-		// --- ADDED: Save individual permission overrides ---
-		newUser.getPermissions().clear();
-		if (userDto.isManageCustomers())
-			newUser.addPermission(Permission.VIEW_CUSTOMERS.name());
-		if (userDto.isManageAdmins())
-			newUser.addPermission(Permission.VIEW_ADMINS.name());
-		if (userDto.isManageOrders())
-			newUser.addPermission(Permission.VIEW_ORDERS.name());
-		if (userDto.isManageProducts())
-			newUser.addPermission(Permission.VIEW_PRODUCTS.name());
-		if (userDto.isManageInventory())
-			newUser.addPermission(Permission.VIEW_INVENTORY.name());
-		if (userDto.isManageTransactions())
-			newUser.addPermission(Permission.VIEW_TRANSACTIONS.name());
-		if (userDto.isManageSite())
-			newUser.addPermission(Permission.EDIT_SITE_SETTINGS.name());
-		if (userDto.isManageActivityLog())
-			newUser.addPermission(Permission.VIEW_ACTIVITY_LOG.name());
-		// --- END ADDED ---
+		// --- REMOVED: All logic for setting individual permissions ---
 
 		return userRepository.save(newUser);
 	}
@@ -218,7 +200,7 @@ public class AdminServiceImpl implements AdminService {
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userDto.getId()));
 
 		if (userToUpdate.getRole() != null && OWNER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
-			throw new IllegalArgumentException("The Owner account cannot be edited by other admins.");
+			throw new IllegalArgumentException("The Owner account cannot be edited.");
 		}
 
 		if (userToUpdate.getRole() == null || CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
@@ -231,10 +213,7 @@ public class AdminServiceImpl implements AdminService {
 					"User " + userToUpdate.getUsername() + " has a null role and cannot be updated.");
 		}
 
-		if (OWNER_ROLE_NAME.equals(roleToUpdate.getName())) {
-			throw new IllegalArgumentException("The Owner's role cannot be modified.");
-		}
-
+		// --- RE-ADDED: Security check to ensure only Owner can manage other admins ---
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isOwner = authentication.getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals(OWNER_ROLE_NAME));
@@ -258,36 +237,16 @@ public class AdminServiceImpl implements AdminService {
 				roleToUpdate = newRole;
 			}
 		} else {
+			// Non-owners cannot change roles
 			if (!userDto.getRoleName().equals(roleToUpdate.getName())) {
 				log.warn("Non-Owner user {} tried to change role for {}. Blocked.", authentication.getName(),
 						userToUpdate.getUsername());
+				// We don't throw an error, just log and ignore the change.
 			}
 		}
+		// --- END RE-ADDED ---
 
-		// --- ADDED: Save individual permission overrides ---
-		// Note: Non-owners can't change permissions, but we'll let them save *other*
-		// fields.
-		// We only update permissions if the current user is an OWNER.
-		if (isOwner) {
-			userToUpdate.getPermissions().clear();
-			if (userDto.isManageCustomers())
-				userToUpdate.addPermission(Permission.VIEW_CUSTOMERS.name());
-			if (userDto.isManageAdmins())
-				userToUpdate.addPermission(Permission.VIEW_ADMINS.name());
-			if (userDto.isManageOrders())
-				userToUpdate.addPermission(Permission.VIEW_ORDERS.name());
-			if (userDto.isManageProducts())
-				userToUpdate.addPermission(Permission.VIEW_PRODUCTS.name());
-			if (userDto.isManageInventory())
-				userToUpdate.addPermission(Permission.VIEW_INVENTORY.name());
-			if (userDto.isManageTransactions())
-				userToUpdate.addPermission(Permission.VIEW_TRANSACTIONS.name());
-			if (userDto.isManageSite())
-				userToUpdate.addPermission(Permission.EDIT_SITE_SETTINGS.name());
-			if (userDto.isManageActivityLog())
-				userToUpdate.addPermission(Permission.VIEW_ACTIVITY_LOG.name());
-		}
-		// --- END ADDED ---
+		// --- REMOVED: All logic for setting individual permissions ---
 
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());

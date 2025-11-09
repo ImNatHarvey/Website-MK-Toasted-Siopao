@@ -32,28 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewAdminModal.querySelector('#viewAdminRole').textContent = role;
 			viewAdminModal.querySelector('#viewAdminCreatedAt').textContent = createdAt;
 
-			const setPermissionIcon = (id, hasPermission) => {
-				const el = viewAdminModal.querySelector(id);
-				if (el) {
-					const icon = el.querySelector('i');
-
-					if (hasPermission === 'true') {
-						icon.className = 'fa-solid fa-fw me-2 fa-check';
-					} else {
-						icon.className = 'fa-solid fa-fw me-2 fa-times';
-					}
-				}
-			};
-
-
-			setPermissionIcon('#viewPermCustomers', dataset.manageCustomers);
-			setPermissionIcon('#viewPermAdmins', dataset.manageAdmins);
-			setPermissionIcon('#viewPermOrders', dataset.manageOrders);
-			setPermissionIcon('#viewPermProducts', dataset.manageProducts);
-			setPermissionIcon('#viewPermInventory', dataset.manageInventory);
-			setPermissionIcon('#viewPermTransactions', dataset.manageTransactions);
-			setPermissionIcon('#viewPermSite', dataset.manageSite);
-			setPermissionIcon('#viewPermActivityLog', dataset.manageActivityLog);
+			// --- REMOVED PERMISSION ICON LOGIC ---
 		});
 	}
 
@@ -74,23 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		titlePrefix: 'Edit Admin: ',
 		titleDatasetKey: 'name',
 		onShow: function(form, dataset, isEdit, isValidationReopen) {
-			// This populates the checkboxes based on the user's *individual* overrides
-			if (isEdit && dataset && !isValidationReopen) {
-				const setCheckbox = (id, value) => {
-					const el = form.querySelector(id);
-					if (el) {
-						el.checked = (value === 'true');
-					}
-				};
-				setCheckbox('#editManageCustomers', dataset.manageCustomers);
-				setCheckbox('#editManageAdmins', dataset.manageAdmins);
-				setCheckbox('#editManageOrders', dataset.manageOrders);
-				setCheckbox('#editManageProducts', dataset.manageProducts);
-				setCheckbox('#editManageInventory', dataset.manageInventory);
-				setCheckbox('#editManageTransactions', dataset.manageTransactions);
-				setCheckbox('#editManageSite', dataset.manageSite);
-				setCheckbox('#editManageActivityLog', dataset.manageActivityLog);
-			}
+			// --- REMOVED ALL CHECKBOX POPULATION LOGIC ---
 		}
 	});
 
@@ -119,7 +82,24 @@ document.addEventListener('DOMContentLoaded', function() {
 		titlePrefix: 'Edit Role: ',
 		titleDatasetKey: 'name',
 		onShow: function(form, dataset, isEdit, isValidationReopen) {
-			// ALL LOGIC REMOVED FROM HERE, as there are no checkboxes to populate
+			// --- ADDED: Logic to populate permission checkboxes for editing a ROLE ---
+			if (isEdit && dataset && !isValidationReopen) {
+				const setCheckbox = (id, value) => {
+					const el = form.querySelector(id);
+					if (el) {
+						el.checked = (value === 'true');
+					}
+				};
+				console.log("Populating Edit Role modal with permissions:", dataset);
+				setCheckbox('#editRoleManageCustomers', dataset.manageCustomers);
+				setCheckbox('#editRoleManageAdmins', dataset.manageAdmins);
+				setCheckbox('#editRoleManageOrders', dataset.manageOrders);
+				setCheckbox('#editRoleManageProducts', dataset.manageProducts);
+				setCheckbox('#editRoleManageInventory', dataset.manageInventory);
+				setCheckbox('#editRoleManageTransactions', dataset.manageTransactions);
+				setCheckbox('#editRoleManageSite', dataset.manageSite);
+				setCheckbox('#editRoleManageActivityLog', dataset.manageActivityLog);
+			}
 		}
 	});
 

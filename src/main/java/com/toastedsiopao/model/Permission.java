@@ -7,7 +7,8 @@ public enum Permission {
 	VIEW_CUSTOMERS("View Customer Management"), ADD_CUSTOMERS("Add Customers"), EDIT_CUSTOMERS("Edit Customers"),
 	DELETE_CUSTOMERS("Delete Customers"),
 
-	VIEW_ADMINS("View Admin Management"), ADD_ADMINS("Add Admins"), DELETE_ADMINS("Delete Admins"),
+	VIEW_ADMINS("View Admin Management"), ADD_ADMINS("Add Admins"), EDIT_ADMINS("Edit Admins"), // ADDED
+	DELETE_ADMINS("Delete Admins"),
 
 	VIEW_ORDERS("View Order Management"), EDIT_ORDERS("Update Order Status"),
 

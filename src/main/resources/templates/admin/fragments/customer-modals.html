@@ -195,9 +195,9 @@
 							</div>
 							<div class="row mb-3">
 								<div class="col-md-6">
-									<label for="phone" class="form-label">Phone Number
-										(Optional)</label> <input type="tel" class="form-control"
-										th:field="*{phone}" th:errorclass="is-invalid">
+									<label for="phone" class="form-label">Phone Number</label> <input
+										type="tel" class="form-control" th:field="*{phone}"
+										th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Error</div>
 								</div>

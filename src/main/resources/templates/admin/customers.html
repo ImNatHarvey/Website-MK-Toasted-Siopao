@@ -25,7 +25,7 @@
 		<div th:replace="~{admin/fragments/common-alerts :: userAlerts}"></div>
 
 		<div class="row text-center mb-4">
-			<div class="col-md-6 mb-3">
+			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Customers</h5>
@@ -33,12 +33,21 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-6 mb-3">
+			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Active Customers</h5>
 						<p class="display-6 fw-bold text-success"
 							th:text="${activeCustomerCount}">?</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Inactive Customers</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="${inactiveCustomerCount}">?</p>
 					</div>
 				</div>
 			</div>

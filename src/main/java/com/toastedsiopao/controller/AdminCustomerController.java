@@ -65,6 +65,7 @@ public class AdminCustomerController {
 		model.addAttribute("customers", customerPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers());
+		model.addAttribute("inactiveCustomerCount", customerService.countInactiveCustomers()); // == ADDED ==
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", customerPage.getTotalPages());
@@ -100,7 +101,7 @@ public class AdminCustomerController {
 			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
 			addCommonAttributesForRedirect(redirectAttributes);
 			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
-					.toUriString();
+					toUriString();
 			return "redirect:" + redirectUrl;
 		}
 

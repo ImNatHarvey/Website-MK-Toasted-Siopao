@@ -15,10 +15,9 @@
 	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 	integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="stylesheet" th:href="@{/css/style-admin.css}">
+<link rel="stylesheet" th:href="@{/css/style-admin.css(v=1.8)}">
 </head>
-<body id="admin-body">
-
+<body id="admin-body" class="sidebar-toggled">
 	<nav class="admin-mobile-nav">
 		<button class="sidebar-toggle-btn" id="sidebarToggle">
 			<i class="fa-solid fa-bars"></i>
@@ -38,64 +37,74 @@
 
 		<aside class="admin-sidebar" id="admin-sidebar">
 			<div class="sidebar-header">
-				<a th:href="@{/admin/dashboard}">MK Admin Panel</a>
+				<button class="sidebar-toggle-btn d-none d-lg-block"
+					id="desktopSidebarToggle">
+					<i class="fa-solid fa-bars"></i>
+				</button>
 			</div>
 
 			<nav class="nav flex-column">
 				<div sec:authorize="hasAuthority('VIEW_DASHBOARD')">
 					<a class="nav-link" th:href="@{/admin/dashboard}"
 						th:classappend="${activePage == 'dashboard' ? 'active' : ''}">
-						<i class="fa-solid fa-chart-line fa-fw"></i> Dashboard
+						<i class="fa-solid fa-chart-line fa-fw"></i> <span
+						class="nav-link-text">Dashboard</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_CUSTOMERS')">
 					<a class="nav-link" th:href="@{/admin/customers}"
 						th:classappend="${activePage == 'customers' ? 'active' : ''}">
-						<i class="fa-solid fa-users fa-fw"></i> Customer Management
+						<i class="fa-solid fa-users fa-fw"></i> <span
+						class="nav-link-text">Customer Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_ADMINS')">
 					<a class="nav-link" th:href="@{/admin/admins}"
 						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
-						class="fa-solid fa-user-shield fa-fw"></i> Admin Management
+						class="fa-solid fa-user-shield fa-fw"></i> <span
+						class="nav-link-text">Admin Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_ORDERS')">
 					<a class="nav-link" th:href="@{/admin/orders}"
 						th:classappend="${activePage == 'orders' ? 'active' : ''}"> <i
-						class="fa-solid fa-box fa-fw"></i> Order Management
+						class="fa-solid fa-box fa-fw"></i> <span class="nav-link-text">Order
+							Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_PRODUCTS')">
 					<a class="nav-link" th:href="@{/admin/products}"
 						th:classappend="${activePage == 'products' ? 'active' : ''}">
-						<i class="fa-solid fa-burger fa-fw"></i> Product Management
+						<i class="fa-solid fa-burger fa-fw"></i> <span
+						class="nav-link-text">Product Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_INVENTORY')">
 					<a class="nav-link" th:href="@{/admin/inventory}"
 						th:classappend="${activePage == 'inventory' ? 'active' : ''}">
-						<i class="fa-solid fa-boxes-stacked fa-fw"></i> Inventory
-						Management
+						<i class="fa-solid fa-boxes-stacked fa-fw"></i> <span
+						class="nav-link-text">Inventory Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_TRANSACTIONS')">
 					<a class="nav-link" th:href="@{/admin/transactions}"
 						th:classappend="${activePage == 'transactions' ? 'active' : ''}">
-						<i class="fa-solid fa-money-bill-wave fa-fw"></i> Transaction
-						History
+						<i class="fa-solid fa-money-bill-wave fa-fw"></i> <span
+						class="nav-link-text">Transaction History</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
 					<a class="nav-link" th:href="@{/admin/settings}"
 						th:classappend="${activePage == 'settings' ? 'active' : ''}">
-						<i class="fa-solid fa-gear fa-fw"></i> Site Management
+						<i class="fa-solid fa-gear fa-fw"></i> <span class="nav-link-text">Site
+							Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_ACTIVITY_LOG')">
 					<a class="nav-link" th:href="@{/admin/activity-log}"
 						th:classappend="${activePage == 'activity-log' ? 'active' : ''}">
-						<i class="fa-solid fa-clipboard-list fa-fw"></i> Activity Log
+						<i class="fa-solid fa-clipboard-list fa-fw"></i> <span
+						class="nav-link-text">Activity Log</span>
 					</a>
 				</div>
 			</nav>
@@ -104,6 +113,13 @@
 		<div class="admin-content" id="admin-content">
 
 			<nav class="admin-content-navbar">
+
+				<div class="d-flex align-items-center">
+					<a class="navbar-brand-top" th:href="@{/admin/dashboard}">MK
+						Admin Panel</a>
+				</div>
+
+
 				<ul
 					class="navbar-nav ms-auto text-center align-items-center flex-row">
 

@@ -16,11 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	};
 
 	const urlParams = new URLSearchParams(window.location.search);
-	const modalToShow = urlParams.get('showModal'); 
+	const modalToShow = urlParams.get('showModal');
 
 	if (modalToShow) {
 		console.log(`URL parameter 'showModal' found: ${modalToShow}`);
-		forceRemoveAllModalState(); 
+		forceRemoveAllModalState();
 
 		const checkBootstrapAndShow = () => {
 			if (typeof bootstrap !== 'undefined' && bootstrap.Modal && bootstrap.Modal.getInstance) {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (modalElement) {
 					console.log(`Element #${modalToShow} found.`);
 					try {
-						forceRemoveAllModalState(); 
+						forceRemoveAllModalState();
 
 						const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
 
@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
 								modalElement.addEventListener('hidden.bs.modal', standardCleanupOnHide);
 								console.log("Attached standard cleanup listener.");
 							}
-							
+
 							modalElement.addEventListener('shown.bs.modal', () => {
 								console.log(`#${modalToShow} fully shown. Applying manual validation styles...`);
 								const errorMessages = modalElement.querySelectorAll('.invalid-feedback');
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
 										console.log("Found error message:", msg.textContent.trim());
 
 										msg.classList.add('d-block');
-										
+
 										let el = msg.previousElementSibling;
 
 										if (el && el.classList.contains('form-text')) {
@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
 												el.classList.add('is-invalid');
 												console.log("Applying 'is-invalid' to:", el);
 											} else if (el.classList.contains('input-group')) {
-												el.classList.add('is-invalid'); 
+												el.classList.add('is-invalid');
 												const inputInside = el.querySelector('.form-control, .form-select');
 												if (inputInside) {
 													inputInside.classList.add('is-invalid');
@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
 									}
 								});
 							}, { once: true });
-							
+
 							console.log(`Calling show() for #${modalToShow}...`);
 							modalInstance.show();
 							console.log(`show() called for #${modalToShow}.`);
 
-							try { 
+							try {
 								const nextURL = window.location.pathname + window.location.search.replace(/[\?&]showModal=[^&]+/, '').replace(/^&/, '?');
 								history.replaceState(null, '', nextURL);
 								console.log("Cleaned URL parameter.");
@@ -122,23 +122,32 @@ document.addEventListener('DOMContentLoaded', function() {
 				setTimeout(checkBootstrapAndShow, 100);
 			}
 		};
-		setTimeout(checkBootstrapAndShow, 50); 
+		setTimeout(checkBootstrapAndShow, 50);
 
 	} else {
 		console.log("No 'showModal' URL parameter found.");
 	}
 
-	const sidebarToggle = document.getElementById('sidebarToggle');
+	// == MODIFIED SIDEBAR LOGIC ==
+	const sidebarToggle = document.getElementById('sidebarToggle'); // mobile
+	const desktopSidebarToggle = document.getElementById('desktopSidebarToggle'); // desktop
 	const sidebarOverlay = document.getElementById('sidebarOverlay');
 	const adminSidebar = document.getElementById('admin-sidebar');
 	const adminBody = document.getElementById('admin-body');
 
-	if (sidebarToggle && sidebarOverlay && adminSidebar && adminBody) {
-		console.log("Mobile sidebar elements found. Attaching listeners.");
+	if (sidebarOverlay && adminSidebar && adminBody) {
+		console.log("Mobile/Desktop sidebar elements found. Attaching listeners.");
 
-		sidebarToggle.addEventListener('click', function() {
+		const toggleFunc = function() {
 			adminBody.classList.toggle('sidebar-toggled');
-		});
+		};
+
+		if (sidebarToggle) {
+			sidebarToggle.addEventListener('click', toggleFunc);
+		}
+		if (desktopSidebarToggle) { // Add listener for desktop toggle
+			desktopSidebarToggle.addEventListener('click', toggleFunc);
+		}
 
 		sidebarOverlay.addEventListener('click', function() {
 			adminBody.classList.remove('sidebar-toggled');
@@ -147,16 +156,19 @@ document.addEventListener('DOMContentLoaded', function() {
 		const sidebarLinks = adminSidebar.querySelectorAll('.nav-link');
 		sidebarLinks.forEach(link => {
 			link.addEventListener('click', function() {
-				if (adminBody.classList.contains('sidebar-toggled')) {
+				// Only auto-close on mobile
+				if (window.innerWidth < 992 && adminBody.classList.contains('sidebar-toggled')) {
 					adminBody.classList.remove('sidebar-toggled');
 				}
 			});
 		});
 
 	} else {
-		console.log("Mobile sidebar elements not found (this is normal on non-admin pages).");
+		console.log("Sidebar elements not found (this is normal on non-admin pages).");
 	}
-	let formToSubmit = null; 
+	// == END MODIFIED SIDEBAR LOGIC ==
+
+	let formToSubmit = null;
 
 	const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
 	if (confirmDeleteModalEl) {
@@ -168,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		confirmDeleteButton.addEventListener('click', function() {
 			if (formToSubmit) {
 				formToSubmit.submit();
-				formToSubmit = null; 
+				formToSubmit = null;
 			}
 		});
 
@@ -179,8 +191,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		document.addEventListener('submit', function(event) {
 			const form = event.target;
 			if (form.dataset.confirmMessage) {
-				event.preventDefault(); 
-				formToSubmit = form; 
+				event.preventDefault();
+				formToSubmit = form;
 				const message = form.dataset.confirmMessage || 'Are you sure?';
 				confirmDeleteMessage.textContent = message;
 				confirmDeleteModal.show();
@@ -190,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	} else {
 		console.log("Delete confirmation modal not found (this is normal on non-admin pages).");
 	}
-	
+
 	const confirmSaveModalEl = document.getElementById('confirmSaveModal');
 	if (confirmSaveModalEl) {
 		console.log("Save confirmation modal found. Attaching listeners.");
@@ -201,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		confirmSaveButton.addEventListener('click', function() {
 			if (formToSubmit) {
 				formToSubmit.submit();
-				formToSubmit = null; 
+				formToSubmit = null;
 			}
 		});
 
@@ -211,10 +223,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		document.addEventListener('submit', function(event) {
 			const form = event.target;
-			
+
 			if (form.dataset.confirmSaveMessage) {
-				event.preventDefault(); 
-				formToSubmit = form; 
+				event.preventDefault();
+				formToSubmit = form;
 				const message = form.dataset.confirmSaveMessage || 'Are you sure?';
 				confirmSaveMessage.textContent = message;
 				confirmSaveModal.show();

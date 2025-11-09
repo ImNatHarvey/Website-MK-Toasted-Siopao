@@ -19,8 +19,8 @@ body {
 }
 
 .btn-custom {
-	background-color: var(--accent); 
-	color: var(--primary); 
+	background-color: var(--accent);
+	color: var(--primary);
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
@@ -38,7 +38,7 @@ body {
 }
 
 .btn-custom-secondary {
-	background-color: var(--muted-text); 
+	background-color: var(--muted-text);
 	color: var(--light);
 	font-weight: bold;
 	border-radius: 30px;
@@ -50,25 +50,25 @@ body {
 }
 
 .btn-custom-secondary:hover {
-	background-color: var(--dark); 
+	background-color: var(--dark);
 	color: var(--light);
 	border-color: var(--dark);
 }
 
 .btn-custom-outline {
 	background-color: transparent;
-	color: var(--primary); 
+	color: var(--primary);
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
 	transition: background-color 0.3s ease, color 0.3s ease, border-color
 		0.3s ease;
-	border: 1px solid var(--primary); 
+	border: 1px solid var(--primary);
 }
 
 .btn-custom-outline:hover {
-	background-color: var(--primary); 
-	color: var(--light); 
+	background-color: var(--primary);
+	color: var(--light);
 	border-color: var(--primary);
 }
 
@@ -141,12 +141,12 @@ body {
 	opacity: 0.65;
 }
 
-.table .btn-sm { 
+.table .btn-sm {
 	border-radius: 0.2rem;
 	padding: 0.25rem 0.5rem;
 }
 
-.modal-footer .btn { 
+.modal-footer .btn {
 	margin-left: 5px;
 }
 
@@ -154,7 +154,7 @@ body {
 	margin-left: 0;
 }
 
-.d-flex.gap-2>.btn { 
+.d-flex.gap-2>.btn {
 	margin-left: 0;
 }
 
@@ -168,7 +168,7 @@ body {
 	white-space: nowrap;
 	vertical-align: baseline;
 	border-radius: 0.375rem;
-	background-color: var(--muted-text); 
+	background-color: var(--muted-text);
 }
 
 .status-badge.status-normal, .status-badge.status-active, .status-badge.status-delivered,
@@ -199,30 +199,30 @@ body {
 }
 
 .section-title {
-	color: var(--primary); 
+	color: var(--primary);
 	font-weight: bold;
 }
 
 .card {
-	background-color: var(--light); 
-	border: 1px solid #eee; 
+	background-color: var(--light);
+	border: 1px solid #eee;
 	border-radius: 15px;
 	overflow: hidden;
 }
 
 .card-title {
 	font-weight: bold;
-	color: var(--primary); 
+	color: var(--primary);
 }
 
 .admin-product-img {
-	height: 150px; 
-	object-fit: contain; 
+	height: 150px;
+	object-fit: contain;
 	padding: 5px;
 }
 
 .stats-card {
-	border-left: 5px solid var(--primary); 
+	border-left: 5px solid var(--primary);
 	border-radius: 8px;
 	background-color: var(--light);
 	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -234,10 +234,10 @@ body {
 	font-weight: bold;
 }
 
-.stats-value, .stats-card .display-6 { 
+.stats-value, .stats-card .display-6 {
 	color: var(--dark);
 	font-weight: bold;
-	font-size: 1.8rem; 
+	font-size: 1.8rem;
 }
 
 .stats-change {
@@ -246,7 +246,7 @@ body {
 }
 
 .quick-nav-card {
-	background-color: var(--secondary); 
+	background-color: var(--secondary);
 	border-radius: 10px;
 	padding: 20px;
 	transition: transform 0.2s ease;
@@ -261,7 +261,7 @@ body {
 }
 
 .quick-nav-card h4 {
-	color: var(--primary); 
+	color: var(--primary);
 	font-weight: bold;
 	margin-top: 10px;
 }
@@ -276,8 +276,8 @@ body {
 }
 
 .table thead th {
-	background-color: var(--primary); 
-	color: var(--light); 
+	background-color: var(--primary);
+	color: var(--light);
 	vertical-align: middle;
 }
 
@@ -286,7 +286,7 @@ body {
 }
 
 .table-hover tbody tr:hover {
-	background-color: var(--secondary); 
+	background-color: var(--secondary);
 }
 
 .modal-header {
@@ -327,8 +327,9 @@ body {
 	display: flex;
 }
 
+/* == SIDEBAR LOGIC (Desktop-first) == */
 .admin-sidebar {
-	width: 260px;
+	width: 260px; /* Full width by default */
 	height: 100vh;
 	position: fixed;
 	top: 0;
@@ -336,18 +337,24 @@ body {
 	background-color: var(--primary);
 	padding: 0;
 	overflow-y: auto;
-	transition: width 0.3s ease;
+	transition: width 0.3s ease-in-out; /* Animate width */
 	z-index: 1000;
+	overflow-x: hidden; /* Hide text when shrinking */
 }
 
+/* == HEADER RE-ADDED AND ALIGNED LEFT == */
 .sidebar-header {
 	height: 70px;
-	padding: 0 1.5rem;
+	padding: 0 0.75rem; /* Adjusted padding */
 	background-color: var(--primary);
 	border-bottom: 1px solid #4A6D8C;
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start; /* Aligns button to the left */
+	transition: justify-content 0.3s ease-in-out;
+	/* == ADDED: Ensure header shrinks with sidebar == */
+	width: 100%;
+	overflow: hidden;
 }
 
 .sidebar-header a {
@@ -355,10 +362,12 @@ body {
 	font-size: 1.25rem;
 	font-weight: bold;
 	text-decoration: none;
+	white-space: nowrap; /* Keep brand on one line */
 }
 
 .admin-sidebar .nav {
 	padding: 1rem 0;
+	/* Removed padding-top: 80px */
 }
 
 .admin-sidebar .nav-link {
@@ -369,6 +378,7 @@ body {
 	font-size: 1rem;
 	white-space: nowrap;
 	transition: background-color 0.2s ease, color 0.2s ease;
+	text-align: left; /* Default text alignment */
 }
 
 .admin-sidebar .nav-link:hover {
@@ -381,22 +391,77 @@ body {
 	color: var(--primary) !important;
 	font-weight: bold;
 	border-bottom: none !important;
-	margin-right: -1rem;
+	margin-right: 0;
 }
 
 .admin-sidebar .nav-link i.fa-fw {
 	margin-right: 8px;
+	transition: margin 0.3s ease-in-out;
 }
 
 .admin-content {
-	margin-left: 260px;
+	margin-left: 260px; /* Default margin for full sidebar */
 	width: calc(100% - 260px);
 	padding: 0;
 	display: flex;
 	flex-direction: column;
 	min-height: 100vh;
+	transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
+/* Toggled (Mini-Sidebar) State for Desktop */
+body.sidebar-toggled .admin-sidebar {
+	width: 80px; /* Mini-sidebar width */
+}
+
+body.sidebar-toggled .admin-content {
+	margin-left: 80px;
+	width: calc(100% - 80px); /* == FIX: Correct width when toggled == */
+}
+
+body.sidebar-toggled .sidebar-header {
+	justify-content: center; /* == CHANGED: Center icon when mini == */
+	padding: 0;
+}
+
+/* == ADDED: Default style for the button in the header == */
+.sidebar-header .sidebar-toggle-btn {
+	font-size: 1.25rem;
+	padding: 0.5rem 0.75rem;
+	margin-right: 0.5rem;
+}
+
+/* == ADDED: Centering for the button when toggled == */
+body.sidebar-toggled .sidebar-header .sidebar-toggle-btn {
+	margin-right: 0;
+	padding: 0.75rem 1rem;
+	width: 100%;
+	text-align: center;
+	font-size: 1.5rem;
+}
+
+body.sidebar-toggled .sidebar-brand-text {
+	display: none; /* Hide brand text */
+}
+
+body.sidebar-toggled .nav-link-text {
+	display: none; /* Hide nav link text */
+}
+
+body.sidebar-toggled .admin-sidebar .nav-link {
+	text-align: center; /* Center the icon */
+	padding: 0.75rem 1rem;
+}
+
+body.sidebar-toggled .admin-sidebar .nav-link i.fa-fw {
+	margin-right: 0;
+}
+
+body.sidebar-toggled .admin-sidebar .nav-link.active {
+	margin-right: 0;
+}
+
+/* == END SIDEBAR LOGIC == */
 .admin-content-navbar {
 	height: 70px;
 	background-color: var(--primary);
@@ -404,15 +469,27 @@ body {
 	padding: 0 1.5rem;
 	display: flex;
 	align-items: center;
-	justify-content: flex-end;
+	justify-content: space-between;
 	flex-shrink: 0;
 	position: sticky;
 	top: 0;
 	z-index: 1010;
 }
 
+/* == Style for new brand in top nav == */
+.navbar-brand-top {
+	color: var(--secondary);
+	font-size: 1.25rem;
+	font-weight: bold;
+	text-decoration: none;
+	white-space: nowrap;
+	margin-left: 0.5rem;
+	display: inline-block;
+}
+
 .admin-content-navbar .navbar-nav {
 	flex-direction: row;
+	margin-left: auto; /* == ADDED: Pushes user menu to right == */
 }
 
 .admin-content-navbar .nav-item {
@@ -801,24 +878,36 @@ select.form-control-readonly {
 	z-index: 1025;
 }
 
+/* == MOBILE OVERRIDES == */
 @media ( max-width : 991.98px) {
-	/* 1. Show the mobile nav */
+	/* 1. Show the mobile nav, hide desktop nav */
 	.admin-mobile-nav {
 		display: flex;
 	}
 	.admin-content-navbar {
 		display: none;
 	}
+
+	/* 2. Override sidebar to be off-canvas */
 	.admin-sidebar {
-		position: fixed;
-		left: -260px;
+		width: 260px; /* Full width */
+		left: -260px; /* Off-screen by default */
 		z-index: 1040;
-		transition: left 0.3s ease-in-out;
+		transition: left 0.3s ease-in-out; /* Animate left property */
 		box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 	}
+	.admin-sidebar .nav {
+		padding-top: 1rem; /* == Reset padding for mobile == */
+	}
+	.sidebar-header {
+		display: none; /* == Hide sidebar header on mobile == */
+	}
+
+	/* 3. Content is always full width */
 	.admin-content {
-		margin-left: 0;
+		margin-left: 0 !important; /* !important to override desktop */
 		width: 100%;
+		transition: none; /* No margin animation */
 	}
 	.admin-content-page {
 		padding-top: 85px;
@@ -828,10 +917,33 @@ select.form-control-readonly {
 	.admin-footer {
 		margin-left: 0;
 	}
+
+	/* 4. Toggled state on mobile means OPEN */
 	body.sidebar-toggled .admin-sidebar {
-		left: 0;
+		width: 260px; /* Explicitly set full width */
+		left: 0; /* Slide in */
 	}
 	body.sidebar-toggled .sidebar-overlay {
-		display: block;
+		display: block; /* Show overlay */
+	}
+	body.sidebar-toggled .admin-content {
+		margin-left: 0 !important; /* !important to override desktop */
+	}
+
+	/* 5. Override mini-sidebar text hiding */
+	body.sidebar-toggled .sidebar-brand-text {
+		display: inline;
+	}
+	body.sidebar-toggled .nav-link-text {
+		display: inline;
+	}
+	body.sidebar-toggled .admin-sidebar .nav-link {
+		text-align: left;
+	}
+	body.sidebar-toggled .admin-sidebar .nav-link i.fa-fw {
+		margin-right: 8px;
+	}
+	body.sidebar-toggled .sidebar-header {
+		display: none;
 	}
 }

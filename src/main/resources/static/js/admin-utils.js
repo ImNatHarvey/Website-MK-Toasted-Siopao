@@ -277,3 +277,69 @@ function initThresholdSliders(modalElement) {
 		enforceThresholdLogic();
 	});
 }
+
+/**
+ * NEW FUNCTION: TOAST NOTIFICATION HANDLER
+ * This function finds the hidden #toast-messages div,
+ * reads all data attributes, and creates a toast for each one.
+ */
+function showToastNotifications() {
+	const messageContainer = document.getElementById('toast-messages');
+	const toastContainer = document.querySelector('.toast-container');
+
+	if (!messageContainer || !toastContainer) {
+		console.log("Toast containers not found. Skipping toast notifications.");
+		return;
+	}
+
+	const messages = messageContainer.dataset;
+	let toastCounter = 0;
+
+	for (const key in messages) {
+		if (Object.prototype.hasOwnProperty.call(messages, key) && messages[key]) {
+			const message = messages[key];
+			const isError = key.toLowerCase().includes('error');
+
+			const toastId = `toast-${key}-${toastCounter++}`;
+
+			// Create Toast HTML
+			const toastEl = document.createElement('div');
+			toastEl.id = toastId;
+			toastEl.className = `toast align-items-center ${isError ? 'text-bg-danger' : 'text-bg-success'} border-0`;
+			toastEl.setAttribute('role', 'alert');
+			toastEl.setAttribute('aria-live', 'assertive');
+			toastEl.setAttribute('aria-atomic', 'true');
+
+			let iconClass = isError ? 'fa-triangle-exclamation' : 'fa-check-circle';
+
+			toastEl.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body d-flex align-items-center">
+						<i class="fa-solid ${iconClass} me-2"></i>
+                        <strong class="me-auto">${message}</strong>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            `;
+
+			// Append to container
+			toastContainer.appendChild(toastEl);
+
+			// Initialize and show
+			const toast = new bootstrap.Toast(toastEl, {
+				delay: isError ? 8000 : 5000 // Longer for errors
+			});
+
+			// Remove element after it's hidden
+			toastEl.addEventListener('hidden.bs.toast', () => {
+				toastEl.remove();
+			});
+
+			toast.show();
+			console.log(`Showing ${isError ? 'error' : 'success'} toast: ${message}`);
+		}
+	}
+}
+
+// Run the toast notification handler on page load
+document.addEventListener('DOMContentLoaded', showToastNotifications);

@@ -19,7 +19,8 @@
 			enctype="multipart/form-data"
 			data-confirm-save-message="Are you sure you want to save all changes to the site settings?">
 
-			<div th:replace="~{admin/fragments/common-alerts :: siteAlerts}"></div>
+			<div
+				th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
 
 			<input type="hidden" th:field="*{id}" />
 
@@ -386,7 +387,7 @@
 								<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
 								<p class="mb-0 small">
 									<strong>Choose file</strong> or drag here.
-								</p>
+									</s_>
 							</div>
 							<div class="image-preview-container">
 								<img src="" alt="Image Preview" class="image-preview">

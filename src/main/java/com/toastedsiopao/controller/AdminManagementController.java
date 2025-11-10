@@ -9,6 +9,7 @@ import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.CustomerService;
+import jakarta.servlet.http.HttpServletRequest; // IMPORT ADDED
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; // IMPORT ADDED
+import org.springframework.security.core.context.SecurityContextHolder; // IMPORT ADDED
+import org.springframework.security.core.userdetails.UserDetails; // IMPORT ADDED
+import org.springframework.security.core.userdetails.UserDetailsService; // IMPORT ADDED
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource; // IMPORT ADDED
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -43,6 +49,10 @@ public class AdminManagementController {
 
 	@Autowired
 	private ActivityLogService activityLogService;
+
+	// IMPORT ADDED
+	@Autowired
+	private UserDetailsService userDetailsService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		Pageable defaultPageable = PageRequest.of(0, 10);
@@ -201,7 +211,7 @@ public class AdminManagementController {
 	@PreAuthorize("isAuthenticated()")
 	public String updateAdminProfile(@Valid @ModelAttribute("adminProfileDto") AdminProfileUpdateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) {
+			UriComponentsBuilder uriBuilder, HttpServletRequest request) { // MODIFIED SIGNATURE
 
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
@@ -221,6 +231,21 @@ public class AdminManagementController {
 
 		try {
 			User updatedUser = adminService.updateAdminProfile(adminDto);
+
+			// --- CODE BLOCK TO REFRESH SESSION ---
+			// Manually update the security principal so the navbar reflects the change
+			UserDetails userDetails = userDetailsService.loadUserByUsername(updatedUser.getUsername());
+			UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null, // Credentials
+																														// are
+																														// not
+																														// needed
+																														// post-auth
+					userDetails.getAuthorities());
+			newAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+			SecurityContextHolder.getContext().setAuthentication(newAuth);
+			log.info("Updated security context for user: {}", updatedUser.getUsername());
+			// --- END OF BLOCK ---
+
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE",
 					"Updated own profile: " + updatedUser.getUsername());
 			redirectAttributes.addFlashAttribute("adminSuccess", "Your profile has been updated successfully!");

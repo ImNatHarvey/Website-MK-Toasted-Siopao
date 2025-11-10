@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value; // IMPORTED
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,6 +38,14 @@ public class MKToastedSiopaoWebsiteApplication {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
+	// --- ADDED: Injected admin credentials ---
+	@Value("${mk.admin.username}")
+	private String adminUsername;
+
+	@Value("${mk.admin.password}")
+	private String adminPassword;
+	// --- END ADDED ---
+
 	public static void main(String[] args) {
 		SpringApplication.run(MKToastedSiopaoWebsiteApplication.class, args);
 	}
@@ -61,8 +70,10 @@ public class MKToastedSiopaoWebsiteApplication {
 				Role newCustomerRole = new Role("ROLE_CUSTOMER");
 				return roleRepository.save(newCustomerRole);
 			});
-			String adminUsername = "mktoastedadmin";
-			String adminPassword = "mktoasted123";
+
+			// --- MODIFIED: Use injected variables instead of hardcoded strings ---
+			// String adminUsername = "mktoastedadmin"; // REMOVED
+			// String adminPassword = "mktoasted123"; // REMOVED
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
 
 			if (existingAdminOptional.isEmpty()) {
@@ -76,6 +87,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				userRepository.save(adminUser);
 				log.info(">>> Admin user created.");
 			} else {
+				// --- END MODIFIED ---
 				User adminUser = existingAdminOptional.get();
 				boolean needsUpdate = false;
 				if (adminUser.getRole() == null) {

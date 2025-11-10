@@ -279,98 +279,157 @@ function initThresholdSliders(modalElement) {
 }
 
 /**
- * NEW FUNCTION: TOAST NOTIFICATION HANDLER
- * This function finds the hidden #toast-messages div,
- * reads all data attributes, and creates a toast for each one.
+ * UPDATED FUNCTION: TOAST NOTIFICATION HANDLER
+ * This function now uses sessionStorage to create a persistent queue.
+ * Toasts no longer auto-hide and feature a live-updating timer.
+ * * REFACTORED: Now correctly renders toasts from queue even if #toast-messages
+ * div is not present on the current page (e.g., Dashboard).
  */
 function showToastNotifications() {
-	const messageContainer = document.getElementById('toast-messages');
+	const TOAST_QUEUE_KEY = 'toastQueue';
 	const toastContainer = document.querySelector('.toast-container');
 
-	if (!messageContainer || !toastContainer) {
-		console.log("Toast containers not found. Skipping toast notifications.");
+	// 1. Check for visual container. If this is missing, we can't do anything.
+	if (!toastContainer) {
+		console.error("Toast .toast-container not found in DOM. Cannot display toasts.");
 		return;
 	}
 
-	const messages = messageContainer.dataset;
-	let toastCounter = 0;
+	const messageContainer = document.getElementById('toast-messages'); // This can be null
 
-	for (const key in messages) {
-		if (Object.prototype.hasOwnProperty.call(messages, key) && messages[key]) {
-			const message = messages[key];
-			const isError = key.toLowerCase().includes('error');
-
-			const toastId = `toast-${key}-${toastCounter++}`;
-
-			// --- MODIFIED: Create Toast HTML with Header ---
-			const toastEl = document.createElement('div');
-			toastEl.id = toastId;
-			// Remove background color from main toast element
-			toastEl.className = `toast`;
-			toastEl.setAttribute('role', 'alert');
-			toastEl.setAttribute('aria-live', 'assertive');
-			toastEl.setAttribute('aria-atomic', 'true');
-
-			const headerClass = isError ? 'text-bg-danger' : 'text-bg-success';
-			const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-check-circle';
-			const title = isError ? 'Error' : 'Success';
-			const startTime = Date.now(); // Record start time
-
-			toastEl.innerHTML = `
-                <div class="toast-header ${headerClass} text-white">
-                    <i class="fa-solid ${iconClass} me-2"></i>
-                    <strong class="me-auto">${title}</strong>
-                    <small class="ms-2 toast-time">now</small>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
-            `;
-			// --- END MODIFICATION ---
-
-			// Append to container
-			toastContainer.appendChild(toastEl);
-
-			// Initialize and show
-			const toast = new bootstrap.Toast(toastEl, {
-				delay: isError ? 8000 : 5000 // Longer for errors
-			});
-
-			// --- ADDED: Timer Logic ---
-			const timeElement = toastEl.querySelector('.toast-time');
-			let timerInterval = null;
-			if (timeElement) {
-				const updateTimer = () => {
-					const now = Date.now();
-					const elapsed = Math.round((now - startTime) / 1000); // seconds
-
-					if (elapsed < 60) {
-						timeElement.textContent = elapsed < 5 ? 'now' : `${elapsed} secs ago`;
-					} else {
-						const minutes = Math.floor(elapsed / 60);
-						timeElement.textContent = `${minutes} min ago`;
-					}
-				};
-				// Set an interval to update the time
-				timerInterval = setInterval(updateTimer, 5000); // Update every 5 seconds
-			}
-			// --- END ADDED ---
-
-			// --- MODIFIED: Clear interval on hide ---
-			toastEl.addEventListener('hidden.bs.toast', () => {
-				if (timerInterval) {
-					clearInterval(timerInterval);
-				}
-				toastEl.remove();
-			});
-			// --- END MODIFICATION ---
-
-			toast.show();
-			console.log(`Showing ${isError ? 'error' : 'success'} toast: ${message}`);
-		}
+	// 2. Load existing queue
+	let queue = [];
+	try {
+		queue = JSON.parse(sessionStorage.getItem(TOAST_QUEUE_KEY) || '[]');
+	} catch (e) {
+		console.error("Failed to parse toast queue from sessionStorage:", e);
+		queue = [];
 	}
+
+	// 3. Add new messages IF the container for them exists
+	if (messageContainer) {
+		const newMessages = messageContainer.dataset;
+		let newToastsAdded = false;
+
+		for (const key in newMessages) {
+			if (Object.prototype.hasOwnProperty.call(newMessages, key) && newMessages[key]) {
+				const message = newMessages[key];
+				const isError = key.toLowerCase().includes('error');
+				const toastId = `toast-${Date.now()}-${Math.random()}`; // Unique ID
+
+				queue.push({
+					id: toastId,
+					message: message,
+					isError: isError,
+					timestamp: Date.now()
+				});
+				newToastsAdded = true;
+
+				// Clear the attribute so it's not re-added on the same page
+				delete messageContainer.dataset[key];
+			}
+		}
+
+		// 4. If new toasts were added, save the updated queue
+		if (newToastsAdded) {
+			sessionStorage.setItem(TOAST_QUEUE_KEY, JSON.stringify(queue));
+		}
+	} else {
+		console.log("No #toast-messages div found on this page. Not adding new toasts, just rendering queue.");
+	}
+
+
+	// 5. Clear the visual toast container and rebuild it from the queue
+	toastContainer.innerHTML = '';
+
+	queue.forEach(toastData => {
+		const {
+			id,
+			message,
+			isError,
+			timestamp
+		} = toastData;
+
+		const toastEl = document.createElement('div');
+		toastEl.id = id;
+		toastEl.className = `toast`;
+		toastEl.setAttribute('role', 'alert');
+		toastEl.setAttribute('aria-live', 'assertive');
+		toastEl.setAttribute('aria-atomic', 'true');
+
+		const headerClass = isError ? 'text-bg-danger' : 'text-bg-success';
+		const iconClass = isError ? 'fa-triangle-exclamation' : 'fa-check-circle';
+		const title = isError ? 'Error' : 'Success';
+		const startTime = timestamp; // Use the stored timestamp
+
+		toastEl.innerHTML = `
+            <div class="toast-header ${headerClass} text-white">
+                <i class="fa-solid ${iconClass} me-2"></i>
+                <strong class="me-auto">${title}</strong>
+                <small class="ms-2 toast-time">now</small>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                ${message}
+            </div>
+        `;
+
+		toastContainer.appendChild(toastEl);
+
+		// 6. Initialize the toast with autohide: false
+		const toast = new bootstrap.Toast(toastEl, {
+			autohide: false // Make toast permanent until closed
+		});
+
+		// 7. Create the live-updating timer
+		const timeElement = toastEl.querySelector('.toast-time');
+		let timerInterval = null;
+
+		const updateTimer = () => {
+			const now = Date.now();
+			const elapsed = Math.round((now - startTime) / 1000); // seconds
+
+			if (elapsed < 5) {
+				timeElement.textContent = 'now';
+			} else if (elapsed < 60) {
+				timeElement.textContent = `${elapsed}s ago`;
+			} else {
+				const minutes = Math.floor(elapsed / 60);
+				const seconds = elapsed % 60;
+				timeElement.textContent = `${minutes}m ${seconds}s ago`;
+			}
+		};
+
+		// Set an interval to update the time every second
+		timerInterval = setInterval(updateTimer, 1000);
+		updateTimer(); // Run immediately
+
+		// 8. Add listener to remove from queue when closed
+		toastEl.addEventListener('hidden.bs.toast', () => {
+			// Stop the timer
+			if (timerInterval) {
+				clearInterval(timerInterval);
+			}
+
+			// Remove from sessionStorage
+			try {
+				let currentQueue = JSON.parse(sessionStorage.getItem(TOAST_QUEUE_KEY) || '[]');
+				const newQueue = currentQueue.filter(t => t.id !== id);
+				sessionStorage.setItem(TOAST_QUEUE_KEY, JSON.stringify(newQueue));
+			} catch (e) {
+				console.error("Failed to update toast queue on close:", e);
+			}
+
+			// Remove the element from DOM
+			toastEl.remove();
+		});
+
+		// 9. Show the toast
+		toast.show();
+		console.log(`Showing ${isError ? 'error' : 'success'} toast: ${message}`);
+	});
 }
+// --- END UPDATED FUNCTION ---
 
 // Run the toast notification handler on page load
 document.addEventListener('DOMContentLoaded', showToastNotifications);

@@ -27,18 +27,18 @@ public class InventoryItem {
 	private String name;
 
 	@NotNull(message = "Category must be selected")
-	@ManyToOne(fetch = FetchType.EAGER) 
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
 	private InventoryCategory category;
 
 	@NotNull(message = "Unit must be selected")
-	@ManyToOne(fetch = FetchType.EAGER) 
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "unit_id", nullable = false)
 	private UnitOfMeasure unit;
 
 	@NotNull(message = "Current stock cannot be null")
 	@PositiveOrZero(message = "Stock must be zero or positive")
-	@Column(nullable = false, precision = 10, scale = 2) 
+	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal currentStock = BigDecimal.ZERO;
 
 	@NotNull(message = "Low stock threshold cannot be null")
@@ -69,13 +69,13 @@ public class InventoryItem {
 
 	public String getStockStatus() {
 		if (currentStock.compareTo(BigDecimal.ZERO) <= 0) {
-			return "NO_STOCK"; 
+			return "NO_STOCK";
 		} else if (currentStock.compareTo(criticalStockThreshold) <= 0) {
-			return "CRITICAL"; 
+			return "CRITICAL";
 		} else if (currentStock.compareTo(lowStockThreshold) <= 0) {
-			return "LOW"; 
+			return "LOW";
 		} else {
-			return "NORMAL"; 
+			return "NORMAL";
 		}
 	}
 

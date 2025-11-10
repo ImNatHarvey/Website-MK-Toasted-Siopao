@@ -1,7 +1,7 @@
 package com.toastedsiopao.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin; 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime; 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,7 +41,7 @@ public class Product {
 	private String imageUrl;
 
 	@NotNull(message = "Product must belong to a category")
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
 	private Category category;
 
@@ -51,17 +51,17 @@ public class Product {
 	@NotNull(message = "Current stock cannot be null")
 	@PositiveOrZero(message = "Stock must be zero or positive")
 	@Column(nullable = false)
-	private Integer currentStock = 0; 
+	private Integer currentStock = 0;
 
 	@NotNull(message = "Low stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false)
-	private Integer lowStockThreshold = 0; 
+	private Integer lowStockThreshold = 0;
 
 	@NotNull(message = "Critical stock threshold cannot be null")
 	@PositiveOrZero(message = "Threshold must be zero or positive")
 	@Column(nullable = false)
-	private Integer criticalStockThreshold = 0; 
+	private Integer criticalStockThreshold = 0;
 
 	private LocalDateTime stockLastUpdated;
 
@@ -81,15 +81,16 @@ public class Product {
 	@Transient
 	public String getStockStatus() {
 		if (currentStock <= 0) {
-			return "NO_STOCK"; 
+			return "NO_STOCK";
 		} else if (currentStock <= criticalStockThreshold) {
-			return "CRITICAL"; 
+			return "CRITICAL";
 		} else if (currentStock <= lowStockThreshold) {
-			return "LOW"; 
+			return "LOW";
 		} else {
-			return "NORMAL"; 
+			return "NORMAL";
 		}
 	}
+
 	public void addIngredient(RecipeIngredient ingredient) {
 		ingredients.add(ingredient);
 		ingredient.setProduct(this);

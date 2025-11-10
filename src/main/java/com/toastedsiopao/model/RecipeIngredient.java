@@ -24,7 +24,7 @@ public class RecipeIngredient {
 	private Product product;
 
 	@NotNull
-	@ManyToOne(fetch = FetchType.EAGER) 
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "inventory_item_id", nullable = false)
 	private InventoryItem inventoryItem;
 
@@ -32,7 +32,7 @@ public class RecipeIngredient {
 	@Positive(message = "Quantity needed must be positive")
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal quantityNeeded;
-	
+
 	public RecipeIngredient(Product product, InventoryItem inventoryItem, BigDecimal quantityNeeded) {
 		this.product = product;
 		this.inventoryItem = inventoryItem;

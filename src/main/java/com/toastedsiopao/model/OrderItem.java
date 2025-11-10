@@ -22,7 +22,7 @@ public class OrderItem {
 	@JoinColumn(name = "order_id", nullable = false)
 	private Order order;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_id", nullable = false)
 	private Product product;
 

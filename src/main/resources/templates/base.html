@@ -66,12 +66,12 @@
 						<button class="btn btn-custom dropdown-toggle" type="button"
 							id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
 							<i class="bi bi-person-circle me-1"></i> <span
-								sec:authentication="principal.username">Username</span>
+								sec:authentication="name">Username</span>
 						</button>
 						<ul class="dropdown-menu dropdown-menu-end"
 							aria-labelledby="userDropdown">
 							<li><span class="dropdown-item-text">Welcome, <strong
-									sec:authentication="principal.username">User</strong>!
+									sec:authentication="name">User</strong>!
 							</span></li>
 							<li><hr class="dropdown-divider"></li>
 

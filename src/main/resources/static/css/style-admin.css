@@ -1,3 +1,8 @@
+/* ADDED: Import Bootstrap Icons for the user dropdown */
+@import
+	url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css")
+	;
+
 .btn-custom {
 	background-color: var(--accent);
 	color: var(--primary);
@@ -489,6 +494,11 @@ body.sidebar-toggled .admin-sidebar .nav-link.active {
 
 .admin-content-navbar .nav-link:hover {
 	color: var(--secondary) !important;
+}
+
+/* --- ADDED: Ensure dropdown button in navbar uses correct margin --- */
+.admin-content-navbar .btn-custom {
+	margin-left: 0;
 }
 
 .admin-content-page {

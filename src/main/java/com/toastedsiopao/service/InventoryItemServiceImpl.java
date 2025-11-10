@@ -39,7 +39,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	private RecipeIngredientRepository recipeIngredientRepository;
 
 	private void validateThresholds(BigDecimal lowThreshold, BigDecimal criticalThreshold) {
-		
+
 		if (lowThreshold == null || lowThreshold.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
 		}
@@ -93,7 +93,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 			throw new IllegalArgumentException("Inventory item data cannot be null.");
 		}
 		if (!StringUtils.hasText(itemDto.getName())) {
-			throw new IllegalArgumentException("Item name cannot be blank."); 
+			throw new IllegalArgumentException("Item name cannot be blank.");
 		}
 		if (itemDto.getCategoryId() == null) {
 			throw new IllegalArgumentException("Category must be selected.");
@@ -103,15 +103,15 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 		if (itemDto.getCurrentStock() == null)
 			itemDto.setCurrentStock(BigDecimal.ZERO);
-		
+
 		validateThresholds(itemDto.getLowStockThreshold(), itemDto.getCriticalStockThreshold());
 		validateNameUniqueness(itemDto.getName(), itemDto.getId());
-		
+
 		InventoryCategory category = categoryRepository.findById(itemDto.getCategoryId()).orElseThrow(
 				() -> new RuntimeException("Inventory Category not found with id: " + itemDto.getCategoryId()));
 		UnitOfMeasure unit = unitRepository.findById(itemDto.getUnitId())
-				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId())); 
-		
+				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId()));
+
 		InventoryItem item;
 		boolean isNew = itemDto.getId() == null;
 		if (!isNew) {
@@ -120,8 +120,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		} else {
 			item = new InventoryItem();
 		}
-		
-		item.setName(itemDto.getName().trim()); 
+
+		item.setName(itemDto.getName().trim());
 		item.setCategory(category);
 		item.setUnit(unit);
 
@@ -131,7 +131,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
-		item.setCostPerUnit(itemDto.getCostPerUnit()); 
+		item.setCostPerUnit(itemDto.getCostPerUnit());
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
@@ -140,30 +140,21 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 			return savedItem;
 		} catch (Exception e) {
 			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
-			
+
 			throw new RuntimeException("Could not save inventory item due to a database error.", e);
 		}
 	}
 
 	@Override
 	public void deleteById(Long id) {
+		// --- MODIFIED: Removed manual pre-check ---
 		InventoryItem item = itemRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
 
-		List<RecipeIngredient> recipes = recipeIngredientRepository.findByInventoryItem(item);
-		if (!recipes.isEmpty()) {
-			
-			String productNames = recipes.stream()
-					.map(r -> r.getProduct() != null ? r.getProduct().getName() : "Unknown Product").distinct().limit(3)
-					.collect(Collectors.joining(", "));
-			if (recipes.size() > 3)
-				productNames += ", ...";
-
-			throw new RuntimeException(
-					"Cannot delete item '" + item.getName() + "'. It is used in product recipe(s): " + productNames);
-		}
-
+		// Let the database throw DataIntegrityViolationException if relations exist
+		// (e.g., in RecipeIngredient)
 		itemRepository.deleteById(id);
+
 		log.info("Deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
 
@@ -175,7 +166,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (hasKeyword && hasCategory) {
 			InventoryCategory category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId)); 
+					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId));
 			return itemRepository.findByNameContainingIgnoreCaseAndCategoryOrderByNameAsc(keyword.trim(), category,
 					pageable);
 		} else if (hasKeyword) {
@@ -185,10 +176,10 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 					.orElseThrow(() -> new RuntimeException("Inventory Category not found with id: " + categoryId));
 			return itemRepository.findByCategoryOrderByNameAsc(category, pageable);
 		} else {
-			return itemRepository.findAll(pageable); 
+			return itemRepository.findAll(pageable);
 		}
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findLowStockItems() {

@@ -134,15 +134,8 @@ public class AdminCustomerController {
 					.toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (Exception e) {
-			log.error("Unexpected error creating customer user: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "addCustomerModal").build()
-					.toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (Exception e) block ---
 
 		return "redirect:/admin/customers";
 	}
@@ -187,15 +180,9 @@ public class AdminCustomerController {
 					.queryParam("editId", userDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (Exception e) {
-			log.error("Error updating customer: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
-			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/customers").queryParam("showModal", "editCustomerModal")
-					.queryParam("editId", userDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (Exception e) block ---
+
 		return "redirect:/admin/customers";
 	}
 
@@ -203,6 +190,9 @@ public class AdminCustomerController {
 	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')")
 	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<User> userOpt = customerService.findUserById(id);
 		if (userOpt.isEmpty() || userOpt.get().getRole() == null
 				|| !"ROLE_CUSTOMER".equals(userOpt.get().getRole().getName())) {
@@ -210,16 +200,15 @@ public class AdminCustomerController {
 			return "redirect:/admin/customers";
 		}
 		String username = userOpt.get().getUsername();
-		try {
-			customerService.deleteCustomerById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
-					"Deleted customer user: " + username + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("customerSuccess",
-					"Customer '" + username + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			log.error("Error deleting customer ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("customerError", "Error deleting customer: " + e.getMessage());
-		}
+
+		// Let the service throw an exception (e.g., if customer has orders)
+		// The GlobalExceptionHandler will catch it.
+		customerService.deleteCustomerById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",
+				"Deleted customer user: " + username + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("customerSuccess", "Customer '" + username + "' deleted successfully!");
+
 		return "redirect:/admin/customers";
 	}
 }

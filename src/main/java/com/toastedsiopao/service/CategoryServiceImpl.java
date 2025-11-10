@@ -1,18 +1,18 @@
 package com.toastedsiopao.service;
 
-import com.toastedsiopao.dto.CategoryDto; 
+import com.toastedsiopao.dto.CategoryDto;
 import com.toastedsiopao.model.Category;
-import com.toastedsiopao.model.Product; 
+import com.toastedsiopao.model.Product;
 import com.toastedsiopao.repository.CategoryRepository;
-import org.slf4j.Logger; 
-import org.slf4j.LoggerFactory; 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy; 
-import org.springframework.data.domain.Page; 
-import org.springframework.data.domain.PageRequest; 
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils; 
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -86,7 +86,7 @@ public class CategoryServiceImpl implements CategoryService {
 			throw new RuntimeException("Could not save product category due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public Category updateFromDto(CategoryDto categoryDto) {
 		if (categoryDto == null || categoryDto.getId() == null) {
@@ -109,20 +109,18 @@ public class CategoryServiceImpl implements CategoryService {
 			throw new RuntimeException("Could not update product category due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public void deleteById(Long id) {
-		
-		Category category = categoryRepository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
 
-		Page<Product> productsInCategory = productService.findByCategory(id, PageRequest.of(0, 1));
-		if (!productsInCategory.isEmpty()) {
-			throw new RuntimeException("Cannot delete '" + category.getName() + "'. Associated with "
-					+ productsInCategory.getTotalElements() + " product(s).");
+		// --- MODIFIED: Removed manual pre-check ---
+		if (!categoryRepository.existsById(id)) {
+			throw new RuntimeException("Category not found with id: " + id);
 		}
 
+		// Let the database throw DataIntegrityViolationException if relations exist
 		categoryRepository.deleteById(id);
+
 		log.info("Deleted product category with ID: {}", id);
 	}
 

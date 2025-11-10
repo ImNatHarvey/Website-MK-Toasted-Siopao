@@ -248,6 +248,9 @@ public class AdminManagementController {
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // --- UPDATED ---
 	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("adminError", "Admin not found or invalid ID.");
@@ -259,15 +262,14 @@ public class AdminManagementController {
 			return "redirect:/admin/admins";
 		}
 
-		try {
-			adminService.deleteAdminById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_ADMIN",
-					"Deleted admin user: " + username + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("adminSuccess", "Admin '" + username + "' deleted successfully!");
-		} catch (Exception e) {
-			log.error("Error deleting admin ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("adminError", "Error deleting admin: " + e.getMessage());
-		}
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		adminService.deleteAdminById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_ADMIN",
+				"Deleted admin user: " + username + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("adminSuccess", "Admin '" + username + "' deleted successfully!");
+
 		return "redirect:/admin/admins";
 	}
 }

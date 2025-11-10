@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/admins/roles")
-@PreAuthorize("hasRole('OWNER')") 
+@PreAuthorize("hasRole('OWNER')")
 public class AdminRoleController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminRoleController.class);
@@ -98,6 +98,9 @@ public class AdminRoleController {
 
 	@PostMapping("/delete/{id}")
 	public String deleteRole(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<Role> roleOpt = adminService.findRoleById(id);
 		if (roleOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("adminError", "Role not found or invalid ID.");
@@ -105,15 +108,14 @@ public class AdminRoleController {
 		}
 		String roleName = roleOpt.get().getName();
 
-		try {
-			adminService.deleteRole(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_ROLE",
-					"Deleted role: " + roleName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("adminSuccess", "Role '" + roleName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			log.error("Error deleting role ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("adminError", "Error deleting role: " + e.getMessage());
-		}
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		adminService.deleteRole(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_ROLE",
+				"Deleted role: " + roleName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("adminSuccess", "Role '" + roleName + "' deleted successfully!");
+
 		return "redirect:/admin/admins";
 	}
 }

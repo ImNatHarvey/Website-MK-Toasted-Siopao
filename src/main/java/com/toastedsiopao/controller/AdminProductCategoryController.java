@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -44,7 +44,7 @@ public class AdminProductCategoryController {
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasAuthority('ADD_PRODUCTS')") 
+	@PreAuthorize("hasAuthority('ADD_PRODUCTS')")
 	public String addCategory(@Valid @ModelAttribute("categoryDto") CategoryDto categoryDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -76,20 +76,14 @@ public class AdminProductCategoryController {
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (RuntimeException e) {
-			log.error("Error adding product category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
-					.build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/products";
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") 
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')")
 	public String updateCategory(@Valid @ModelAttribute("categoryUpdateDto") CategoryDto categoryDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -125,22 +119,19 @@ public class AdminProductCategoryController {
 					.queryParam("editId", categoryDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (RuntimeException e) {
-			log.error("Error updating product category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
-			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "editCategoryModal")
-					.queryParam("editId", categoryDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/products";
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") 
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')")
 	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<Category> categoryOpt = categoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
@@ -148,15 +139,17 @@ public class AdminProductCategoryController {
 		}
 		String categoryName = categoryOpt.get().getName();
 
-		try {
-			categoryService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_CATEGORY",
-					"Deleted product category: " + categoryName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("categorySuccess",
-					"Category '" + categoryName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
-		}
+		// Let the service throw an exception if deletion fails (e.g.,
+		// DataIntegrityViolation)
+		// The GlobalExceptionHandler will catch it.
+		categoryService.deleteById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_CATEGORY",
+				"Deleted product category: " + categoryName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("categorySuccess",
+				"Category '" + categoryName + "' deleted successfully!");
+
+		// --- Note: The exception handler will redirect if deleteById(id) fails ---
 		return "redirect:/admin/products";
 	}
 }

@@ -112,7 +112,7 @@ public class AdminInventoryController {
 	}
 
 	@PostMapping("/save")
-	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')") 
+	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -134,7 +134,7 @@ public class AdminInventoryController {
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
-		} catch (RuntimeException e) {
+		} catch (IllegalArgumentException e) { // Keep specific validation catch
 			log.warn("Error saving inventory item: {}", e.getMessage());
 			if (e.getMessage().contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
@@ -152,11 +152,13 @@ public class AdminInventoryController {
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
+
 		return "redirect:/admin/inventory";
 	}
 
 	@PostMapping("/stock/adjust")
-	@PreAuthorize("hasAuthority('ADJUST_INVENTORY_STOCK')") 
+	@PreAuthorize("hasAuthority('ADJUST_INVENTORY_STOCK')")
 	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
 			@RequestParam("quantity") BigDecimal quantity, @RequestParam("action") String action,
 			@RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes,
@@ -182,7 +184,7 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException e) { // Keep this for stock-specific errors like "cannot go below zero"
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
@@ -193,25 +195,27 @@ public class AdminInventoryController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')") 
+	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
 	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
 		if (itemOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Inventory item not found.");
 			return "redirect:/admin/inventory";
 		}
 		String itemName = itemOpt.get().getName();
-		try {
-			inventoryItemService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
-					"Deleted inventory item: " + itemName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			log.warn("Could not delete item '{}': {}", itemName, e.getMessage());
-			redirectAttributes.addFlashAttribute("inventoryError",
-					"Could not delete item '" + itemName + "': " + e.getMessage());
-		}
+
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		inventoryItemService.deleteById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
+				"Deleted inventory item: " + itemName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
+
 		return "redirect:/admin/inventory";
 	}
 }

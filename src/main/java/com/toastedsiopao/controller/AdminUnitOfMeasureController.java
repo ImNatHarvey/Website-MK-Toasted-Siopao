@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/inventory/units")
-@PreAuthorize("hasAuthority('MANAGE_UNITS')") 
+@PreAuthorize("hasAuthority('MANAGE_UNITS')")
 public class AdminUnitOfMeasureController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminUnitOfMeasureController.class);
@@ -70,14 +70,9 @@ public class AdminUnitOfMeasureController {
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageUnitsModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
-		} catch (RuntimeException e) {
-			log.error("Error adding unit of measure: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("unitError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageUnitsModal").build()
-					.toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
+
 		return "redirect:/admin/inventory";
 	}
 
@@ -113,14 +108,8 @@ public class AdminUnitOfMeasureController {
 					.queryParam("editId", unitDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (RuntimeException e) {
-			log.error("Error updating unit: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("unitError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editUnitModal")
-					.queryParam("editId", unitDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/inventory";
 	}
@@ -128,6 +117,9 @@ public class AdminUnitOfMeasureController {
 	@PostMapping("/delete/{id}")
 	public String deleteUnitOfMeasure(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<UnitOfMeasure> unitOpt = unitOfMeasureService.findById(id);
 		if (unitOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("unitError", "Unit not found.");
@@ -135,15 +127,14 @@ public class AdminUnitOfMeasureController {
 		}
 		String unitName = unitOpt.get().getName();
 
-		try {
-			unitOfMeasureService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_UNIT_OF_MEASURE",
-					"Deleted unit: " + unitName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + unitName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			log.error("Error deleting unit ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("unitError", "Error deleting unit: " + e.getMessage());
-		}
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		unitOfMeasureService.deleteById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_UNIT_OF_MEASURE",
+				"Deleted unit: " + unitName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + unitName + "' deleted successfully!");
+
 		return "redirect:/admin/inventory";
 	}
 }

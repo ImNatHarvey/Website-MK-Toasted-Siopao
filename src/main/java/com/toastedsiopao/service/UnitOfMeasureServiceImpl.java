@@ -1,10 +1,10 @@
 package com.toastedsiopao.service;
 
-import com.toastedsiopao.dto.UnitOfMeasureDto; 
+import com.toastedsiopao.dto.UnitOfMeasureDto;
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.repository.UnitOfMeasureRepository;
-import org.slf4j.Logger; 
-import org.slf4j.LoggerFactory; 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 			throw new IllegalArgumentException("Unit abbreviation '" + abbreviation.trim() + "' already exists.");
 		}
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<UnitOfMeasure> findAll() {
@@ -115,7 +115,7 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 			throw new RuntimeException("Could not save unit due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public UnitOfMeasure updateFromDto(UnitOfMeasureDto unitDto) {
 		if (unitDto == null || unitDto.getId() == null) {
@@ -140,21 +140,17 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 			throw new RuntimeException("Could not update unit due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public void deleteById(Long id) {
-		// 1. Find the unit first
-		UnitOfMeasure unit = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Unit not found with id: " + id)); 
-		
-		long itemsUsingUnitCount = inventoryItemService.countByUnit(unit);
-
-		if (itemsUsingUnitCount > 0) {
-			throw new RuntimeException("Cannot delete unit '" + unit.getName() + "'. It is associated with "
-					+ itemsUsingUnitCount + " inventory item(s).");
+		// --- MODIFIED: Removed manual pre-check ---
+		if (!repository.existsById(id)) {
+			throw new RuntimeException("Unit not found with id: " + id);
 		}
 
+		// Let the database throw DataIntegrityViolationException if relations exist
 		repository.deleteById(id);
+
 		log.info("Deleted unit with ID: {}", id);
 	}
 }

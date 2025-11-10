@@ -4,14 +4,14 @@ import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.repository.InventoryCategoryRepository;
-import org.slf4j.Logger; 
-import org.slf4j.LoggerFactory; 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; 
-import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils; 
+import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +50,7 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryCategory> findAll() {
-		return repository.findAll(); 
+		return repository.findAll();
 	}
 
 	@Override
@@ -92,7 +92,7 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 			throw new RuntimeException("Could not save inventory category due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public InventoryCategory updateFromDto(InventoryCategoryDto categoryDto) {
 		if (categoryDto == null || categoryDto.getId() == null) {
@@ -115,20 +115,18 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 			throw new RuntimeException("Could not update inventory category due to a database error.", e);
 		}
 	}
-	
+
 	@Override
 	public void deleteById(Long id) {
-		
-		InventoryCategory category = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Category not found with id: " + id));
 
-		Page<InventoryItem> itemsInCategory = inventoryItemService.searchItems(null, id, PageRequest.of(0, 1));
-		if (!itemsInCategory.isEmpty()) {
-			throw new RuntimeException("Cannot delete category '" + category.getName() + "'. It is associated with "
-					+ itemsInCategory.getTotalElements() + " inventory item(s).");
+		// --- MODIFIED: Removed manual pre-check ---
+		if (!repository.existsById(id)) {
+			throw new RuntimeException("Category not found with id: " + id);
 		}
 
+		// Let the database throw DataIntegrityViolationException if relations exist
 		repository.deleteById(id);
+
 		log.info("Deleted inventory category with ID: {}", id);
 	}
 }

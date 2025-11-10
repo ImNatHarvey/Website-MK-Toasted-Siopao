@@ -41,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
 	private InventoryItemService inventoryItemService;
 
 	private void validateThresholds(Integer lowThreshold, Integer criticalThreshold) {
-		
+
 		if (lowThreshold == null || lowThreshold <= 0) {
 			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
 		}
@@ -55,7 +55,7 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Product> findAll(Pageable pageable) { 
+	public Page<Product> findAll(Pageable pageable) {
 		return productRepository.findAll(pageable);
 	}
 
@@ -79,7 +79,7 @@ public class ProductServiceImpl implements ProductService {
 		if (productDto.getPrice() == null) {
 			throw new IllegalArgumentException("Price cannot be null.");
 		}
-		
+
 		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
 
 		Category category = categoryRepository.findById(productDto.getCategoryId())
@@ -95,9 +95,9 @@ public class ProductServiceImpl implements ProductService {
 			log.info("{} product: ID={}, Name='{}'", logAction, product.getId(), productDto.getName());
 		} else {
 			product = new Product();
-			product.setCurrentStock(0); 
+			product.setCurrentStock(0);
 			log.info("{} new product: Name='{}'", logAction, productDto.getName());
-			product.setRecipeLocked(true); 
+			product.setRecipeLocked(true);
 			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
 		}
 
@@ -110,10 +110,10 @@ public class ProductServiceImpl implements ProductService {
 		}
 
 		if (!product.isRecipeLocked() || isNew) {
-			if (product.getIngredients() != null) { 
+			if (product.getIngredients() != null) {
 				List<Long> dtoIngredientItemIds = productDto.getIngredients().stream()
-						.filter(dto -> dto.getInventoryItemId() != null) 
-						.map(RecipeIngredientDto::getInventoryItemId).collect(Collectors.toList());
+						.filter(dto -> dto.getInventoryItemId() != null).map(RecipeIngredientDto::getInventoryItemId)
+						.collect(Collectors.toList());
 
 				product.getIngredients()
 						.removeIf(ingredient -> !dtoIngredientItemIds.contains(ingredient.getInventoryItem().getId()));
@@ -163,16 +163,13 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public void deleteById(Long id) { 
+	public void deleteById(Long id) {
+		// --- MODIFIED: Removed manual pre-check ---
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-		List<OrderItem> orderItems = orderItemRepository.findByProduct(product);
-		if (!orderItems.isEmpty()) {
-			throw new RuntimeException("Cannot delete product '" + product.getName() + "'. It is part of "
-					+ orderItems.size() + " existing order(s).");
-		}
-
+		// Let the database throw DataIntegrityViolationException if relations exist
+		// (e.g., in OrderItem)
 		log.info("Deleting product: ID={}, Name='{}'", id, product.getName());
 		productRepository.deleteById(id);
 	}
@@ -187,7 +184,7 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Product> searchProducts(String keyword, Pageable pageable) { 
+	public Page<Product> searchProducts(String keyword, Pageable pageable) {
 		if (keyword == null || keyword.trim().isEmpty()) {
 			return findAll(pageable);
 		}
@@ -215,7 +212,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 
-	@Override 
+	@Override
 	public Product adjustStock(Long productId, int quantityChange, String reason) {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
@@ -285,7 +282,7 @@ public class ProductServiceImpl implements ProductService {
 				}
 			}
 		}
-		
+
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;
 
@@ -302,7 +299,7 @@ public class ProductServiceImpl implements ProductService {
 
 		return savedProduct;
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public long countAllProducts() {
@@ -344,7 +341,7 @@ public class ProductServiceImpl implements ProductService {
 			if (itemOpt.isEmpty()) {
 				log.warn("calculateMaxProducible: Ingredient item ID {} not found.",
 						ingredient.getInventoryItem().getId());
-				return 0; 
+				return 0;
 			}
 
 			BigDecimal availableStock = itemOpt.get().getCurrentStock();
@@ -353,13 +350,13 @@ public class ProductServiceImpl implements ProductService {
 			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) {
 				log.warn("calculateMaxProducible: Ingredient '{}' has invalid quantity needed ({}).",
 						itemOpt.get().getName(), quantityNeeded);
-				continue; 
+				continue;
 			}
 
 			if (availableStock.compareTo(quantityNeeded) < 0) {
 				log.debug("calculateMaxProducible: Not enough stock for '{}'. Need {}, have {}.",
 						itemOpt.get().getName(), quantityNeeded, availableStock);
-				return 0; 
+				return 0;
 			}
 
 			int possibleUnits = availableStock.divide(quantityNeeded, 0, RoundingMode.FLOOR).intValue();

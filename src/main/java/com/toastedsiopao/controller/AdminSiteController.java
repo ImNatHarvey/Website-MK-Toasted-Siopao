@@ -20,7 +20,7 @@ import java.security.Principal;
 import java.util.function.BiConsumer;
 
 @Controller
-@RequestMapping("/admin") 
+@RequestMapping("/admin")
 public class AdminSiteController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminSiteController.class);
@@ -44,58 +44,81 @@ public class AdminSiteController {
 		return "admin/settings"; // Renders settings.html
 	}
 
-	private void processImageUpload(MultipartFile file, boolean removeImage, String currentPath, String defaultPath,
-			BiConsumer<SiteSettings, String> pathSetter, SiteSettings settings) {
+	/**
+	 * Handles the logic for a single image upload field. It decides whether to
+	 * store a new image, delete an existing one, or keep the current one.
+	 *
+	 * @param file        The new MultipartFile from the form.
+	 * @param removeImage The boolean flag from the 'removeImage' hidden input.
+	 * @param currentPath The existing image path stored in the database.
+	 * @param defaultPath The default placeholder path for this image.
+	 * @return The final path (new, default, or current) to be saved to the
+	 *         database.
+	 */
+	private String handleImageUpload(MultipartFile file, boolean removeImage, String currentPath, String defaultPath) {
+		String oldPathToDelete = null;
+		String finalPath;
 
 		if (removeImage) {
 			log.info("User requested image removal. Reverting to default path: {}", defaultPath);
-			pathSetter.accept(settings, defaultPath); 
+			finalPath = defaultPath;
 			if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 					&& !currentPath.startsWith("/img/")) {
-				log.info("Deleting old custom file: {}", currentPath);
-				fileStorageService.delete(currentPath);
+				oldPathToDelete = currentPath; // Mark old custom file for deletion
 			}
 		} else if (file != null && !file.isEmpty()) {
 			log.info("New file detected. Storing...");
 			try {
-				String newPath = fileStorageService.store(file);
-				pathSetter.accept(settings, newPath); 
-				log.info("Set new path to: {}", newPath);
+				finalPath = fileStorageService.store(file); // Store new file
+				log.info("Set new path to: {}", finalPath);
 				if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 						&& !currentPath.startsWith("/img/")) {
-					log.info("Deleting old custom file: {}", currentPath);
-					fileStorageService.delete(currentPath);
+					oldPathToDelete = currentPath; // Mark old custom file for deletion
 				}
 			} catch (Exception e) {
 				log.error("Failed to store new image file: {}. Reverting to default path.", e.getMessage(), e);
-				pathSetter.accept(settings, defaultPath);
+				finalPath = defaultPath;
 			}
 		} else {
 			log.debug("No image change. Keeping path: {}", currentPath);
-			pathSetter.accept(settings, currentPath);
+			finalPath = currentPath; // Keep the existing path
 		}
+
+		// Perform deletion if an old file was marked
+		if (oldPathToDelete != null) {
+			log.info("Deleting old custom file: {}", oldPathToDelete);
+			fileStorageService.delete(oldPathToDelete);
+		}
+
+		return finalPath;
 	}
 
 	@PostMapping("/settings/update")
-	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") 
+	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')")
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
+			// --- Carousel Files ---
 			@RequestParam("carouselImage1File") MultipartFile carouselImage1File,
 			@RequestParam("carouselImage2File") MultipartFile carouselImage2File,
 			@RequestParam("carouselImage3File") MultipartFile carouselImage3File,
+			// --- Feature Card Files ---
 			@RequestParam("featureCard1ImageFile") MultipartFile featureCard1ImageFile,
 			@RequestParam("featureCard2ImageFile") MultipartFile featureCard2ImageFile,
 			@RequestParam("featureCard3ImageFile") MultipartFile featureCard3ImageFile,
 			@RequestParam("featureCard4ImageFile") MultipartFile featureCard4ImageFile,
+			// --- Other Page Files ---
 			@RequestParam("whyUsImageFile") MultipartFile whyUsImageFile,
 			@RequestParam("aboutImageFile") MultipartFile aboutImageFile,
-			
+
+			// --- Carousel Remove Flags ---
 			@RequestParam(value = "removeCarouselImage1", defaultValue = "false") boolean removeCarouselImage1,
 			@RequestParam(value = "removeCarouselImage2", defaultValue = "false") boolean removeCarouselImage2,
 			@RequestParam(value = "removeCarouselImage3", defaultValue = "false") boolean removeCarouselImage3,
+			// --- Feature Card Remove Flags ---
 			@RequestParam(value = "removeFeatureCard1Image", defaultValue = "false") boolean removeFeatureCard1Image,
 			@RequestParam(value = "removeFeatureCard2Image", defaultValue = "false") boolean removeFeatureCard2Image,
 			@RequestParam(value = "removeFeatureCard3Image", defaultValue = "false") boolean removeFeatureCard3Image,
 			@RequestParam(value = "removeFeatureCard4Image", defaultValue = "false") boolean removeFeatureCard4Image,
+			// --- Other Page Remove Flags ---
 			@RequestParam(value = "removeWhyUsImage", defaultValue = "false") boolean removeWhyUsImage,
 			@RequestParam(value = "removeAboutImage", defaultValue = "false") boolean removeAboutImage,
 			RedirectAttributes redirectAttributes, Principal principal) {
@@ -103,59 +126,61 @@ public class AdminSiteController {
 		log.info("Updating site settings...");
 
 		SiteSettings settingsToUpdate = siteSettingsService.getSiteSettings();
-		
-		SiteSettings defaultSettings = new SiteSettings();
-
-		settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
-		settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());
-		settingsToUpdate.setFeatureCard1Title(formSettings.getFeatureCard1Title());
-		settingsToUpdate.setFeatureCard1Text(formSettings.getFeatureCard1Text());
-		settingsToUpdate.setFeatureCard2Title(formSettings.getFeatureCard2Title());
-		settingsToUpdate.setFeatureCard2Text(formSettings.getFeatureCard2Text());
-		settingsToUpdate.setFeatureCard3Title(formSettings.getFeatureCard3Title());
-		settingsToUpdate.setFeatureCard3Text(formSettings.getFeatureCard3Text());
-		settingsToUpdate.setFeatureCard4Title(formSettings.getFeatureCard4Title());
-		settingsToUpdate.setFeatureCard4Text(formSettings.getFeatureCard4Text());
-		settingsToUpdate.setPromoTitle(formSettings.getPromoTitle());
-		settingsToUpdate.setPromoText(formSettings.getPromoText());
-		settingsToUpdate.setWhyUsTitle(formSettings.getWhyUsTitle());
-		settingsToUpdate.setWhyUsText(formSettings.getWhyUsText());
-		settingsToUpdate.setAboutTitle(formSettings.getAboutTitle());
-		settingsToUpdate.setAboutDescription1(formSettings.getAboutDescription1());
-		settingsToUpdate.setAboutDescription2(formSettings.getAboutDescription2());
-		settingsToUpdate.setContactFacebookName(formSettings.getContactFacebookName());
-		settingsToUpdate.setContactFacebookUrl(formSettings.getContactFacebookUrl());
-		settingsToUpdate.setContactPhoneName(formSettings.getContactPhoneName());
-		settingsToUpdate.setContactPhoneUrl(formSettings.getContactPhoneUrl());
+		SiteSettings defaultSettings = new SiteSettings(); // For default paths
 
 		try {
-			processImageUpload(carouselImage1File, removeCarouselImage1, settingsToUpdate.getCarouselImage1(),
-					defaultSettings.getCarouselImage1(), SiteSettings::setCarouselImage1, settingsToUpdate);
+			// --- 1. Update Text Fields ---
+			settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
+			settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());
+			settingsToUpdate.setFeatureCard1Title(formSettings.getFeatureCard1Title());
+			settingsToUpdate.setFeatureCard1Text(formSettings.getFeatureCard1Text());
+			settingsToUpdate.setFeatureCard2Title(formSettings.getFeatureCard2Title());
+			settingsToUpdate.setFeatureCard2Text(formSettings.getFeatureCard2Text());
+			settingsToUpdate.setFeatureCard3Title(formSettings.getFeatureCard3Title());
+			settingsToUpdate.setFeatureCard3Text(formSettings.getFeatureCard3Text());
+			settingsToUpdate.setFeatureCard4Title(formSettings.getFeatureCard4Title());
+			settingsToUpdate.setFeatureCard4Text(formSettings.getFeatureCard4Text());
+			settingsToUpdate.setPromoTitle(formSettings.getPromoTitle());
+			settingsToUpdate.setPromoText(formSettings.getPromoText());
+			settingsToUpdate.setWhyUsTitle(formSettings.getWhyUsTitle());
+			settingsToUpdate.setWhyUsText(formSettings.getWhyUsText());
+			settingsToUpdate.setAboutTitle(formSettings.getAboutTitle());
+			settingsToUpdate.setAboutDescription1(formSettings.getAboutDescription1());
+			settingsToUpdate.setAboutDescription2(formSettings.getAboutDescription2());
+			settingsToUpdate.setContactFacebookName(formSettings.getContactFacebookName());
+			settingsToUpdate.setContactFacebookUrl(formSettings.getContactFacebookUrl());
+			settingsToUpdate.setContactPhoneName(formSettings.getContactPhoneName());
+			settingsToUpdate.setContactPhoneUrl(formSettings.getContactPhoneUrl());
 
-			processImageUpload(carouselImage2File, removeCarouselImage2, settingsToUpdate.getCarouselImage2(),
-					defaultSettings.getCarouselImage2(), SiteSettings::setCarouselImage2, settingsToUpdate);
+			// --- 2. Handle Image Uploads ---
+			settingsToUpdate.setCarouselImage1(handleImageUpload(carouselImage1File, removeCarouselImage1,
+					settingsToUpdate.getCarouselImage1(), defaultSettings.getCarouselImage1()));
 
-			processImageUpload(carouselImage3File, removeCarouselImage3, settingsToUpdate.getCarouselImage3(),
-					defaultSettings.getCarouselImage3(), SiteSettings::setCarouselImage3, settingsToUpdate);
+			settingsToUpdate.setCarouselImage2(handleImageUpload(carouselImage2File, removeCarouselImage2,
+					settingsToUpdate.getCarouselImage2(), defaultSettings.getCarouselImage2()));
 
-			processImageUpload(featureCard1ImageFile, removeFeatureCard1Image, settingsToUpdate.getFeatureCard1Image(),
-					defaultSettings.getFeatureCard1Image(), SiteSettings::setFeatureCard1Image, settingsToUpdate);
+			settingsToUpdate.setCarouselImage3(handleImageUpload(carouselImage3File, removeCarouselImage3,
+					settingsToUpdate.getCarouselImage3(), defaultSettings.getCarouselImage3()));
 
-			processImageUpload(featureCard2ImageFile, removeFeatureCard2Image, settingsToUpdate.getFeatureCard2Image(),
-					defaultSettings.getFeatureCard2Image(), SiteSettings::setFeatureCard2Image, settingsToUpdate);
+			settingsToUpdate.setFeatureCard1Image(handleImageUpload(featureCard1ImageFile, removeFeatureCard1Image,
+					settingsToUpdate.getFeatureCard1Image(), defaultSettings.getFeatureCard1Image()));
 
-			processImageUpload(featureCard3ImageFile, removeFeatureCard3Image, settingsToUpdate.getFeatureCard3Image(),
-					defaultSettings.getFeatureCard3Image(), SiteSettings::setFeatureCard3Image, settingsToUpdate);
+			settingsToUpdate.setFeatureCard2Image(handleImageUpload(featureCard2ImageFile, removeFeatureCard2Image,
+					settingsToUpdate.getFeatureCard2Image(), defaultSettings.getFeatureCard2Image()));
 
-			processImageUpload(featureCard4ImageFile, removeFeatureCard4Image, settingsToUpdate.getFeatureCard4Image(),
-					defaultSettings.getFeatureCard4Image(), SiteSettings::setFeatureCard4Image, settingsToUpdate);
+			settingsToUpdate.setFeatureCard3Image(handleImageUpload(featureCard3ImageFile, removeFeatureCard3Image,
+					settingsToUpdate.getFeatureCard3Image(), defaultSettings.getFeatureCard3Image()));
 
-			processImageUpload(whyUsImageFile, removeWhyUsImage, settingsToUpdate.getWhyUsImage(),
-					defaultSettings.getWhyUsImage(), SiteSettings::setWhyUsImage, settingsToUpdate);
+			settingsToUpdate.setFeatureCard4Image(handleImageUpload(featureCard4ImageFile, removeFeatureCard4Image,
+					settingsToUpdate.getFeatureCard4Image(), defaultSettings.getFeatureCard4Image()));
 
-			processImageUpload(aboutImageFile, removeAboutImage, settingsToUpdate.getAboutImage(),
-					defaultSettings.getAboutImage(), SiteSettings::setAboutImage, settingsToUpdate);
+			settingsToUpdate.setWhyUsImage(handleImageUpload(whyUsImageFile, removeWhyUsImage,
+					settingsToUpdate.getWhyUsImage(), defaultSettings.getWhyUsImage()));
 
+			settingsToUpdate.setAboutImage(handleImageUpload(aboutImageFile, removeAboutImage,
+					settingsToUpdate.getAboutImage(), defaultSettings.getAboutImage()));
+
+			// --- 3. Save and Report Success ---
 			siteSettingsService.save(settingsToUpdate);
 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_SITE_SETTINGS",

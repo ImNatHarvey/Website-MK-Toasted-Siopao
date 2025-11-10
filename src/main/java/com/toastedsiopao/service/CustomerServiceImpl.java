@@ -175,6 +175,7 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public void deleteCustomerById(Long id) {
 
+		// --- MODIFIED: Removed manual pre-check ---
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
@@ -182,12 +183,8 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new RuntimeException("Cannot delete non-customer user with this method.");
 		}
 
-		Page<Order> orders = orderRepository.findByUserOrderByOrderDateDesc(user, PageRequest.of(0, 1));
-		if (!orders.isEmpty()) {
-			throw new RuntimeException("Cannot delete customer '" + user.getUsername() + "'. They have "
-					+ orders.getTotalElements() + " order(s) associated with their account.");
-		}
-
+		// Let the database throw DataIntegrityViolationException if relations exist
+		// (e.g., in Order)
 		userRepository.deleteById(id);
 	}
 

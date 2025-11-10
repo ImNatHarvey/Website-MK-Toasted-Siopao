@@ -8,7 +8,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize; 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Controller
 @RequestMapping("/admin/inventory/categories")
-@PreAuthorize("hasAuthority('MANAGE_INVENTORY_CATEGORIES')") 
+@PreAuthorize("hasAuthority('MANAGE_INVENTORY_CATEGORIES')")
 public class AdminInventoryCategoryController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminInventoryCategoryController.class);
@@ -75,14 +75,9 @@ public class AdminInventoryCategoryController {
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageCategoriesModal")
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
-		} catch (RuntimeException e) {
-			log.error("Error adding inventory category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageCategoriesModal")
-					.build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
+
 		return "redirect:/admin/inventory";
 	}
 
@@ -123,14 +118,8 @@ public class AdminInventoryCategoryController {
 					.queryParam("editId", categoryDto.getId()).build().toUriString();
 			return "redirect:" + redirectUrl;
 
-		} catch (RuntimeException e) {
-			log.error("Error updating inventory category: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "An unexpected error occurred: " + e.getMessage());
-			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "editInvCategoryModal")
-					.queryParam("editId", categoryDto.getId()).build().toUriString();
-			return "redirect:" + redirectUrl;
 		}
+		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/inventory";
 	}
@@ -138,6 +127,9 @@ public class AdminInventoryCategoryController {
 	@PostMapping("/delete/{id}")
 	public String deleteInventoryCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<InventoryCategory> categoryOpt = inventoryCategoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
@@ -145,16 +137,15 @@ public class AdminInventoryCategoryController {
 		}
 		String categoryName = categoryOpt.get().getName();
 
-		try {
-			inventoryCategoryService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",
-					"Deleted inventory category: " + categoryName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("categorySuccess",
-					"Category '" + categoryName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			log.error("Error deleting inventory category ID {}: {}", id, e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("categoryError", "Error deleting category: " + e.getMessage());
-		}
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		inventoryCategoryService.deleteById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",
+				"Deleted inventory category: " + categoryName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("categorySuccess",
+				"Category '" + categoryName + "' deleted successfully!");
+
 		return "redirect:/admin/inventory";
 	}
 }

@@ -365,6 +365,7 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	public void deleteRole(Long id) {
+		// --- MODIFIED: Removed manual pre-check ---
 		Role roleToDelete = roleRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
 
@@ -372,12 +373,7 @@ public class AdminServiceImpl implements AdminService {
 			throw new RuntimeException("Cannot delete a default system role: " + roleToDelete.getName());
 		}
 
-		long userCount = userRepository.countByRole_Name(roleToDelete.getName());
-		if (userCount > 0) {
-			throw new RuntimeException("Cannot delete role '" + roleToDelete.getName() + "'. It is assigned to "
-					+ userCount + " user(s).");
-		}
-
+		// Let the database throw DataIntegrityViolationException if relations exist (e.g., in User)
 		log.info("Deleting role: {}", roleToDelete.getName());
 		roleRepository.delete(roleToDelete);
 	}

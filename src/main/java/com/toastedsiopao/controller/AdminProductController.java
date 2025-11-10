@@ -65,7 +65,7 @@ public class AdminProductController {
 	}
 
 	@GetMapping
-	@PreAuthorize("hasAuthority('VIEW_PRODUCTS')") 
+	@PreAuthorize("hasAuthority('VIEW_PRODUCTS')")
 	public String manageProducts(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -95,7 +95,7 @@ public class AdminProductController {
 		model.addAttribute("products", productPage.getContent());
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
-		
+
 		// This replaces the old inventoryStockMapJson logic.
 		// It fetches ALL products with their ingredients to populate the "Manage Stock"
 		// modal,
@@ -182,7 +182,7 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')") 
+	@PreAuthorize("hasAuthority('EDIT_PRODUCTS')")
 	public String updateProduct(@Valid @ModelAttribute("productUpdateDto") ProductDto productDto, BindingResult result,
 			@RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
@@ -259,7 +259,7 @@ public class AdminProductController {
 	}
 
 	@PostMapping("/stock/adjust")
-	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')") 
+	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')")
 	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
 			@RequestParam("action") String action, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -282,7 +282,7 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " units of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
-		} catch (RuntimeException e) {
+		} catch (RuntimeException e) { // Keep this for stock-specific errors
 			log.warn("Stock adjustment failed: {}", e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
@@ -296,27 +296,29 @@ public class AdminProductController {
 	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
 	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
+
+		// --- REMOVED: try-catch block ---
+
 		Optional<Product> productOpt = productService.findById(id);
 		if (productOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("productError", "Product not found.");
 			return "redirect:/admin/products";
 		}
 		String productName = productOpt.get().getName();
-		try {
-			String imagePath = productOpt.get().getImageUrl();
-			if (StringUtils.hasText(imagePath)) {
-				fileStorageService.delete(imagePath);
-			}
 
-			productService.deleteById(id);
-			activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
-					"Deleted product: " + productName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("productSuccess",
-					"Product '" + productName + "' deleted successfully!");
-		} catch (RuntimeException e) {
-			redirectAttributes.addFlashAttribute("productError",
-					"Could not delete product '" + productName + "': " + e.getMessage());
+		String imagePath = productOpt.get().getImageUrl();
+		if (StringUtils.hasText(imagePath)) {
+			fileStorageService.delete(imagePath);
 		}
+
+		// Let the service throw an exception if deletion fails
+		// The GlobalExceptionHandler will catch it.
+		productService.deleteById(id);
+
+		activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
+				"Deleted product: " + productName + " (ID: " + id + ")");
+		redirectAttributes.addFlashAttribute("productSuccess", "Product '" + productName + "' deleted successfully!");
+
 		return "redirect:/admin/products";
 	}
 

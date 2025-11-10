@@ -7,39 +7,39 @@
 </head>
 <body>
 	<main class="container my-5">
-		<!-- About Section -->
-		<h1 class="mb-5 text-center section-title">About MK Toasted
-			Siopao</h1>
+		<h1 class="mb-5 text-center section-title"
+			th:text="${siteSettings.aboutTitle}">About MK Toasted Siopao</h1>
 		<div class="row align-items-center gy-4">
-			<!-- Image -->
 			<div class="col-md-6 text-center">
-				<img th:src="@{/img/carousel1.jpg}" alt="Our Team"
+				<img th:src="@{${siteSettings.aboutImage}}" alt="Our Team"
 					class="img-fluid rounded shadow-sm"
 					style="max-height: 400px; object-fit: cover;">
 			</div>
-			<!-- Text Content -->
 			<div class="col-md-6">
-				<p class="fs-5 mb-3">MK Toasted Siopao started as a small family
-					business with a passion for bringing warm, flavorful, and freshly
-					toasted siopao to our local community. Our mission is simple,
-					deliver high-quality siopao that everyone can enjoy, with love and
-					care in every bite.</p>
-				<p class="fs-5">We take pride in our craftsmanship, customer
-					service, and commitment to supporting local suppliers. At MK
-					Toasted Siopao, every siopao is more than food, it’s a story, a
-					tradition, and a taste you’ll remember.</p>
+				<p class="fs-5 mb-3" th:text="${siteSettings.aboutDescription1}">MK
+					Toasted Siopao started as a small family business with a passion
+					for bringing warm, flavorful, and freshly toasted siopao to our
+					local community. Our mission is simple, deliver high-quality siopao
+					that everyone can enjoy, with love and care in every bite.</p>
+				<p class="fs-5" th:text="${siteSettings.aboutDescription2}">We
+					take pride in our craftsmanship, customer service, and commitment
+					to supporting local suppliers. At MK Toasted Siopao, every siopao
+					is more than food, it’s a story, a tradition, and a taste you’ll
+					remember.</p>
 			</div>
 		</div>
 
-		<!-- Contact Section -->
 		<h2 class="mt-5 mb-4 text-center section-title">Contact Us</h2>
 		<div class="d-flex flex-wrap justify-content-center gap-4">
-			<a href="https://www.facebook.com/YourPage" target="_blank"
-				class="d-flex align-items-center gap-2 text-decoration-none"> <span><i
-					class="fa-brands fa-facebook"></i> MK Toasted Siopao</span>
-			</a> <a href="tel:+639XXXXXXXXX"
-				class="d-flex align-items-center gap-2 text-decoration-none"> <span><i
-					class="fa-solid fa-circle-user"></i> +63 9XX XXX XXXX</span>
+			<a th:href="${siteSettings.contactFacebookUrl}" target="_blank"
+				class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+				<span><i class="fa-brands fa-facebook"></i> <span
+					th:text="${siteSettings.contactFacebookName}">MK Toasted
+						Siopao</span></span>
+			</a> <a th:href="${siteSettings.contactPhoneUrl}"
+				class="d-flex align-items-center gap-2 text-decoration-none text-dark">
+				<span><i class="fa-solid fa-phone"></i> <span
+					th:text="${siteSettings.contactPhoneName}">+63 9XX XXX XXXX</span></span>
 			</a>
 		</div>
 	</main>

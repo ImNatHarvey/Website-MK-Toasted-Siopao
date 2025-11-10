@@ -1,7 +1,7 @@
 package com.toastedsiopao.controller;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory; 
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,22 +11,33 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import com.toastedsiopao.dto.CustomerSignUpDto; 
-import com.toastedsiopao.service.CustomerService; 
+import com.toastedsiopao.dto.CustomerSignUpDto;
+import com.toastedsiopao.model.SiteSettings;
+import com.toastedsiopao.service.CustomerService;
+import com.toastedsiopao.service.SiteSettingsService;
 
 import jakarta.validation.Valid;
 
 @Controller
-public class HomeController {
+public class AuthController {
 
-	private static final Logger log = LoggerFactory.getLogger(HomeController.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
 	@Autowired
-	private CustomerService customerService; 
+	private CustomerService customerService;
 
-	@GetMapping("/")
-	public String home() {
-		return "index";
+	@Autowired
+	private SiteSettingsService siteSettingsService;
+
+	@ModelAttribute
+	public void addCommonAttributes(Model model) {
+		SiteSettings settings = siteSettingsService.getSiteSettings();
+		model.addAttribute("siteSettings", settings);
+	}
+
+	@GetMapping("/login")
+	public String showLoginForm() {
+		return "login";
 	}
 
 	@GetMapping("/signup")
@@ -50,12 +61,12 @@ public class HomeController {
 		}
 
 		try {
-			customerService.saveCustomer(userDto); 
+			customerService.saveCustomer(userDto);
 			log.info("Signup successful for username: {}", userDto.getUsername());
 			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
 			return "redirect:/login";
 
-		} catch (IllegalArgumentException e) { 
+		} catch (IllegalArgumentException e) {
 			log.warn("Signup failed (Service level validation): {}", e.getMessage());
 
 			if (e.getMessage().contains("Username already exists")) {
@@ -73,37 +84,12 @@ public class HomeController {
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
 			return "redirect:/signup";
 
-		} catch (Exception e) { 
+		} catch (Exception e) {
 			log.error("Unexpected error during signup for username {}: {}", userDto.getUsername(), e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("errorMessage",
 					"An unexpected error occurred during registration. Please try again later.");
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
 			return "redirect:/signup";
 		}
-	}
-
-	@GetMapping("/login")
-	public String showLoginForm() {
-		return "login";
-	}
-
-	@GetMapping("/menu")
-	public String menu() {
-		return "menu";
-	}
-
-	@GetMapping("/order")
-	public String order() {
-		return "order";
-	}
-
-	@GetMapping("/about")
-	public String about() {
-		return "about";
-	}
-
-	@GetMapping("/access-denied")
-	public String accessDenied() {
-		return "access-denied";
 	}
 }

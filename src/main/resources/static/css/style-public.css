@@ -3,6 +3,7 @@
 /* body block was removed and moved to base.css */
 .navbar-custom {
 	background-color: var(--primary);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Added subtle shadow */
 }
 
 .navbar-brand {
@@ -10,29 +11,35 @@
 	color: var(--secondary);
 }
 
-.navbar-brand span {
-	font-weight: normal;
+.navbar-brand:hover {
+	color: var(--light); /* Added hover effect */
 }
 
 .nav-link {
 	color: var(--light);
 	margin: 0 10px;
 	transition: color 0.2s ease;
+	border-bottom: 2px solid transparent; /* Added for active state */
+	padding-top: 0.5rem;
+	padding-bottom: 0.5rem;
 }
 
 /* UPDATED: Made selector more specific to remove !important */
-.navbar-custom .nav-link:hover, .navbar-custom .nav-link.active {
+.navbar-custom .nav-link:hover {
 	color: var(--secondary);
+	border-bottom-color: var(--secondary); /* Added hover underline */
 }
 
-.nav-link.active {
+.navbar-custom .nav-link.active {
+	color: var(--secondary) !important; /* Kept important for specificity */
 	font-weight: bold;
 	border-bottom: 2px solid var(--secondary);
 }
 
 .navbar-toggler {
-	background-color: var(--secondary);
-	border-color: var(--primary);
+	/* Use accent color for toggler */
+	background-color: var(--accent);
+	border: 1px solid var(--accent);
 }
 
 .navbar-toggler-icon {
@@ -40,13 +47,14 @@
 		url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(17, 63, 103, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
+/* --- COPIED FROM style-admin.css FOR CONSISTENCY --- */
 .btn-custom {
 	background-color: var(--accent);
 	color: var(--primary);
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
-	margin-left: 10px;
+	/* margin-left: 10px; <-- REMOVED, will be handled inline */
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 	transition: background-color 0.3s ease, color 0.3s ease, border-color
 		0.3s ease;
@@ -86,6 +94,7 @@
 	transition: background-color 0.3s ease, color 0.3s ease, border-color
 		0.3s ease;
 	border: 1px solid var(--primary);
+	/* REMOVED margin-left: 10px; to fix button layout */
 }
 
 .btn-custom-outline:hover {
@@ -93,10 +102,12 @@
 	color: var(--light);
 	border-color: var(--primary);
 }
+/* --- END COPIED STYLES --- */
 
+/* --- REMOVED FIX for invisible navbar button (no longer needed) --- */
 .promo-banner {
 	background-color: var(--secondary);
-	border-radius: 20px;
+	border-radius: 15px; /* Matched card radius */
 	padding: 30px;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -194,20 +205,21 @@
 	font-size: 1rem;
 }
 
+/* Use btn-custom style for ordering */
 .btn-warning {
-	color: var(--dark);
+	background-color: var(--accent);
+	color: var(--primary);
 	font-weight: bold;
 	border-radius: 20px;
 	padding: 6px 16px;
 	transition: 0.3s ease;
-	border-color: var(--warning);
-	background-color: var(--warning);
+	border-color: var(--accent);
 }
 
 .btn-warning:hover {
-	background-color: #e0a800;
-	border-color: #d39e00;
-	color: var(--dark);
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--light);
 }
 
 .order-summary {
@@ -226,6 +238,7 @@
 	color: var(--primary);
 }
 
+/* Updated checkout button to use btn-custom styles */
 .btn-checkout {
 	background-color: var(--accent);
 	color: var(--primary);
@@ -234,6 +247,7 @@
 	padding: 10px;
 	transition: 0.3s ease;
 	border: 1px solid var(--accent);
+	width: 100%; /* Make it full width */
 }
 
 .btn-checkout:hover {
@@ -267,14 +281,16 @@
 	
 }
 
+/* Auth card (login/signup) updated to use theme colors */
 .auth-card {
-	background-color: var(--secondary);
-	border: none;
+	background-color: var(--light); /* Use light color */
+	border: 1px solid #eee; /* Add subtle border */
 	border-radius: 15px;
 }
 
 .auth-card .section-title {
 	margin-top: 0;
+	color: var(--primary); /* Use primary color */
 }
 
 footer {

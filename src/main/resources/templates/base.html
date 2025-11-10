@@ -29,7 +29,8 @@
 <body class="d-flex flex-column min-vh-100">
 
 	<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
-		<div class="container">
+		<div class="container-fluid"
+			style="padding-left: 1.5rem; padding-right: 1.5rem;">
 			<a class="navbar-brand" th:href="@{/}"
 				th:text="${siteSettings != null ? siteSettings.websiteName : 'MK Toasted Siopao'}">
 				MK Toasted Siopao </a>
@@ -110,7 +111,7 @@
 			</div>
 		</div>
 	</nav>
-	<main class="flex-grow-1 mt-5">
+	<main class="flex-grow-1 main-content-public">
 		<div th:replace="${content}"></div>
 	</main>
 

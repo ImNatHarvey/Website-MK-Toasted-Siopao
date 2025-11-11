@@ -18,10 +18,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('adminAccountCreateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding admin. Please check the form below.</div>
-
 							<div class="row">
 								<div class="col-md-6 mb-3">
 									<label for="adminFirstName" class="form-label">First
@@ -126,10 +122,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('adminUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
-
 							<input type="hidden" th:field="*{id}" />
 
 							<h5 class="mb-3">Personal Information</h5>
@@ -259,10 +251,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('adminProfileDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
-
 							<input type="hidden" th:field="*{id}" />
 							<h5 class="mb-3">Personal Information</h5>
 							<div class="mb-3">

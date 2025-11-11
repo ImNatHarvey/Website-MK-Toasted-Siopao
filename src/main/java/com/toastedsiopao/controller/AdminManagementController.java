@@ -34,6 +34,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors; // IMPORTED
 
 @Controller
 @RequestMapping("/admin/admins")
@@ -125,6 +126,13 @@ public class AdminManagementController {
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Admin creation validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
 					result);
 			redirectAttributes.addFlashAttribute("adminAccountCreateDto", adminDto);
@@ -143,6 +151,8 @@ public class AdminManagementController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating admin user: {}", e.getMessage());
+
+			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "adminAccountCreateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
@@ -151,9 +161,10 @@ public class AdminManagementController {
 				result.rejectValue("confirmPassword", "adminAccountCreateDto.confirmPassword", e.getMessage());
 			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminAccountCreateDto.roleName", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("adminError", "Error creating admin: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error creating admin: " + e.getMessage());
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
 					result);
 			redirectAttributes.addFlashAttribute("adminAccountCreateDto", adminDto);
@@ -171,6 +182,13 @@ public class AdminManagementController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Admin update validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", adminDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -188,15 +206,18 @@ public class AdminManagementController {
 
 		} catch (RuntimeException e) {
 			log.warn("Validation error updating admin: {}", e.getMessage());
+
+			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("adminError", "Error updating admin: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating admin: " + e.getMessage());
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", adminDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -214,6 +235,13 @@ public class AdminManagementController {
 			UriComponentsBuilder uriBuilder, HttpServletRequest request) { // MODIFIED SIGNATURE
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Admin profile update validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
 					result);
 			redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);
@@ -252,13 +280,16 @@ public class AdminManagementController {
 
 		} catch (RuntimeException e) {
 			log.warn("Validation error updating own profile: {}", e.getMessage());
+
+			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminProfileDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminProfileDto.email", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("adminError", "Error updating profile: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating profile: " + e.getMessage());
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
 					result);
 			redirectAttributes.addFlashAttribute("adminProfileDto", adminDto);

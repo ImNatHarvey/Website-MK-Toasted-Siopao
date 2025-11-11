@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.stream.Collectors; // IMPORTED
 
 @Controller
 @RequestMapping("/admin/admins/roles")
@@ -39,6 +40,13 @@ public class AdminRoleController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Role creation validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleDto", result);
 			redirectAttributes.addFlashAttribute("roleDto", roleDto);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "manageRolesModal").build()
@@ -55,7 +63,14 @@ public class AdminRoleController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating role: {}", e.getMessage());
-			result.rejectValue("name", "roleDto.name", e.getMessage());
+
+			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
+			if (e.getMessage().contains("Role name")) {
+				result.rejectValue("name", "roleDto.name", e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("globalError", "Error creating role: " + e.getMessage());
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleDto", result);
 			redirectAttributes.addFlashAttribute("roleDto", roleDto);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "manageRolesModal").build()
@@ -70,6 +85,13 @@ public class AdminRoleController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Role update validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleUpdateDto", result);
 			redirectAttributes.addFlashAttribute("roleUpdateDto", roleDto);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editRoleModal")
@@ -86,7 +108,14 @@ public class AdminRoleController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating role: {}", e.getMessage());
-			result.rejectValue("name", "roleUpdateDto.name", e.getMessage());
+
+			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
+			if (e.getMessage().contains("Role name")) {
+				result.rejectValue("name", "roleUpdateDto.name", e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating role: " + e.getMessage());
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleUpdateDto", result);
 			redirectAttributes.addFlashAttribute("roleUpdateDto", roleDto);
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "editRoleModal")

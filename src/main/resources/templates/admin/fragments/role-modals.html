@@ -20,15 +20,12 @@
 							th:action="@{/admin/admins/roles/add}" method="post"
 							th:object="${roleDto}" id="addRoleForm" class="mb-4">
 							<h6 class="mb-3">Add New Role</h6>
-							<div th:if="${#fields.hasErrors('roleDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding role. Please check below.</div>
 							<div class="mb-3">
 								<label for="newRoleName" class="form-label">Role Name</label> <input
 									type="text" class="form-control"
 									placeholder="New role name (e.g., SUPERVISOR)"
 									th:field="*{name}" th:errorclass="is-invalid" id="newRoleName">
-								<div class_w="invalid-feedback"
+								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
 								<div class="form-text">Role name must be uppercase,
 									letters and underscores only.</div>
@@ -157,10 +154,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('roleUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
-
 							<input type="hidden" th:field="*{id}" />
 
 							<div class="mb-3">

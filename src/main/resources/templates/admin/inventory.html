@@ -75,7 +75,7 @@
 			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class_w="card-title">Items Out of Stock</h5>
+						<h5 class="card-title">Items Out of Stock</h5>
 						<p class="display-6 fw-bold text-danger"
 							th:text="${outOfStockCount}">0</p>
 					</div>
@@ -190,13 +190,7 @@
 					</table>
 				</div>
 				<div th:if="${inventoryPage.totalPages > 0}"
-					class="d-flex justify-content-between align-items-center mt-3">
-
-					<span class="text-muted small"
-						th:text="'Showing ' + ${inventoryPage.number * inventoryPage.size + 1} + 
-                               ' - ' + ${inventoryPage.number * inventoryPage.size + inventoryPage.numberOfElements} + 
-                               ' of ' + ${inventoryPage.totalElements}">
-					</span>
+					class="d-flex justify-content-center mt-3">
 
 					<nav aria-label="Inventory Pagination">
 						<ul class="pagination pagination-sm mb-0">
@@ -229,12 +223,6 @@
 							</li>
 						</ul>
 					</nav>
-
-					<span class="text-muted small" style="visibility: hidden;"
-						th:text="'Showing ' + ${inventoryPage.number * inventoryPage.size + 1} + 
-                               ' - ' + ${inventoryPage.number * inventoryPage.size + inventoryPage.numberOfElements} + 
-                               ' of ' + ${inventoryPage.totalElements}">
-					</span>
 				</div>
 			</div>
 		</div>

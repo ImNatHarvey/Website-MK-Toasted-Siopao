@@ -183,13 +183,7 @@
 		</div>
 
 		<div th:if="${productPage.totalPages > 0}"
-			class="d-flex justify-content-between align-items-center mt-4">
-
-			<span class="text-muted small"
-				th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
-                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
-                       ' of ' + ${productPage.totalElements}">
-			</span>
+			class="d-flex justify-content-center mt-4">
 
 			<nav aria-label="Product Pagination">
 				<ul class="pagination pagination-sm mb-0">
@@ -223,12 +217,6 @@
 					</li>
 				</ul>
 			</nav>
-
-			<span class="text-muted small" style="visibility: hidden;"
-				th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
-                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
-                       ' of ' + ${productPage.totalElements}">
-			</span>
 		</div>
 
 		<div

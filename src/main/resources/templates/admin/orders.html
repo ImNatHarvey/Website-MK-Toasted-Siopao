@@ -58,6 +58,27 @@
 				</div>
 			</div>
 		</div>
+
+		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
+			<a th:href="@{/admin/orders(keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == null ? 'active' : ''}">All
+				Orders</a> <a
+				th:href="@{/admin/orders(status='PENDING', keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending</a>
+			<a
+				th:href="@{/admin/orders(status='PROCESSING', keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
+			<a th:href="@{/admin/orders(status='DELIVERED', keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
+			<a th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}"
+				class="btn btn-outline-primary"
+				th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
+		</div>
+
 		<form th:action="@{/admin/orders}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="d-flex flex-column flex-md-row gap-2">
@@ -80,26 +101,6 @@
 				<input type="hidden" name="status" th:value="${currentStatus}" />
 			</div>
 		</form>
-
-		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
-			<a th:href="@{/admin/orders(keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == null ? 'active' : ''}">All
-				Orders</a> <a
-				th:href="@{/admin/orders(status='PENDING', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending</a>
-			<a
-				th:href="@{/admin/orders(status='PROCESSING', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
-			<a th:href="@{/admin/orders(status='DELIVERED', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
-			<a th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
-		</div>
 
 		<div class="card">
 			<div class="card-header">
@@ -149,13 +150,7 @@
 				</div>
 
 				<div th:if="${orderPage.totalPages > 0}"
-					class="d-flex justify-content-between align-items-center mt-3">
-
-					<span class="text-muted small"
-						th:text="'Showing ' + ${orderPage.number * orderPage.size + 1} + 
-                               ' - ' + ${orderPage.number * orderPage.size + orderPage.numberOfElements} + 
-                               ' of ' + ${orderPage.totalElements}">
-					</span>
+					class="d-flex justify-content-center mt-3">
 
 					<nav aria-label="Order Pagination">
 						<ul class="pagination pagination-sm mb-0">
@@ -189,12 +184,6 @@
 							</li>
 						</ul>
 					</nav>
-
-					<span class="text-muted small" style="visibility: hidden;"
-						th:text="'Showing ' + ${orderPage.number * orderPage.size + 1} + 
-                               ' - ' + ${orderPage.number * orderPage.size + orderPage.numberOfElements} + 
-                               ' of ' + ${orderPage.totalElements}">
-					</span>
 				</div>
 			</div>
 		</div>

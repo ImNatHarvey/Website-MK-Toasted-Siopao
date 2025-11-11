@@ -6,10 +6,10 @@
 <title>Menu - MK Toasted Siopao</title>
 </head>
 <body>
-	<main class="container-fluid p-4">
+	<main class="container-fluid px-4 py-4">
 		<div class="row">
 			<div class="col-lg-9">
-				<h2 class="mb-4 mt-4 section-title">Our Menu</h2>
+				<h2 class="mb-4 section-title">Our Menu</h2>
 
 				<form th:action="@{/menu}" method="get"
 					class="mb-4 p-3 bg-light rounded shadow-sm">
@@ -83,59 +83,10 @@
 					</div>
 				</div>
 
-				<div th:if="${productPage.totalPages > 0}"
-					class="d-flex justify-content-between align-items-center mt-5">
-
-					<span class="text-muted small"
-						th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
-                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
-                       ' of ' + ${productPage.totalElements}">
-					</span>
-
-					<nav aria-label="Product Pagination">
-						<ul class="pagination pagination-sm mb-0">
-
-							<li class="page-item"
-								th:classappend="${productPage.first} ? 'disabled'"><a
-								class="page-link"
-								th:href="@{/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
-							</li>
-
-							<th:block
-								th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
-								th:if="${productPage.totalPages <= 7 || i == 0 || i == productPage.totalPages - 1 || (i >= productPage.number - 2 && i <= productPage.number + 2)}">
-
-								<li class="page-item disabled"
-									th:if="${productPage.totalPages > 7 && (i == 0 && productPage.number > 3 || i == productPage.totalPages - 1 && productPage.number < productPage.totalPages - 4)}">
-									<span class="page-link">...</span>
-								</li>
-
-								<li class="page-item"
-									th:classappend="${i == productPage.number} ? 'active'"><a
-									class="page-link"
-									th:href="@{/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
-									th:text="${i + 1}"></a></li>
-							</th:block>
-
-							<li class="page-item"
-								th:classappend="${productPage.last} ? 'disabled'"><a
-								class="page-link"
-								th:href="@{/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
-							</li>
-						</ul>
-					</nav>
-
-					<span class="text-muted small" style="visibility: hidden;"
-						th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
-                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
-                       ' of ' + ${productPage.totalElements}">
-					</span>
-				</div>
-
 			</div>
 
 			<div class="col-lg-3">
-				<div class="order-summary sticky-top p-4 rounded shadow-sm mt-4"
+				<div class="order-summary sticky-top p-4 rounded shadow-sm"
 					style="top: 80px;">
 					<h3 class="order-title mb-4">My Order</h3>
 					<div class="empty-order">
@@ -158,6 +109,43 @@
 				</div>
 			</div>
 		</div>
-	</main>
+
+		<div th:if="${productPage.totalPages > 0}"
+			class="d-flex justify-content-center mt-4">
+
+			<nav aria-label="Product Pagination">
+				<ul class="pagination pagination-sm mb-0">
+
+					<li class="page-item"
+						th:classappend="${productPage.first} ? 'disabled'"><a
+						class="page-link"
+						th:href="@{/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+					</li>
+
+					<th:block
+						th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+						th:if="${productPage.totalPages <= 7 || i == 0 || i == productPage.totalPages - 1 || (i >= productPage.number - 2 && i <= productPage.number + 2)}">
+
+						<li class="page-item disabled"
+							th:if="${productPage.totalPages > 7 && (i == 0 && productPage.number > 3 || i == productPage.totalPages - 1 && productPage.number < productPage.totalPages - 4)}">
+							<span class="page-link">...</span>
+						</li>
+
+						<li class="page-item"
+							th:classappend="${i == productPage.number} ? 'active'"><a
+							class="page-link"
+							th:href="@{/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+							th:text="${i + 1}"></a></li>
+					</th:block>
+
+					<li class="page-item"
+						th:classappend="${productPage.last} ? 'disabled'"><a
+						class="page-link"
+						th:href="@{/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+		</main>
 </body>
 </html>

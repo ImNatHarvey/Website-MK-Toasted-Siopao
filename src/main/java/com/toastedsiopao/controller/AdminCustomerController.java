@@ -25,6 +25,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.stream.Collectors; // IMPORTED
 
 @Controller
 @RequestMapping("/admin/customers")
@@ -96,6 +97,13 @@ public class AdminCustomerController {
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Customer creation validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerCreateDto", userDto);
@@ -116,15 +124,20 @@ public class AdminCustomerController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
 
+			// --- MODIFIED: Send errors to globalError for toast notification ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "customerCreateDto.username", e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
 				result.rejectValue("email", "customerCreateDto.email", e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			} else if (e.getMessage().contains("Passwords do not match")) {
 				result.rejectValue("confirmPassword", "customerCreateDto.confirmPassword", e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			} else {
-				redirectAttributes.addFlashAttribute("customerError", "Error creating customer: " + e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", "Error creating customer: " + e.getMessage());
 			}
+			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
@@ -147,6 +160,13 @@ public class AdminCustomerController {
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Simplified toast notification message ---
+			String allErrors = result.getFieldErrors().stream()
+					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
+			log.warn("Customer update validation failed: {}", allErrors);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);
@@ -165,13 +185,19 @@ public class AdminCustomerController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating customer: {}", e.getMessage());
+
+			// --- MODIFIED: Send errors to globalError for toast notification ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "customerUpdateDto.username", e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "customerUpdateDto.email", e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			} else {
-				redirectAttributes.addFlashAttribute("customerError", "Error updating customer: " + e.getMessage());
+				redirectAttributes.addFlashAttribute("globalError", "Error updating customer: " + e.getMessage());
 			}
+			// --- END MODIFICATION ---
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerUpdateDto", userDto);

@@ -16,9 +16,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('customerCreateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding customer. Please check the form below.</div>
 							<div class="mb-3">
 								<label for="custFirstName" class="form-label">First Name</label>
 								<input type="text" class="form-control" th:field="*{firstName}"
@@ -143,18 +140,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('customerUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
-							<div th:if="${customerError}"
-								class="alert alert-danger alert-dismissible fade show small p-2"
-								role="alert">
-								<i class="fa-solid fa-triangle-exclamation me-1"></i><span
-									th:text="${customerError}"></span>
-								<button type="button" class="btn-close btn-sm p-2"
-									data-bs-dismiss="alert" aria-label="Close"></button>
-							</div>
-
 							<input type="hidden" th:field="*{id}" />
 
 							<h5 class="mb-3">Personal Information</h5>
@@ -224,7 +209,7 @@
 								</div>
 								<div class="col">
 									<label for="lotNo" class="form-label">Lot No.</label> <input
-										type="text" class="form-control" placeholder="Lot No."
+										type.text class="form-control" placeholder="Lot No."
 										th:field="*{lotNo}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}">Error</div>

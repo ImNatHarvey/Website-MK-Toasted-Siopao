@@ -6,7 +6,7 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID; // ADDED
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,7 @@ import org.springframework.util.StringUtils;
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
+import com.toastedsiopao.dto.PasswordResetDto; // ADDED
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
@@ -56,13 +57,15 @@ public class CustomerServiceImpl implements CustomerService {
 	private UserValidationService userValidationService;
 
 	@Autowired
-	private EmailService emailService; // ADDED
+	private EmailService emailService;
 
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
 			throw new IllegalArgumentException("Passwords do not match");
 		}
 	}
+	// ... (existing methods saveCustomer, createCustomerFromAdmin, etc. are
+	// unchanged) ...
 
 	@Override
 	public User saveCustomer(CustomerSignUpDto userDto) {
@@ -279,7 +282,6 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.countByRole_NameAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
 	}
 
-	// --- ADDED: Implementation for password reset ---
 	@Override
 	public void processPasswordForgotRequest(String email, String resetUrlBase) throws Exception {
 		Optional<User> userOpt = userRepository.findByEmail(email);
@@ -302,5 +304,51 @@ public class CustomerServiceImpl implements CustomerService {
 
 		// This method is @Async and can throw MessagingException
 		emailService.sendPasswordResetEmail(user, token, resetUrl);
+	}
+
+	// --- ADDED: Implementation for token validation ---
+	@Override
+	@Transactional(readOnly = true)
+	public boolean validatePasswordResetToken(String token) {
+		if (!StringUtils.hasText(token)) {
+			return false;
+		}
+
+		Optional<User> userOpt = userRepository.findByResetPasswordToken(token);
+		if (userOpt.isEmpty()) {
+			log.warn("Password reset token invalid: {}", token);
+			return false;
+		}
+
+		User user = userOpt.get();
+		if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now(clock))) {
+			log.warn("Password reset token for user {} has expired.", user.getUsername());
+			return false;
+		}
+
+		log.info("Password reset token validated successfully for user {}", user.getUsername());
+		return true;
+	}
+
+	// --- ADDED: Implementation for resetting the password ---
+	@Override
+	public void resetPassword(PasswordResetDto resetDto) {
+		validatePasswordConfirmation(resetDto.getPassword(), resetDto.getConfirmPassword());
+
+		if (!validatePasswordResetToken(resetDto.getToken())) {
+			throw new IllegalArgumentException("Invalid or expired password reset token.");
+		}
+
+		User user = userRepository.findByResetPasswordToken(resetDto.getToken())
+				.orElseThrow(() -> new IllegalArgumentException("Invalid token."));
+
+		user.setPassword(passwordEncoder.encode(resetDto.getPassword()));
+
+		// Invalidate the token
+		user.setResetPasswordToken(null);
+		user.setResetPasswordTokenExpiry(null);
+
+		userRepository.save(user);
+		log.info("Password successfully reset for user {}", user.getUsername());
 	}
 }

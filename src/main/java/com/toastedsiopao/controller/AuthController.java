@@ -4,20 +4,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.ui.Model; // ADDED
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam; // ADDED
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
+import com.toastedsiopao.dto.PasswordResetDto; // ADDED
 import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.SiteSettingsService;
 
-import jakarta.servlet.http.HttpServletRequest; // ADDED
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 @Controller
@@ -95,7 +96,6 @@ public class AuthController {
 		}
 	}
 
-	// --- ADDED: Method to handle the "Forgot Password" modal submission ---
 	@PostMapping("/forgot-password")
 	public String processForgotPassword(@RequestParam("email") String email, HttpServletRequest request,
 			RedirectAttributes redirectAttributes) {
@@ -120,5 +120,55 @@ public class AuthController {
 		}
 
 		return "redirect:/login";
+	}
+
+	// --- ADDED: Show the reset password form page ---
+	@GetMapping("/reset-password")
+	public String showResetPasswordForm(@RequestParam("token") String token, Model model,
+			RedirectAttributes redirectAttributes) {
+
+		if (!customerService.validatePasswordResetToken(token)) {
+			log.warn("Invalid or expired token used: {}", token);
+			redirectAttributes.addFlashAttribute("errorMessage",
+					"Invalid or expired password reset link. Please try again.");
+			return "redirect:/login";
+		}
+
+		PasswordResetDto dto = new PasswordResetDto();
+		dto.setToken(token);
+		model.addAttribute("passwordResetDto", dto);
+
+		return "reset-password";
+	}
+
+	// --- ADDED: Process the reset password form submission ---
+	@PostMapping("/reset-password")
+	public String processResetPassword(@Valid @ModelAttribute("passwordResetDto") PasswordResetDto passwordResetDto,
+			BindingResult result, RedirectAttributes redirectAttributes, Model model) {
+
+		// DTO-level validation (e.g., blank fields)
+		if (result.hasErrors()) {
+			model.addAttribute("passwordResetDto", passwordResetDto);
+			return "reset-password"; // Return to page to show @NotBlank errors
+		}
+
+		try {
+			customerService.resetPassword(passwordResetDto);
+			redirectAttributes.addFlashAttribute("successMessage",
+					"Your password has been reset successfully! Please log in.");
+			return "redirect:/login";
+
+		} catch (IllegalArgumentException e) {
+			log.warn("Password reset failed: {}", e.getMessage());
+			// Service-level validation (e.g., passwords don't match, token invalid)
+			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+			redirectAttributes.addFlashAttribute("token", passwordResetDto.getToken());
+			// We redirect back to the GET mapping to re-validate the token
+			return "redirect:/reset-password?token=" + passwordResetDto.getToken();
+		} catch (Exception e) {
+			log.error("Unexpected error during password reset: {}", e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("errorMessage", "An unexpected error occurred. Please try again.");
+			return "redirect:/reset-password?token=" + passwordResetDto.getToken();
+		}
 	}
 }

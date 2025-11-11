@@ -3,6 +3,7 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
+import com.toastedsiopao.dto.PasswordResetDto; // ADDED
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,4 +49,21 @@ public interface CustomerService {
 	 * @throws Exception if email sending fails.
 	 */
 	void processPasswordForgotRequest(String email, String resetUrlBase) throws Exception;
+
+	/**
+	 * Validates a password reset token.
+	 * 
+	 * @param token The token to validate.
+	 * @return true if the token is valid and not expired, false otherwise.
+	 */
+	boolean validatePasswordResetToken(String token); // ADDED
+
+	/**
+	 * Resets a user's password based on a valid token.
+	 * 
+	 * @param resetDto DTO containing the token and new passwords.
+	 * @throws IllegalArgumentException if passwords don't match or token is
+	 *                                  invalid.
+	 */
+	void resetPassword(PasswordResetDto resetDto); // ADDED
 }

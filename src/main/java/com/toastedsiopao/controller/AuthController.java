@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam; // ADDED
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
@@ -16,6 +17,7 @@ import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.SiteSettingsService;
 
+import jakarta.servlet.http.HttpServletRequest; // ADDED
 import jakarta.validation.Valid;
 
 @Controller
@@ -91,5 +93,32 @@ public class AuthController {
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
 			return "redirect:/signup";
 		}
+	}
+
+	// --- ADDED: Method to handle the "Forgot Password" modal submission ---
+	@PostMapping("/forgot-password")
+	public String processForgotPassword(@RequestParam("email") String email, HttpServletRequest request,
+			RedirectAttributes redirectAttributes) {
+
+		try {
+			// 1. Get the base URL (e.g., "http://localhost:8080")
+			String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+
+			// 2. Call service to find user, generate token, and send email
+			customerService.processPasswordForgotRequest(email, baseUrl);
+
+			// 3. Set a generic success message (for security, don't confirm if email
+			// exists)
+			redirectAttributes.addFlashAttribute("successMessage",
+					"If an account with that email exists, a password reset link has been sent.");
+
+		} catch (Exception e) {
+			// This is likely a mail server error (e.g., bad credentials, server down)
+			log.error("Error processing password reset for email {}: {}", email, e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("errorMessage",
+					"Error sending reset email. Please try again later or contact support.");
+		}
+
+		return "redirect:/login";
 	}
 }

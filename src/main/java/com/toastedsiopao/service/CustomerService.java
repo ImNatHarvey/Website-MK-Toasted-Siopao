@@ -27,7 +27,7 @@ public interface CustomerService {
 
 	long countActiveCustomers();
 
-	long countInactiveCustomers(); 
+	long countInactiveCustomers();
 
 	void deleteCustomerById(Long id);
 
@@ -38,4 +38,14 @@ public interface CustomerService {
 	void checkForInactiveCustomers();
 
 	long countNewCustomersThisMonth();
+
+	/**
+	 * Finds a user by email, generates a password reset token, saves it, and
+	 * triggers the password reset email. * @param email The email address to look
+	 * up.
+	 * 
+	 * @param resetUrlBase The base URL (e.g., "http://localhost:8080")
+	 * @throws Exception if email sending fails.
+	 */
+	void processPasswordForgotRequest(String email, String resetUrlBase) throws Exception;
 }

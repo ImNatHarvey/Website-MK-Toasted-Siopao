@@ -61,4 +61,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	long countByRole_NameNotAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
 			@Param("end") LocalDateTime end);
 
+	// --- ADDED: For password reset ---
+	Optional<User> findByResetPasswordToken(String token);
+
 }

@@ -95,6 +95,14 @@ public class User {
 	@Column(nullable = true)
 	private LocalDateTime lastActivity;
 
+	// --- ADDED: Fields for password reset ---
+	@Column(nullable = true)
+	private String resetPasswordToken;
+
+	@Column(nullable = true)
+	private LocalDateTime resetPasswordTokenExpiry;
+	// --- END ADDED ---
+
 	public User(String username, String password, Role role) {
 		this.username = username;
 		this.password = password;

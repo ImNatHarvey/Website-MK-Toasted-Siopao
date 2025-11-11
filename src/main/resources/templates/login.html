@@ -20,10 +20,19 @@
 							role="alert">Invalid username or password.</div>
 						<div th:if="${param.logout}" class="alert alert-success"
 							role="alert">You have been logged out.</div>
+
 						<div th:if="${successMessage}"
 							class="alert alert-success alert-dismissible fade show"
 							role="alert">
 							<span th:text="${successMessage}"></span>
+							<button type="button" class="btn-close" data-bs-dismiss="alert"
+								aria-label="Close"></button>
+						</div>
+
+						<div th:if="${errorMessage}"
+							class="alert alert-danger alert-dismissible fade show"
+							role="alert">
+							<span th:text="${errorMessage}"></span>
 							<button type="button" class="btn-close" data-bs-dismiss="alert"
 								aria-label="Close"></button>
 						</div>

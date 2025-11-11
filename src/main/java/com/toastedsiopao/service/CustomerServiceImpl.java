@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID; // ADDED
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +54,9 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private UserValidationService userValidationService;
+
+	@Autowired
+	private EmailService emailService; // ADDED
 
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
@@ -273,5 +277,30 @@ public class CustomerServiceImpl implements CustomerService {
 		LocalDateTime now = LocalDateTime.now(clock);
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
 		return userRepository.countByRole_NameAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
+	}
+
+	// --- ADDED: Implementation for password reset ---
+	@Override
+	public void processPasswordForgotRequest(String email, String resetUrlBase) throws Exception {
+		Optional<User> userOpt = userRepository.findByEmail(email);
+
+		if (userOpt.isEmpty()) {
+			// DO NOT throw an error. This prevents attackers from "enumerating" valid
+			// emails.
+			log.warn("Password reset request for non-existent email: {}", email);
+			return; // Silently return
+		}
+
+		User user = userOpt.get();
+		String token = UUID.randomUUID().toString();
+
+		user.setResetPasswordToken(token);
+		user.setResetPasswordTokenExpiry(LocalDateTime.now(clock).plusHours(1)); // 1 hour expiry
+		userRepository.save(user);
+
+		String resetUrl = resetUrlBase + "/reset-password?token=" + token;
+
+		// This method is @Async and can throw MessagingException
+		emailService.sendPasswordResetEmail(user, token, resetUrl);
 	}
 }

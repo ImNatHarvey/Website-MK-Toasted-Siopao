@@ -54,7 +54,9 @@ public class SecurityConfig {
 								"/login", 
 								"/signup",
 								"/access-denied", 
-								"/logout" 
+								"/logout",
+								"/forgot-password",  // --- ADDED
+								"/reset-password"    // --- ADDED
 						).permitAll() 
 
 						.requestMatchers("/admin/**").hasAuthority("VIEW_DASHBOARD").requestMatchers("/u/**")

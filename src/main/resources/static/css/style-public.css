@@ -424,3 +424,15 @@ footer {
 .order-item-total {
 	font-size: 0.9rem;
 }
+
+/* == ADDED: Public modal header style == */
+.modal-header-public {
+	background-color: var(--primary);
+	color: var(--light);
+}
+
+.modal-header-public .btn-close {
+	background-color: var(--light);
+	border-radius: 50%;
+}
+/* == END ADDED == */

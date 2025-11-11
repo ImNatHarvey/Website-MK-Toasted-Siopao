@@ -179,8 +179,10 @@
 											<input type="checkbox" class="form-check-input"
 												th:field="*{terms}" th:errorclass="is-invalid"> <label
 												class="form-check-label" for="terms"> I agree to the
-												<a href="#">Terms of Service</a> and <a href="#">Privacy
-													Policy</a>
+												<a href="#" data-bs-toggle="modal"
+												data-bs-target="#termsOfServiceModal">Terms of Service</a>
+												and <a href="#" data-bs-toggle="modal"
+												data-bs-target="#privacyPolicyModal">Privacy Policy</a>
 											</label>
 											<div class="invalid-feedback"
 												th:if="${#fields.hasErrors('terms')}" th:errors="*{terms}">Terms

@@ -1,4 +1,3 @@
-
 @import
 	url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css")
 	;
@@ -19,6 +18,83 @@
 }
 /* == END PAGINATION STYLING == */
 
+/* == UPDATED: Filter Button Styling == */
+.btn-outline-primary, .btn-outline-success, .btn-outline-danger,
+	.btn-outline-warning, .btn-outline-info {
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-weight: normal;
+	transition: 0.3s ease;
+	/* Remove default Bootstrap hover effects */
+	box-shadow: none !important;
+}
+
+/* --- Primary --- */
+.btn-outline-primary {
+	color: var(--primary);
+	border-color: var(--primary);
+}
+
+.btn-outline-primary.active, .btn-outline-primary:hover {
+	background-color: var(--primary) !important;
+	color: var(--light) !important;
+	border-color: var(--primary) !important;
+	font-weight: bold;
+}
+
+/* --- Success (Delivered) --- */
+.btn-outline-success {
+	color: var(--success);
+	border-color: var(--success);
+}
+
+.btn-outline-success.active, .btn-outline-success:hover {
+	background-color: var(--success) !important;
+	color: var(--light) !important;
+	border-color: var(--success) !important;
+	font-weight: bold;
+}
+
+/* --- Danger (Cancelled) --- */
+.btn-outline-danger {
+	color: var(--danger);
+	border-color: var(--danger);
+}
+
+.btn-outline-danger.active, .btn-outline-danger:hover {
+	background-color: var(--danger) !important;
+	color: var(--light) !important;
+	border-color: var(--danger) !important;
+	font-weight: bold;
+}
+
+/* --- Warning (Pending) --- */
+.btn-outline-warning {
+	color: var(--warning);
+	border-color: var(--warning);
+	/* Warning text is dark */
+}
+
+.btn-outline-warning.active, .btn-outline-warning:hover {
+	background-color: var(--warning) !important;
+	color: var(--dark) !important;
+	border-color: var(--warning) !important;
+	font-weight: bold;
+}
+
+/* --- Info (Processing) --- */
+.btn-outline-info {
+	color: var(--info);
+	border-color: var(--info);
+}
+
+.btn-outline-info.active, .btn-outline-info:hover {
+	background-color: var(--info) !important;
+	color: var(--light) !important;
+	border-color: var(--info) !important;
+	font-weight: bold;
+}
+/* == END Filter Button Styling == */
 .btn-custom {
 	background-color: var(--accent);
 	color: var(--primary);

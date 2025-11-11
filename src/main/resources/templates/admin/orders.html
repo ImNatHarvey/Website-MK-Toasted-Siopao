@@ -59,24 +59,21 @@
 			</div>
 		</div>
 
-		<div class="d-flex justify-content-center mb-4 flex-wrap gap-2">
-			<a th:href="@{/admin/orders(keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == null ? 'active' : ''}">All
-				Orders</a> <a
-				th:href="@{/admin/orders(status='PENDING', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending</a>
-			<a
-				th:href="@{/admin/orders(status='PROCESSING', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
-			<a th:href="@{/admin/orders(status='DELIVERED', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
-			<a th:href="@{/admin/orders(status='CANCELLED', keyword=${keyword})}"
-				class="btn btn-outline-primary"
-				th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
+		<div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
+			<a th:href="@{/admin/orders}" class="btn btn-outline-primary"
+				th:classappend="${param.status == null ? 'active' : ''}">All
+				Orders</a> <a th:href="@{/admin/orders(status='PENDING')}"
+				class="btn btn-outline-warning"
+				th:classappend="${param.status == 'PENDING' ? 'active' : ''}">Pending</a>
+			<a th:href="@{/admin/orders(status='PROCESSING')}"
+				class="btn btn-outline-info"
+				th:classappend="${param.status == 'PROCESSING' ? 'active' : ''}">Processing</a>
+			<a th:href="@{/admin/orders(status='DELIVERED')}"
+				class="btn btn-outline-success"
+				th:classappend="${param.status == 'DELIVERED' ? 'active' : ''}">Delivered</a>
+			<a th:href="@{/admin/orders(status='CANCELLED')}"
+				class="btn btn-outline-danger"
+				th:classappend="${param.status == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
 		</div>
 
 		<form th:action="@{/admin/orders}" method="get"

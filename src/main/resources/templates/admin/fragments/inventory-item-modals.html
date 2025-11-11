@@ -17,12 +17,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasGlobalErrors()}"
-								class="alert alert-danger small p-2" role="alert">
-								<p th:each="err : ${#fields.globalErrors()}" th:text="${err}"
-									class="mb-0"></p>
-							</div>
-
 							<div class="mb-3">
 								<label for="itemName" class="form-label">Item Name</label> <input
 									type="text" class="form-control" th:field="*{name}"

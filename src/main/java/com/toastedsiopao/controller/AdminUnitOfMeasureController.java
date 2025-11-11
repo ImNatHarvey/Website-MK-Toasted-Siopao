@@ -49,6 +49,9 @@ public class AdminUnitOfMeasureController {
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 		if (result.hasErrors() || result.hasGlobalErrors()) {
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureDto",
 					result);
 			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
@@ -63,7 +66,16 @@ public class AdminUnitOfMeasureController {
 			redirectAttributes.addFlashAttribute("unitSuccess", "Unit '" + newUnit.getName() + "' added successfully!");
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding unit: {}", e.getMessage());
-			result.reject("global", e.getMessage());
+			// --- MODIFIED: Add globalError for toast AND keep reject ---
+			if (e.getMessage().contains("Unit name")) {
+				result.rejectValue("name", "duplicate.unitName", e.getMessage());
+			} else if (e.getMessage().contains("Unit abbreviation")) {
+				result.rejectValue("abbreviation", "duplicate.unitAbbreviation", e.getMessage());
+			} else {
+				result.reject("global", e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("globalError", "Error adding unit: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureDto",
 					result);
 			redirectAttributes.addFlashAttribute("unitOfMeasureDto", unitDto);
@@ -83,6 +95,9 @@ public class AdminUnitOfMeasureController {
 
 		if (result.hasErrors()) {
 			log.warn("Unit update DTO validation failed. Errors: {}", result.getAllErrors());
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);
@@ -100,7 +115,16 @@ public class AdminUnitOfMeasureController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating unit: {}", e.getMessage());
-			result.reject("global", e.getMessage());
+			// --- MODIFIED: Add globalError for toast AND keep reject ---
+			if (e.getMessage().contains("Unit name")) {
+				result.rejectValue("name", "duplicate.unitName", e.getMessage());
+			} else if (e.getMessage().contains("Unit abbreviation")) {
+				result.rejectValue("abbreviation", "duplicate.unitAbbreviation", e.getMessage());
+			} else {
+				result.reject("global", e.getMessage());
+			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating unit: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.unitOfMeasureUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("unitOfMeasureUpdateDto", unitDto);

@@ -19,13 +19,7 @@
 							th:action="@{/admin/inventory/units/add}" method="post"
 							th:object="${unitOfMeasureDto}" id="addUnitForm" class="mb-4">
 							<h6>Add New Unit</h6>
-							<div th:if="${#fields.hasErrors('unitOfMeasureDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding unit. Please check below.</div>
 
-							<div class="invalid-feedback d-block mb-2"
-								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
-								Unit Error</div>
 							<div class="row g-2 mb-2">
 								<div class="col-md-7">
 									<label for="unitName" class="visually-hidden">Unit Name</label>
@@ -104,13 +98,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('unitOfMeasureUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								updating unit. Please check below.</div>
-
-							<div class="invalid-feedback d-block mb-2"
-								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
-								Unit Error</div>
 							<input type="hidden" th:field="*{id}" id="editUnitId">
 							<div class="mb-3">
 								<label for="editUnitName" class="form-label">Unit Name</label> <input

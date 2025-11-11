@@ -118,6 +118,9 @@ public class AdminInventoryController {
 			UriComponentsBuilder uriBuilder) {
 		if (result.hasErrors()) {
 			log.warn("Inventory item DTO validation failed. Errors: {}", result.getAllErrors());
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
@@ -136,14 +139,15 @@ public class AdminInventoryController {
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
 		} catch (IllegalArgumentException e) { // Keep specific validation catch
 			log.warn("Error saving inventory item: {}", e.getMessage());
+			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
 						e.getMessage()));
 			} else if (e.getMessage().contains("threshold")) {
 				result.reject("global", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("inventoryError", "Error saving item: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error saving item: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);

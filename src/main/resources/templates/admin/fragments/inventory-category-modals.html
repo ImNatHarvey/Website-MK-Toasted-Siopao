@@ -20,9 +20,6 @@
 							th:object="${inventoryCategoryDto}" id="addInvCategoryForm"
 							class="mb-4">
 							<h6 class="mb-3">Add New Category</h6>
-							<div th:if="${#fields.hasErrors('inventoryCategoryDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding category. Please check below.</div>
 							<div class="row g-2">
 								<div class="col-md-9">
 									<label for="newInvCategoryName" class="visually-hidden">New
@@ -90,10 +87,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('inventoryCategoryUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the error below.</div>
-
 							<div class="invalid-feedback d-block mb-2"
 								th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}">Global
 								Error</div>

@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.multipart.MaxUploadSizeExceededException; // --- ADDED ---
+import org.springframework.web.multipart.MultipartException; // --- ADDED ---
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @ControllerAdvice
@@ -31,6 +33,27 @@ public class GlobalExceptionHandler {
 
 		return "redirect:" + (referer != null ? referer : "/admin/dashboard");
 	}
+
+	// --- ADDED: Handler for file size limit ---
+	/**
+	 * Handles file upload errors, specifically when a file exceeds the 20MB limit
+	 * defined in application.properties.
+	 */
+	@ExceptionHandler({ MultipartException.class, MaxUploadSizeExceededException.class })
+	public String handleMultipartException(Exception ex, RedirectAttributes redirectAttributes,
+			HttpServletRequest request) {
+		String referer = request.getHeader("Referer");
+		String message = "File upload error: File size exceeds the 20MB limit.";
+
+		log.warn("File upload error for request [{}]: {}. Sending user-friendly message: {}", request.getRequestURI(),
+				ex.getMessage(), message);
+
+		redirectAttributes.addFlashAttribute("globalError", message); // Use globalError for the toast
+
+		// Redirect back to the settings page, or the referer
+		return "redirect:" + (referer != null ? referer : "/admin/settings");
+	}
+	// --- END ADDED ---
 
 	/**
 	 * A catch-all handler for any other unexpected runtime exceptions. This

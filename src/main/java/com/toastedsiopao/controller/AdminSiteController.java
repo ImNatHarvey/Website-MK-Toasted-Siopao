@@ -17,6 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.List; // --- ADDED ---
 import java.util.function.BiConsumer;
 
 @Controller
@@ -24,6 +25,9 @@ import java.util.function.BiConsumer;
 public class AdminSiteController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminSiteController.class);
+
+	// --- ADDED: Allowed file types ---
+	private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
 
 	@Autowired
 	private ActivityLogService activityLogService;
@@ -67,7 +71,17 @@ public class AdminSiteController {
 				oldPathToDelete = currentPath; // Mark old custom file for deletion
 			}
 		} else if (file != null && !file.isEmpty()) {
-			log.info("New file detected. Storing...");
+			log.info("New file detected. Validating...");
+
+			// --- ADDED: File Type Validation ---
+			String contentType = file.getContentType();
+			if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
+				log.warn("Invalid file type uploaded: {}", contentType);
+				throw new IllegalArgumentException("Invalid file type. Only JPG, PNG, or GIF are allowed.");
+			}
+			// --- END ADDED ---
+
+			log.info("File type OK. Storing...");
 			try {
 				finalPath = fileStorageService.store(file); // Store new file
 				log.info("Set new path to: {}", finalPath);

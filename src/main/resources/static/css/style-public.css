@@ -109,8 +109,31 @@
 	color: var(--light);
 	border-color: var(--primary);
 }
-/* --- END COPIED STYLES --- */
 
+/* --- ADDED: Action buttons from admin --- */
+.btn-action-add {
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.btn-action-add:hover {
+	background-color: var(--dark);
+	border-color: var(--dark);
+}
+
+.btn-action-view {
+	background-color: var(--info);
+	color: var(--light);
+	border-color: var(--info);
+}
+
+.btn-action-view:hover {
+	background-color: #138496;
+	border-color: #117a8b;
+}
+
+/* --- END COPIED STYLES --- */
 /* --- REMOVED FIX for invisible navbar button (no longer needed) --- */
 .promo-banner {
 	background-color: var(--secondary);
@@ -144,6 +167,7 @@
 	font-weight: bold;
 }
 
+/* THIS IS THE STYLE FOR THE FILTER BUTTONS YOU WANTED */
 .btn-outline-primary {
 	color: var(--primary);
 	border-color: var(--primary);
@@ -158,6 +182,16 @@
 	color: var(--light) !important;
 	border-color: var(--primary) !important;
 	font-weight: bold;
+}
+
+/* ADDED: Style for small filter buttons */
+.btn-outline-primary.btn-sm {
+	padding: 0.25rem 0.75rem;
+	font-size: 0.875rem;
+}
+
+.btn-outline-primary.btn-sm.active, .btn-outline-primary.btn-sm:hover {
+	font-weight: bold; /* keep consistent bolding */
 }
 
 .search-input-group .form-control {
@@ -184,6 +218,7 @@
 	border-color: var(--primary);
 }
 
+/* This is the card style from index.html */
 .card {
 	background-color: var(--light);
 	border: 1px solid #eee;
@@ -197,8 +232,9 @@
 	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
+/* This is the card image style from index.html */
 .card-img-top {
-	height: 180px;
+	height: 200px;
 	object-fit: cover;
 }
 
@@ -229,10 +265,12 @@
 	color: var(--light);
 }
 
+/* --- MODIFIED: Changed .order-summary to use stats-card styles --- */
 .order-summary {
-	background-color: var(--secondary);
-	border-radius: 15px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	border-left: 5px solid var(--primary);
+	border-radius: 8px;
+	background-color: var(--light);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .order-title {
@@ -300,9 +338,10 @@
 	color: var(--primary); /* Use primary color */
 }
 
-/* ADDED to fix spacing issue */
-.main-content-public {
+/* MODIFIED: Renamed to wrapper and removed padding */
+.main-content-public-wrapper {
 	padding-top: var(--top-nav-height);
+	background-color: #f8f9fa; /* Added admin page background color */
 }
 
 footer {
@@ -311,4 +350,77 @@ footer {
 	text-align: center;
 	padding: 20px;
 	margin-top: auto;
+}
+
+/* --- ADDED: Styles from admin theme --- */
+
+/* THIS IS THE CARD STYLE YOU WANTED FOR THE "MY ORDER" BOX */
+.stats-card {
+	border-left: 5px solid var(--primary);
+	border-radius: 8px;
+	background-color: var(--light);
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card .card-title {
+	color: var(--primary);
+	font-size: 0.95rem;
+	font-weight: bold;
+}
+
+.stats-value {
+	color: var(--dark);
+	font-weight: bold;
+	font-size: 1.8rem;
+}
+
+/* MODIFIED: This now points to the default .card-img-top style */
+.product-card-public .card-img-top {
+	height: 200px;
+	object-fit: cover;
+	padding: 0;
+}
+
+/* THIS IS THE PAGINATION STYLE YOU WANTED */
+.pagination .page-item .page-link {
+	color: var(--primary);
+}
+
+.pagination .page-item.active .page-link {
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--light);
+}
+
+.pagination .page-item.disabled .page-link {
+	color: var(--muted-text);
+}
+
+/* Order summary item styles */
+.order-item-img {
+	width: 50px;
+	height: 50px;
+	border-radius: 6px;
+	object-fit: cover;
+	margin-right: 1rem;
+	border: 1px solid #eee;
+}
+
+.order-item-details {
+	flex-grow: 1;
+}
+
+.order-item-title {
+	font-weight: 600;
+	font-size: 0.9rem;
+	color: var(--dark);
+	margin-bottom: 0.25rem;
+}
+
+.order-item-price {
+	font-size: 0.85rem;
+}
+
+.order-item-total {
+	font-size: 0.9rem;
 }

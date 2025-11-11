@@ -6,110 +6,143 @@
 <title>Menu - MK Toasted Siopao</title>
 </head>
 <body>
-	<main class="container my-5">
+	<main class="container-fluid p-4">
 		<div class="row">
-			<!-- Menu Section -->
-			<div class="col-lg-8">
+			<div class="col-lg-9">
 				<h2 class="mb-4 mt-4 section-title">Our Menu</h2>
 
-				<!-- Category Filters -->
-				<div class="d-flex flex-wrap gap-2 mb-4">
-					<button class="btn btn-sm btn-outline-primary active">All</button>
-					<button class="btn btn-sm btn-outline-primary">Favorites</button>
-					<button class="btn btn-sm btn-outline-primary">Combo</button>
-					<button class="btn btn-sm btn-outline-primary">Siopao</button>
-					<button class="btn btn-sm btn-outline-primary">Drinks</button>
+				<form th:action="@{/menu}" method="get"
+					class="mb-4 p-3 bg-light rounded shadow-sm">
+					<div class="mb-3">
+						<label class="form-label">Filter by Category</label>
+						<div class="d-flex flex-wrap gap-2">
+							<a th:href="@{/menu(keyword=${keyword})}"
+								class="btn btn-sm btn-outline-primary"
+								th:classappend="${selectedCategoryId == null ? 'active' : ''}">All
+								Categories</a> <a th:each="cat : ${categories}"
+								th:href="@{/menu(category=${cat.id}, keyword=${keyword})}"
+								class="btn btn-sm btn-outline-primary"
+								th:classappend="${selectedCategoryId != null && selectedCategoryId == cat.id ? 'active' : ''}"
+								th:text="${cat.name}">Category</a>
+						</div>
+					</div>
+
+					<div class="d-flex flex-column flex-md-row gap-2">
+						<div class="flex-grow-1">
+							<label for="keyword" class="form-label">Search by Name</label> <input
+								type="text" class="form-control" id="keyword" name="keyword"
+								th:value="${keyword}" placeholder="Enter product name...">
+							<input type="hidden" name="category"
+								th:value="${selectedCategoryId}" />
+						</div>
+						<div class="d-flex gap-2 align-self-md-end"
+							style="flex-shrink: 0;">
+							<button type="submit" class="btn btn-action-view" title="Search">
+								<i class="fa-solid fa-search"></i> <span
+									class="d-none d-md-inline ms-1">Search</span>
+							</button>
+							<a th:href="@{/menu}" class="btn btn-custom-secondary"
+								title="Clear All"> <i class="fa-solid fa-times"></i> <span
+								class="d-none d-md-inline ms-1">Clear</span>
+							</a>
+						</div>
+					</div>
+				</form>
+				<div th:if="${productPage.empty}"
+					class="alert alert-warning text-center" role="alert">
+					<span
+						th:text="${(keyword != null or selectedCategoryId != null) ? 'No products found matching your criteria.' : 'No products found.'}">No
+						products added yet.</span>
 				</div>
 
-				<div class="input-group mb-4">
-					<input type="text" class="form-control"
-						placeholder="Search menu items...">
-					<button class="btn btn-outline-secondary" type="button">Search</button>
-				</div>
-
-				<!-- Menu Items -->
-				<div class="row row-cols-1 row-cols-md-2 g-4">
-					<!-- Toasted Siopao -->
-					<div class="col">
-						<div class="card h-100 shadow-sm">
-							<img th:src="@{/img/siopao.jpg}" class="card-img-top"
-								alt="Toasted Siopao">
-							<div class="card-body">
-								<h5 class="card-title">Toasted Siopao</h5>
-								<p class="card-text">Delicious toasted siopao with filling.</p>
-								<div class="d-flex justify-content-between align-items-center">
-									<span class="price fw-bold">₱35.00</span>
-									<button class="btn btn-sm btn-warning">Order</button>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Siopao Combo Meal -->
-					<div class="col">
-						<div class="card h-100 shadow-sm">
-							<img th:src="@{/img/combo.jpg}" class="card-img-top"
-								alt="Siopao Combo Meal">
-							<div class="card-body">
-								<h5 class="card-title">Siopao Combo Meal</h5>
-								<p class="card-text">Toasted siopao with drink and side.</p>
-								<div class="d-flex justify-content-between align-items-center">
-									<span class="price fw-bold">₱99.00</span>
-									<button class="btn btn-sm btn-warning">Order</button>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Classic Siopao -->
-					<div class="col">
-						<div class="card h-100 shadow-sm">
-							<img th:src="@{/img/favorites.jpg}" class="card-img-top"
-								alt="Classic Siopao">
-							<div class="card-body">
-								<h5 class="card-title">Classic Siopao</h5>
-								<p class="card-text">Juicy beef fillings with fresh
-									vegetables.</p>
-								<div class="d-flex justify-content-between align-items-center">
-									<span class="price fw-bold">₱55.00</span>
-									<button class="btn btn-sm btn-warning">Order</button>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					<!-- Iced Tea -->
-					<div class="col">
-						<div class="card h-100 shadow-sm">
-							<img th:src="@{/img/drinks.jpeg}" class="card-img-top"
-								alt="Iced Tea">
-							<div class="card-body">
-								<h5 class="card-title">Iced Tea</h5>
-								<p class="card-text">Refreshing iced tea perfect with any
-									meal.</p>
-								<div class="d-flex justify-content-between align-items-center">
-									<span class="price fw-bold">₱25.00</span>
-									<button class="btn btn-sm btn-warning">Order</button>
+				<div th:unless="${productPage.empty}"
+					class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+					<div class="col" th:each="product : ${productPage.content}">
+						<div class="card h-100 shadow-sm product-card-public">
+							<img
+								th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
+								class="card-img-top" th:alt="${product.name}"
+								onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+							<div class="card-body d-flex flex-column">
+								<h5 class="card-title" th:text="${product.name}">...</h5>
+								<p class="mb-1 text-muted small"
+									th:text="${product.category.name}">...</p>
+								<p class="mb-2">
+									<strong class="fs-5">₱<span
+										th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
+								</p>
+								<p class="card-text small mb-3 flex-grow-1"
+									th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
+								<div class="mt-auto">
+									<button class="btn btn-sm btn-warning w-100">
+										<i class="fa-solid fa-cart-plus me-1"></i> Add to Order
+									</button>
 								</div>
 							</div>
 						</div>
 					</div>
 				</div>
+
+				<div th:if="${productPage.totalPages > 0}"
+					class="d-flex justify-content-between align-items-center mt-5">
+
+					<span class="text-muted small"
+						th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
+                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
+                       ' of ' + ${productPage.totalElements}">
+					</span>
+
+					<nav aria-label="Product Pagination">
+						<ul class="pagination pagination-sm mb-0">
+
+							<li class="page-item"
+								th:classappend="${productPage.first} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+							</li>
+
+							<th:block
+								th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+								th:if="${productPage.totalPages <= 7 || i == 0 || i == productPage.totalPages - 1 || (i >= productPage.number - 2 && i <= productPage.number + 2)}">
+
+								<li class="page-item disabled"
+									th:if="${productPage.totalPages > 7 && (i == 0 && productPage.number > 3 || i == productPage.totalPages - 1 && productPage.number < productPage.totalPages - 4)}">
+									<span class="page-link">...</span>
+								</li>
+
+								<li class="page-item"
+									th:classappend="${i == productPage.number} ? 'active'"><a
+									class="page-link"
+									th:href="@{/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+									th:text="${i + 1}"></a></li>
+							</th:block>
+
+							<li class="page-item"
+								th:classappend="${productPage.last} ? 'disabled'"><a
+								class="page-link"
+								th:href="@{/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+							</li>
+						</ul>
+					</nav>
+
+					<span class="text-muted small" style="visibility: hidden;"
+						th:text="'Showing ' + ${productPage.number * productPage.size + 1} + 
+                       ' - ' + ${productPage.number * productPage.size + productPage.numberOfElements} + 
+                       ' of ' + ${productPage.totalElements}">
+					</span>
+				</div>
+
 			</div>
 
-			<!-- Order Summary -->
-			<div class="col-lg-4">
-				<div
-					class="order-summary sticky-top p-4 rounded shadow-sm mt-4 mt-lg-0"
+			<div class="col-lg-3">
+				<div class="order-summary sticky-top p-4 rounded shadow-sm mt-4"
 					style="top: 80px;">
 					<h3 class="order-title mb-4">My Order</h3>
 					<div class="empty-order">
 						<p class="text-muted">Your bag is empty.</p>
 					</div>
 
-					<div class="order-items d-none">
-						<!-- Order items will appear here -->
-					</div>
+					<div class="order-items d-none"></div>
 
 					<div class="mt-4 pt-3 border-top">
 						<div
@@ -118,8 +151,8 @@
 							<span class="total-price fw-bold">₱0.00</span>
 						</div>
 						<div class="d-flex justify-content-center">
-							<!-- We'll link this to the real order page later -->
-							<a href="/order" class="btn btn-checkout px-4">Proceed to Checkout</a>
+							<a th:href="@{/order}" class="btn btn-checkout px-4">Proceed
+								to Checkout</a>
 						</div>
 					</div>
 				</div>

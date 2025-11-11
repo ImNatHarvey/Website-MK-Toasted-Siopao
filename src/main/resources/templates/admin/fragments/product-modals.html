@@ -19,9 +19,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('productDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the errors below.</div>
 							<div class="mb-3">
 								<label for="addProductName" class="form-label">Product
 									Name</label> <input type="text" class="form-control" th:field="*{name}"
@@ -122,10 +119,7 @@
 										th:if="${#fields.hasErrors('criticalStockThreshold')}"
 										th:errors="*{criticalStockThreshold}"></div>
 								</div>
-								<div class="col-12">
-									<div class="invalid-feedback d-block"
-										th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
-								</div>
+								<div class="col-12"></div>
 							</div>
 
 							<hr class="my-4">
@@ -302,11 +296,6 @@
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('criticalStockThreshold')}"
 										th:errors="*{criticalStockThreshold}"></div>
-								</div>
-								<div class="col-12 mb-3" th:if="${#fields.hasGlobalErrors()}">
-									<div class="alert alert-danger alert-sm p-2" role="alert"
-										th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global
-										error</div>
 								</div>
 							</div>
 							<div class="alert alert-info small">Current stock cannot be

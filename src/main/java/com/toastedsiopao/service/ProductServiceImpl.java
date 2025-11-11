@@ -53,6 +53,18 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 
+	// --- ADDED ---
+	private void validateNameUniqueness(String name, Long currentProductId) {
+		Optional<Product> existingProductOpt = productRepository.findByNameIgnoreCase(name.trim());
+		if (existingProductOpt.isPresent()) {
+			Product existingProduct = existingProductOpt.get();
+			if (currentProductId == null || !existingProduct.getId().equals(currentProductId)) {
+				throw new IllegalArgumentException("Product name '" + name.trim() + "' already exists.");
+			}
+		}
+	}
+	// --- END ADDED ---
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findAll(Pageable pageable) {
@@ -81,6 +93,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 
 		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
+		validateNameUniqueness(productDto.getName(), productDto.getId()); // --- ADDED THIS CALL ---
 
 		Category category = categoryRepository.findById(productDto.getCategoryId())
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + productDto.getCategoryId()));
@@ -158,6 +171,10 @@ public class ProductServiceImpl implements ProductService {
 		} catch (Exception e) {
 			log.error("Database error {} product '{}': {}", logAction.toLowerCase(), productDto.getName(),
 					e.getMessage(), e);
+			// --- MODIFIED: Check for constraint violation ---
+			if (e.getMessage().contains("ConstraintViolationException")) {
+				throw new IllegalArgumentException("Product name '" + productDto.getName() + "' already exists.");
+			}
 			throw new RuntimeException("Could not save product due to a database error.", e);
 		}
 	}

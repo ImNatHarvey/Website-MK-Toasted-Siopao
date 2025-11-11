@@ -19,9 +19,6 @@
 							th:action="@{/admin/products/categories/add}" method="post"
 							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
 							<h6 class="mb-3">Add New Category</h6>
-							<div th:if="${#fields.hasErrors('categoryDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Error
-								adding category. Please check below.</div>
 							<div class="row g-2">
 								<div class="col-md-9">
 									<label for="newCategoryName" class="visually-hidden">New
@@ -85,9 +82,6 @@
 								aria-label="Close"></button>
 						</div>
 						<div class="modal-body">
-							<div th:if="${#fields.hasErrors('categoryUpdateDto.*')}"
-								class="alert alert-danger small p-2" role="alert">Please
-								correct the error below.</div>
 							<input type="hidden" th:field="*{id}" id="editCategoryId">
 							<div class="mb-3">
 								<label for="editCategoryName" class="form-label">Category

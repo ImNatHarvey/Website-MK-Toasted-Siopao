@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors; // IMPORTED
 
 @Controller
 @RequestMapping("/admin/products")
@@ -131,6 +132,9 @@ public class AdminProductController {
 
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for add. Errors: {}", result.getAllErrors());
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -147,6 +151,9 @@ public class AdminProductController {
 				} catch (Exception e) {
 					log.error("Error storing image file during add: {}", e.getMessage());
 					result.reject("global", "Could not save image: " + e.getMessage());
+					// --- MODIFIED: Add globalError for toast ---
+					redirectAttributes.addFlashAttribute("globalError", "Error adding product: " + e.getMessage());
+					// --- END MODIFICATION ---
 					redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto",
 							result);
 					redirectAttributes.addFlashAttribute("productDto", productDto);
@@ -165,11 +172,14 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error adding product: {}", e.getMessage(), e);
-			if (e.getMessage().contains("threshold")) {
+			// --- MODIFIED: Add specific check for product name ---
+			if (e.getMessage().contains("Product name")) {
+				result.rejectValue("name", "productDto.name", e.getMessage());
+			} else if (e.getMessage().contains("threshold")) {
 				result.reject("global", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("productError", "Error adding product: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error adding product: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -189,6 +199,9 @@ public class AdminProductController {
 
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for update. Errors: {}", result.getAllErrors());
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
@@ -221,6 +234,9 @@ public class AdminProductController {
 				} catch (Exception e) {
 					log.error("Error storing new image file during update: {}", e.getMessage());
 					result.reject("global", "Could not save new image: " + e.getMessage());
+					// --- MODIFIED: Add globalError for toast ---
+					redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
+					// --- END MODIFICATION ---
 					redirectAttributes
 							.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto", result);
 					redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
@@ -241,11 +257,14 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error updating product: {}", e.getMessage(), e);
-			if (e.getMessage().contains("threshold")) {
+			// --- MODIFIED: Add specific check for product name ---
+			if (e.getMessage().contains("Product name")) {
+				result.rejectValue("name", "productUpdateDto.name", e.getMessage());
+			} else if (e.getMessage().contains("threshold")) {
 				result.reject("global", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("productError", "Error updating product: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);

@@ -49,6 +49,9 @@ public class AdminProductCategoryController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
@@ -65,11 +68,12 @@ public class AdminProductCategoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding product category: {}", e.getMessage());
+			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("categoryError", "Error adding category: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error adding category: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
@@ -90,6 +94,9 @@ public class AdminProductCategoryController {
 
 		if (result.hasErrors()) {
 			log.warn("Category update DTO validation failed. Errors: {}", result.getAllErrors());
+			// --- MODIFIED: Add globalError for toast ---
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
@@ -107,11 +114,12 @@ public class AdminProductCategoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating product category: {}", e.getMessage());
+			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
-			} else {
-				redirectAttributes.addFlashAttribute("categoryError", "Error updating category: " + e.getMessage());
 			}
+			redirectAttributes.addFlashAttribute("globalError", "Error updating category: " + e.getMessage());
+			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);

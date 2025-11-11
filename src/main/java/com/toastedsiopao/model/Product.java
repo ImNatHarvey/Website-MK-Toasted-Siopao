@@ -26,7 +26,7 @@ public class Product {
 
 	@NotBlank(message = "Product name cannot be blank")
 	@Size(max = 100, message = "Product name cannot exceed 100 characters")
-	@Column(nullable = false, length = 100)
+	@Column(nullable = false, length = 100, unique = true) // --- ADDED unique = true ---
 	private String name;
 
 	@Column(length = 500)

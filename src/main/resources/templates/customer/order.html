@@ -1,81 +1,134 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{customer/base :: layout(~{::main})}">
+	th:replace="~{base :: layout(~{::main})}">
 <head>
-<title>Checkout - MK Toasted Siopao</title>
+<meta charset="UTF-8">
+<title>Order - MK Toasted Siopao</title>
 </head>
 <body>
-	<main>
-		<!-- Page Content -->
-		<div class="container my-5">
-			<div class="row">
-				<!-- Order Form -->
-				<div class="col-lg-8">
-					<h2 class="mb-4 mt-4">Delivery Details</h2>
-					<form>
-						<div class="row g-3">
-							<div class="col-md-6">
-								<label for="first-name" class="form-label">First Name</label> <input
-									type="text" class="form-control" id="first-name"
-									placeholder="Ivan" required>
+	<main class="container-fluid px-4 py-4">
+		<div class="row">
+			<div class="col-lg-9">
+				<h2 class="mb-4 section-title">Delivery Details</h2>
+				<div class="card shadow-sm">
+					<div class="card-body p-4">
+						<form>
+							<h5 class="mb-3">Personal Details</h5>
+							<div class="row g-3 mb-3">
+								<div class="col-md-6">
+									<label for="first-name" class="form-label">First Name</label> <input
+										type="text" class="form-control" id="first-name"
+										placeholder="Juan" required>
+								</div>
+								<div class="col-md-6">
+									<label for="last-name" class="form-label">Last Name</label> <input
+										type="text" class="form-control" id="last-name"
+										placeholder="Dela Cruz" required>
+								</div>
+								<div class="col-md-6">
+									<label for="phone" class="form-label">Phone Number</label> <input
+										type="tel" class="form-control" id="phone"
+										placeholder="09123456789" required>
+								</div>
+								<div class="col-md-6">
+									<label for="email" class="form-label">Email</label> <input
+										type="email" class="form-control" id="email"
+										placeholder="you@example.com" required>
+								</div>
 							</div>
-							<div class="col-md-6">
-								<label for="last-name" class="form-label">Last Name</label> <input
-									type="text" class="form-control" id="last-name"
-									placeholder="Flores" required>
+
+							<hr class="my-4">
+							<h5 class="mb-3">Location Details</h5>
+							<div class="row g-2 mb-3">
+								<div class="col">
+									<label for="houseNo" class="form-label">House No.</label> <input
+										type="text" class="form-control" placeholder="House No."
+										id="houseNo">
+								</div>
+								<div class="col">
+									<label for="lotNo" class="form-label">Lot No.</label> <input
+										type.text class="form-control" placeholder="Lot No."
+										id="lotNo">
+								</div>
+								<div class="col">
+									<label for="blockNo" class="form-label">Block No.</label> <input
+										type="text" class="form-control" placeholder="Block No."
+										id="blockNo">
+								</div>
 							</div>
-							<div class="col-md-6">
-								<label for="phone" class="form-label">Phone Number</label> <input
-									type="tel" class="form-control" id="phone"
-									placeholder="09123456789" required>
+							<div class="mb-3">
+								<label for="street" class="form-label">Street</label> <input
+									type="text" class="form-control"
+									placeholder="Street / Subdivision" id="street" required>
 							</div>
-							<div class="col-md-6">
-								<label for="location" class="form-label">Location</label> <input
-									type="text" class="form-control" id="location"
-									placeholder="Street, Barangay" required>
+							<div class="row g-2 mb-3">
+								<div class="col-md-6">
+									<label for="barangay" class="form-label">Barangay</label> <input
+										type="text" class="form-control" placeholder="Barangay"
+										id="barangay" required>
+								</div>
+								<div class="col-md-6">
+									<label for="municipality" class="form-label">Municipality</label>
+									<input type="text" class="form-control"
+										placeholder="Municipality" id="municipality" required>
+								</div>
 							</div>
-							<!-- More form fields... -->
-							<div class="col-12">
+							<div class="mb-3">
+								<label for="province" class="form-label">Province</label> <input
+									type="text" class="form-control" placeholder="Province"
+									id="province" required>
+							</div>
+
+							<hr class="my-4">
+							<div class="mb-3">
 								<label for="notes" class="form-label">Notes to
-									Store/Rider</label>
-								<textarea class="form-control" id="notes" rows="6"
-									placeholder="Leave a note..."></textarea>
+									Store/Rider (Optional)</label>
+								<textarea class="form-control" id="notes" rows="3"
+									placeholder="Leave a note... (e.g., landmark, color of gate)"></textarea>
 							</div>
-						</div>
 
-						<h4 class="mt-4">Payment Method</h4>
-						<div class="form-check">
-							<input class="form-check-input" type="radio" name="payment"
-								id="gcash" value="gcash" checked> <label
-								class="form-check-label" for="gcash">GCash</label>
-						</div>
-						<div class="form-check mb-4">
-							<input class="form-check-input" type="radio" name="payment"
-								id="cod" value="cod"> <label class="form-check-label"
-								for="cod">Cash on Delivery</label>
-						</div>
-					</form>
+							<h4 class="mt-5 mb-3">Payment Method</h4>
+							<div class="form-check">
+								<input class="form-check-input" type="radio" name="payment"
+									id="gcash" value="gcash" checked> <label
+									class="form-check-label" for="gcash"> GCash </label>
+							</div>
+							<div class="form-check mb-4">
+								<input class="form-check-input" type="radio" name="payment"
+									id="cod" value="cod"> <label class="form-check-label"
+									for="cod"> Cash on Delivery </label>
+							</div>
+						</form>
+					</div>
 				</div>
+			</div>
 
-				<!-- Order Summary Sidebar -->
-				<div class="col-lg-4">
-					<div
-						class="order-summary sticky-top p-4 rounded shadow-sm mt-4 mt-lg-0"
-						style="top: 80px;">
-						<h3 class="order-title mb-4">My Order</h3>
-						<div class="empty-order">
-							<p class="text-muted">Your bag is empty.</p>
+			<div class="col-lg-3">
+				<div class="order-summary sticky-top p-4 rounded shadow-sm mt-4"
+					style="top: 80px;">
+					<h3 class="order-title mb-4">
+						My Order
+						<button class="btn btn-sm btn-outline-danger btn-clear-cart"
+							style="float: right; font-size: 0.75rem; padding: 0.2rem 0.5rem;">Clear</button>
+					</h3>
+
+					<div class="order-items-list"
+						style="max-height: 400px; overflow-y: auto;"></div>
+
+					<div class="empty-order" th:if="${#lists.isEmpty(products)}">
+						<p class="text-muted">Your bag is empty. Please add items from
+							the menu.</p>
+					</div>
+
+					<div class="mt-4 pt-3 border-top">
+						<div
+							class="d-flex justify-content-between align-items-center mb-3">
+							<h5 class="mb-0">Total:</h5>
+							<span class="total-price fw-bold">₱0.00</span>
 						</div>
-						<div class="order-items d-none"></div>
-						<div class="mt-4 pt-3 border-top">
-							<div
-								class="d-flex justify-content-between align-items-center mb-3">
-								<h5 class="mb-0">Total:</h5>
-								<span class="total-price fw-bold">₱0.00</span>
-							</div>
-							<div class="d-flex justify-content-center">
-								<a href="#" class="btn btn-checkout px-4">Place Order</a>
-							</div>
+						<div class="d-grid">
+							<button class="btn btn-checkout px-4" disabled>Proceed
+								to Checkout</button>
 						</div>
 					</div>
 				</div>

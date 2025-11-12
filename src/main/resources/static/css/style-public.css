@@ -580,14 +580,14 @@ footer {
 }
 /* == END: NEW QUANTITY STEPPER STYLES == */
 
-/* == START: NEW ORDER SUMMARY ITEM STYLES == */
+/* == START: MODIFIED ORDER SUMMARY ITEM STYLES == */
 .order-summary .order-item {
 	display: flex;
-	align-items: center;
+	align-items: center; /* Vertically centers all items in the row */
 	margin-bottom: 1rem;
 	padding-bottom: 1rem;
 	border-bottom: 1px solid #eee;
-	gap: 0.75rem;
+	gap: 0.75rem; /* Space between elements */
 }
 
 .order-summary .order-item:last-child {
@@ -597,7 +597,7 @@ footer {
 }
 
 .order-summary .order-item-img-container {
-	flex-shrink: 0;
+	flex-shrink: 0; /* Prevents image from shrinking */
 }
 
 .order-summary .order-item-img {
@@ -607,40 +607,31 @@ footer {
 	border-radius: 8px;
 }
 
-.order-summary .order-item-details {
-	flex-grow: 1;
-	line-height: 1.3;
-	align-self: flex-start;
-}
-
 .order-summary .order-item-title {
+	flex-grow: 1; /* Pushes everything else to the right */
 	font-size: 0.95rem;
 	font-weight: 600;
-	margin-bottom: 0.25rem;
 	color: var(--dark);
+	margin-bottom: 0; /* Removed margin */
 }
 
-.order-summary .order-item-details .quantity-stepper-inline {
-	margin-top: 0.25rem;
-}
-
-.order-summary .order-item-actions-vertical {
-	flex-shrink: 0;
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	justify-content: space-between;
-	height: 50px;
+/* Stepper is now a direct child */
+.order-summary .quantity-stepper-inline {
+	flex-shrink: 0; /* Prevents stepper from shrinking */
+	margin: 0 0.5rem; /* Adds space around the stepper */
 }
 
 .order-summary .order-item-total {
-	font-size: 0.95rem;
+	flex-shrink: 0; /* Prevents total from shrinking */
+	font-size: 1rem;
 	font-weight: bold;
 	color: var(--primary);
-	text-align: right;
+	width: 70px; /* Assigns a fixed width for alignment */
+	text-align: right; /* Aligns price to the right */
 }
 
 .order-summary .cart-remove-btn {
+	flex-shrink: 0; /* Prevents button from shrinking */
 	padding: 0.1rem 0.3rem;
 	font-size: 0.8rem;
 	line-height: 1;
@@ -657,4 +648,4 @@ footer {
 	font-size: 0.75rem;
 	padding: 0.2rem 0.5rem;
 }
-/* == END: NEW CART ITEM STYLES == */
+/* == END: MODIFIED CART ITEM STYLES == */

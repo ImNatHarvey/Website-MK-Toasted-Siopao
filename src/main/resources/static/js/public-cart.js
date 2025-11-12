@@ -122,30 +122,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
 					const itemEl = document.createElement('div');
 					itemEl.className = 'order-item';
+					// --- THIS IS THE NEW HTML STRUCTURE ---
 					itemEl.innerHTML = `
                         <div class="order-item-img-container">
                             <img src="${item.image}" alt="${item.name}" class="order-item-img">
                         </div>
-                        <div class="order-item-details">
-                            <div class="order-item-title">${item.name}</div>
-                            <div class="quantity-stepper-inline" style="max-width: 90px;">
-                                <button class="btn btn-sm btn-action-delete qty-btn minus cart-decrement-btn" data-product-id="${productId}">
-                                    <i class="fa-solid fa-minus"></i>
-                                </button>
-                                <input type="text" class="form-control form-control-sm qty-input" value="${item.quantity}" readonly>
-                                <button class="btn btn-sm btn-action-add qty-btn plus cart-increment-btn" data-product-id="${productId}">
-                                    <i class="fa-solid fa-plus"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="order-item-actions-vertical">
-                            <div class="order-item-total">
-                                ${formatCurrency(itemTotal)}
-                            </div>
-                            <button class="btn btn-sm btn-link text-danger cart-remove-btn" data-product-id="${productId}" title="Remove item">
-                                <i class="fa-solid fa-trash-can"></i>
+                        <div class="order-item-title">${item.name}</div>
+                        <div class="quantity-stepper-inline" style="max-width: 90px;">
+                            <button class="btn btn-sm btn-action-delete qty-btn minus cart-decrement-btn" data-product-id="${productId}">
+                                <i class="fa-solid fa-minus"></i>
+                            </button>
+                            <input type="text" class="form-control form-control-sm qty-input" value="${item.quantity}" readonly>
+                            <button class="btn btn-sm btn-action-add qty-btn plus cart-increment-btn" data-product-id="${productId}">
+                                <i class="fa-solid fa-plus"></i>
                             </button>
                         </div>
+                        <div class="order-item-total">
+                            ${formatCurrency(itemTotal)}
+                        </div>
+                        <button class="btn btn-sm btn-link text-danger cart-remove-btn" data-product-id="${productId}" title="Remove item">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
                     `;
 					orderItemsList.appendChild(itemEl);
 				});

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils; // --- ADDED ---
 
 @Service
 @Transactional
@@ -20,7 +21,16 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 
 	@Override
 	public SiteSettings getSiteSettings() {
-		return settingsRepository.findById(SETTINGS_ID).orElseGet(this::createDefaultSettings);
+		// --- MODIFIED: Added logic to set default footer text if it's null in DB ---
+		SiteSettings settings = settingsRepository.findById(SETTINGS_ID).orElseGet(this::createDefaultSettings);
+
+		if (!StringUtils.hasText(settings.getFooterText())) {
+			log.warn("Footer text was null/empty in database, setting default.");
+			settings.setFooterText("© 2025 MK Toasted Siopao | All Rights Reserved");
+		}
+
+		return settings;
+		// --- END MODIFIED ---
 	}
 
 	@Override
@@ -32,7 +42,8 @@ public class SiteSettingsServiceImpl implements SiteSettingsService {
 	private SiteSettings createDefaultSettings() {
 		log.info("No site settings found with ID 1. Creating default settings...");
 		SiteSettings defaultSettings = new SiteSettings();
-		defaultSettings.setId(SETTINGS_ID); 
+		defaultSettings.setId(SETTINGS_ID);
+		// The default footerText is now set in the model's constructor
 		return settingsRepository.save(defaultSettings);
 	}
 }

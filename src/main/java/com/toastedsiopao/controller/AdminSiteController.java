@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.List; // --- ADDED ---
+import java.util.List;
 import java.util.function.BiConsumer;
 
 @Controller
@@ -26,7 +26,6 @@ public class AdminSiteController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminSiteController.class);
 
-	// --- ADDED: Allowed file types ---
 	private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
 
 	@Autowired
@@ -73,13 +72,11 @@ public class AdminSiteController {
 		} else if (file != null && !file.isEmpty()) {
 			log.info("New file detected. Validating...");
 
-			// --- ADDED: File Type Validation ---
 			String contentType = file.getContentType();
 			if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
 				log.warn("Invalid file type uploaded: {}", contentType);
 				throw new IllegalArgumentException("Invalid file type. Only JPG, PNG, or GIF are allowed.");
 			}
-			// --- END ADDED ---
 
 			log.info("File type OK. Storing...");
 			try {
@@ -110,18 +107,17 @@ public class AdminSiteController {
 	@PostMapping("/settings/update")
 	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')")
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
-			// --- Carousel Files ---
-			@RequestParam("carouselImage1File") MultipartFile carouselImage1File,
-			@RequestParam("carouselImage2File") MultipartFile carouselImage2File,
-			@RequestParam("carouselImage3File") MultipartFile carouselImage3File,
-			// --- Feature Card Files ---
-			@RequestParam("featureCard1ImageFile") MultipartFile featureCard1ImageFile,
-			@RequestParam("featureCard2ImageFile") MultipartFile featureCard2ImageFile,
-			@RequestParam("featureCard3ImageFile") MultipartFile featureCard3ImageFile,
-			@RequestParam("featureCard4ImageFile") MultipartFile featureCard4ImageFile,
-			// --- Other Page Files ---
-			@RequestParam("whyUsImageFile") MultipartFile whyUsImageFile,
-			@RequestParam("aboutImageFile") MultipartFile aboutImageFile,
+			// --- MODIFIED: Added required = false to all MultipartFile params ---
+			@RequestParam(value = "carouselImage1File", required = false) MultipartFile carouselImage1File,
+			@RequestParam(value = "carouselImage2File", required = false) MultipartFile carouselImage2File,
+			@RequestParam(value = "carouselImage3File", required = false) MultipartFile carouselImage3File,
+			@RequestParam(value = "featureCard1ImageFile", required = false) MultipartFile featureCard1ImageFile,
+			@RequestParam(value = "featureCard2ImageFile", required = false) MultipartFile featureCard2ImageFile,
+			@RequestParam(value = "featureCard3ImageFile", required = false) MultipartFile featureCard3ImageFile,
+			@RequestParam(value = "featureCard4ImageFile", required = false) MultipartFile featureCard4ImageFile,
+			@RequestParam(value = "whyUsImageFile", required = false) MultipartFile whyUsImageFile,
+			@RequestParam(value = "aboutImageFile", required = false) MultipartFile aboutImageFile,
+			// --- END MODIFIED ---
 
 			// --- Carousel Remove Flags ---
 			@RequestParam(value = "removeCarouselImage1", defaultValue = "false") boolean removeCarouselImage1,
@@ -165,6 +161,7 @@ public class AdminSiteController {
 			settingsToUpdate.setContactFacebookUrl(formSettings.getContactFacebookUrl());
 			settingsToUpdate.setContactPhoneName(formSettings.getContactPhoneName());
 			settingsToUpdate.setContactPhoneUrl(formSettings.getContactPhoneUrl());
+			settingsToUpdate.setFooterText(formSettings.getFooterText());
 
 			// --- 2. Handle Image Uploads ---
 			settingsToUpdate.setCarouselImage1(handleImageUpload(carouselImage1File, removeCarouselImage1,

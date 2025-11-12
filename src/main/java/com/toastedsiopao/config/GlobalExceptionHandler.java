@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity; // --- ADDED ---
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.MultipartException; // --- ADDED ---
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -36,24 +36,43 @@ public class GlobalExceptionHandler {
 		return "redirect:" + (referer != null ? referer : "/admin/dashboard");
 	}
 
+	// --- MODIFIED: Split the multipart handler into two ---
+
 	/**
 	 * Handles file upload errors, specifically when a file exceeds the 20MB limit
 	 * defined in application.properties.
 	 */
-	@ExceptionHandler({ MultipartException.class, MaxUploadSizeExceededException.class })
-	public String handleMultipartException(Exception ex, RedirectAttributes redirectAttributes,
-			HttpServletRequest request) {
+	@ExceptionHandler(MaxUploadSizeExceededException.class) // --- SPECIFICALLY for size ---
+	public String handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex,
+			RedirectAttributes redirectAttributes, HttpServletRequest request) {
 		String referer = request.getHeader("Referer");
 		String message = "File upload error: File size exceeds the 20MB limit.";
 
-		log.warn("File upload error for request [{}]: {}. Sending user-friendly message: {}", request.getRequestURI(),
-				ex.getMessage(), message);
+		log.warn("File size limit exceeded for request [{}]: {}.", request.getRequestURI(), ex.getMessage());
 
 		redirectAttributes.addFlashAttribute("globalError", message); // Use globalError for the toast
 
 		// Redirect back to the settings page, or the referer
 		return "redirect:" + (referer != null ? referer : "/admin/settings");
 	}
+
+	/**
+	 * Handles other generic multipart errors. With resolve-lazily=true, this should
+	 * be rare, but it's good practice.
+	 */
+	@ExceptionHandler(MultipartException.class) // --- For OTHER multipart errors ---
+	public String handleGenericMultipartException(MultipartException ex, RedirectAttributes redirectAttributes,
+			HttpServletRequest request) {
+		String referer = request.getHeader("Referer");
+		String message = "A file-related error occurred. Please try again or contact support.";
+
+		log.warn("Generic multipart error for request [{}]: {}.", request.getRequestURI(), ex.getMessage(), ex);
+
+		redirectAttributes.addFlashAttribute("globalError", message); // Use globalError for the toast
+
+		return "redirect:" + (referer != null ? referer : "/admin/settings");
+	}
+	// --- END MODIFIED ---
 
 	/**
 	 * A catch-all handler for any other unexpected runtime exceptions. This

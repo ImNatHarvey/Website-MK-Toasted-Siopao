@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class SiteSettings {
 
 	@Id
-	private Long id = 1L; 
+	private Long id = 1L;
 
 	@Column(length = 50)
 	private String websiteName = "MK Toasted Siopao";
@@ -84,4 +84,9 @@ public class SiteSettings {
 	private String contactPhoneName = "+63 9XX XXX XXXX";
 	@Column(length = 255)
 	private String contactPhoneUrl = "tel:+639XXXXXXXXX";
+
+	// --- MODIFIED: Simplified to a standard column to ensure ddl-auto works ---
+	@Column(length = 255)
+	private String footerText = "© 2025 MK Toasted Siopao | All Rights Reserved";
+	// --- END MODIFIED ---
 }

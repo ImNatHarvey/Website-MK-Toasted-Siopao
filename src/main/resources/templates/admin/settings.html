@@ -430,6 +430,18 @@
 				</div>
 			</section>
 
+			<section class="mb-4">
+				<div class="card p-4 shadow-sm">
+					<h2 class="h4">Footer Settings</h2>
+					<div class="mb-3">
+						<label for="footerText" class="form-label">Footer Text</label> <input
+							type="text" id="footerText" class="form-control"
+							th:field="*{footerText}">
+						<div class="form-text">This text appears at the bottom of
+							every page.</div>
+					</div>
+				</div>
+			</section>
 			<div class="card p-3 shadow-sm text-end mb-3"
 				sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
 				<button type="submit" class="btn btn-action-add btn-lg"

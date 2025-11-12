@@ -101,19 +101,38 @@ document.addEventListener('DOMContentLoaded', function() {
 			const cart = getCart();
 			const productIds = Object.keys(cart);
 
-			if (!orderItemsList || !emptyOrderDiv || !totalPriceEl || !checkoutButton) return;
+			if (!orderItemsList || !emptyOrderDiv || !totalPriceEl || !checkoutButton) {
+				console.warn("Cart elements (list, emptyDiv, price, button) not all found. Cart render aborted.");
+				return;
+			}
 
 			orderItemsList.innerHTML = '';
 			let totalPrice = 0;
 
+			const isButtonTag = checkoutButton.tagName === 'BUTTON';
+
 			if (productIds.length === 0) {
 				emptyOrderDiv.classList.remove('d-none');
 				orderItemsList.classList.add('d-none');
-				checkoutButton.classList.add('disabled');
+
+				if (isButtonTag) {
+					checkoutButton.disabled = true;
+				} else {
+					checkoutButton.classList.add('disabled');
+					checkoutButton.style.pointerEvents = 'none';
+					checkoutButton.setAttribute('aria-disabled', 'true');
+				}
 			} else {
 				emptyOrderDiv.classList.add('d-none');
 				orderItemsList.classList.remove('d-none');
-				checkoutButton.classList.remove('disabled');
+
+				if (isButtonTag) {
+					checkoutButton.disabled = false;
+				} else {
+					checkoutButton.classList.remove('disabled');
+					checkoutButton.style.pointerEvents = 'auto';
+					checkoutButton.setAttribute('aria-disabled', 'false');
+				}
 
 				productIds.forEach(productId => {
 					const item = cart[productId];

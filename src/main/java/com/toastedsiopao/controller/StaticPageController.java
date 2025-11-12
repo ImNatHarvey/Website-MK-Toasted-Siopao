@@ -2,10 +2,10 @@ package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.Product;
-import com.toastedsiopao.model.SiteSettings;
+import com.toastedsiopao.model.SiteSettings; // --- RE-ADDED ---
 import com.toastedsiopao.service.CategoryService;
 import com.toastedsiopao.service.ProductService;
-import com.toastedsiopao.service.SiteSettingsService;
+import com.toastedsiopao.service.SiteSettingsService; // --- RE-ADDED ---
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.ModelAttribute; // --- RE-ADDED ---
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.List;
 public class StaticPageController {
 
 	@Autowired
-	private SiteSettingsService siteSettingsService;
+	private SiteSettingsService siteSettingsService; // --- RE-ADDED ---
 
 	// --- ADDED: Services for dynamic data ---
 	@Autowired
@@ -31,7 +31,7 @@ public class StaticPageController {
 	@Autowired
 	private CategoryService categoryService;
 
-	@ModelAttribute
+	@ModelAttribute // --- RE-ADDED ---
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);

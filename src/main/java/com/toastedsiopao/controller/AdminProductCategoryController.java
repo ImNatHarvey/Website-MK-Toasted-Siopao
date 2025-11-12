@@ -49,9 +49,7 @@ public class AdminProductCategoryController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
@@ -68,12 +66,10 @@ public class AdminProductCategoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding product category: {}", e.getMessage());
-			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error adding category: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryDto", result);
 			redirectAttributes.addFlashAttribute("categoryDto", categoryDto);
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageCategoriesModal")
@@ -81,7 +77,6 @@ public class AdminProductCategoryController {
 			return "redirect:" + redirectUrl;
 
 		}
-		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/products";
 	}
@@ -94,9 +89,7 @@ public class AdminProductCategoryController {
 
 		if (result.hasErrors()) {
 			log.warn("Category update DTO validation failed. Errors: {}", result.getAllErrors());
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
@@ -114,12 +107,10 @@ public class AdminProductCategoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating product category: {}", e.getMessage());
-			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating category: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.categoryUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("categoryUpdateDto", categoryDto);
@@ -128,7 +119,6 @@ public class AdminProductCategoryController {
 			return "redirect:" + redirectUrl;
 
 		}
-		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/products";
 	}
@@ -138,8 +128,6 @@ public class AdminProductCategoryController {
 	public String deleteCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
 			Principal principal) {
 
-		// --- REMOVED: try-catch block ---
-
 		Optional<Category> categoryOpt = categoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("categoryError", "Category not found.");
@@ -147,9 +135,6 @@ public class AdminProductCategoryController {
 		}
 		String categoryName = categoryOpt.get().getName();
 
-		// Let the service throw an exception if deletion fails (e.g.,
-		// DataIntegrityViolation)
-		// The GlobalExceptionHandler will catch it.
 		categoryService.deleteById(id);
 
 		activityLogService.logAdminAction(principal.getName(), "DELETE_CATEGORY",
@@ -157,7 +142,6 @@ public class AdminProductCategoryController {
 		redirectAttributes.addFlashAttribute("categorySuccess",
 				"Category '" + categoryName + "' deleted successfully!");
 
-		// --- Note: The exception handler will redirect if deleteById(id) fails ---
 		return "redirect:/admin/products";
 	}
 }

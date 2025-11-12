@@ -12,12 +12,12 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; // **** KEPT IMPORT ****
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter; 
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity 
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	@Autowired
@@ -38,26 +38,14 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http, LoginWhitespaceFilter loginWhitespaceFilter)
-			throws Exception { 
-		http
-				.addFilterBefore(loginWhitespaceFilter, UsernamePasswordAuthenticationFilter.class)
+			throws Exception {
+		http.addFilterBefore(loginWhitespaceFilter, UsernamePasswordAuthenticationFilter.class)
 
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers("/css/**", 
-								"/img/**", 
-								"/js/**", 
-								"/img/uploads/**", 
-								"/", 
-								"/menu", 
-								"/about", 
-								"/order", 
-								"/login", 
-								"/signup",
-								"/access-denied", 
-								"/logout",
-								"/forgot-password",  // --- ADDED
-								"/reset-password"    // --- ADDED
-						).permitAll() 
+						.requestMatchers("/css/**", "/img/**", "/js/**", "/img/uploads/**", "/favicon.ico", "/",
+								"/menu", "/about", "/order", "/login", "/signup", "/access-denied", "/logout",
+								"/forgot-password", "/reset-password")
+						.permitAll()
 
 						.requestMatchers("/admin/**").hasAuthority("VIEW_DASHBOARD").requestMatchers("/u/**")
 						.hasRole("CUSTOMER")

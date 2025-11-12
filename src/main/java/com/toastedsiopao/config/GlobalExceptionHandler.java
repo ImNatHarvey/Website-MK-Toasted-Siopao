@@ -4,11 +4,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity; // --- ADDED ---
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.multipart.MaxUploadSizeExceededException; // --- ADDED ---
-import org.springframework.web.multipart.MultipartException; // --- ADDED ---
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -34,7 +36,6 @@ public class GlobalExceptionHandler {
 		return "redirect:" + (referer != null ? referer : "/admin/dashboard");
 	}
 
-	// --- ADDED: Handler for file size limit ---
 	/**
 	 * Handles file upload errors, specifically when a file exceeds the 20MB limit
 	 * defined in application.properties.
@@ -53,15 +54,30 @@ public class GlobalExceptionHandler {
 		// Redirect back to the settings page, or the referer
 		return "redirect:" + (referer != null ? referer : "/admin/settings");
 	}
-	// --- END ADDED ---
 
 	/**
 	 * A catch-all handler for any other unexpected runtime exceptions. This
 	 * prevents users from seeing a white-label error page.
 	 */
 	@ExceptionHandler(Exception.class)
-	public String handleGenericException(Exception ex, RedirectAttributes redirectAttributes,
+	public Object handleGenericException(Exception ex, RedirectAttributes redirectAttributes, // --- MODIFIED: Return
+																								// type changed to
+																								// Object ---
 			HttpServletRequest request) {
+
+		// --- MODIFIED: START ---
+		// Handle 404 NoResourceFoundException gracefully to avoid ERROR spam
+		if (ex instanceof NoResourceFoundException) {
+			if (request.getRequestURI() != null && request.getRequestURI().equals("/favicon.ico")) {
+				log.warn("Favicon not found (harmless): {}", ex.getMessage());
+			} else {
+				log.warn("Static resource not found (404): {}", ex.getMessage());
+			}
+			// Return a 404 response directly instead of trying to render a page
+			return ResponseEntity.notFound().build();
+		}
+		// --- MODIFIED: END ---
+
 		String referer = request.getHeader("Referer");
 		String message = "An unexpected server error occurred. Please try again later or contact support.";
 

@@ -14,9 +14,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.PasswordResetDto; // ADDED
-import com.toastedsiopao.model.SiteSettings;
+import com.toastedsiopao.model.SiteSettings; // --- RE-ADDED ---
 import com.toastedsiopao.service.CustomerService;
-import com.toastedsiopao.service.SiteSettingsService;
+import com.toastedsiopao.service.SiteSettingsService; // --- RE-ADDED ---
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -29,10 +29,10 @@ public class AuthController {
 	@Autowired
 	private CustomerService customerService;
 
-	@Autowired
+	@Autowired // --- RE-ADDED ---
 	private SiteSettingsService siteSettingsService;
 
-	@ModelAttribute
+	@ModelAttribute // --- RE-ADDED ---
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);

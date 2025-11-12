@@ -1,24 +1,24 @@
 package com.toastedsiopao.controller;
 
-import org.springframework.beans.factory.annotation.Autowired; // ADDED
+import org.springframework.beans.factory.annotation.Autowired; // --- RE-ADDED ---
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // ADDED
+import org.springframework.ui.Model; // --- RE-ADDED ---
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute; // ADDED
+import org.springframework.web.bind.annotation.ModelAttribute; // --- RE-ADDED ---
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.toastedsiopao.model.SiteSettings; // ADDED
-import com.toastedsiopao.service.SiteSettingsService; // ADDED
+import com.toastedsiopao.model.SiteSettings; // --- RE-ADDED ---
+import com.toastedsiopao.service.SiteSettingsService; // --- RE-ADDED ---
 
 @Controller
 @RequestMapping("/u")
 public class UserController {
 
-	// --- ADDED: Inject SiteSettingsService ---
+	// --- RE-ADDED: Inject SiteSettingsService ---
 	@Autowired
 	private SiteSettingsService siteSettingsService;
 
-	// --- ADDED: Common method to add site settings to all /u/ pages ---
+	// --- RE-ADDED: Common method to add site settings to all /u/ pages ---
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();

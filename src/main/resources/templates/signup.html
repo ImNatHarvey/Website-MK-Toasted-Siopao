@@ -15,6 +15,14 @@
 						<h2 class="text-center mb-3 section-title">Create Your
 							Account</h2>
 
+						<div th:if="${checkoutMessage}"
+							class="alert alert-info d-flex align-items-center" role="alert">
+							<i class="fa-solid fa-circle-info fa-lg me-2"></i>
+							<div>
+								<strong class="d-block" th:text="${checkoutMessage}"></strong>
+								Your delivery details have been pre-filled.
+							</div>
+						</div>
 						<div th:if="${errorMessage}"
 							class="alert alert-danger alert-dismissible fade show"
 							role="alert">
@@ -48,15 +56,6 @@
 												th:if="${#fields.hasErrors('lastName')}"
 												th:errors="*{lastName}">Last Name Error</div>
 										</div>
-									</div>
-
-									<div class="mb-3">
-										<label for="username" class="form-label">Username</label> <input
-											type="text" class="form-control" th:field="*{username}"
-											th:errorclass="is-invalid">
-										<div class="invalid-feedback"
-											th:if="${#fields.hasErrors('username')}"
-											th:errors="*{username}">Username Error</div>
 									</div>
 
 									<div class="mb-3">
@@ -152,9 +151,23 @@
 								</div>
 								<div class="col-lg-6">
 									<div class="mb-3">
+										<label for="username" class="form-label">Username</label> <input
+											type="text" class="form-control" th:field="*{username}"
+											th:errorclass="is-invalid"
+											placeholder="Choose a unique username">
+										<div class="invalid-feedback"
+											th:if="${#fields.hasErrors('username')}"
+											th:errors="*{username}">Username Error</div>
+									</div>
+								</div>
+								<div class="col-lg-6"></div>
+
+								<div class="col-lg-6">
+									<div class="mb-3">
 										<label for="password" class="form-label">Password</label> <input
 											type="password" class="form-control" th:field="*{password}"
-											th:errorclass="is-invalid">
+											th:errorclass="is-invalid"
+											placeholder="At least 8 characters">
 										<div class="invalid-feedback"
 											th:if="${#fields.hasErrors('password')}"
 											th:errors="*{password}">Password Error</div>
@@ -164,7 +177,8 @@
 									<div class="mb-3">
 										<label for="confirmPassword" class="form-label">Confirm
 											Password</label> <input type="password" class="form-control"
-											th:field="*{confirmPassword}" th:errorclass="is-invalid">
+											th:field="*{confirmPassword}" th:errorclass="is-invalid"
+											placeholder="Re-type your password">
 										<div class="invalid-feedback"
 											th:if="${#fields.hasErrors('confirmPassword')}"
 											th:errors="*{confirmPassword}">Confirm Password Error</div>
@@ -204,6 +218,75 @@
 				</div>
 			</div>
 		</section>
+
+		<script th:inline="javascript">
+			document
+					.addEventListener(
+							'DOMContentLoaded',
+							function() {
+								const params = new URLSearchParams(
+										window.location.search);
+								if (params.get('source') === 'checkout') {
+									console
+											.log("Signup page loaded from checkout.");
+									const guestDataString = sessionStorage
+											.getItem('guestCheckoutData');
+									if (guestDataString) {
+										console
+												.log("Found guest checkout data. Pre-filling form.");
+										try {
+											const guestData = JSON
+													.parse(guestDataString);
+
+											// Map of guestData keys to form field IDs
+											const fieldMap = {
+												firstName : 'firstName',
+												lastName : 'lastName',
+												email : 'email',
+												phone : 'phone',
+												houseNo : 'houseNo',
+												lotNo : 'lotNo',
+												blockNo : 'blockNo',
+												street : 'street',
+												barangay : 'barangay',
+												municipality : 'municipality',
+												province : 'province'
+											};
+
+											for ( const key in fieldMap) {
+												const field = document
+														.getElementById(fieldMap[key]);
+												if (field && guestData[key]) {
+													field.value = guestData[key];
+												}
+											}
+
+											// Clean up the session storage
+											sessionStorage
+													.removeItem('guestCheckoutData');
+
+											// Focus the first empty field (username)
+											const usernameField = document
+													.getElementById('username');
+											if (usernameField) {
+												usernameField.focus();
+											}
+
+										} catch (e) {
+											console
+													.error(
+															"Failed to parse guest checkout data:",
+															e);
+											sessionStorage
+													.removeItem('guestCheckoutData');
+										}
+									} else {
+										console
+												.log("Loaded from checkout, but no guest data found in session storage.");
+									}
+								}
+							});
+		</script>
 	</main>
 </body>
 </html>

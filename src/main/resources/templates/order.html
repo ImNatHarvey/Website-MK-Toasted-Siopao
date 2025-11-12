@@ -10,30 +10,37 @@
 		<div class="row">
 			<div class="col-lg-9">
 				<h2 class="mb-4 section-title">Delivery Details</h2>
-				<div>
-					<div>
-						<form>
+				<div class="card shadow-sm">
+					<div class="card-body p-4">
+
+						<form id="order-form" novalidate>
 							<h5 class="mb-3">Personal Details</h5>
 							<div class="row g-3 mb-3">
 								<div class="col-md-6">
 									<label for="first-name" class="form-label">First Name</label> <input
 										type="text" class="form-control" id="first-name"
 										placeholder="Juan" required>
+									<div class="invalid-feedback">First name is required.</div>
 								</div>
 								<div class="col-md-6">
 									<label for="last-name" class="form-label">Last Name</label> <input
 										type="text" class="form-control" id="last-name"
 										placeholder="Dela Cruz" required>
+									<div class="invalid-feedback">Last name is required.</div>
 								</div>
 								<div class="col-md-6">
 									<label for="phone" class="form-label">Phone Number</label> <input
 										type="tel" class="form-control" id="phone"
 										placeholder="09123456789" required>
+									<div class="invalid-feedback" id="phone-feedback">Phone
+										number is required.</div>
 								</div>
 								<div class="col-md-6">
 									<label for="email" class="form-label">Email</label> <input
 										type="email" class="form-control" id="email"
 										placeholder="you@example.com" required>
+									<div class="invalid-feedback" id="email-feedback">A valid
+										email is required.</div>
 								</div>
 							</div>
 
@@ -44,39 +51,50 @@
 									<label for="houseNo" class="form-label">House No.</label> <input
 										type="text" class="form-control" placeholder="House No."
 										id="houseNo">
+									<div class="invalid-feedback">Cannot exceed 50
+										characters.</div>
 								</div>
 								<div class="col">
 									<label for="lotNo" class="form-label">Lot No.</label> <input
-										type.text class="form-control" placeholder="Lot No."
+										type="text" class="form-control" placeholder="Lot No."
 										id="lotNo">
+									<div class="invalid-feedback">Cannot exceed 50
+										characters.</div>
 								</div>
 								<div class="col">
 									<label for="blockNo" class="form-label">Block No.</label> <input
 										type="text" class="form-control" placeholder="Block No."
 										id="blockNo">
+									<div class="invalid-feedback">Cannot exceed 50
+										characters.</div>
 								</div>
 							</div>
 							<div class="mb-3">
 								<label for="street" class="form-label">Street</label> <input
 									type="text" class="form-control"
 									placeholder="Street / Subdivision" id="street" required>
+								<div class="invalid-feedback">Street / Subdivision is
+									required.</div>
 							</div>
 							<div class="row g-2 mb-3">
 								<div class="col-md-6">
 									<label for="barangay" class="form-label">Barangay</label> <input
 										type="text" class="form-control" placeholder="Barangay"
 										id="barangay" required>
+									<div class="invalid-feedback">Barangay is required.</div>
 								</div>
 								<div class="col-md-6">
 									<label for="municipality" class="form-label">Municipality</label>
 									<input type="text" class="form-control"
 										placeholder="Municipality" id="municipality" required>
+									<div class="invalid-feedback">Municipality is required.</div>
 								</div>
 							</div>
 							<div class="mb-3">
 								<label for="province" class="form-label">Province</label> <input
 									type="text" class="form-control" placeholder="Province"
 									id="province" required>
+								<div class="invalid-feedback">Province is required.</div>
 							</div>
 
 							<hr class="my-4">
@@ -126,8 +144,14 @@
 							<span class="total-price fw-bold fs-5">₱0.00</span>
 						</div>
 						<div class="d-grid">
-							<button class="btn btn-checkout px-4" disabled>Proceed
-								to Checkout</button>
+							<button type="button" class="btn btn-checkout px-4"
+								id="proceed-to-checkout-btn" disabled>Proceed to
+								Checkout</button>
+						</div>
+						<div class="alert alert-info small p-2 mt-3"
+							sec:authorize="!isAuthenticated()">
+							<i class="fa-solid fa-circle-info me-1"></i> You'll be asked to
+							create an account to finalize your order.
 						</div>
 					</div>
 				</div>

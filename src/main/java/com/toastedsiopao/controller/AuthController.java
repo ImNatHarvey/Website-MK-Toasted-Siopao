@@ -44,10 +44,17 @@ public class AuthController {
 	}
 
 	@GetMapping("/signup")
-	public String showSignupForm(Model model) {
+	public String showSignupForm(Model model, @RequestParam(value = "source", required = false) String source) { // MODIFIED
 		if (!model.containsAttribute("customerSignUpDto")) {
 			model.addAttribute("customerSignUpDto", new CustomerSignUpDto());
 		}
+
+		// --- ADDED ---
+		if ("checkout".equals(source)) {
+			model.addAttribute("checkoutMessage", "Please create an account to proceed with your order.");
+		}
+		// --- END ADDED ---
+
 		return "signup";
 	}
 
@@ -66,6 +73,13 @@ public class AuthController {
 		try {
 			customerService.saveCustomer(userDto);
 			log.info("Signup successful for username: {}", userDto.getUsername());
+
+			// --- MODIFIED: Check if they came from checkout to redirect to order page ---
+			// For now, just redirect to login. We can enhance this later.
+			// The original plan was to auto-login, but that's more complex.
+			// Let's stick to the user's plan: data transfer.
+			// --- END MODIFIED ---
+
 			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
 			return "redirect:/login";
 
@@ -161,14 +175,21 @@ public class AuthController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Password reset failed: {}", e.getMessage());
 			// Service-level validation (e.g., passwords don't match, token invalid)
-			redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
-			redirectAttributes.addFlashAttribute("token", passwordResetDto.getToken());
-			// We redirect back to the GET mapping to re-validate the token
-			return "redirect:/reset-password?token=" + passwordResetDto.getToken();
+
+			// --- MODIFIED: Pass DTO back to model to show errors ---
+			result.reject("global", e.getMessage());
+			model.addAttribute("passwordResetDto", passwordResetDto);
+			model.addAttribute("errorMessage", e.getMessage()); // Also add as a general error
+			return "reset-password";
+			// --- END MODIFIED ---
+
 		} catch (Exception e) {
 			log.error("Unexpected error during password reset: {}", e.getMessage(), e);
-			redirectAttributes.addFlashAttribute("errorMessage", "An unexpected error occurred. Please try again.");
-			return "redirect:/reset-password?token=" + passwordResetDto.getToken();
+			// --- MODIFIED: Pass DTO back to model to show errors ---
+			model.addAttribute("passwordResetDto", passwordResetDto);
+			model.addAttribute("errorMessage", "An unexpected error occurred. Please try again.");
+			return "reset-password";
+			// --- END MODIFIED ---
 		}
 	}
 }

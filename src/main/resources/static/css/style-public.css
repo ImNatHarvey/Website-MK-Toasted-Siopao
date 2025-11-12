@@ -225,6 +225,7 @@
 	border-radius: 15px;
 	overflow: hidden;
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
 .card:hover {
@@ -434,5 +435,37 @@ footer {
 .modal-header-public .btn-close {
 	background-color: var(--light);
 	border-radius: 50%;
+}
+/* == END ADDED == */
+
+/* == MODIFIED: Carousel Image Height Adjustment == */
+.carousel-image {
+	height: 45vh; /* Set height to 45% of the viewport height */
+	object-fit: cover;
+}
+
+/* On smaller screens, make it smaller */
+@media ( max-width : 768px) {
+	.carousel-image {
+		height: 40vh; /* 40% of viewport height on mobile */
+	}
+}
+/* == END MODIFIED == */
+
+/* == ADDED: Viewport-fill styles for homepage == */
+.homepage-main-content {
+	display: flex;
+	flex-direction: column;
+	/* Full viewport height MINUS the navbar height */
+	min-height: calc(100vh - var(--top-nav-height));
+}
+
+.featured-products-section {
+	flex-grow: 1; /* This makes the section take up remaining space */
+	display: flex;
+	flex-direction: column;
+	justify-content: center; /* This vertically centers the content */
+	padding-top: 2rem;
+	padding-bottom: 2rem;
 }
 /* == END ADDED == */

@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.List;
 
 @Controller
-public class StaticPageController {
+public class PublicDashboardController {
 
 	@Autowired
 	private SiteSettingsService siteSettingsService; // --- RE-ADDED ---

@@ -56,9 +56,14 @@
 				</div>
 
 				<div th:unless="${productPage.empty}"
-					class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+					class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"
+					id="product-list-container">
 					<div class="col" th:each="product : ${productPage.content}">
-						<div class="card h-100 shadow-sm product-card-public">
+						<div class="card h-100 shadow-sm product-card-public"
+							th:data-product-id="${product.id}"
+							th:data-product-name="${product.name}"
+							th:data-product-price="${product.price}"
+							th:data-product-image="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}">
 							<img
 								th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
 								class="card-img-top" th:alt="${product.name}"
@@ -67,14 +72,32 @@
 								<h5 class="card-title" th:text="${product.name}">...</h5>
 								<p class="mb-1 text-muted small"
 									th:text="${product.category.name}">...</p>
-								<p class="mb-2">
-									<strong class="fs-5">₱<span
-										th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
-								</p>
+
+								<div
+									class="d-flex justify-content-between align-items-center mb-2 price-stepper-row">
+									<p class="mb-0">
+										<strong class="fs-5">₱<span
+											th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
+									</p>
+									<div class="quantity-stepper-inline">
+										<button class="btn btn-sm btn-action-delete qty-btn minus"
+											type="button" disabled>
+											<i class="fa-solid fa-minus"></i>
+										</button>
+										<input type="text"
+											class="form-control form-control-sm qty-input" value="0"
+											readonly>
+										<button class="btn btn-sm btn-action-add qty-btn plus"
+											type="button">
+											<i class="fa-solid fa-plus"></i>
+										</button>
+									</div>
+								</div>
 								<p class="card-text small mb-3 flex-grow-1"
 									th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
+
 								<div class="mt-auto">
-									<button class="btn btn-sm btn-warning w-100">
+									<button class="btn btn-sm btn-warning w-100 btn-add-to-order">
 										<i class="fa-solid fa-cart-plus me-1"></i> Add to Order
 									</button>
 								</div>
@@ -89,20 +112,21 @@
 				<div class="order-summary sticky-top p-4 rounded shadow-sm"
 					style="top: 80px;">
 					<h3 class="order-title mb-4">My Order</h3>
-					<div class="empty-order">
-						<p class="text-muted">Your bag is empty.</p>
+					<div class="empty-order text-center py-3">
+						<p class="text-muted mb-0">Your bag is empty.</p>
 					</div>
 
-					<div class="order-items d-none"></div>
+					<div class="order-items-list d-none"
+						style="max-height: 400px; overflow-y: auto;"></div>
 
 					<div class="mt-4 pt-3 border-top">
 						<div
 							class="d-flex justify-content-between align-items-center mb-3">
 							<h5 class="mb-0">Total:</h5>
-							<span class="total-price fw-bold">₱0.00</span>
+							<span class="total-price fw-bold fs-5">₱0.00</span>
 						</div>
-						<div class="d-flex justify-content-center">
-							<a th:href="@{/order}" class="btn btn-checkout px-4">Proceed
+						<div class="d-grid">
+							<a th:href="@{/order}" class="btn btn-checkout px-4 disabled">Proceed
 								to Checkout</a>
 						</div>
 					</div>
@@ -146,6 +170,6 @@
 				</ul>
 			</nav>
 		</div>
-		</main>
+	</main>
 </body>
 </html>

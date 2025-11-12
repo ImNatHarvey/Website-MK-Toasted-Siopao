@@ -133,6 +133,18 @@
 	border-color: #117a8b;
 }
 
+/* --- ADDED: Delete button style for stepper --- */
+.btn-action-delete {
+	background-color: var(--danger);
+	color: var(--light);
+	border-color: var(--danger);
+}
+
+.btn-action-delete:hover {
+	background-color: #c82333;
+	border-color: #bd2130;
+}
+
 /* --- END COPIED STYLES --- */
 /* --- REMOVED FIX for invisible navbar button (no longer needed) --- */
 .promo-banner {
@@ -302,7 +314,7 @@
 	border-color: var(--primary);
 }
 
-.btn-checkout:disabled {
+.btn-checkout.disabled {
 	background-color: #ccc;
 	border-color: #ccc;
 	color: #666;
@@ -469,3 +481,151 @@ footer {
 	padding-bottom: 2rem;
 }
 /* == END ADDED == */
+
+/* == START: RENAMED QUANTITY STEPPER STYLES == */
+.quantity-stepper-fullwidth {
+	display: flex;
+	width: 100%;
+}
+
+.quantity-stepper-fullwidth .qty-btn {
+	flex-shrink: 0;
+	width: 40px;
+	z-index: 1;
+	font-size: 0.8rem;
+}
+
+.quantity-stepper-fullwidth .qty-btn.minus {
+	border-radius: 20px 0 0 20px;
+}
+
+.quantity-stepper-fullwidth .qty-btn.plus {
+	border-radius: 0 20px 20px 0;
+}
+
+.quantity-stepper-fullwidth .qty-input {
+	flex-grow: 1;
+	width: 40px;
+	text-align: center;
+	border-left: 0;
+	border-right: 0;
+	border-radius: 0;
+	z-index: 0;
+	background-color: var(--light) !important;
+	padding-left: 0.25rem;
+	padding-right: 0.25rem;
+	font-weight: bold;
+	color: var(--primary);
+}
+/* == END: RENAMED QUANTITY STEPPER STYLES == */
+
+/* == START: NEW INLINE STEPPER STYLES == */
+.price-stepper-row {
+	gap: 10px;
+}
+
+.price-stepper-row .fs-5 {
+	flex-shrink: 0;
+}
+
+.quantity-stepper-inline {
+	display: flex;
+	width: 100%;
+	max-width: 110px; /* Max width for the inline stepper */
+	flex-shrink: 1;
+}
+
+.quantity-stepper-inline .qty-btn {
+	flex-shrink: 0;
+	width: 32px; /* Smaller buttons */
+	z-index: 1;
+	font-size: 0.7rem;
+	padding: 0.25rem 0.5rem;
+}
+
+.quantity-stepper-inline .qty-btn.minus {
+	border-radius: 20px 0 0 20px;
+}
+
+.quantity-stepper-inline .qty-btn.plus {
+	border-radius: 0 20px 20px 0;
+}
+
+.quantity-stepper-inline .qty-input {
+	flex-grow: 1;
+	width: 35px; /* Smaller input */
+	text-align: center;
+	border-left: 0;
+	border-right: 0;
+	border-radius: 0;
+	z-index: 0;
+	background-color: var(--light) !important;
+	padding-left: 0.1rem;
+	padding-right: 0.1rem;
+	font-weight: bold;
+	color: var(--primary);
+	font-size: 0.9rem;
+}
+/* == END: NEW INLINE STEPPER STYLES == */
+
+/* Remove ugly number input spinners */
+.qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button
+	{
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+.qty-input[type=number] {
+	-moz-appearance: textfield;
+}
+/* == END: NEW QUANTITY STEPPER STYLES == */
+
+/* == START: NEW ORDER SUMMARY ITEM STYLES == */
+.order-summary .order-item {
+	display: flex;
+	align-items: center;
+	margin-bottom: 1rem;
+	padding-bottom: 1rem;
+	border-bottom: 1px solid #eee;
+}
+
+.order-summary .order-item:last-child {
+	margin-bottom: 0;
+	padding-bottom: 0;
+	border-bottom: none;
+}
+
+.order-summary .order-item-img {
+	width: 50px;
+	height: 50px;
+	object-fit: cover;
+	border-radius: 8px;
+	margin-right: 0.75rem;
+}
+
+.order-summary .order-item-details {
+	flex-grow: 1;
+	line-height: 1.3;
+}
+
+.order-summary .order-item-title {
+	font-size: 0.95rem;
+	font-weight: 600;
+	margin-bottom: 0.1rem;
+	color: var(--dark);
+}
+
+.order-summary .order-item-price {
+	font-size: 0.85rem;
+	color: var(--muted-text);
+	margin-bottom: 0;
+}
+
+.order-summary .order-item-total {
+	font-size: 1rem;
+	font-weight: bold;
+	color: var(--primary);
+	margin-left: 0.5rem;
+	text-align: right;
+}
+/* == END: NEW ORDER SUMMARY ITEM STYLES == */

@@ -12,7 +12,7 @@ import com.toastedsiopao.service.SiteSettingsService; // --- RE-ADDED ---
 
 @Controller
 @RequestMapping("/u")
-public class UserController {
+public class CustomerController {
 
 	// --- RE-ADDED: Inject SiteSettingsService ---
 	@Autowired

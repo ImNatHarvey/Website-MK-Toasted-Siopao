@@ -58,8 +58,22 @@ public class SecurityConfig {
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
 						.successHandler(customerAuthenticationSuccessHandler).failureUrl("/login?error=true")
 						.permitAll())
+
+				// --- MODIFICATION: Added Remember Me Configuration ---
+				.rememberMe(rememberMe -> rememberMe.key("a-very-secret-key-for-mk-toasted-siopao-remember-me") // A
+																												// secret
+																												// key
+																												// for
+																												// hashing
+						.tokenValiditySeconds(14 * 24 * 60 * 60) // 14 days
+						.userDetailsService(userDetailsService) // Re-uses your existing user details service
+						.rememberMeParameter("remember-me") // This matches the login.html form
+				)
+				// --- END MODIFICATION ---
+
 				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true).deleteCookies("JSESSIONID")
+						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true)
+						.deleteCookies("JSESSIONID", "remember-me") // --- MODIFIED: Also delete remember-me cookie
 						.clearAuthentication(true))
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
 				.headers(headers -> headers.cacheControl(cache -> cache.disable()));

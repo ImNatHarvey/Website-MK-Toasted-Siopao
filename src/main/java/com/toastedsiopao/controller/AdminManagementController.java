@@ -1,8 +1,9 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.dto.AdminPasswordUpdateDto;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
-import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.RoleDto;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
@@ -115,6 +116,12 @@ public class AdminManagementController {
 			}
 			model.addAttribute("adminProfileDto", profileDto);
 		}
+
+		// --- ADDED FOR PASSWORD MODAL ---
+		if (!model.containsAttribute("adminPasswordDto")) {
+			model.addAttribute("adminPasswordDto", new AdminPasswordUpdateDto());
+		}
+		// --- END ADDED ---
 
 		return "admin/admins";
 	}
@@ -300,6 +307,41 @@ public class AdminManagementController {
 		}
 		return "redirect:/admin/admins";
 	}
+
+	// --- ADDED ---
+	@PostMapping("/profile/update-password")
+	@PreAuthorize("isAuthenticated()")
+	public String updateAdminPassword(@Valid @ModelAttribute("adminPasswordDto") AdminPasswordUpdateDto passwordDto,
+			BindingResult result, Principal principal, RedirectAttributes redirectAttributes,
+			UriComponentsBuilder uriBuilder) {
+
+		if (result.hasErrors()) {
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminPasswordDto",
+					result);
+			redirectAttributes.addFlashAttribute("adminPasswordDto", passwordDto);
+			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
+			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "changePasswordModal").build()
+					.toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		try {
+			adminService.updateAdminPassword(principal.getName(), passwordDto);
+			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE_PASSWORD",
+					"Updated own admin password.");
+			redirectAttributes.addFlashAttribute("adminSuccess", "Your password has been changed successfully!");
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("adminPasswordDto", new AdminPasswordUpdateDto()); // Clear fields on
+																									// error
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "changePasswordModal").build()
+					.toUriString();
+			return "redirect:" + redirectUrl;
+		}
+
+		return "redirect:/admin/admins";
+	}
+	// --- END ADDED ---
 
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // --- UPDATED ---

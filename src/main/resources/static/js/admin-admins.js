@@ -152,4 +152,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 
+	// --- ADDED ---
+	initializeModalForm({
+		modalId: 'changePasswordModal',
+		formId: 'changePasswordForm',
+		validationAttribute: 'data-show-change-password-modal',
+		wrapperId: 'admin-content-wrapper'
+	});
+	// --- END ADDED ---
+
 });

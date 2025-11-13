@@ -287,10 +287,14 @@
 									th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 							</div>
 
-							<div class="alert alert-warning small">To change your
-								password or role, please contact the System Owner.</div>
+							<div class="alert alert-warning small">To change your role,
+								please contact the System Owner.</div>
 						</div>
 						<div class="modal-footer">
+							<button type="button" class="btn btn-action-edit me-auto"
+								data-bs-toggle="modal" data-bs-target="#changePasswordModal"
+								data-bs-dismiss="modal">Change Password</button>
+
 							<button type="submit" class="btn btn-custom">Save
 								Changes</button>
 							<button type="button" class="btn btn-custom-secondary"

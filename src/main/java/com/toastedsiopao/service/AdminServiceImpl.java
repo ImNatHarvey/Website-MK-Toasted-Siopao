@@ -1,6 +1,7 @@
 package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.AdminAccountCreateDto;
+import com.toastedsiopao.dto.AdminPasswordUpdateDto;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
 import com.toastedsiopao.dto.RoleDto;
@@ -377,4 +378,25 @@ public class AdminServiceImpl implements AdminService {
 		log.info("Deleting role: {}", roleToDelete.getName());
 		roleRepository.delete(roleToDelete);
 	}
+
+	// --- ADDED ---
+	@Override
+	public void updateAdminPassword(String currentUsername, AdminPasswordUpdateDto passwordDto) {
+		User userToUpdate = userRepository.findByUsername(currentUsername)
+				.orElseThrow(() -> new RuntimeException("Current user not found."));
+
+		// 1. Check if current password matches
+		if (!passwordEncoder.matches(passwordDto.getCurrentPassword(), userToUpdate.getPassword())) {
+			throw new IllegalArgumentException("Current password does not match.");
+		}
+
+		// 2. Check if new passwords match
+		validatePasswordConfirmation(passwordDto.getNewPassword(), passwordDto.getConfirmPassword());
+
+		// 3. Update password
+		userToUpdate.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
+		userRepository.save(userToUpdate);
+		log.info("User password updated for: {}", currentUsername);
+	}
+	// --- END ADDED ---
 }

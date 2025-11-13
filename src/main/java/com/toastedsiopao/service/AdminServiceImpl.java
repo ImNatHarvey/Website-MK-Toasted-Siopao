@@ -257,6 +257,22 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
 
+		// --- ADDED: Status update logic ---
+		if (isOwner) {
+			if (StringUtils.hasText(userDto.getStatus())
+					&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE"))) {
+				userToUpdate.setStatus(userDto.getStatus());
+			} else {
+				throw new IllegalArgumentException("Invalid status value provided.");
+			}
+		} else {
+			if (!userDto.getStatus().equals(userToUpdate.getStatus())) {
+				log.warn("Non-Owner user {} tried to change status for {}. Blocked.", authentication.getName(),
+						userToUpdate.getUsername());
+			}
+		}
+		// --- END ADDED ---
+
 		return userRepository.save(userToUpdate);
 	}
 
@@ -311,6 +327,14 @@ public class AdminServiceImpl implements AdminService {
 	public long countActiveAdmins() {
 		return userRepository.countActiveAdmins();
 	}
+
+	// --- ADDED ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countInactiveAdmins() {
+		return userRepository.countInactiveAdmins();
+	}
+	// --- END ADDED ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -374,7 +398,8 @@ public class AdminServiceImpl implements AdminService {
 			throw new RuntimeException("Cannot delete a default system role: " + roleToDelete.getName());
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist (e.g., in User)
+		// Let the database throw DataIntegrityViolationException if relations exist
+		// (e.g., in User)
 		log.info("Deleting role: {}", roleToDelete.getName());
 		roleRepository.delete(roleToDelete);
 	}

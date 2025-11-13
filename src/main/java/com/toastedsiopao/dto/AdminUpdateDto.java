@@ -35,5 +35,9 @@ public class AdminUpdateDto {
 	@NotBlank(message = "Role name cannot be blank")
 	private String roleName;
 
-	// --- PERMISSIONS REMOVED ---
+	// --- ADDED ---
+	@NotBlank(message = "Status must be selected")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "Status must be either ACTIVE or INACTIVE")
+	private String status;
+	// --- END ADDED ---
 }

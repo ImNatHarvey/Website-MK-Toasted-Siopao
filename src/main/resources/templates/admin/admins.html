@@ -41,7 +41,7 @@
 			th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
 
 		<div class="row text-center mb-4">
-			<div class="col-md-6 mb-3">
+			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Admins</h5>
@@ -49,7 +49,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-6 mb-3">
+			<div class="col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Active Admins</h5>
@@ -58,8 +58,16 @@
 					</div>
 				</div>
 			</div>
+			<div class="col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Inactive Admins</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="${inactiveAdminCount}">0</p>
+					</div>
+				</div>
+			</div>
 		</div>
-
 		<form th:action="@{/admin/admins}" method="get"
 			class="mb-4 p-3 bg-light rounded shadow-sm">
 			<div class="d-flex flex-column flex-md-row gap-2">
@@ -109,7 +117,8 @@
 								th:data-role-name="${admin.role != null ? admin.role.name : ''}"
 								th:data-created-at="${admin.createdAt != null ? #temporals.format(admin.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
 								th:data-last-activity="${admin.lastActivity != null ? #temporals.format(admin.lastActivity, 'MMM dd, yyyY HH:mm') : 'N/A'}"
-								th:data-permissions="${admin.role != null ? #strings.listJoin(admin.role.permissions, ',') : ''}">
+								th:data-permissions="${admin.role != null ? #strings.listJoin(admin.role.permissions, ',') : ''}"
+								th:data-status="${admin.status}">
 
 								<td th:text="${admin.id}">001</td>
 								<td th:text="${admin.firstName + ' ' + admin.lastName}">Admin
@@ -143,8 +152,8 @@
 											th:data-last-name="${admin.lastName}"
 											th:data-username="${admin.username}"
 											th:data-email="${admin.email}"
-											th:data-role-name="${admin.role != null ? admin.role.name : ''}">Edit</button>
-									</div>
+											th:data-role-name="${admin.role != null ? admin.role.name : ''}"
+											th:data-status="${admin.status}">Edit</button> </div>
 
 									<form sec:authorize="hasAuthority('DELETE_ADMINS')"
 										th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"

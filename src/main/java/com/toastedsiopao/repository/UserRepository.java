@@ -55,6 +55,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND u.status = 'ACTIVE'")
 	long countActiveAdmins();
 
+	// --- ADDED ---
+	@Query("SELECT COUNT(u) FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND u.status = 'INACTIVE'")
+	long countInactiveAdmins();
+	// --- END ADDED ---
+
 	long countByRole_NameAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
 			@Param("end") LocalDateTime end);
 

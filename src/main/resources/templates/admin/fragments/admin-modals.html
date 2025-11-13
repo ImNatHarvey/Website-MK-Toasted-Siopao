@@ -166,23 +166,37 @@
 							<hr>
 							<h5 class="mb-3">Access Rights</h5>
 
-							<div class="mb-3">
-								<label for="editAdminRoleName" class="form-label">Role</label> <select
-									class="form-select" th:field="*{roleName}"
-									id="editAdminRoleName" th:errorclass="is-invalid"
-									th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
-									th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change roles' : 'Select a role'}">
-									<option value="">-- Select a Role --</option>
-									<option th:each="role : ${allAdminRoles}"
-										th:if="${role.name != 'ROLE_OWNER'}" th:value="${role.name}"
-										th:text="${role.name.replace('ROLE_', '')}">Role Name
-									</option>
-								</select>
-								<div class="invalid-feedback"
-									th:if="${#fields.hasErrors('roleName')}"
-									th:errors="*{roleName}">Role Name Error</div>
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="editAdminRoleName" class="form-label">Role</label> <select
+										class="form-select" th:field="*{roleName}"
+										id="editAdminRoleName" th:errorclass="is-invalid"
+										th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
+										th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change roles' : 'Select a role'}">
+										<option value="">-- Select a Role --</option>
+										<option th:each="role : ${allAdminRoles}"
+											th:if="${role.name != 'ROLE_OWNER'}" th:value="${role.name}"
+											th:text="${role.name.replace('ROLE_', '')}">Role Name
+										</option>
+									</select>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('roleName')}"
+										th:errors="*{roleName}">Role Name Error</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="editAdminStatus" class="form-label">Account
+										Status</label> <select class="form-select" th:field="*{status}"
+										id="editAdminStatus" th:errorclass="is-invalid"
+										th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
+										th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change status' : 'Select a status'}">
+										<option value="ACTIVE">ACTIVE</option>
+										<option value="INACTIVE">INACTIVE</option>
+									</select>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Status
+										Error</div>
+								</div>
 							</div>
-
 							<hr>
 							<div class="alert alert-warning small">Password cannot be
 								changed from this form.</div>

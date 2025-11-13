@@ -80,6 +80,7 @@ public class AdminManagementController {
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
+		model.addAttribute("inactiveAdminCount", adminService.countInactiveAdmins()); // --- ADDED ---
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", adminPage.getTotalPages());
@@ -221,6 +222,8 @@ public class AdminManagementController {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
+			} else if (e.getMessage().contains("status")) { // --- ADDED ---
+				result.rejectValue("status", "adminUpdateDto.status", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating admin: " + e.getMessage());
 			// --- END MODIFICATION ---

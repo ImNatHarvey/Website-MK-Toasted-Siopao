@@ -37,6 +37,10 @@ public interface AdminService {
 
 	long countActiveAdmins();
 
+	// --- ADDED ---
+	long countInactiveAdmins();
+	// --- END ADDED ---
+
 	long countNewAdminsThisMonth();
 
 	Optional<Role> findRoleById(Long id);

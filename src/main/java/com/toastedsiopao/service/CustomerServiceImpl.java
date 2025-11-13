@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.toastedsiopao.dto.CustomerCreateDto;
+import com.toastedsiopao.dto.CustomerPasswordDto;
+import com.toastedsiopao.dto.CustomerProfileDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
-import com.toastedsiopao.dto.PasswordResetDto; // ADDED
+import com.toastedsiopao.dto.PasswordResetDto;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
@@ -306,7 +308,6 @@ public class CustomerServiceImpl implements CustomerService {
 		emailService.sendPasswordResetEmail(user, token, resetUrl);
 	}
 
-	// --- ADDED: Implementation for token validation ---
 	@Override
 	@Transactional(readOnly = true)
 	public boolean validatePasswordResetToken(String token) {
@@ -330,7 +331,6 @@ public class CustomerServiceImpl implements CustomerService {
 		return true;
 	}
 
-	// --- ADDED: Implementation for resetting the password ---
 	@Override
 	public void resetPassword(PasswordResetDto resetDto) {
 		validatePasswordConfirmation(resetDto.getPassword(), resetDto.getConfirmPassword());
@@ -351,4 +351,50 @@ public class CustomerServiceImpl implements CustomerService {
 		userRepository.save(user);
 		log.info("Password successfully reset for user {}", user.getUsername());
 	}
+
+	// --- ADDED IMPLEMENTATIONS ---
+	@Override
+	public void updateCustomerProfile(String currentUsername, CustomerProfileDto profileDto) {
+		User userToUpdate = userRepository.findByUsername(currentUsername)
+				.orElseThrow(() -> new RuntimeException("Current user not found."));
+
+		userValidationService.validateUsernameOnUpdate(profileDto.getUsername(), userToUpdate.getId());
+		userValidationService.validateEmailOnUpdate(profileDto.getEmail(), userToUpdate.getId());
+
+		userToUpdate.setFirstName(profileDto.getFirstName());
+		userToUpdate.setLastName(profileDto.getLastName());
+		userToUpdate.setUsername(profileDto.getUsername());
+		userToUpdate.setEmail(profileDto.getEmail());
+		userToUpdate.setPhone(profileDto.getPhone());
+		userToUpdate.setHouseNo(profileDto.getHouseNo());
+		userToUpdate.setLotNo(profileDto.getLotNo());
+		userToUpdate.setBlockNo(profileDto.getBlockNo());
+		userToUpdate.setStreet(profileDto.getStreet());
+		userToUpdate.setBarangay(profileDto.getBarangay());
+		userToUpdate.setMunicipality(profileDto.getMunicipality());
+		userToUpdate.setProvince(profileDto.getProvince());
+
+		userRepository.save(userToUpdate);
+		log.info("User profile updated for: {}", currentUsername);
+	}
+
+	@Override
+	public void updateCustomerPassword(String currentUsername, CustomerPasswordDto passwordDto) {
+		User userToUpdate = userRepository.findByUsername(currentUsername)
+				.orElseThrow(() -> new RuntimeException("Current user not found."));
+
+		// 1. Check if current password matches
+		if (!passwordEncoder.matches(passwordDto.getCurrentPassword(), userToUpdate.getPassword())) {
+			throw new IllegalArgumentException("Current password does not match.");
+		}
+
+		// 2. Check if new passwords match
+		validatePasswordConfirmation(passwordDto.getNewPassword(), passwordDto.getConfirmPassword());
+
+		// 3. Update password
+		userToUpdate.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
+		userRepository.save(userToUpdate);
+		log.info("User password updated for: {}", currentUsername);
+	}
+	// --- END ADDED IMPLEMENTATIONS ---
 }

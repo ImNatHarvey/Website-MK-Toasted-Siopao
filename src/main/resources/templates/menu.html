@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{base :: layout(~{::main})}">
+	th:replace="~{customer/base :: layout(~{::main})}">
 <head>
 <meta charset="UTF-8">
 <title>Menu - MK Toasted Siopao</title>
@@ -11,16 +11,16 @@
 			<div class="col-lg-9">
 				<h2 class="mb-4 section-title">Our Menu</h2>
 
-				<form th:action="@{/menu}" method="get"
+				<form th:action="@{/u/menu}" method="get"
 					class="mb-4 p-3 bg-light rounded shadow-sm">
 					<div class="mb-3">
 						<label class="form-label">Filter by Category</label>
 						<div class="d-flex flex-wrap gap-2">
-							<a th:href="@{/menu(keyword=${keyword})}"
+							<a th:href="@{/u/menu(keyword=${keyword})}"
 								class="btn btn-sm btn-outline-primary"
 								th:classappend="${selectedCategoryId == null ? 'active' : ''}">All
 								Categories</a> <a th:each="cat : ${categories}"
-								th:href="@{/menu(category=${cat.id}, keyword=${keyword})}"
+								th:href="@{/u/menu(category=${cat.id}, keyword=${keyword})}"
 								class="btn btn-sm btn-outline-primary"
 								th:classappend="${selectedCategoryId != null && selectedCategoryId == cat.id ? 'active' : ''}"
 								th:text="${cat.name}">Category</a>
@@ -41,7 +41,7 @@
 								<i class="fa-solid fa-search"></i> <span
 									class="d-none d-md-inline ms-1">Search</span>
 							</button>
-							<a th:href="@{/menu}" class="btn btn-custom-secondary"
+							<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
 								title="Clear All"> <i class="fa-solid fa-times"></i> <span
 								class="d-none d-md-inline ms-1">Clear</span>
 							</a>
@@ -130,9 +130,8 @@
 							<span class="total-price fw-bold fs-5">₱0.00</span>
 						</div>
 						<div class="d-grid">
-							<button type="button" id="go-to-checkout-btn"
-								class="btn btn-checkout px-4" disabled>Proceed to
-								Checkout</button>
+							<a th:href="@{/u/order}" id="go-to-checkout-btn" class="btn btn-checkout px-4 disabled">Proceed
+								to Checkout</a>
 						</div>
 					</div>
 				</div>
@@ -148,7 +147,7 @@
 					<li class="page-item"
 						th:classappend="${productPage.first} ? 'disabled'"><a
 						class="page-link"
-						th:href="@{/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+						th:href="@{/u/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
 					</li>
 
 					<th:block
@@ -163,14 +162,14 @@
 						<li class="page-item"
 							th:classappend="${i == productPage.number} ? 'active'"><a
 							class="page-link"
-							th:href="@{/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+							th:href="@{/u/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
 							th:text="${i + 1}"></a></li>
 					</th:block>
 
 					<li class="page-item"
 						th:classappend="${productPage.last} ? 'disabled'"><a
 						class="page-link"
-						th:href="@{/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+						th:href="@{/u/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
 					</li>
 				</ul>
 			</nav>

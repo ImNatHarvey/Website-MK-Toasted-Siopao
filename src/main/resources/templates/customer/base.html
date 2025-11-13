@@ -38,17 +38,36 @@
 				<span class="navbar-toggler-icon"></span>
 			</button>
 			<div class="collapse navbar-collapse" id="customerNavbar">
-				<ul class="navbar-nav mx-auto text-center">
+
+				<ul class="navbar-nav mx-auto text-center"
+					sec:authorize="isAuthenticated()">
 					<li class="nav-item"><a class="nav-link"
 						th:href="@{/u/dashboard}">Home</a></li>
 					<li class="nav-item"><a class="nav-link" th:href="@{/u/menu}">Menu</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/u/order}">Orders</a></li>
 					<li class="nav-item"><a class="nav-link"
 						th:href="@{/u/history}">My History</a></li>
 					<li class="nav-item"><a class="nav-link"
 						th:href="@{/u/profile}">My Profile</a></li>
 				</ul>
 
-				<div class="d-flex justify-content-center align-items-center">
+				<ul class="navbar-nav mx-auto text-center"
+					sec:authorize="!isAuthenticated()">
+					<li class="nav-item"><a class="nav-link" th:href="@{/}">Home</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/menu}">Menu</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/order}">Orders</a></li>
+					<li class="nav-item"><a class="nav-link" th:href="@{/about}">About
+							Us</a></li>
+				</ul>
+				<div class="d-flex justify-content-center"
+					sec:authorize="!isAuthenticated()">
+					<a th:href="@{/signup}" class="btn btn-custom">Sign Up</a> <a
+						th:href="@{/login}" class="btn btn-custom"
+						style="margin-left: 10px;">Log In</a>
+				</div>
+
+				<div class="d-flex justify-content-center align-items-center"
+					sec:authorize="isAuthenticated()">
 					<div class="dropdown">
 						<button class="btn btn-custom dropdown-toggle" type="button"
 							id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -63,7 +82,7 @@
 							<li><hr class="dropdown-divider"></li>
 							<li><a class="dropdown-item" th:href="@{/u/profile}">Edit
 									Profile</a></li>
-							<li><a class="dropdown-item" th:href="@{/u/history}">Order
+							<li><a class="dropdown-item" th:href="@{/u/history}">My
 									History</a></li>
 							<li><hr class="dropdown-divider"></li>
 							<li>
@@ -90,7 +109,8 @@
 			</div>
 		</div>
 	</nav>
-	<main class="flex-grow-1 main-content-public-wrapper homepage-main-content">
+	<main
+		class="flex-grow-1 main-content-public-wrapper homepage-main-content">
 		<div th:replace="${content}"></div>
 	</main>
 
@@ -101,9 +121,21 @@
 				2025 MK Toasted Siopao | All Rights Reserved</p>
 		</div>
 	</footer>
+
+	<div class="toast-container position-fixed top-0 end-0 p-3"
+		style="z-index: 1100"></div>
+
+	<div id="toast-messages" th:data-profile-success="${profileSuccess}"
+		th:data-profile-error="${profileError}"
+		th:data-password-success="${passwordSuccess}"
+		th:data-password-error="${passwordError}" style="display: none;"></div>
+
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 		crossorigin="anonymous"></script>
+
+	<script th:src="@{/js/global-script.js}"></script>
+	<script th:src="@{/js/public-cart.js}"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{base :: layout(~{::main})}">
+	th:replace="~{customer/base :: layout(~{::main})}">
 <head>
 <meta charset="UTF-8">
 <title>Order - MK Toasted Siopao</title>
@@ -12,28 +12,32 @@
 				<h2 class="mb-4 section-title">Delivery Details</h2>
 				<div class="card shadow-sm">
 					<div class="card-body p-4">
-						<form>
+						<form id="customer-order-form" method="post"
+							th:action="@{/u/order/submit}">
 							<h5 class="mb-3">Personal Details</h5>
 							<div class="row g-3 mb-3">
 								<div class="col-md-6">
 									<label for="first-name" class="form-label">First Name</label> <input
 										type="text" class="form-control" id="first-name"
-										placeholder="Juan" required>
+										placeholder="Juan" required th:value="${customer.firstName}">
 								</div>
 								<div class="col-md-6">
 									<label for="last-name" class="form-label">Last Name</label> <input
 										type="text" class="form-control" id="last-name"
-										placeholder="Dela Cruz" required>
+										placeholder="Dela Cruz" required
+										th:value="${customer.lastName}">
 								</div>
 								<div class="col-md-6">
 									<label for="phone" class="form-label">Phone Number</label> <input
 										type="tel" class="form-control" id="phone"
-										placeholder="09123456789" required>
+										placeholder="09123456789" required
+										th:value="${customer.phone}">
 								</div>
 								<div class="col-md-6">
 									<label for="email" class="form-label">Email</label> <input
 										type="email" class="form-control" id="email"
-										placeholder="you@example.com" required>
+										placeholder="you@example.com" required
+										th:value="${customer.email}">
 								</div>
 							</div>
 
@@ -43,40 +47,42 @@
 								<div class="col">
 									<label for="houseNo" class="form-label">House No.</label> <input
 										type="text" class="form-control" placeholder="House No."
-										id="houseNo">
+										id="houseNo" th:value="${customer.houseNo}">
 								</div>
 								<div class="col">
 									<label for="lotNo" class="form-label">Lot No.</label> <input
 										type.text class="form-control" placeholder="Lot No."
-										id="lotNo">
+										id="lotNo" th:value="${customer.lotNo}">
 								</div>
 								<div class="col">
 									<label for="blockNo" class="form-label">Block No.</label> <input
 										type="text" class="form-control" placeholder="Block No."
-										id="blockNo">
+										id="blockNo" th:value="${customer.blockNo}">
 								</div>
 							</div>
 							<div class="mb-3">
 								<label for="street" class="form-label">Street</label> <input
 									type="text" class="form-control"
-									placeholder="Street / Subdivision" id="street" required>
+									placeholder="Street / Subdivision" id="street" required
+									th:value="${customer.street}">
 							</div>
 							<div class="row g-2 mb-3">
 								<div class="col-md-6">
 									<label for="barangay" class="form-label">Barangay</label> <input
 										type="text" class="form-control" placeholder="Barangay"
-										id="barangay" required>
+										id="barangay" required th:value="${customer.barangay}">
 								</div>
 								<div class="col-md-6">
 									<label for="municipality" class="form-label">Municipality</label>
 									<input type="text" class="form-control"
-										placeholder="Municipality" id="municipality" required>
+										placeholder="Municipality" id="municipality" required
+										th:value="${customer.municipality}">
 								</div>
 							</div>
 							<div class="mb-3">
 								<label for="province" class="form-label">Province</label> <input
 									type="text" class="form-control" placeholder="Province"
-									id="province" required>
+									id="province" required th:value="${customer.province}">
 							</div>
 
 							<hr class="my-4">
@@ -112,10 +118,10 @@
 							style="float: right; font-size: 0.75rem; padding: 0.2rem 0.5rem;">Clear</button>
 					</h3>
 
-					<div class="order-items-list"
+					<div class_w="order-items-list"
 						style="max-height: 400px; overflow-y: auto;"></div>
 
-					<div class="empty-order" th:if="${#lists.isEmpty(products)}">
+					<div class_w="empty-order">
 						<p class="text-muted">Your bag is empty. Please add items from
 							the menu.</p>
 					</div>
@@ -127,8 +133,8 @@
 							<span class="total-price fw-bold">₱0.00</span>
 						</div>
 						<div class="d-grid">
-							<button class="btn btn-checkout px-4" disabled>Proceed
-								to Checkout</button>
+							<button type="submit" form="customer-order-form"
+								class="btn btn-checkout px-4" disabled>Place Order</button>
 						</div>
 					</div>
 				</div>

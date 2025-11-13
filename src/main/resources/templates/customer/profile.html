@@ -6,69 +6,151 @@
 </head>
 <body>
 	<main>
-		<!-- Page Content -->
 		<div class="container mt-4">
 			<h2 class="section-title mb-4">My Profile</h2>
 
-			<!-- Personal Information -->
-			<div class="profile-card">
+			<div class="card shadow-sm p-4 mb-4">
 				<h4 class="mb-4">Personal Information</h4>
-				<form id="profileForm">
+				<form id="profileForm" th:action="@{/u/profile/update-details}"
+					th:object="${profileDto}" method="post">
 					<div class="row mb-3">
 						<div class="col-md-6">
-							<label for="fullName" class="form-label">Full Name</label> <input
-								type="text" class="form-control" id="fullName" required>
+							<label for="firstName" class="form-label">First Name</label> <input
+								type="text" class="form-control" th:field="*{firstName}"
+								th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('firstName')}"
+								th:errors="*{firstName}"></div>
 						</div>
 						<div class="col-md-6">
-							<label for="username" class="form-label">Username</label> <input
-								type="text" class="form-control" id="username" required>
+							<label for="lastName" class="form-label">Last Name</label> <input
+								type="text" class="form-control" th:field="*{lastName}"
+								th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}"></div>
 						</div>
 					</div>
 					<div class="row mb-3">
 						<div class="col-md-6">
-							<label for="contactNumber" class="form-label">Contact
-								Number</label> <input type="tel" class="form-control" id="contactNumber"
-								required>
+							<label for="username" class="form-label">Username</label> <input
+								type="text" class="form-control" th:field="*{username}"
+								th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></div>
 						</div>
 						<div class="col-md-6">
-							<label for="email" class="form-label">Email Address</label> <input
-								type="email" class="form-control" id="email" required>
+							<label for="phone" class="form-label">Contact Number</label> <input
+								type="tel" class="form-control" th:field="*{phone}"
+								th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
 						</div>
 					</div>
 					<div class="mb-3">
-						<label for="deliveryAddress" class="form-label">Delivery
-							Address</label>
-						<textarea class="form-control" id="deliveryAddress" rows="3"
-							required></textarea>
+						<label for="email" class="form-label">Email Address</label> <input
+							type="email" class="form-control" th:field="*{email}"
+							th:errorclass="is-invalid">
+						<div class="invalid-feedback"
+							th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
 					</div>
-					<button type="submit" class="btn btn-custom">Save Changes</button>
+
+					<hr class="my-4">
+					<h5 class="mb-3">Location Details</h5>
+					<div class="row g-2 mb-3">
+						<div class="col">
+							<label for="houseNo" class="form-label">House No.</label> <input
+								type="text" class="form-control" placeholder="House No."
+								id="houseNo" th:field="*{houseNo}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('houseNo')}" th:errors="*{houseNo}"></div>
+						</div>
+						<div class="col">
+							<label for="lotNo" class="form-label">Lot No.</label> <input
+								type.text class="form-control" placeholder="Lot No." id="lotNo"
+								th:field="*{lotNo}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}"></div>
+						</div>
+						<div class="col">
+							<label for="blockNo" class="form-label">Block No.</label> <input
+								type="text" class="form-control" placeholder="Block No."
+								id="blockNo" th:field="*{blockNo}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('blockNo')}" th:errors="*{blockNo}"></div>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="street" class="form-label">Street /
+							Subdivision</label> <input type="text" class="form-control"
+							placeholder="Street / Subdivision" id="street"
+							th:field="*{street}" th:errorclass="is-invalid">
+						<div class="invalid-feedback"
+							th:if="${#fields.hasErrors('street')}" th:errors="*{street}"></div>
+					</div>
+					<div class="row g-2 mb-3">
+						<div class="col-md-6">
+							<label for="barangay" class="form-label">Barangay</label> <input
+								type="text" class="form-control" placeholder="Barangay"
+								id="barangay" th:field="*{barangay}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('barangay')}" th:errors="*{barangay}"></div>
+						</div>
+						<div class="col-md-6">
+							<label for="municipality" class="form-label">Municipality</label>
+							<input type="text" class="form-control"
+								placeholder="Municipality" id="municipality"
+								th:field="*{municipality}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('municipality')}"
+								th:errors="*{municipality}"></div>
+						</div>
+					</div>
+					<div class="mb-3">
+						<label for="province" class="form-label">Province</label> <input
+							type="text" class="form-control" placeholder="Province"
+							id="province" th:field="*{province}" th:errorclass="is-invalid">
+						<div class="invalid-feedback"
+							th:if="${#fields.hasErrors('province')}" th:errors="*{province}"></div>
+					</div>
+
+					<button type.submit class="btn btn-custom mt-3">Save
+						Profile Changes</button>
 				</form>
 			</div>
 
-			<!-- Change Password -->
-			<div class="profile-card">
+			<div class="card shadow-sm p-4 mb-4">
 				<h4 class="mb-4">Change Password</h4>
-				<form id="passwordForm">
+				<form id="passwordForm" th:action="@{/u/profile/update-password}"
+					th:object="${passwordDto}" method="post">
 					<div class="row mb-3">
 						<div class="col-md-6">
 							<label for="currentPassword" class="form-label">Current
 								Password</label> <input type="password" class="form-control"
-								id="currentPassword" required>
+								th:field="*{currentPassword}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('currentPassword')}"
+								th:errors="*{currentPassword}"></div>
 						</div>
 					</div>
 					<div class="row mb-3">
 						<div class="col-md-6">
 							<label for="newPassword" class="form-label">New Password</label>
-							<input type="password" class="form-control" id="newPassword"
-								required>
+							<input type="password" class="form-control"
+								th:field="*{newPassword}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('newPassword')}"
+								th:errors="*{newPassword}"></div>
 						</div>
 						<div class="col-md-6">
 							<label for="confirmPassword" class="form-label">Confirm
 								New Password</label> <input type="password" class="form-control"
-								id="confirmPassword" required>
+								th:field="*{confirmPassword}" th:errorclass="is-invalid">
+							<div class="invalid-feedback"
+								th:if="${#fields.hasErrors('confirmPassword')}"
+								th:errors="*{confirmPassword}"></div>
 						</div>
 					</div>
-					<button type="submit" class="btn btn-custom">Update
+					<button type="submit" class="btn btn-custom mt-3">Update
 						Password</button>
 				</form>
 			</div>

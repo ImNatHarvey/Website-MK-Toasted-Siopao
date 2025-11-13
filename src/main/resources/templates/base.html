@@ -50,9 +50,6 @@
 						sec:authorize="!hasAuthority('VIEW_DASHBOARD')"><a
 						class="nav-link" th:href="@{/menu}">Menu</a></li>
 
-					<li class="nav-item" sec:authorize="hasRole('CUSTOMER')"><a
-						class="nav-link" th:href="@{/u/history}">My History</a></li>
-
 					<li class="nav-item" sec:authorize="!isAuthenticated()"><a
 						class="nav-link" th:href="@{/order}">Orders</a></li>
 					<li class="nav-item"><a class="nav-link" th:href="@{/about}">About
@@ -84,7 +81,7 @@
 							<li sec:authorize="hasRole('CUSTOMER')"><a
 								class="dropdown-item" th:href="@{/u/profile}">My Profile</a></li>
 							<li sec:authorize="hasRole('CUSTOMER')"><a
-								class="dropdown-item" th:href="@{/u/history}">Order History</a></li>
+								class="dropdown-item" th:href="@{/u/history}">My History</a></li>
 
 							<li sec:authorize="hasAuthority('VIEW_DASHBOARD')"><a
 								class="dropdown-item" th:href="@{/admin/dashboard}">Go to

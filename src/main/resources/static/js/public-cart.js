@@ -239,14 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 
-		// 14. NEW Event Listener: Handle "Go to Checkout" button on MENU page
-		const goToCheckoutBtn = document.getElementById('go-to-checkout-btn');
-		if (goToCheckoutBtn) {
-			goToCheckoutBtn.addEventListener('click', function() {
-				// This button's only job is to navigate to the order page
-				window.location.href = '/order';
-			});
-		}
+		// 14. --- THIS BLOCK WAS REMOVED as it was causing the bug ---
 
 		// 15. Initialization (was 14)
 		renderCart();
@@ -345,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <small class="ms-2 toast-time">now</small>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
                 </div>
-                <div class.="toast-body">
+                <div class="toast-body">
                     ${message}
                 </div>
             `;

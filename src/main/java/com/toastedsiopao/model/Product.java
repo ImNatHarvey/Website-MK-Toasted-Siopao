@@ -91,6 +91,28 @@ public class Product {
 		}
 	}
 
+	// --- MODIFIED: Renamed to getPublicStockStatusText ---
+	@Transient
+	public String getPublicStockStatusText() {
+		if (currentStock <= 0) {
+			return "No Stock";
+		} else {
+			return "Available";
+		}
+	}
+	// --- END MODIFIED ---
+
+	// --- ADDED: New method for CSS class ---
+	@Transient
+	public String getPublicStockStatusClass() {
+		if (currentStock <= 0) {
+			return "no_stock"; // Corresponds to status-no_stock
+		} else {
+			return "normal"; // Corresponds to status-normal (green)
+		}
+	}
+	// --- END ADDED ---
+
 	public void addIngredient(RecipeIngredient ingredient) {
 		ingredients.add(ingredient);
 		ingredient.setProduct(this);

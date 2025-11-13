@@ -171,6 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		};
 
 		// 11. Event Listener: Handle Product Card Stepper
+		// --- MODIFIED: Added stock limiting logic ---
 		document.addEventListener('click', function(event) {
 			const button = event.target.closest('.qty-btn');
 			if (!button) return;
@@ -184,17 +185,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const qtyInput = stepper.querySelector('.qty-input');
 			const minusBtn = stepper.querySelector('.qty-btn.minus');
+			const plusBtn = stepper.querySelector('.qty-btn.plus'); // Get plus button
+			
+			// Get stock from data attribute
+			const stock = parseInt(card.dataset.productStock, 10);
+			if (isNaN(stock)) {
+				console.warn("Product stock is not a number:", card.dataset.productStock);
+				return; // Do nothing if stock isn't a valid number
+			}
+
 			let currentQty = parseInt(qtyInput.value, 10);
 
 			if (button.classList.contains('plus')) {
-				currentQty++;
+				// Only increment if current quantity is less than stock
+				if (currentQty < stock) {
+					currentQty++;
+				}
 			} else if (button.classList.contains('minus')) {
 				currentQty--;
 			}
 
 			if (currentQty < 0) currentQty = 0;
+			
 			qtyInput.value = currentQty;
+			
+			// Disable minus button if quantity is 0
 			minusBtn.disabled = (currentQty === 0);
+			// Disable plus button if quantity is equal to or greater than stock
+			plusBtn.disabled = (currentQty >= stock);
 		});
 
 		// 12. Event Listener: Handle "Add to Order" Button Click
@@ -208,12 +226,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			const { productId, productName, productPrice, productImage } = card.dataset;
 			const qtyInput = card.querySelector('.qty-input');
 			const minusBtn = card.querySelector('.qty-btn.minus');
+			const plusBtn = card.querySelector('.qty-btn.plus'); // Get plus button
 			const quantityToAdd = parseInt(qtyInput.value, 10);
 
 			if (quantityToAdd > 0) {
 				addToCart(productId, productName, productPrice, productImage, quantityToAdd);
 				qtyInput.value = 0;
 				minusBtn.disabled = true;
+				if (plusBtn) {
+					plusBtn.disabled = false; // Re-enable plus button after adding to cart
+				}
 			}
 		});
 

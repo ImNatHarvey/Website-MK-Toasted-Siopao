@@ -23,16 +23,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	// --- ADDED ---
 	Optional<Product> findByNameIgnoreCase(String name);
 
-	@Query(value = FIND_PRODUCT_WITH_RELATIONS + "ORDER BY p.name ASC", countQuery = COUNT_PRODUCT)
+	// --- MODIFIED: Added stock-based sorting ---
+	@Query(value = FIND_PRODUCT_WITH_RELATIONS
+			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT)
 	Page<Product> findAll(Pageable pageable);
 
+	// --- MODIFIED: Added stock-based sorting ---
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS
-			+ "WHERE p.category = :category ORDER BY p.name ASC", countQuery = COUNT_PRODUCT
+			+ "WHERE p.category = :category ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT
 					+ "WHERE p.category = :category")
 	Page<Product> findByCategory(@Param("category") Category category, Pageable pageable);
 
+	// --- MODIFIED: Added stock-based sorting ---
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS
-			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.name ASC", countQuery = COUNT_PRODUCT
+			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT
 					+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
 	Page<Product> findByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
 
@@ -41,8 +45,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 					+ "WHERE LOWER(p.category.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
 	Page<Product> findByCategoryNameIgnoreCase(@Param("keyword") String categoryName, Pageable pageable);
 
+	// --- MODIFIED: Added stock-based sorting ---
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
-			+ "AND p.category = :category ORDER BY p.name ASC", countQuery = COUNT_PRODUCT
+			+ "AND p.category = :category ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT
 					+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + "AND p.category = :category")
 	Page<Product> findByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
 			@Param("category") Category category, Pageable pageable);

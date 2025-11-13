@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{customer/base :: layout(~{::main})}">
+	th:replace="~{base :: layout(~{::main})}">
 <head>
 <meta charset="UTF-8">
 <title>Menu - MK Toasted Siopao</title>
@@ -11,16 +11,16 @@
 			<div class="col-lg-9">
 				<h2 class="mb-4 section-title">Our Menu</h2>
 
-				<form th:action="@{/u/menu}" method="get"
+				<form th:action="@{/menu}" method="get"
 					class="mb-4 p-3 bg-light rounded shadow-sm">
 					<div class="mb-3">
 						<label class="form-label">Filter by Category</label>
 						<div class="d-flex flex-wrap gap-2">
-							<a th:href="@{/u/menu(keyword=${keyword})}"
+							<a th:href="@{/menu(keyword=${keyword})}"
 								class="btn btn-sm btn-outline-primary"
 								th:classappend="${selectedCategoryId == null ? 'active' : ''}">All
 								Categories</a> <a th:each="cat : ${categories}"
-								th:href="@{/u/menu(category=${cat.id}, keyword=${keyword})}"
+								th:href="@{/menu(category=${cat.id}, keyword=${keyword})}"
 								class="btn btn-sm btn-outline-primary"
 								th:classappend="${selectedCategoryId != null && selectedCategoryId == cat.id ? 'active' : ''}"
 								th:text="${cat.name}">Category</a>
@@ -41,7 +41,7 @@
 								<i class="fa-solid fa-search"></i> <span
 									class="d-none d-md-inline ms-1">Search</span>
 							</button>
-							<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
+							<a th:href="@{/menu}" class="btn btn-custom-secondary"
 								title="Clear All"> <i class="fa-solid fa-times"></i> <span
 								class="d-none d-md-inline ms-1">Clear</span>
 							</a>
@@ -63,6 +63,7 @@
 							th:data-product-id="${product.id}"
 							th:data-product-name="${product.name}"
 							th:data-product-price="${product.price}"
+							th:data-product-stock="${product.currentStock}"
 							th:data-product-image="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}">
 							<img
 								th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
@@ -72,14 +73,15 @@
 								<h5 class="card-title" th:text="${product.name}">...</h5>
 								<p class="mb-1 text-muted small"
 									th:text="${product.category.name}">...</p>
-
+								
 								<div
 									class="d-flex justify-content-between align-items-center mb-2 price-stepper-row">
 									<p class="mb-0">
 										<strong class="fs-5">₱<span
 											th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
 									</p>
-									<div class="quantity-stepper-inline">
+									<div class="quantity-stepper-inline"
+										th:if="${product.getPublicStockStatusClass() == 'normal'}">
 										<button class="btn btn-sm btn-action-delete qty-btn minus"
 											type="button" disabled>
 											<i class="fa-solid fa-minus"></i>
@@ -88,17 +90,28 @@
 											class="form-control form-control-sm qty-input" value="0"
 											readonly>
 										<button class="btn btn-sm btn-action-add qty-btn plus"
-											type="button">
+											type="button"
+											th:disabled="${product.currentStock <= 0}">
 											<i class="fa-solid fa-plus"></i>
 										</button>
 									</div>
 								</div>
+
+								<div class="mb-2">
+									<span class="status-badge"
+										th:text="${product.getPublicStockStatusText()}"
+										th:classappend="'status-' + ${product.getPublicStockStatusClass()}">
+									</span>
+								</div>
+								
 								<p class="card-text small mb-3 flex-grow-1"
 									th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
 
 								<div class="mt-auto">
-									<button class="btn btn-sm btn-warning w-100 btn-add-to-order">
-										<i class="fa-solid fa-cart-plus me-1"></i> Add to Order
+									<button class="btn btn-sm btn-warning w-100 btn-add-to-order"
+										th:disabled="${product.getPublicStockStatusClass() == 'no_stock'}">
+										<i class="fa-solid fa-cart-plus me-1"></i> 
+										<span th:text="${product.getPublicStockStatusClass() == 'normal' ? 'Add to Order' : 'Out of Stock'}">Add to Order</span>
 									</button>
 								</div>
 							</div>
@@ -130,9 +143,16 @@
 							<span class="total-price fw-bold fs-5">₱0.00</span>
 						</div>
 						<div class="d-grid">
-							<a th:href="@{/u/order}" id="go-to-checkout-btn" class="btn btn-checkout px-4 disabled">Proceed
+							<a th:href="@{/order}" id="go-to-checkout-btn" class="btn btn-checkout px-4 disabled">Proceed
 								to Checkout</a>
 						</div>
+						
+						<div class="alert alert-info small p-2 mt-3"
+							sec:authorize="!isAuthenticated()">
+							<i class="fa-solid fa-circle-info me-1"></i> You'll be asked to
+							create an account to finalize your order.
+						</div>
+						
 					</div>
 				</div>
 			</div>
@@ -147,7 +167,7 @@
 					<li class="page-item"
 						th:classappend="${productPage.first} ? 'disabled'"><a
 						class="page-link"
-						th:href="@{/u/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+						th:href="@{/menu(page=${productPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
 					</li>
 
 					<th:block
@@ -162,14 +182,14 @@
 						<li class="page-item"
 							th:classappend="${i == productPage.number} ? 'active'"><a
 							class="page-link"
-							th:href="@{/u/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+							th:href="@{/menu(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
 							th:text="${i + 1}"></a></li>
 					</th:block>
 
 					<li class="page-item"
 						th:classappend="${productPage.last} ? 'disabled'"><a
 						class="page-link"
-						th:href="@{/u/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+						th:href="@{/menu(page=${productPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
 					</li>
 				</ul>
 			</nav>

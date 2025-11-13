@@ -63,6 +63,7 @@
 							th:data-product-id="${product.id}"
 							th:data-product-name="${product.name}"
 							th:data-product-price="${product.price}"
+							th:data-product-stock="${product.currentStock}"
 							th:data-product-image="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}">
 							<img
 								th:src="${product.imageUrl != null && !#strings.isEmpty(product.imageUrl) ? product.imageUrl : '/img/placeholder.jpg'}"
@@ -72,14 +73,15 @@
 								<h5 class="card-title" th:text="${product.name}">...</h5>
 								<p class="mb-1 text-muted small"
 									th:text="${product.category.name}">...</p>
-
+								
 								<div
 									class="d-flex justify-content-between align-items-center mb-2 price-stepper-row">
 									<p class="mb-0">
 										<strong class="fs-5">₱<span
 											th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>
 									</p>
-									<div class="quantity-stepper-inline">
+									<div class="quantity-stepper-inline"
+										th:if="${product.getPublicStockStatusClass() == 'normal'}">
 										<button class="btn btn-sm btn-action-delete qty-btn minus"
 											type="button" disabled>
 											<i class="fa-solid fa-minus"></i>
@@ -88,17 +90,28 @@
 											class="form-control form-control-sm qty-input" value="0"
 											readonly>
 										<button class="btn btn-sm btn-action-add qty-btn plus"
-											type="button">
+											type="button"
+											th:disabled="${product.currentStock <= 0}">
 											<i class="fa-solid fa-plus"></i>
 										</button>
 									</div>
 								</div>
+								
+								<div class="mb-2">
+									<span class="status-badge"
+										th:text="${product.getPublicStockStatusText()}"
+										th:classappend="'status-' + ${product.getPublicStockStatusClass()}">
+									</span>
+								</div>
+								
 								<p class="card-text small mb-3 flex-grow-1"
 									th:text="${product.description != null ? #strings.abbreviate(product.description, 70) : 'No description.'}">...</p>
 
 								<div class="mt-auto">
-									<button class="btn btn-sm btn-warning w-100 btn-add-to-order">
-										<i class="fa-solid fa-cart-plus me-1"></i> Add to Order
+									<button class="btn btn-sm btn-warning w-100 btn-add-to-order"
+										th:disabled="${product.getPublicStockStatusClass() == 'no_stock'}">
+										<i class="fa-solid fa-cart-plus me-1"></i> 
+										<span th:text="${product.getPublicStockStatusClass() == 'normal' ? 'Add to Order' : 'Out of Stock'}">Add to Order</span>
 									</button>
 								</div>
 							</div>

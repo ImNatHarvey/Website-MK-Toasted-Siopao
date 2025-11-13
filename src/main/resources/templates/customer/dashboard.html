@@ -1,19 +1,40 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
 	th:replace="~{customer/base :: layout(~{::main})}">
 <head>
 <title>Customer Dashboard - MK Toasted Siopao</title>
 </head>
 <body>
 	<main>
-		<!-- Page Content -->
-		<div class="container mt-4">
-			<!-- Welcome Section -->
+		<div id="carouselExampleSlidesOnly" class="carousel slide"
+			data-bs-ride="carousel">
+			<div class="carousel-inner">
+				<div class="carousel-item active">
+					<img th:src="@{${siteSettings.carouselImage1}}"
+						class="d-block w-100 carousel-image"
+						alt="Siopao Carousel Image 1">
+				</div>
+				<div class="carousel-item">
+					<img th:src="@{${siteSettings.carouselImage2}}"
+						class="d-block w-100 carousel-image"
+						alt="Siopao Carousel Image 2">
+				</div>
+				<div class="carousel-item">
+					<img th:src="@{${siteSettings.carouselImage3}}"
+						class="d-block w-100 carousel-image"
+						alt="Siopao Carousel Image 3">
+				</div>
+			</div>
+		</div>
+
+		<div class="container featured-products-section">
 			<div class="welcome-card mb-5">
 				<div class="row align-items-center">
 					<div class="col-md-8">
-						<h3>Welcome back, Juan!</h3>
-						<!-- This will be dynamic later -->
+						<h3>
+							Welcome back, <span sec:authentication="name">Customer</span>!
+						</h3>
 						<p class="mb-0">Ready to order your favorite toasted siopao?</p>
 					</div>
 					<div class="col-md-4 text-end">
@@ -23,7 +44,6 @@
 				</div>
 			</div>
 
-			<!-- Quick Actions -->
 			<h4 class="section-title mb-4">Quick Actions</h4>
 			<div class="row mb-5">
 				<div class="col-md-3 mb-3">
@@ -70,23 +90,95 @@
 					</div>
 				</div>
 			</div>
-
-			<!-- Recent Orders -->
-			<h4 class="section-title mb-4">Recent Orders</h4>
-			<div class="card mb-5">
-				<div class="card-body">
-					<div id="recentOrders">
-						<!-- Orders will be loaded dynamically -->
-						<div class="text-center py-4">
-							<p class="text-muted">You have no recent orders.</p>
+		</div>
+		<div class="container my-5">
+			<h2 class="text-center mb-4 section-title"
+				th:text="${siteSettings.featuredProductsTitle}">Our Featured
+				Products</h2>
+			<div class="row row-cols-1 row-cols-md-4 g-4">
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{${siteSettings.featureCard1Image}}"
+							class="card-img-top" alt="Feature Card 1"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title"
+								th:text="${siteSettings.featureCard1Title}">Favorite</h5>
+							<p class="card-text" th:text="${siteSettings.featureCard1Text}">Our
+								best-selling toasted siopao flavors, loved by everyone.</p>
 						</div>
 					</div>
-					<div class="text-center mt-3">
-						<a th:href="@{/u/history}" class="btn btn-custom">View All
-							Orders</a>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{${siteSettings.featureCard2Image}}"
+							class="card-img-top" alt="Feature Card 2"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title"
+								th:text="${siteSettings.featureCard2Title}">Combo</h5>
+							<p class="card-text" th:text="${siteSettings.featureCard2Text}">Perfectly
+								paired combos with siopao, drinks, and more.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{${siteSettings.featureCard3Image}}"
+							class="card-img-top" alt="Feature Card 3"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title"
+								th:text="${siteSettings.featureCard3Title}">Siopao</h5>
+							<p class="card-text" th:text="${siteSettings.featureCard3Text}">Freshly
+								made toasted siopao, crispy outside, soft inside.</p>
+						</div>
+					</div>
+				</div>
+				<div class="col">
+					<div class="card h-100">
+						<img th:src="@{${siteSettings.featureCard4Image}}"
+							class="card-img-top" alt="Feature Card 4"
+							style="height: 200px; object-fit: cover;">
+						<div class="card-body">
+							<h5 class="card-title"
+								th:text="${siteSettings.featureCard4Title}">Drinks</h5>
+							<p class="card-text" th:text="${siteSettings.featureCard4Text}">Refreshing
+								drinks to pair with your favorite siopao.</p>
+						</div>
 					</div>
 				</div>
 			</div>
+		</div>
+
+		<div class="container my-5">
+			<div class="promo-banner text-center">
+				<h4 th:text="${siteSettings.promoTitle}">Special Promo!</h4>
+				<p th:text="${siteSettings.promoText}">Get 2 Toasted Siopao + 1
+					Drink for only ₱99</p>
+			</div>
+		</div>
+
+		<div class="container my-5">
+			<div class="row align-items-center">
+				<div class="col-md-8">
+					<h4 class="section-title" th:text="${siteSettings.whyUsTitle}">Why
+						Toasted Siopao?</h4>
+					<p th:text="${siteSettings.whyUsText}">Crispy outside, savory
+						inside! Perfect for your cravings — delicious, filling, and
+						budget-friendly.</p>
+				</div>
+				<div class="col-md-4 text-end">
+					<img th:src="@{${siteSettings.whyUsImage}}" class="feature-img"
+						alt="Toasted Siopao"
+						style="width: 70%; height: auto; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+				</div>
+			</div>
+		</div>
+
+		<div class="cta-section text-center">
+			<h4>Order Now & Taste the Difference!</h4>
+			<a th:href="@{/u/menu}" class="btn btn-custom">Order Now</a>
 		</div>
 	</main>
 </body>

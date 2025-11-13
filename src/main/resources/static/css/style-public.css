@@ -54,98 +54,10 @@
 		url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(17, 63, 103, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
-/* --- COPIED FROM style-admin.css FOR CONSISTENCY --- */
-.btn-custom {
-	background-color: var(--accent);
-	color: var(--primary);
-	font-weight: bold;
-	border-radius: 30px;
-	padding: 8px 20px;
-	/* margin-left: 10px; <-- REMOVED, will be handled inline */
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	transition: background-color 0.3s ease, color 0.3s ease, border-color
-		0.3s ease;
-	border: 1px solid var(--accent);
-}
+/* == START: REMOVED ALL .btn-custom AND .btn-action-* STYLES == */
+/* ... Styles were here ... */
+/* == END: REMOVED BUTTON STYLES == */
 
-.btn-custom:hover {
-	background-color: var(--primary);
-	color: var(--light);
-	border-color: var(--primary);
-}
-
-.btn-custom-secondary {
-	background-color: var(--muted-text);
-	color: var(--light);
-	font-weight: bold;
-	border-radius: 30px;
-	padding: 8px 20px;
-	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	transition: background-color 0.3s ease, color 0.3s ease, border-color
-		0.3s ease;
-	border: 1px solid var(--muted-text);
-}
-
-.btn-custom-secondary:hover {
-	background-color: var(--dark);
-	color: var(--light);
-	border-color: var(--dark);
-}
-
-.btn-custom-outline {
-	background-color: transparent;
-	color: var(--primary);
-	font-weight: bold;
-	border-radius: 30px;
-	padding: 8px 20px;
-	transition: background-color 0.3s ease, color 0.3s ease, border-color
-		0.3s ease;
-	border: 1px solid var(--primary);
-	/* REMOVED margin-left: 10px; to fix button layout */
-}
-
-.btn-custom-outline:hover {
-	background-color: var(--primary);
-	color: var(--light);
-	border-color: var(--primary);
-}
-
-/* --- ADDED: Action buttons from admin --- */
-.btn-action-add {
-	background-color: var(--primary);
-	color: var(--light);
-	border-color: var(--primary);
-}
-
-.btn-action-add:hover {
-	background-color: var(--dark);
-	border-color: var(--dark);
-}
-
-.btn-action-view {
-	background-color: var(--info);
-	color: var(--light);
-	border-color: var(--info);
-}
-
-.btn-action-view:hover {
-	background-color: #138496;
-	border-color: #117a8b;
-}
-
-/* --- ADDED: Delete button style for stepper --- */
-.btn-action-delete {
-	background-color: var(--danger);
-	color: var(--light);
-	border-color: var(--danger);
-}
-
-.btn-action-delete:hover {
-	background-color: #c82333;
-	border-color: #bd2130;
-}
-
-/* --- END COPIED STYLES --- */
 /* --- REMOVED FIX for invisible navbar button (no longer needed) --- */
 .promo-banner {
 	background-color: var(--secondary);

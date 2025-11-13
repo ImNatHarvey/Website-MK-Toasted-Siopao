@@ -23,3 +23,165 @@ body {
 	color: var(--dark);
 	background-color: var(--light);
 }
+
+/* ======================================================================== */
+/* == START: CENTRALIZED BUTTON STYLES (MOVED FROM ADMIN/PUBLIC) == */
+/* ======================================================================== */
+.btn-custom {
+	background-color: var(--accent);
+	color: var(--primary);
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--accent);
+}
+
+.btn-custom:hover {
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.btn-custom-secondary {
+	background-color: var(--muted-text);
+	color: var(--light);
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--muted-text);
+}
+
+.btn-custom-secondary:hover {
+	background-color: var(--dark);
+	color: var(--light);
+	border-color: var(--dark);
+}
+
+.btn-custom-outline {
+	background-color: transparent;
+	color: var(--primary);
+	font-weight: bold;
+	border-radius: 30px;
+	padding: 8px 20px;
+	transition: background-color 0.3s ease, color 0.3s ease, border-color
+		0.3s ease;
+	border: 1px solid var(--primary);
+}
+
+.btn-custom-outline:hover {
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+/* --- Action Buttons --- */
+.btn-action-add {
+	background-color: var(--primary);
+	color: var(--light);
+	border-color: var(--primary);
+}
+
+.btn-action-add:hover {
+	background-color: var(--dark);
+	border-color: var(--dark);
+}
+
+.btn-action-edit {
+	background-color: var(--warning);
+	color: var(--dark);
+	border-color: var(--warning);
+}
+
+.btn-action-edit:hover {
+	background-color: #e0a800;
+	border-color: #d39e00;
+}
+
+.btn-action-delete {
+	background-color: var(--danger);
+	color: var(--light);
+	border-color: var(--danger);
+}
+
+.btn-action-delete:hover {
+	background-color: #c82333;
+	border-color: #bd2130;
+}
+
+.btn-action-view {
+	background-color: var(--info);
+	color: var(--light);
+	border-color: var(--info);
+}
+
+.btn-action-view:hover {
+	background-color: #138496;
+	border-color: #117a8b;
+}
+
+.btn-action-success {
+	background-color: var(--success);
+	color: var(--light);
+	border-color: var(--success);
+}
+
+.btn-action-success:hover {
+	background-color: #218838;
+	border-color: #1e7e34;
+}
+
+/* --- Disabled States --- */
+.btn-action-edit:disabled, .btn-action-edit.disabled {
+	background-color: var(--warning);
+	border-color: var(--warning);
+	color: var(--dark);
+	opacity: 0.65;
+}
+
+.btn-action-delete:disabled, .btn-action-delete.disabled {
+	background-color: var(--danger);
+	border-color: var(--danger);
+	color: var(--light);
+	opacity: 0.65;
+}
+/* ======================================================================== */
+/* == END: CENTRALIZED BUTTON STYLES == */
+/* ======================================================================== */
+
+/* ======================================================================== */
+/* == START: CENTRALIZED TOAST STYLES (MOVED FROM ADMIN) == */
+/* ======================================================================== */
+.toast {
+	min-width: 360px;
+	box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+	background-color: var(--light);
+}
+
+.toast-header {
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.toast-header .fa-solid {
+	font-size: 1.1rem;
+}
+
+.toast-header .toast-time {
+	font-weight: 500;
+}
+
+.toast-body {
+	font-size: 1.05rem;
+	padding-top: 0.85rem;
+	padding-bottom: 0.85rem;
+	color: var(--dark);
+}
+/* ======================================================================== */
+/* == END: CENTRALIZED TOAST STYLES == */
+/* ======================================================================== */

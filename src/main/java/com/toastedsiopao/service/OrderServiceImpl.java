@@ -9,6 +9,7 @@ import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.OrderRepository;
 import com.toastedsiopao.repository.ProductRepository;
+import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -55,6 +57,11 @@ public class OrderServiceImpl implements OrderService {
 
 	@Autowired
 	private Clock clock; 
+	
+	// --- ADDED ---
+	@Autowired
+	private EmailService emailService;
+	// --- END ADDED ---
 	
 	private static class CartItemDto {
 		public String name;
@@ -127,6 +134,10 @@ public class OrderServiceImpl implements OrderService {
 		newOrder.setShippingFirstName(orderDto.getFirstName());
 		newOrder.setShippingLastName(orderDto.getLastName());
 		newOrder.setShippingPhone(orderDto.getPhone());
+		// --- THIS IS THE FIX ---
+		newOrder.setShippingEmail(orderDto.getEmail());
+		// --- END FIX ---
+		
 		String fullAddress = String.format("%s %s %s, %s, %s, %s, %s",
 				Optional.ofNullable(orderDto.getHouseNo()).orElse(""),
 				Optional.ofNullable(orderDto.getLotNo()).orElse(""),
@@ -297,7 +308,19 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		log.info("Order #{} accepted. Status set to PROCESSING.", orderId);
-		return orderRepository.save(order);
+		Order savedOrder = orderRepository.save(order);
+		
+		// --- Send Email ---
+		try {
+			String subject = "Your Order has been Accepted!";
+			String message = "We're happy to let you know that your order has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
+			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
+		} catch (MessagingException e) {
+			log.error("Failed to send 'Order Accepted' email for Order #{}", savedOrder.getId(), e);
+		}
+		// --- End Email ---
+
+		return savedOrder;
 	}
 
 	@Override
@@ -317,6 +340,67 @@ public class OrderServiceImpl implements OrderService {
 
 		log.info("Order #{} rejected. Status set to REJECTED.", orderId);
 		return orderRepository.save(order);
+	}
+	
+	@Override
+	public Order shipOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+
+		if (!order.getStatus().equals(Order.STATUS_PROCESSING)) {
+			throw new IllegalArgumentException("Only orders in 'Processing' status can be shipped.");
+		}
+		
+		order.setStatus(Order.STATUS_OUT_FOR_DELIVERY);
+		// Payment status (especially for COD) remains unchanged until completion.
+		
+		log.info("Order #{} status set to OUT_FOR_DELIVERY.", orderId);
+		Order savedOrder = orderRepository.save(order);
+
+		// --- Send Email ---
+		try {
+			String subject = "Your Order is Out for Delivery!";
+			String message = "Get ready! Your order is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of " +
+							 "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
+			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
+		} catch (MessagingException e) {
+			log.error("Failed to send 'Out for Delivery' email for Order #{}", savedOrder.getId(), e);
+		}
+		// --- End Email ---
+		
+		return savedOrder;
+	}
+
+	@Override
+	public Order completeCodOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+
+		if (!order.getStatus().equals(Order.STATUS_OUT_FOR_DELIVERY)) {
+			throw new IllegalArgumentException("Only orders 'Out for Delivery' can be marked as completed.");
+		}
+		
+		if (!order.getPaymentMethod().equalsIgnoreCase("cod")) {
+			throw new IllegalArgumentException("This action is only for 'Cash on Delivery' orders.");
+		}
+		
+		order.setStatus(Order.STATUS_DELIVERED);
+		order.setPaymentStatus(Order.PAYMENT_PAID); // Mark as paid
+		
+		log.info("COD Order #{} status set to DELIVERED and PAID.", orderId);
+		Order savedOrder = orderRepository.save(order);
+
+		// --- Send Email ---
+		try {
+			String subject = "Your Order is Complete!";
+			String message = "Your order has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
+			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
+		} catch (MessagingException e) {
+			log.error("Failed to send 'Order Completed' email for Order #{}", savedOrder.getId(), e);
+		}
+		// --- End Email ---
+		
+		return savedOrder;
 	}
 	// --- END NEW IMPLEMENTATIONS ---
 	

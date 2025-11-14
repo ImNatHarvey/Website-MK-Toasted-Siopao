@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.User;
 import jakarta.mail.MessagingException;
 
@@ -14,4 +15,14 @@ public interface EmailService {
 	 * @throws MessagingException if there's an error sending the mail.
 	 */
 	void sendPasswordResetEmail(User user, String token, String resetUrl) throws MessagingException;
+
+	/**
+	 * Sends an order status update email to a user.
+	 *
+	 * @param order   The order that was updated.
+	 * @param subject The subject line for the email (e.g., "Your order is on the way!")
+	 * @param message The main message to display in the email body.
+	 * @throws MessagingException if there's an error sending the mail.
+	 */
+	void sendOrderStatusUpdateEmail(Order order, String subject, String message) throws MessagingException;
 }

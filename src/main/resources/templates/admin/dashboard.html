@@ -118,6 +118,19 @@
 			<div class="col-xl-3 col-md-6 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-orders"
+						style="background-color: #e6fffb; color: #13c2c2;">
+						<i class="fa-solid fa-truck"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Out for Delivery</div>
+						<div class="stats-value" th:text="${outForDeliveryOrders}"
+							th:styleappend="${outForDeliveryOrders > 0 ? 'color: #13c2c2;' : ''}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
 						style="background-color: #f6ffed; color: #52c41a;">
 						<i class="fa-solid fa-truck-fast"></i>
 					</div>
@@ -211,7 +224,7 @@
 						<div class="stats-value" style="color: #f5222d;"
 							th:text="${criticalStockItems}">0</div>
 					</div>
-				</div>
+					</div>
 			</div>
 			<div class="col-lg-2 col-md-6 mb-4">
 				<div class="stats-card-v2">

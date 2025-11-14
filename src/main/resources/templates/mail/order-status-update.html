@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Status Update</title>
+<style>
+body {
+	font-family: Arial, sans-serif;
+	line-height: 1.6;
+	color: #333;
+}
+
+.container {
+	width: 90%;
+	max-width: 600px;
+	margin: 20px auto;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.header {
+	background-color: #113F67; /* Primary color */
+	color: #fdf5aa; /* Secondary color */
+	padding: 20px;
+	text-align: center;
+}
+
+.header h1 {
+	margin: 0;
+	font-size: 24px;
+}
+
+.content {
+	padding: 30px;
+}
+
+.content p {
+	margin-bottom: 20px;
+}
+
+.button {
+	display: inline-block;
+	background-color: #ffc374; /* Accent color */
+	color: #113F67;
+	padding: 12px 25px;
+	text-decoration: none;
+	border-radius: 25px;
+	font-weight: bold;
+	font-size: 16px;
+}
+
+.order-details {
+	background-color: #f9f9f9;
+	padding: 15px;
+	border-radius: 8px;
+	margin-top: 20px;
+}
+
+.footer {
+	background-color: #f9f9f9;
+	color: #777;
+	padding: 20px;
+	text-align: center;
+	font-size: 12px;
+}
+</style>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<h1 th:text="${siteSettings.websiteName}">MK Toasted Siopao</h1>
+		</div>
+		<div class="content">
+			<p>
+				Hi <strong th:text="${name}">Customer</strong>,
+			</p>
+
+			<h2
+				style="color: #113F67; font-size: 20px; margin-bottom: 15px;"
+				th:text="${subject}">Your Order Status Update</h2>
+
+			<p th:text="${messageBody}">We're happy to let you know that
+				your order has been accepted and is now being processed.</p>
+
+			<div class="order-details">
+				<strong>Order ID:</strong> <span
+					th:text="'#ORD-' + ${orderId}">#ORD-XXXX</span><br> <strong>New
+					Status:</strong> <span th:text="${status}">PROCESSING</span><br> <strong>Total:</strong>
+				<span
+					th:text="'₱' + ${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</span>
+			</div>
+
+			<p style="text-align: center; margin-top: 30px;">
+				<a th:href="@{|${baseUrl}/u/history|}" class="button">View Your
+					Order History</a>
+			</p>
+
+			<p>
+				Thanks,<br> The MK Toasted Siopao Team
+			</p>
+		</div>
+		<div class="footer">
+			<p th:text="${siteSettings.footerText}">© 2025 MK Toasted
+				Siopao. All Rights Reserved.</p>
+		</div>
+	</div>
+</body>
+</html>

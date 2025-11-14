@@ -34,6 +34,12 @@ public interface OrderService {
 	Order cancelOrder(Long orderId, User customer);
 	Order acceptOrder(Long orderId);
 	Order rejectOrder(Long orderId);
+	
+	// --- NEW METHODS FOR OUR FLOW ---
+	Order shipOrder(Long orderId);
+	Order completeCodOrder(Long orderId);
+	// --- END NEW METHODS ---
+	
 	// --- END ADDED ---
 
 	BigDecimal getSalesToday();

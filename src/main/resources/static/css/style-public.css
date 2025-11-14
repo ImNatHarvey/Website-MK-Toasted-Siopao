@@ -651,7 +651,7 @@ footer {
 }
 
 .status-badge.status-critical, .status-badge.status-cancelled,
-	.status-badge.status-inactive {
+	.status-badge.status-inactive, .status-badge.status-rejected {
 	background-color: var(--danger);
 	color: var(--light);
 }
@@ -666,6 +666,13 @@ footer {
 	background-color: var(--primary); /* <-- MODIFIED from #6f42c1 */
 	color: var(--light);
 }
+
+/* --- THIS IS THE NEW STYLE --- */
+.status-badge.status-out-for-delivery {
+	background-color: #13c2c2; /* A new teal color */
+	color: var(--light);
+}
+/* --- END NEW STYLE --- */
 /* == END ADDED == */
 
 .status-badge.status-no_stock {

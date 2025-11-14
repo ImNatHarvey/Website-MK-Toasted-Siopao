@@ -55,6 +55,9 @@ public class AdminOrderController {
 		model.addAttribute("pendingVerificationOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
 		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING, 0L));
 		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PROCESSING, 0L));
+		// --- NEW ---
+		model.addAttribute("outForDeliveryOrders", orderStatusCounts.getOrDefault(Order.STATUS_OUT_FOR_DELIVERY, 0L));
+		// --- END NEW ---
 		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault(Order.STATUS_DELIVERED, 0L));
 		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
 		model.addAttribute("rejectedOrders", orderStatusCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
@@ -73,7 +76,7 @@ public class AdminOrderController {
 		return "admin/orders"; 
 	}
 
-	// --- ADDED ---
+	// --- MODIFIED ---
 	@PostMapping("/update-status/{id}")
 	@PreAuthorize("hasAuthority('EDIT_ORDERS')")
 	public String updateOrderStatus(@PathVariable("id") Long orderId,
@@ -92,6 +95,14 @@ public class AdminOrderController {
 				Order order = orderService.rejectOrder(orderId);
 				activityLogService.logAdminAction(adminUsername, "REJECT_ORDER", "Rejected Order #ORD-" + orderId + ". Stock reversed.");
 				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " rejected. Stock has been reversed.");
+			} else if ("ship".equals(action)) {
+				Order order = orderService.shipOrder(orderId);
+				activityLogService.logAdminAction(adminUsername, "SHIP_ORDER", "Shipped Order #ORD-" + orderId + ". Status set to " + order.getStatus());
+				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " is now Out for Delivery.");
+			} else if ("complete".equals(action)) {
+				Order order = orderService.completeCodOrder(orderId);
+				activityLogService.logAdminAction(adminUsername, "COMPLETE_ORDER", "Completed (COD) Order #ORD-" + orderId + ". Status set to " + order.getStatus());
+				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " has been completed and paid.");
 			} else {
 				throw new IllegalArgumentException("Invalid action.");
 			}
@@ -105,5 +116,5 @@ public class AdminOrderController {
 
 		return "redirect:/admin/orders";
 	}
-	// --- END ADDED ---
+	// --- END MODIFIED ---
 }

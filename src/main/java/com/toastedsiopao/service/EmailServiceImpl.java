@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -62,5 +63,41 @@ public class EmailServiceImpl implements EmailService {
 
 		mailSender.send(message);
 		log.info("Password reset email sent successfully to {}", user.getEmail());
+	}
+
+	@Override
+	@Async
+	public void sendOrderStatusUpdateEmail(Order order, String subject, String messageBody) throws MessagingException {
+		String toEmail = order.getShippingEmail();
+		if (toEmail == null) {
+			log.warn("Cannot send order status email: Order #{} has no email address.", order.getId());
+			return;
+		}
+
+		log.info("Attempting to send order status update email to {} for Order #{}", toEmail, order.getId());
+
+		// 1. Create Thymeleaf context
+		Context context = new Context();
+		context.setVariable("name", order.getShippingFirstName());
+		context.setVariable("orderId", order.getId());
+		context.setVariable("subject", subject);
+		context.setVariable("messageBody", messageBody);
+		context.setVariable("totalAmount", order.getTotalAmount());
+		context.setVariable("status", order.getStatus().replace("_", " "));
+
+		// 2. Process the HTML template
+		String htmlBody = templateEngine.process("mail/order-status-update", context);
+
+		// 3. Create and send the email
+		MimeMessage message = mailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+		helper.setFrom(fromEmail);
+		helper.setTo(toEmail);
+		helper.setSubject(subject + " (Order #ORD-" + order.getId() + ")");
+		helper.setText(htmlBody, true); // true = HTML email
+
+		mailSender.send(message);
+		log.info("Order status update email sent successfully to {}", toEmail);
 	}
 }

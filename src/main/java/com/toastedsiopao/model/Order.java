@@ -19,15 +19,18 @@ public class Order {
 	public static final String STATUS_PENDING = "PENDING";
 	public static final String STATUS_PENDING_VERIFICATION = "PENDING_VERIFICATION";
 	public static final String STATUS_PROCESSING = "PROCESSING";
+	// --- NEW STATUS ---
+	public static final String STATUS_OUT_FOR_DELIVERY = "OUT_FOR_DELIVERY";
+	// --- END NEW STATUS ---
 	public static final String STATUS_DELIVERED = "DELIVERED";
 	public static final String STATUS_CANCELLED = "CANCELLED";
-	public static final String STATUS_REJECTED = "REJECTED"; // --- ADDED ---
+	public static final String STATUS_REJECTED = "REJECTED"; 
 
 	public static final String PAYMENT_PENDING = "PENDING";
 	public static final String PAYMENT_FOR_VERIFICATION = "FOR_VERIFICATION";
 	public static final String PAYMENT_PAID = "PAID";
-	public static final String PAYMENT_REJECTED = "REJECTED"; // --- ADDED ---
-	public static final String PAYMENT_CANCELLED = "CANCELLED"; // --- ADDED ---
+	public static final String PAYMENT_REJECTED = "REJECTED"; 
+	public static final String PAYMENT_CANCELLED = "CANCELLED"; 
 	// --- END ADDED ---
 
 	@Id
@@ -55,6 +58,11 @@ public class Order {
 
 	@Column(length = 20)
 	private String shippingPhone;
+	
+	// --- THIS IS THE FIX ---
+	@Column(length = 100)
+	private String shippingEmail;
+	// --- END FIX ---
 
 	@Column(length = 255)
 	private String shippingAddress;

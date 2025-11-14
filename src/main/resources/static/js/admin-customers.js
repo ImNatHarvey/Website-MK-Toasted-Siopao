@@ -24,8 +24,33 @@ document.addEventListener('DOMContentLoaded', function() {
 			const username = dataset.username || 'N/A';
 			const email = dataset.email || 'N/A';
 			const phone = dataset.phone || 'N/A';
-			const address1 = dataset.addressLine1 || '';
-			const address2 = dataset.addressLine2 || '';
+
+			// --- MODIFIED: Build address string from individual fields ---
+			const houseNo = dataset.houseNo && dataset.houseNo !== 'null' ? dataset.houseNo.trim() : '';
+			const blockNo = dataset.blockNo && dataset.blockNo !== 'null' ? dataset.blockNo.trim() : '';
+			const lotNo = dataset.lotNo && dataset.lotNo !== 'null' ? dataset.lotNo.trim() : '';
+			const street = dataset.street && dataset.street !== 'null' ? dataset.street.trim() : '';
+			const barangay = dataset.barangay && dataset.barangay !== 'null' ? dataset.barangay.trim() : '';
+			const municipality = dataset.municipality && dataset.municipality !== 'null' ? dataset.municipality.trim() : '';
+			const province = dataset.province && dataset.province !== 'null' ? dataset.province.trim() : '';
+
+			let unitParts = [];
+			if (houseNo) unitParts.push(`House No. ${houseNo}`);
+			if (blockNo) unitParts.push(`Blk. No. ${blockNo}`);
+			if (lotNo) unitParts.push(`Lot No. ${lotNo}`);
+
+			let addressParts = [];
+			const unitDetails = unitParts.join(', ');
+			if (unitDetails) addressParts.push(unitDetails);
+
+			if (street) addressParts.push(street);
+			if (barangay) addressParts.push(barangay);
+			if (municipality) addressParts.push(municipality);
+			if (province) addressParts.push(province);
+
+			const fullAddress = addressParts.join(', ');
+			// --- END MODIFIED ---
+
 			const status = dataset.status || 'N/A';
 			const createdAt = dataset.createdAt || 'N/A';
 			const lastActivity = dataset.lastActivity || 'N/A';
@@ -35,9 +60,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewCustomerModal.querySelector('#viewCustomerUsername').textContent = username;
 			viewCustomerModal.querySelector('#viewCustomerEmail').textContent = email;
 			viewCustomerModal.querySelector('#viewCustomerPhone').textContent = phone;
-			viewCustomerModal.querySelector('#viewCustomerAddress1').textContent = address1.trim();
-			const address2Trimmed = address2.replace(/,\s*,/g, ',').replace(/^,\s*|,\s*$/g, '').trim();
-			viewCustomerModal.querySelector('#viewCustomerAddress2').textContent = address2Trimmed.length > 0 ? address2Trimmed : 'No address details provided.';
+
+			// --- MODIFIED: Set the new single address span ---
+			viewCustomerModal.querySelector('#viewCustomerAddress').textContent = fullAddress.length > 0 ? fullAddress : 'No address details provided.';
+			// --- END MODIFIED ---
 
 			const statusBadge = viewCustomerModal.querySelector('#viewCustomerStatusBadge');
 			statusBadge.textContent = status;

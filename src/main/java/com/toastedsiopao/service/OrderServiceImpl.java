@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
+import java.util.ArrayList; // ADDED
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,15 +139,39 @@ public class OrderServiceImpl implements OrderService {
 		newOrder.setShippingEmail(orderDto.getEmail());
 		// --- END FIX ---
 		
-		String fullAddress = String.format("%s %s %s, %s, %s, %s, %s",
-				Optional.ofNullable(orderDto.getHouseNo()).orElse(""),
-				Optional.ofNullable(orderDto.getLotNo()).orElse(""),
-				Optional.ofNullable(orderDto.getBlockNo()).orElse(""),
-				orderDto.getStreet(),
-				orderDto.getBarangay(),
-				orderDto.getMunicipality(),
-				orderDto.getProvince())
-				.replaceAll("\\s+", " ").trim();
+		// --- MODIFIED: Build address string with labels ---
+		List<String> unitParts = new ArrayList<>();
+		if (StringUtils.hasText(orderDto.getHouseNo())) {
+			unitParts.add("House No. " + orderDto.getHouseNo().trim());
+		}
+		if (StringUtils.hasText(orderDto.getBlockNo())) {
+			unitParts.add("Blk. No. " + orderDto.getBlockNo().trim());
+		}
+		if (StringUtils.hasText(orderDto.getLotNo())) {
+			unitParts.add("Lot No. " + orderDto.getLotNo().trim());
+		}
+		String unitDetails = String.join(", ", unitParts);
+
+		List<String> addressParts = new ArrayList<>();
+		if (!unitDetails.isEmpty()) {
+			addressParts.add(unitDetails);
+		}
+		if (StringUtils.hasText(orderDto.getStreet())) {
+			addressParts.add(orderDto.getStreet().trim());
+		}
+		if (StringUtils.hasText(orderDto.getBarangay())) {
+			addressParts.add(orderDto.getBarangay().trim());
+		}
+		if (StringUtils.hasText(orderDto.getMunicipality())) {
+			addressParts.add(orderDto.getMunicipality().trim());
+		}
+		if (StringUtils.hasText(orderDto.getProvince())) {
+			addressParts.add(orderDto.getProvince().trim());
+		}
+
+		String fullAddress = String.join(", ", addressParts);
+		// --- END MODIFIED ---
+		
 		newOrder.setShippingAddress(fullAddress);
 		
 		Order savedOrder = orderRepository.save(newOrder);

@@ -100,8 +100,15 @@
 								th:data-username="${customer.username}"
 								th:data-email="${customer.email != null ? customer.email : 'N/A'}"
 								th:data-phone="${customer.phone != null ? customer.phone : 'N/A'}"
-								th:data-address-line1="${(customer.houseNo != null ? customer.houseNo : '') + ' ' + (customer.street != null ? customer.street : '')}"
-								th:data-address-line2="${(customer.barangay != null ? customer.barangay : '') + ', ' + (customer.municipality != null ? customer.municipality : '') + ', ' + (customer.province != null ? customer.province : '')}"
+								
+								th:data-house-no="${customer.houseNo}"
+								th:data-lot-no="${customer.lotNo}"
+								th:data-block-no="${customer.blockNo}"
+								th:data-street="${customer.street}"
+								th:data-barangay="${customer.barangay}"
+								th:data-municipality="${customer.municipality}"
+								th:data-province="${customer.province}"
+								
 								th:data-created-at="${customer.createdAt != null ? #temporals.format(customer.createdAt, 'MMM dd, yyyy HH:mm') : 'N/A'}"
 								th:data-last-activity="${customer.lastActivity != null ? #temporals.format(customer.lastActivity, 'MMM dd, yyyy HH:mm') : 'N/A'}"
 								th:data-status="${customer.status}">

@@ -115,8 +115,7 @@
 							<strong>Address:</strong>
 						</p>
 						<address class="mb-0 ms-3">
-							<span id="viewCustomerAddress1" class="d-block"></span><span
-								id="viewCustomerAddress2" class="d-block"></span>
+							<span id="viewCustomerAddress" class="d-block"></span>
 						</address>
 					</div>
 					<div class="modal-footer">
@@ -209,7 +208,7 @@
 								</div>
 								<div class="col">
 									<label for="lotNo" class="form-label">Lot No.</label> <input
-										type.text class="form-control" placeholder="Lot No."
+										type="text" class="form-control" placeholder="Lot No."
 										th:field="*{lotNo}" th:errorclass="is-invalid">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}">Error</div>
@@ -235,7 +234,7 @@
 									<label for="barangay" class="form-label">Barangay</label> <input
 										type="text" class="form-control" placeholder="Barangay"
 										th:field="*{barangay}" th:errorclass="is-invalid">
-									<div classs="invalid-feedback"
+									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('barangay')}"
 										th:errors="*{barangay}">Error</div>
 								</div>

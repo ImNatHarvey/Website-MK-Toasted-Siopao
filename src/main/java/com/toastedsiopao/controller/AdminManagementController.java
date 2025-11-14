@@ -348,9 +348,16 @@ public class AdminManagementController {
 
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // --- UPDATED ---
-	public String deleteAdmin(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
+	public String deleteAdmin(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- REMOVED: try-catch block ---
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/admins";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) {

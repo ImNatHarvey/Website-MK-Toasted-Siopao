@@ -53,4 +53,7 @@ public interface AdminService {
 
 	// --- ADDED ---
 	void updateAdminPassword(String currentUsername, AdminPasswordUpdateDto passwordDto);
+
+	boolean validateOwnerPassword(String password);
+	// --- END ADDED ---
 }

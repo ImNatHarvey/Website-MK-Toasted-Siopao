@@ -423,5 +423,27 @@ public class AdminServiceImpl implements AdminService {
 		userRepository.save(userToUpdate);
 		log.info("User password updated for: {}", currentUsername);
 	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public boolean validateOwnerPassword(String password) {
+		if (!StringUtils.hasText(password)) {
+			return false;
+		}
+		
+		User owner = userRepository.findByUsername(OWNER_USERNAME) 
+				.orElse(null);
+		
+		if (owner == null) {
+			 log.error("CRITICAL: The Owner account '{}' could not be found for password validation.", OWNER_USERNAME);
+			 return false;
+		}
+
+		if (passwordEncoder.matches(password, owner.getPassword())) {
+			return true;
+		}
+		
+		return false;
+	}
 	// --- END ADDED ---
 }

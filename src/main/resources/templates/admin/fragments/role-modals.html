@@ -124,7 +124,7 @@
 									<form
 										th:action="@{/admin/admins/roles/delete/{id}(id=${role.id})}"
 										method="post"
-										th:data-confirm-message="'Are you sure you want to delete the role \'' + ${role.name.replace('ROLE_', '')} + '\'? This cannot be undone.'">
+										th:data-secure-delete-message="'Are you sure you want to delete the role \'' + ${role.name.replace('ROLE_', '')} + '\'? This requires the Owner password.'">
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${role.name == 'ROLE_OWNER'}"
 											th:title="${role.name == 'ROLE_OWNER' ? 'Owner role cannot be deleted.' : 'Delete Role'}">

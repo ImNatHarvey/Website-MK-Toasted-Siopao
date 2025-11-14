@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -126,9 +127,16 @@ public class AdminRoleController {
 	}
 
 	@PostMapping("/delete/{id}")
-	public String deleteRole(@PathVariable("id") Long id, RedirectAttributes redirectAttributes, Principal principal) {
+	public String deleteRole(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- REMOVED: try-catch block ---
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/admins";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<Role> roleOpt = adminService.findRoleById(id);
 		if (roleOpt.isEmpty()) {

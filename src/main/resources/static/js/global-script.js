@@ -128,9 +128,12 @@ document.addEventListener('DOMContentLoaded', function() {
 		console.log("No 'showModal' URL parameter found.");
 	}
 
-	// == CONFIRMATION MODAL LOGIC (SHARED) ==
+	// ========================================================================
+	// == MODIFIED: CONFIRMATION MODAL LOGIC (NOW HANDLES 3 MODALS) ==
+	// ========================================================================
 	let formToSubmit = null;
 
+	// --- 1. Simple Delete Modal ---
 	const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
 	if (confirmDeleteModalEl) {
 		console.log("Delete confirmation modal found. Attaching listeners.");
@@ -148,22 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		confirmDeleteModalEl.addEventListener('hidden.bs.modal', function() {
 			formToSubmit = null;
 		});
-
-		document.addEventListener('submit', function(event) {
-			const form = event.target;
-			if (form.dataset.confirmMessage) {
-				event.preventDefault();
-				formToSubmit = form;
-				const message = form.dataset.confirmMessage || 'Are you sure?';
-				confirmDeleteMessage.textContent = message;
-				confirmDeleteModal.show();
-			}
-		});
-
 	} else {
-		console.log("Delete confirmation modal not found.");
+		console.log("Standard delete confirmation modal not found.");
 	}
 
+	// --- 2. Simple Save Modal ---
 	const confirmSaveModalEl = document.getElementById('confirmSaveModal');
 	if (confirmSaveModalEl) {
 		console.log("Save confirmation modal found. Attaching listeners.");
@@ -181,21 +173,100 @@ document.addEventListener('DOMContentLoaded', function() {
 		confirmSaveModalEl.addEventListener('hidden.bs.modal', function() {
 			formToSubmit = null;
 		});
-
-		document.addEventListener('submit', function(event) {
-			const form = event.target;
-
-			if (form.dataset.confirmSaveMessage) {
-				event.preventDefault();
-				formToSubmit = form;
-				const message = form.dataset.confirmSaveMessage || 'Are you sure?';
-				confirmSaveMessage.textContent = message;
-				confirmSaveModal.show();
-			}
-		});
-
 	} else {
 		console.log("Save confirmation modal not found.");
 	}
+
+	// --- 3. NEW: Secure Password Delete Modal ---
+	const passwordConfirmDeleteModalEl = document.getElementById('passwordConfirmDeleteModal');
+	if (passwordConfirmDeleteModalEl) {
+		console.log("Secure password delete modal found. Attaching listeners.");
+		const passwordConfirmDeleteModal = new bootstrap.Modal(passwordConfirmDeleteModalEl);
+		const passwordConfirmDeleteButton = document.getElementById('passwordConfirmDeleteButton');
+		const passwordConfirmDeleteMessage = document.getElementById('passwordConfirmDeleteMessage');
+		const passwordInput = document.getElementById('secureDeletePassword');
+		const passwordFeedback = document.getElementById('secureDeletePasswordFeedback');
+
+		passwordConfirmDeleteButton.addEventListener('click', function() {
+			const password = passwordInput.value;
+			if (!password) {
+				passwordInput.classList.add('is-invalid');
+				passwordFeedback.style.display = 'block';
+				return;
+			}
+
+			if (formToSubmit) {
+				// Create and append the hidden password input
+				const hiddenPasswordInput = document.createElement('input');
+				hiddenPasswordInput.type = 'hidden';
+				hiddenPasswordInput.name = 'password';
+				hiddenPasswordInput.value = password;
+				formToSubmit.appendChild(hiddenPasswordInput);
+
+				// Disable button to prevent double-submit
+				passwordConfirmDeleteButton.disabled = true;
+				passwordConfirmDeleteButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Deleting...';
+
+				// Submit the form
+				formToSubmit.submit();
+				formToSubmit = null;
+			}
+		});
+
+		passwordConfirmDeleteModalEl.addEventListener('hidden.bs.modal', function() {
+			formToSubmit = null;
+			// Reset modal state
+			passwordInput.value = '';
+			passwordInput.classList.remove('is-invalid');
+			passwordFeedback.style.display = 'none';
+			passwordConfirmDeleteButton.disabled = false;
+			passwordConfirmDeleteButton.innerHTML = '<i class="fa-solid fa-trash me-1"></i> Confirm Delete';
+		});
+	} else {
+		console.log("Secure password delete modal not found.");
+	}
+
+	// --- 4. Main Submit Interceptor ---
+	document.addEventListener('submit', function(event) {
+		const form = event.target;
+		
+		const secureDeleteMessage = form.dataset.secureDeleteMessage;
+		const simpleDeleteMessage = form.dataset.confirmMessage;
+		const simpleSaveMessage = form.dataset.confirmSaveMessage;
+
+		if (secureDeleteMessage && passwordConfirmDeleteModalEl) {
+			// --- Handle Secure Delete ---
+			event.preventDefault();
+			formToSubmit = form;
+			// ===============================================
+			// == THIS IS THE FIX ==
+			// ===============================================
+			const modal = bootstrap.Modal.getOrCreateInstance(passwordConfirmDeleteModalEl);
+			// ===============================================
+			// == END FIX ==
+			// ===============================================
+			const msgEl = document.getElementById('passwordConfirmDeleteMessage');
+			if(msgEl) msgEl.textContent = secureDeleteMessage;
+			modal.show();
+			
+		} else if (simpleDeleteMessage && confirmDeleteModalEl) {
+			// --- Handle Simple Delete ---
+			event.preventDefault();
+			formToSubmit = form;
+			const modal = bootstrap.Modal.getInstance(confirmDeleteModalEl);
+			const msgEl = document.getElementById('confirmDeleteMessage');
+			if(msgEl) msgEl.textContent = simpleDeleteMessage;
+			modal.show();
+			
+		} else if (simpleSaveMessage && confirmSaveModalEl) {
+			// --- Handle Simple Save ---
+			event.preventDefault();
+			formToSubmit = form;
+			const modal = bootstrap.Modal.getInstance(confirmSaveModalEl);
+			const msgEl = document.getElementById('confirmSaveMessage');
+			if(msgEl) msgEl.textContent = simpleSaveMessage;
+			modal.show();
+		}
+	});
 
 });

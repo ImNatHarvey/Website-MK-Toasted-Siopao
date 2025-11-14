@@ -214,10 +214,16 @@ public class AdminCustomerController {
 
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')")
-	public String deleteCustomer(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
-			Principal principal) {
+	public String deleteCustomer(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- REMOVED: try-catch block ---
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/customers";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<User> userOpt = customerService.findUserById(id);
 		if (userOpt.isEmpty() || userOpt.get().getRole() == null

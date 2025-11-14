@@ -158,7 +158,7 @@
 									<form sec:authorize="hasAuthority('DELETE_ADMINS')"
 										th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
-										th:data-confirm-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'?'">
+										th:data-secure-delete-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'? This requires the Owner password.'">
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${admin.username == currentUsername || (admin.role != null and admin.role.name == 'ROLE_OWNER')}"
 											th:title="${admin.username == currentUsername ? 'You cannot delete your own account.' : (admin.role != null and admin.role.name == 'ROLE_OWNER' ? 'The Owner account cannot be deleted.' : 'Delete Admin')}">Delete</button>

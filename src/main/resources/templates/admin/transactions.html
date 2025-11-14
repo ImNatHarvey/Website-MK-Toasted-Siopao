@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'transactions')}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'transactions')}">
 <head>
 <title>Transaction History - MK Admin Portal</title>
 </head>
@@ -99,7 +99,33 @@
 							</tr>
 						</thead>
 						<tbody>
-							<tr th:each="order : ${transactions}">
+							<tr th:each="order : ${transactions}"
+								th:data-order-id="${order.id}"
+								th:data-order-date="${#temporals.format(order.orderDate, 'MMM dd, yyyy • h:mm a')}"
+								th:data-customer-name="${order.shippingFirstName + ' ' + order.shippingLastName}"
+								th:data-customer-phone="${order.shippingPhone}"
+								th:data-customer-address="${order.shippingAddress}"
+								th:data-order-total="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}"
+								th:data-payment-method="${#strings.toUpperCase(order.paymentMethod)}"
+								th:data-payment-status="${#strings.replace(order.paymentStatus, '_', ' ')}"
+								th:data-order-status="${#strings.replace(order.status, '_', ' ')}"
+								th:data-status-class="${
+									order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 
+									(order.status == 'OUT_FOR_DELIVERY' ? 'status-out-for-delivery' : 
+									'status-' + #strings.toLowerCase(order.status))}"
+								th:data-notes="${order.notes}"
+								th:data-receipt-url="${order.paymentReceiptImageUrl}"
+								th:data-transaction-id="${order.transactionId}"
+								th:data-items-json="'[' + ${#strings.listJoin(
+									order.items.![
+										'{' +
+										'&quot;name&quot;:&quot;' + #strings.escapeJavaScript(product.name) + '&quot;,' +
+										'&quot;quantity&quot;:' + quantity + ',' +
+										'&quot;price&quot;:' + pricePerUnit +
+										'}'
+									],
+									','
+								)} + ']'">
 								<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
 								<td
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
@@ -110,12 +136,13 @@
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">
 									₱0.00</td>
 								<td
-									th:text="${order.paymentMethod != null ? order.paymentMethod : 'N/A'}">GCash</td>
-								<td><span class="status-badge" th:text="${order.status}"
+									th:text="${order.paymentMethod != null ? #strings.toUpperCase(order.paymentMethod) : 'N/A'}">GCash</td>
+								<td><span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
 									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
 										Status </span></td>
 								<td>
-									<button class="btn btn-sm btn-action-view">View</button>
+									<button class="btn btn-sm btn-action-view view-order-btn"
+										data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(transactions)}">
@@ -161,6 +188,14 @@
 				</div>
 			</div>
 		</div>
+		
+		<div th:replace="~{admin/fragments/order-modal :: order-view-modal}"></div>
+		
 	</div>
+	
+	<th:block th:fragment="script">
+		<script th:src="@{/js/admin-orders.js}"></script>
+	</th:block>
+	
 </body>
 </html>

@@ -253,7 +253,7 @@
 											th:if="${order.status == 'OUT_FOR_DELIVERY'}"
 											sec:authorize="hasAuthority('EDIT_ORDERS')">
 											<form
-												th:if="${order.paymentMethod == 'cod'}"
+												th:if="${#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
 												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
 												method="post" class="d-inline"
 												th:data-confirm-save-message="'Confirm payment received for COD Order ' + ${order.id} + '?'">
@@ -261,7 +261,7 @@
 												<button type="submit" class="btn btn-sm btn-action-success">Complete (COD)</button>
 											</form>
 											<form
-												th:if="${order.paymentMethod != 'cod'}"
+												th:if="${!#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
 												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
 												method="post" class="d-inline"
 												th:data-confirm-save-message="'Confirm Order ' + ${order.id} + ' has been delivered?'">

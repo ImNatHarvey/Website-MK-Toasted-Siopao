@@ -55,7 +55,7 @@ public class OrderSubmitDto {
 
 	// Order Details
 	@NotBlank(message = "Payment method is required.")
-	private String paymentMethod; // "gcash" or "cod"
+	private String paymentMethod; // "gcash" or "cod" (values from form)
 
 	@Size(max = 500, message = "Notes cannot exceed 500 characters")
 	private String notes;

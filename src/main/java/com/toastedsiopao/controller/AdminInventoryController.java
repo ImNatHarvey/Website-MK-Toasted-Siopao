@@ -7,6 +7,7 @@ import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.service.ActivityLogService;
+import com.toastedsiopao.service.AdminService; // --- ADDED ---
 import com.toastedsiopao.service.InventoryCategoryService;
 import com.toastedsiopao.service.InventoryItemService;
 import com.toastedsiopao.service.UnitOfMeasureService;
@@ -47,6 +48,9 @@ public class AdminInventoryController {
 	private UnitOfMeasureService unitOfMeasureService;
 	@Autowired
 	private ActivityLogService activityLogService;
+	
+	@Autowired // --- ADDED ---
+	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
@@ -200,10 +204,16 @@ public class AdminInventoryController {
 
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
-	public String deleteInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
-			Principal principal) {
-
-		// --- REMOVED: try-catch block ---
+	public String deleteInventoryItem(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			RedirectAttributes redirectAttributes, Principal principal) {
+		
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/inventory";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
 		if (itemOpt.isEmpty()) {

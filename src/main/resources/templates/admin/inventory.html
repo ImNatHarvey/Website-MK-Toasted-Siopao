@@ -176,14 +176,14 @@
 									<form sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
-										th:data-confirm-message="'Are you sure you want to delete the item \'' + ${item.name} + '\'?'">
+										th:data-secure-delete-message="'Are you sure you want to delete the item \'' + ${item.name} + '\'? This requires the Owner password.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
-								</td>
+									</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(inventoryItems)}">
 								<td colspan="8" class="text-center text-muted"
-									th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No inventory items added yet.'}">
+									th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No items found.'}">
 									No inventory items added yet.</td>
 							</tr>
 						</tbody>

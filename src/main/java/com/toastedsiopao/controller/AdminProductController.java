@@ -9,6 +9,7 @@ import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.service.ActivityLogService;
+import com.toastedsiopao.service.AdminService; // --- ADDED ---
 import com.toastedsiopao.service.CategoryService;
 import com.toastedsiopao.service.FileStorageService;
 import com.toastedsiopao.service.InventoryItemService;
@@ -59,6 +60,9 @@ public class AdminProductController {
 
 	@Autowired
 	private FileStorageService fileStorageService;
+	
+	@Autowired // --- ADDED ---
+	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
@@ -313,10 +317,16 @@ public class AdminProductController {
 
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
-	public String deleteProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
-			Principal principal) {
-
-		// --- REMOVED: try-catch block ---
+	public String deleteProduct(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			RedirectAttributes redirectAttributes, Principal principal) {
+		
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/products";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<Product> productOpt = productService.findById(id);
 		if (productOpt.isEmpty()) {

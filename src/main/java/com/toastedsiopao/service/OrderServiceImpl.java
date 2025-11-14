@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList; // ADDED
+import java.util.ArrayList; 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,9 +58,12 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private Clock clock; 
 	
-	// --- ADDED ---
 	@Autowired
 	private EmailService emailService;
+	
+	// --- ADDED ---
+	@Autowired
+	private NotificationService notificationService;
 	// --- END ADDED ---
 	
 	private static class CartItemDto {
@@ -126,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			newOrder.setStatus(Order.STATUS_PENDING_VERIFICATION);
 			newOrder.setPaymentStatus(Order.PAYMENT_FOR_VERIFICATION);
-			newOrder.setTransactionId(orderDto.getTransactionId()); // --- ADDED THIS LINE ---
+			newOrder.setTransactionId(orderDto.getTransactionId()); 
 		}
 		
 		newOrder.setPaymentReceiptImageUrl(receiptImagePath);
@@ -135,11 +138,8 @@ public class OrderServiceImpl implements OrderService {
 		newOrder.setShippingFirstName(orderDto.getFirstName());
 		newOrder.setShippingLastName(orderDto.getLastName());
 		newOrder.setShippingPhone(orderDto.getPhone());
-		// --- THIS IS THE FIX ---
 		newOrder.setShippingEmail(orderDto.getEmail());
-		// --- END FIX ---
 		
-		// --- MODIFIED: Build address string with labels ---
 		List<String> unitParts = new ArrayList<>();
 		if (StringUtils.hasText(orderDto.getHouseNo())) {
 			unitParts.add("House No. " + orderDto.getHouseNo().trim());
@@ -170,7 +170,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		String fullAddress = String.join(", ", addressParts);
-		// --- END MODIFIED ---
 		
 		newOrder.setShippingAddress(fullAddress);
 		
@@ -189,6 +188,13 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		log.info("Successfully created Order #{} for user {}", savedOrder.getId(), user.getUsername());
+		
+		// --- ADDED: Admin Notification ---
+		String notifMessage = "New " + savedOrder.getPaymentMethod().toUpperCase() + " order (#" + savedOrder.getId() + ") placed by " + user.getUsername() + ".";
+		String notifLink = "/admin/orders?status=" + savedOrder.getStatus();
+		notificationService.createAdminNotification(notifMessage, notifLink);
+		// --- END ADDED ---
+		
 		return savedOrder;
 	}
 
@@ -272,7 +278,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 	}
 
-	// --- NEW PRIVATE HELPER METHOD ---
 	private void reverseStockForOrder(Order order, String reason) {
 		log.info("Reversing stock for order #{}", order.getId());
 		for (OrderItem item : order.getItems()) {
@@ -281,16 +286,13 @@ public class OrderServiceImpl implements OrderService {
 				log.info("Restored {} unit(s) of {} (ID: {})", 
 						item.getQuantity(), item.getProduct().getName(), item.getProduct().getId());
 			} catch (Exception e) {
-				// Log critical error. This shouldn't fail, but if it does, we must know.
 				log.error("CRITICAL: Failed to reverse stock for product ID {} during order cancellation/rejection. " +
 						  "Order ID: {}, Product: {}, Qty: {}. Error: {}",
 						  item.getProduct().getId(), order.getId(), item.getProduct().getName(), item.getQuantity(), e.getMessage(), e);
-				// We don't re-throw, as the order status change is the primary goal.
 			}
 		}
 	}
 	
-	// --- NEW IMPLEMENTATIONS ---
 	@Override
 	public Order cancelOrder(Long orderId, User customer) {
 		Order order = orderRepository.findById(orderId)
@@ -311,6 +313,12 @@ public class OrderServiceImpl implements OrderService {
 		
 		reverseStockForOrder(order, "Order #" + order.getId() + " Cancelled by Customer");
 		
+		// --- ADDED: Admin Notification ---
+		String notifMessage = "Customer " + customer.getUsername() + " cancelled order #" + order.getId() + ".";
+		String notifLink = "/admin/orders?status=CANCELLED";
+		notificationService.createAdminNotification(notifMessage, notifLink);
+		// --- END ADDED ---
+		
 		return orderRepository.save(order);
 	}
 
@@ -326,7 +334,6 @@ public class OrderServiceImpl implements OrderService {
 
 		if (currentStatus.equals(Order.STATUS_PENDING)) { // COD
 			order.setStatus(Order.STATUS_PROCESSING);
-			// Payment status remains PENDING until paid on delivery
 		} else { // PENDING_VERIFICATION (GCash)
 			order.setStatus(Order.STATUS_PROCESSING);
 			order.setPaymentStatus(Order.PAYMENT_PAID);
@@ -335,15 +342,20 @@ public class OrderServiceImpl implements OrderService {
 		log.info("Order #{} accepted. Status set to PROCESSING.", orderId);
 		Order savedOrder = orderRepository.save(order);
 		
+		String subject = "Your Order has been Accepted!";
+		String message = "We're happy to let you know that your order (#" + savedOrder.getId() + ") has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
+		
 		// --- Send Email ---
 		try {
-			String subject = "Your Order has been Accepted!";
-			String message = "We're happy to let you know that your order has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Accepted' email for Order #{}", savedOrder.getId(), e);
 		}
 		// --- End Email ---
+		
+		// --- ADDED: User Notification ---
+		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
+		// --- END ADDED ---
 
 		return savedOrder;
 	}
@@ -364,7 +376,14 @@ public class OrderServiceImpl implements OrderService {
 		reverseStockForOrder(order, "Order #" + order.getId() + " Rejected by Admin");
 
 		log.info("Order #{} rejected. Status set to REJECTED.", orderId);
-		return orderRepository.save(order);
+		Order savedOrder = orderRepository.save(order);
+		
+		// --- ADDED: User Notification ---
+		String message = "Unfortunately, your order (#" + savedOrder.getId() + ") has been rejected. Stock has been reversed. If this was a GCash order, please contact us for a refund.";
+		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
+		// --- END ADDED ---
+		
+		return savedOrder;
 	}
 	
 	@Override
@@ -377,21 +396,25 @@ public class OrderServiceImpl implements OrderService {
 		}
 		
 		order.setStatus(Order.STATUS_OUT_FOR_DELIVERY);
-		// Payment status (especially for COD) remains unchanged until completion.
 		
 		log.info("Order #{} status set to OUT_FOR_DELIVERY.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
+		String subject = "Your Order is Out for Delivery!";
+		String message = "Get ready! Your order (#" + savedOrder.getId() + ") is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of " +
+						 "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
+
 		// --- Send Email ---
 		try {
-			String subject = "Your Order is Out for Delivery!";
-			String message = "Get ready! Your order is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of " +
-							 "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Out for Delivery' email for Order #{}", savedOrder.getId(), e);
 		}
 		// --- End Email ---
+		
+		// --- ADDED: User Notification ---
+		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
+		// --- END ADDED ---
 		
 		return savedOrder;
 	}
@@ -415,20 +438,24 @@ public class OrderServiceImpl implements OrderService {
 		log.info("COD Order #{} status set to DELIVERED and PAID.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
+		String subject = "Your Order is Complete!";
+		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
+
 		// --- Send Email ---
 		try {
-			String subject = "Your Order is Complete!";
-			String message = "Your order has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Completed' email for Order #{}", savedOrder.getId(), e);
 		}
 		// --- End Email ---
 		
+		// --- ADDED: User Notification ---
+		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
+		// --- END ADDED ---
+		
 		return savedOrder;
 	}
 	
-	// --- THIS IS THE NEWLY IMPLEMENTED METHOD ---
 	@Override
 	public Order completeDeliveredOrder(Long orderId) {
 		Order order = orderRepository.findById(orderId)
@@ -444,28 +471,30 @@ public class OrderServiceImpl implements OrderService {
 		
 		if (!order.getPaymentStatus().equals(Order.PAYMENT_PAID)) {
 			log.warn("Admin is completing an order (ID: {}) that is not marked as PAID. Current payment status: {}", orderId, order.getPaymentStatus());
-			// We allow this, but it's unusual. The "acceptOrder" step should have set GCash to PAID.
 		}
 		
 		order.setStatus(Order.STATUS_DELIVERED);
-		// Payment status is already PAID, so no change needed.
 		
 		log.info("Pre-Paid Order #{} status set to DELIVERED.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
+		String subject = "Your Order has been Delivered!";
+		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
+
 		// --- Send Email ---
 		try {
-			String subject = "Your Order has been Delivered!";
-			String message = "Your order has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Delivered' email for Order #{}", savedOrder.getId(), e);
 		}
 		// --- End Email ---
 		
+		// --- ADDED: User Notification ---
+		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
+		// --- END ADDED ---
+		
 		return savedOrder;
 	}
-	// --- END NEW IMPLEMENTATION ---
 	
 	@Override
 	@Transactional(readOnly = true)

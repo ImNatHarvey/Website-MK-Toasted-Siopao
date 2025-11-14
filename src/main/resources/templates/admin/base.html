@@ -21,18 +21,56 @@
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
 <link rel="stylesheet" th:href="@{/css/style-admin.css(v=1.9)}">
 </head>
-<body id="admin-body" class="sidebar-toggled">
+<body id="admin-body">
 	<nav class="admin-mobile-nav">
 		<button class="sidebar-toggle-btn" id="sidebarToggle">
 			<i class="fa-solid fa-bars"></i>
 		</button>
 		<a class="mobile-brand" th:href="@{/admin/dashboard}">MK Admin
 			Portal</a>
-		<form th:action="@{/logout}" method="post" class="d-inline ms-auto">
-			<button type="submit" class="btn btn-custom-outline btn-sm"
-				style="--bs-btn-color: var(--light); --bs-btn-border-color: var(--light);">
-				Log Out</button>
-		</form>
+			
+		<div class="d-flex align-items-center ms-auto">
+			<div class="dropdown">
+				<a class="nav-link position-relative" href="#" id="mobileAdminNotificationDropdown"
+					role="button" data-bs-toggle="dropdown" aria-expanded="false"
+					style="color: var(--light); font-size: 1.2rem;"> 
+					<i class="fa-solid fa-bell"></i>
+					<span th:if="${unreadAdminNotificationCount > 0}"
+						class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger admin-notification-badge"
+						style="font-size: 0.6rem; padding: 0.25em 0.5em;"
+						id="mobile-admin-notification-badge"
+						th:text="${unreadAdminNotificationCount > 9 ? '9+' : unreadAdminNotificationCount}">
+					</span>
+				</a>
+				<ul class="dropdown-menu dropdown-menu-end"
+					aria-labelledby="mobileAdminNotificationDropdown"
+					id="mobile-admin-notification-list">
+					<li>
+						<h6 class="dropdown-header">Admin Notifications</h6>
+					</li>
+					<li th:each="notif : ${adminNotifications}">
+						<a class="dropdown-item notification-item" th:href="@{${notif.link}}" th:data-notification-id="${notif.id}">
+							<span class="d-block small" th:text="${notif.message}">...</span>
+							<span class="d-block text-muted" style="font-size: 0.75rem;" 
+								th:text="${#temporals.format(notif.createdAt, 'MMM dd, h:mm a')}"></span>
+						</a>
+					</li>
+					<li th:if="${#lists.isEmpty(adminNotifications)}">
+						<span class="dropdown-item-text text-muted">No unread notifications</span>
+					</li>
+					<li><hr class="dropdown-divider"></li>
+					<li>
+						<a class="dropdown-item text-center small" th:href="@{/admin/orders}">View All Orders</a>
+					</li>
+				</ul>
+			</div>
+			
+			<form th:action="@{/logout}" method="post" class="d-inline ms-2">
+				<button type="submit" class="btn btn-custom-outline btn-sm"
+					style="--bs-btn-color: var(--light); --bs-btn-border-color: var(--light);">
+					Log Out</button>
+			</form>
+		</div>
 	</nav>
 
 	<div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -160,14 +198,37 @@
 						</div>
 					</li>
 
-					<li class="nav-item dropdown"><a class="nav-link" href="#"
+					<li class="nav-item dropdown"><a class="nav-link position-relative" href="#"
 						id="notificationDropdown" role="button" data-bs-toggle="dropdown"
-						aria-expanded="false"> <i class="fa-solid fa-bell"></i>
+						aria-expanded="false" style="font-size: 1.2rem;"> <i
+							class="fa-solid fa-bell"></i> <span
+							th:if="${unreadAdminNotificationCount > 0}"
+							class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger admin-notification-badge"
+							style="font-size: 0.6rem; padding: 0.25em 0.5em;"
+							id="desktop-admin-notification-badge"
+							th:text="${unreadAdminNotificationCount > 9 ? '9+' : unreadAdminNotificationCount}">
+						</span>
 					</a>
 						<ul class="dropdown-menu dropdown-menu-end"
-							aria-labelledby="notificationDropdown">
-							<li><a class="dropdown-item text-muted" href="#">No
-									notifications</a></li>
+							aria-labelledby="notificationDropdown"
+							id="desktop-admin-notification-list">
+							<li>
+								<h6 class="dropdown-header">Admin Notifications</h6>
+							</li>
+							<li th:each="notif : ${adminNotifications}"><a
+								class="dropdown-item notification-item"
+								th:href="@{${notif.link}}" th:data-notification-id="${notif.id}"> 
+								<span class="d-block small"
+									th:text="${notif.message}">...</span> <span
+									class="d-block text-muted" style="font-size: 0.75rem;"
+									th:text="${#temporals.format(notif.createdAt, 'MMM dd, h:mm a')}"></span>
+							</a></li>
+							<li th:if="${#lists.isEmpty(adminNotifications)}"><span
+								class="dropdown-item-text text-muted">No unread
+									notifications</span></li>
+							<li><hr class="dropdown-divider"></li>
+							<li><a class="dropdown-item text-center small"
+								th:href="@{/admin/orders}">View All Orders</a></li>
 						</ul></li>
 
 				</ul>
@@ -243,7 +304,6 @@
 	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/global-script.js}"></script>
 	<script th:src="@{/js/admin-global.js}"></script>
-
-	<div th:replace="${pageScript}"></div>
+	<script th:src="@{/js/notification-handler.js}"></script> <div th:replace="${pageScript}"></div>
 </body>
 </html>

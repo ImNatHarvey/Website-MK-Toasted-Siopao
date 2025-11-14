@@ -96,15 +96,73 @@
 						</ul>
 					</div>
 
-					<div class="dropdown ms-2">
-						<a class="nav-link" href="#" id="notificationDropdown"
+					<div class="dropdown ms-2" sec:authorize="hasRole('CUSTOMER')">
+						<a class="nav-link position-relative" href="#" id="notificationDropdown"
 							role="button" data-bs-toggle="dropdown" aria-expanded="false"
-							style="color: var(--light);"> <i class="fa-solid fa-bell"></i>
+							style="color: var(--light); font-size: 1.2rem;"> 
+							<i class="fa-solid fa-bell"></i>
+							<span th:if="${unreadUserNotificationCount > 0}"
+								class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger user-notification-badge"
+								style="font-size: 0.6rem; padding: 0.25em 0.5em;"
+								id="public-user-notification-badge"
+								th:text="${unreadUserNotificationCount > 9 ? '9+' : unreadUserNotificationCount}">
+							</span>
 						</a>
 						<ul class="dropdown-menu dropdown-menu-end"
-							aria-labelledby="notificationDropdown">
-							<li><a class="dropdown-item text-muted" href="#">No
-									notifications</a></li>
+							aria-labelledby="notificationDropdown"
+							id="public-user-notification-list">
+							<li>
+								<h6 class="dropdown-header">My Notifications</h6>
+							</li>
+							<li th:each="notif : ${userNotifications}">
+								<a class="dropdown-item notification-item" th:href="@{${notif.link}}" th:data-notification-id="${notif.id}">
+									<span class="d-block small" th:text="${notif.message}">...</span>
+									<span class="d-block text-muted" style="font-size: 0.75rem;" 
+										th:text="${#temporals.format(notif.createdAt, 'MMM dd, h:mm a')}"></span>
+								</a>
+							</li>
+							<li th:if="${#lists.isEmpty(userNotifications)}">
+								<span class="dropdown-item-text text-muted">No unread notifications</span>
+							</li>
+							<li><hr class="dropdown-divider"></li>
+							<li>
+								<a class="dropdown-item text-center small" th:href="@{/u/history}">View All History</a>
+							</li>
+						</ul>
+					</div>
+					
+					<div class="dropdown ms-2" sec:authorize="hasAuthority('VIEW_DASHBOARD')">
+						<a class="nav-link position-relative" href="#" id="notificationDropdownAdmin"
+							role="button" data-bs-toggle="dropdown" aria-expanded="false"
+							style="color: var(--light); font-size: 1.2rem;"> 
+							<i class="fa-solid fa-bell"></i>
+							<span th:if="${unreadAdminNotificationCount > 0}"
+								class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger admin-notification-badge"
+								style="font-size: 0.6rem; padding: 0.25em 0.5em;"
+								id="public-admin-notification-badge"
+								th:text="${unreadAdminNotificationCount > 9 ? '9+' : unreadAdminNotificationCount}">
+							</span>
+						</a>
+						<ul class="dropdown-menu dropdown-menu-end"
+							aria-labelledby="notificationDropdownAdmin"
+							id="public-admin-notification-list">
+							<li>
+								<h6 class="dropdown-header">Admin Notifications</h6>
+							</li>
+							<li th:each="notif : ${adminNotifications}">
+								<a class="dropdown-item notification-item" th:href="@{${notif.link}}" th:data-notification-id="${notif.id}">
+									<span class="d-block small" th:text="${notif.message}">...</span>
+									<span class="d-block text-muted" style="font-size: 0.75rem;" 
+										th:text="${#temporals.format(notif.createdAt, 'MMM dd, h:mm a')}"></span>
+								</a>
+							</li>
+							<li th:if="${#lists.isEmpty(adminNotifications)}">
+								<span class="dropdown-item-text text-muted">No unread notifications</span>
+							</li>
+							<li><hr class="dropdown-divider"></li>
+							<li>
+								<a class="dropdown-item text-center small" th:href="@{/admin/orders}">View All Orders</a>
+							</li>
 						</ul>
 					</div>
 
@@ -143,7 +201,6 @@
 	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/global-script.js}"></script>
 	<script th:src="@{/js/public-cart.js}"></script>
-
-	<th:block th:replace="${pageScript} ?: ~{}"></th:block>
+	<script th:src="@{/js/notification-handler.js}"></script> <th:block th:replace="${pageScript} ?: ~{}"></th:block>
 </body>
 </html>

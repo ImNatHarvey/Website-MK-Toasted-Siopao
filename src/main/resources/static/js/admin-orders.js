@@ -95,14 +95,15 @@ document.addEventListener('DOMContentLoaded', function() {
 			itemsList.innerHTML = ''; // Clear previous items
 			try {
 				let items = [];
-				// Handle the bracket-based JSON string
+				// --- ***** THIS IS THE FIX ***** ---
 				if (dataset.itemsJson && dataset.itemsJson.startsWith('[')) {
-					const jsonString = dataset.itemsJson.replace(/'/g, '"');
-					items = JSON.parse(jsonString);
+					// The data is now a valid JSON string, so we can parse it directly.
+					items = JSON.parse(dataset.itemsJson);
 				} else if (dataset.itemsJson) {
-					// Handle the case where it might be a single object (though unlikely now)
-					items = [JSON.parse(dataset.itemsJson.replace(/'/g, '"'))];
+					// Fallback just in case, but should not be used
+					items = [JSON.parse(dataset.itemsJson)];
 				}
+				// --- ***** END OF FIX ***** ---
 
 				if (items.length > 0) {
 					items.forEach(item => {

@@ -234,7 +234,9 @@ public class ProductServiceImpl implements ProductService {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
-		if (quantityChange > 0) {
+		// --- MODIFIED: This logic now only runs if it's "Production" ---
+		if (quantityChange > 0 && "Production".equals(reason)) {
+			log.info("Adjusting stock for production. Deducting ingredients for {} units of {}.", quantityChange, product.getName());
 			List<RecipeIngredient> ingredients = product.getIngredients();
 			if (ingredients == null || ingredients.isEmpty()) {
 				log.warn(
@@ -298,7 +300,11 @@ public class ProductServiceImpl implements ProductService {
 							item.getUnit().getAbbreviation(), item.getName());
 				}
 			}
+		} else if (quantityChange > 0) {
+			log.info("Stock increase for Product ID {} is not production (Reason: '{}'). Skipping ingredient deduction.", productId, reason);
 		}
+		// --- END MODIFICATION ---
+
 
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;

@@ -174,16 +174,16 @@
 									'status-' + #strings.toLowerCase(order.status))}"
 								th:data-notes="${order.notes}"
 								th:data-receipt-url="${order.paymentReceiptImageUrl}"
-								th:data-items-json="${#strings.listJoin(
+								th:data-items-json="'[' + ${#strings.listJoin(
 									order.items.![
 										'{' +
-										'&quot;name&quot;:&quot;' + product.name + '&quot;,' +
+										'&quot;name&quot;:&quot;' + #strings.escapeJavaScript(product.name) + '&quot;,' +
 										'&quot;quantity&quot;:' + quantity + ',' +
 										'&quot;price&quot;:' + pricePerUnit +
 										'}'
 									],
 									','
-								)}">
+								)} + ']'">
 								<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
 								<td
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>

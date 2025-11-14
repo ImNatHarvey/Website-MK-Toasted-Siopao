@@ -1,6 +1,7 @@
 package com.toastedsiopao.service;
 
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.model.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -13,6 +14,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
@@ -27,9 +29,27 @@ public class EmailServiceImpl implements EmailService {
 	@Autowired
 	@Qualifier("emailTemplateEngine") // Use the specific template engine we'll create
 	private TemplateEngine templateEngine;
+	
+	// --- ADDED ---
+	@Autowired
+	private SiteSettingsService siteSettingsService;
+	// --- END ADDED ---
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
+
+	// --- PRIVATE HELPER TO GET BASE URL ---
+	private String getBaseUrl() {
+		try {
+			// Try to get URL from the current web request
+			return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
+		} catch (Exception e) {
+			// Fallback for async tasks with no request context
+			log.warn("Could not determine base URL from web request for email template. Defaulting to http://localhost:8080");
+			return "http://localhost:8080"; 
+		}
+	}
+	// --- END HELPER ---
 
 	@Override
 	@Async // Make email sending asynchronous so the user doesn't have to wait
@@ -44,6 +64,10 @@ public class EmailServiceImpl implements EmailService {
 
 		// 1. Create Thymeleaf context
 		Context context = new Context();
+		// --- ADDED siteSettings and baseUrl ---
+		context.setVariable("siteSettings", siteSettingsService.getSiteSettings());
+		context.setVariable("baseUrl", getBaseUrl());
+		// --- END ADDED ---
 		context.setVariable("name", user.getFirstName());
 		context.setVariable("resetUrl", resetUrl);
 		// You could also add the token if you want to display it (e.g., as an OTP)
@@ -78,6 +102,10 @@ public class EmailServiceImpl implements EmailService {
 
 		// 1. Create Thymeleaf context
 		Context context = new Context();
+		// --- ADDED siteSettings and baseUrl ---
+		context.setVariable("siteSettings", siteSettingsService.getSiteSettings());
+		context.setVariable("baseUrl", getBaseUrl());
+		// --- END ADDED ---
 		context.setVariable("name", order.getShippingFirstName());
 		context.setVariable("orderId", order.getId());
 		context.setVariable("subject", subject);

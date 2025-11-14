@@ -42,7 +42,7 @@ public class CustomerHistoryController {
 	public String customerHistory(Model model, Principal principal,
 			@RequestParam(value = "status", required = false) String status,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "5") int size) { // <-- CHANGED FROM 10 to 5
 
 		User user = customerService.findByUsername(principal.getName());
 		if (user == null) {

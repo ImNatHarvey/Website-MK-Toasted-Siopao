@@ -15,6 +15,19 @@ import java.util.List;
 @NoArgsConstructor
 public class Order {
 
+	// --- ADDED: Status Constants ---
+	public static final String STATUS_PENDING = "PENDING";
+	public static final String STATUS_PENDING_VERIFICATION = "PENDING_VERIFICATION";
+	public static final String STATUS_PROCESSING = "PROCESSING";
+	public static final String STATUS_DELIVERED = "DELIVERED";
+	public static final String STATUS_CANCELLED = "CANCELLED";
+
+	public static final String PAYMENT_PENDING = "PENDING";
+	public static final String PAYMENT_FOR_VERIFICATION = "FOR_VERIFICATION";
+	public static final String PAYMENT_PAID = "PAID";
+	public static final String PAYMENT_REJECTED = "REJECTED";
+	// --- END ADDED ---
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
@@ -57,16 +70,21 @@ public class Order {
 	
 	@Column(length = 255)
 	private String paymentReceiptImageUrl;
+	
+	// --- ADDED: Notes field from DTO ---
+	@Column(length = 500)
+	private String notes;
+	// --- END ADDED ---
 
 	@PrePersist
 	protected void onCreate() {
 		orderDate = LocalDateTime.now();
 		lastUpdated = LocalDateTime.now();
 		if (status == null) {
-			status = "PENDING"; 
+			status = STATUS_PENDING; // --- MODIFIED ---
 		}
 		if (paymentStatus == null) {
-			paymentStatus = "PENDING";
+			paymentStatus = PAYMENT_PENDING; // --- MODIFIED ---
 		}
 	}
 

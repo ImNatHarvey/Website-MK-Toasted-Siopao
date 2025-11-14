@@ -128,7 +128,11 @@
 	<div id="toast-messages" th:data-profile-success="${profileSuccess}"
 		th:data-profile-error="${profileError}"
 		th:data-password-success="${passwordSuccess}"
-		th:data-password-error="${passwordError}" style="display: none;"></div>
+		th:data-password-error="${passwordError}"
+		th:data-order-success="${orderSuccess}"
+		th:data-order-error="${orderError}" 
+		th:data-clear-cart="${clearCart}"
+		style="display: none;"></div>
 
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
@@ -136,6 +140,7 @@
 		crossorigin="anonymous"></script>
 
 	<script th:src="@{/js/global-script.js}"></script>
+	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/public-cart.js}"></script>
 </body>
 </html>

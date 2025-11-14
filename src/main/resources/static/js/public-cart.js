@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const orderItemsList = cartSummary.querySelector('.order-items-list');
 		const emptyOrderDiv = cartSummary.querySelector('.empty-order');
 		const totalPriceEl = cartSummary.querySelector('.total-price');
-		const checkoutButton = cartSummary.querySelector('.btn-checkout');
+		const checkoutButton = cartSummary.querySelector('.btn-checkout'); // This is the button in the sidebar
 
 		// 1. Helper: Get Cart
 		const getCart = () => {
@@ -90,10 +90,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		// 9. NEW Function: Clear Cart (MODIFIED)
 		const clearCart = () => {
-			// if (confirm('Are you sure you want to clear your entire order?')) { // REMOVED as per user request
 			saveCart({});
 			renderCart();
-			// } // REMOVED
+		};
+		
+		// --- ADDED: Helper to get total price ---
+		const getCartTotal = (cart) => {
+			let total = 0;
+			Object.keys(cart).forEach(id => {
+				const item = cart[id];
+				total += item.price * item.quantity;
+			});
+			return total;
 		};
 
 		// 10. Main Function: Render Cart (HEAVILY MODIFIED)
@@ -107,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			orderItemsList.innerHTML = '';
-			let totalPrice = 0;
+			const totalPrice = getCartTotal(cart); // Use helper
 
 			const isButtonTag = checkoutButton.tagName === 'BUTTON';
 
@@ -137,11 +145,9 @@ document.addEventListener('DOMContentLoaded', function() {
 				productIds.forEach(productId => {
 					const item = cart[productId];
 					const itemTotal = item.price * item.quantity;
-					totalPrice += itemTotal;
 
 					const itemEl = document.createElement('div');
 					itemEl.className = 'order-item';
-					// --- THIS IS THE NEW HTML STRUCTURE ---
 					itemEl.innerHTML = `
                         <div class="order-item-img-container">
                             <img src="${item.image}" alt="${item.name}" class="order-item-img">
@@ -171,12 +177,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		};
 
 		// 11. Event Listener: Handle Product Card Stepper
-		// --- MODIFIED: Added stock limiting logic ---
 		document.addEventListener('click', function(event) {
 			const button = event.target.closest('.qty-btn');
 			if (!button) return;
 
-			// Only act on steppers INSIDE a product card, not the cart
 			const card = button.closest('.product-card-public');
 			if (!card) return;
 
@@ -185,19 +189,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const qtyInput = stepper.querySelector('.qty-input');
 			const minusBtn = stepper.querySelector('.qty-btn.minus');
-			const plusBtn = stepper.querySelector('.qty-btn.plus'); // Get plus button
+			const plusBtn = stepper.querySelector('.qty-btn.plus');
 			
-			// Get stock from data attribute
 			const stock = parseInt(card.dataset.productStock, 10);
 			if (isNaN(stock)) {
 				console.warn("Product stock is not a number:", card.dataset.productStock);
-				return; // Do nothing if stock isn't a valid number
+				return;
 			}
 
 			let currentQty = parseInt(qtyInput.value, 10);
 
 			if (button.classList.contains('plus')) {
-				// Only increment if current quantity is less than stock
 				if (currentQty < stock) {
 					currentQty++;
 				}
@@ -208,10 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (currentQty < 0) currentQty = 0;
 			
 			qtyInput.value = currentQty;
-			
-			// Disable minus button if quantity is 0
 			minusBtn.disabled = (currentQty === 0);
-			// Disable plus button if quantity is equal to or greater than stock
 			plusBtn.disabled = (currentQty >= stock);
 		});
 
@@ -226,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const { productId, productName, productPrice, productImage } = card.dataset;
 			const qtyInput = card.querySelector('.qty-input');
 			const minusBtn = card.querySelector('.qty-btn.minus');
-			const plusBtn = card.querySelector('.qty-btn.plus'); // Get plus button
+			const plusBtn = card.querySelector('.qty-btn.plus'); 
 			const quantityToAdd = parseInt(qtyInput.value, 10);
 
 			if (quantityToAdd > 0) {
@@ -234,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				qtyInput.value = 0;
 				minusBtn.disabled = true;
 				if (plusBtn) {
-					plusBtn.disabled = false; // Re-enable plus button after adding to cart
+					plusBtn.disabled = false;
 				}
 			}
 		});
@@ -247,24 +246,27 @@ document.addEventListener('DOMContentLoaded', function() {
 			const productId = button.dataset.productId;
 
 			if (button.classList.contains('cart-increment-btn')) {
-				console.log("Cart increment:", productId);
 				incrementItem(productId);
 			} else if (button.classList.contains('cart-decrement-btn')) {
-				console.log("Cart decrement:", productId);
 				decrementItem(productId);
 			} else if (button.classList.contains('cart-remove-btn')) {
-				console.log("Cart remove:", productId);
 				removeItem(productId);
 			} else if (button.classList.contains('btn-clear-cart')) {
-				console.log("Cart clear all");
 				clearCart();
 			}
 		});
 
-		// 14. --- THIS BLOCK WAS REMOVED as it was causing the bug ---
-
-		// 15. Initialization (was 14)
+		// 14. Initialization
 		renderCart();
+		
+		// --- ADDED: Check for 'clearCart' flag from redirect ---
+		const messageContainer = document.getElementById('toast-messages');
+		if (messageContainer && messageContainer.dataset.clearCart === 'true') {
+			console.log("Order success flag detected. Clearing cart.");
+			clearCart();
+			delete messageContainer.dataset.clearCart;
+		}
+		// --- END ADDED ---
 
 	} else {
 		console.log("Cart summary not found. Skipping public cart logic.");
@@ -311,13 +313,17 @@ document.addEventListener('DOMContentLoaded', function() {
 			queue = [];
 		}
 
-		const messageContainer = document.getElementById('toast-messages'); // This div is optional
+		const messageContainer = document.getElementById('toast-messages');
 		if (messageContainer) {
 			const newMessages = messageContainer.dataset;
 			let newToastsAdded = false;
 
 			for (const key in newMessages) {
 				if (Object.prototype.hasOwnProperty.call(newMessages, key) && newMessages[key]) {
+					if (key === 'clearCart') {
+						continue;
+					}
+					
 					const message = newMessages[key];
 					const isError = key.toLowerCase().includes('error');
 					const toastId = `toast-${Date.now()}-${Math.random()}`;
@@ -403,7 +409,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	};
 
-	// Show any pending toasts on page load
 	showToastNotifications();
 	// ========================================================================
 	// == END: TOAST NOTIFICATION LOGIC ==
@@ -411,118 +416,263 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 	// ========================================================================
-	// == START: NEW ORDER FORM VALIDATION LOGIC ==
+	// == START: NEW CUSTOMER ORDER FORM & MODAL LOGIC ==
 	// ========================================================================
-	const orderForm = document.getElementById('order-form');
-	const checkoutBtn = document.getElementById('proceed-to-checkout-btn');
+	const mainElement = document.querySelector('main.container-fluid');
+	const orderForm = document.getElementById('customer-order-form');
+	const copyDetailsBtn = document.getElementById('copy-my-details-btn');
+	const placeOrderBtn = document.getElementById('place-order-btn-trigger');
+	const paymentModal = document.getElementById('paymentModal');
+	
+	if (mainElement && orderForm && copyDetailsBtn && placeOrderBtn && paymentModal) {
+		console.log("Customer order form and modal logic initialized.");
 
-	if (orderForm && checkoutBtn) {
-		console.log("Order form and checkout button found. Attaching validation listener.");
+		// Map of form IDs to main element data-c-* attribute suffixes
+		const fieldMap = {
+			'shipping-firstName': 'firstname',
+			'shipping-lastName': 'lastname',
+			'shipping-phone': 'phone',
+			'shipping-email': 'email',
+			'shipping-houseNo': 'houseno',
+			'shipping-lotNo': 'lotno',
+			'shipping-blockNo': 'blockno',
+			'shipping-street': 'street',
+			'shipping-barangay': 'barangay',
+			'shipping-municipality': 'municipality',
+			'shipping-province': 'province'
+		};
+		
+		// Map of modal's hidden field IDs to form IDs
+		const modalFieldMap = {
+			'form_firstName': 'shipping-firstName',
+			'form_lastName': 'shipping-lastName',
+			'form_phone': 'shipping-phone',
+			'form_email': 'shipping-email',
+			'form_houseNo': 'shipping-houseNo',
+			'form_lotNo': 'shipping-lotNo',
+			'form_blockNo': 'shipping-blockNo',
+			'form_street': 'shipping-street',
+			'form_barangay': 'shipping-barangay',
+			'form_municipality': 'shipping-municipality',
+			'form_province': 'shipping-province'
+		};
 
-		const validateField = (field, regex, feedbackEl, emptyMsg, invalidMsg) => {
+		// --- "Copy My Details" Button Logic ---
+		copyDetailsBtn.addEventListener('click', function() {
+			for (const [fieldId, dataKey] of Object.entries(fieldMap)) {
+				const input = document.getElementById(fieldId);
+				const dataValue = mainElement.dataset['c' + dataKey];
+				if (input && dataValue && dataValue !== 'null') {
+					input.value = dataValue;
+				} else if (input) {
+					input.value = ''; // Clear field if no profile data
+				}
+			}
+			
+			// Show a confirmation toast
+			queueToast("Your profile details have been copied to the form.", false);
+			showToastNotifications();
+			
+			// Remove focus from button
+			copyDetailsBtn.blur();
+		});
+
+		// --- Validation Logic ---
+		const phoneRegex = /^(09|\+639)\d{9}$/;
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		
+		const validateField = (field, regex = null, feedbackEl = null, emptyMsg = "This field is required.", invalidMsg = "Invalid format.") => {
 			let isValid = true;
-			if (!field.value.trim()) {
-				feedbackEl.textContent = emptyMsg;
-				field.classList.add('is-invalid');
-				isValid = false;
-			} else if (regex && !regex.test(field.value.trim())) {
+			const value = field.value.trim();
+			
+			// Check for 'required' attribute
+			const isRequired = field.hasAttribute('required');
+			
+			if (!value) {
+				if (isRequired) {
+					feedbackEl.textContent = emptyMsg;
+					field.classList.add('is-invalid');
+					isValid = false;
+				} else {
+					field.classList.remove('is-invalid'); // Not required and empty is fine
+				}
+			} else if (regex && !regex.test(value)) {
 				feedbackEl.textContent = invalidMsg;
 				field.classList.add('is-invalid');
 				isValid = false;
-			} else {
+			} else if ( (field.id === 'shipping-houseNo' || field.id === 'shipping-lotNo' || field.id === 'shipping-blockNo') && value.length > 50) {
+				// Specific length check for optional fields
+				feedbackEl.textContent = `Cannot exceed 50 characters.`;
+				field.classList.add('is-invalid');
+				isValid = false;
+			}
+			else {
 				field.classList.remove('is-invalid');
 			}
 			return isValid;
 		};
-
-		checkoutBtn.addEventListener('click', function(event) {
-			event.preventDefault();
-			console.log("Checkout button clicked.");
-
-			const formFields = {
-				firstName: document.getElementById('first-name'),
-				lastName: document.getElementById('last-name'),
-				phone: document.getElementById('phone'),
-				email: document.getElementById('email'),
-				street: document.getElementById('street'),
-				barangay: document.getElementById('barangay'),
-				municipality: document.getElementById('municipality'),
-				province: document.getElementById('province'),
-				// Optional fields
-				houseNo: document.getElementById('houseNo'),
-				lotNo: document.getElementById('lotNo'),
-				blockNo: document.getElementById('blockNo'),
-				notes: document.getElementById('notes')
-			};
-
-			const phoneRegex = /^(09|\+639)\d{9}$/;
-			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
+		
+		const validateShippingForm = () => {
 			let isFormValid = true;
+			
+			isFormValid &= validateField(document.getElementById('shipping-firstName'), null, document.getElementById('shipping-firstName').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-lastName'), null, document.getElementById('shipping-lastName').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-street'), null, document.getElementById('shipping-street').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-barangay'), null, document.getElementById('shipping-barangay').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-municipality'), null, document.getElementById('shipping-municipality').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-province'), null, document.getElementById('shipping-province').nextElementSibling);
+			
+			isFormValid &= validateField(document.getElementById('shipping-phone'), phoneRegex, document.getElementById('shipping-phone-feedback'), "Phone number is required.", "Invalid format (e.g., 09xxxxxxxxx).");
+			isFormValid &= validateField(document.getElementById('shipping-email'), emailRegex, document.getElementById('shipping-email-feedback'), "Email is required.", "Invalid email format.");
+			
+			// Optional fields with length check
+			isFormValid &= validateField(document.getElementById('shipping-houseNo'), null, document.getElementById('shipping-houseNo').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-lotNo'), null, document.getElementById('shipping-lotNo').nextElementSibling);
+			isFormValid &= validateField(document.getElementById('shipping-blockNo'), null, document.getElementById('shipping-blockNo').nextElementSibling);
 
-			// Clear previous validation
-			orderForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+			return isFormValid;
+		};
 
-			// Validate required fields
-			isFormValid &= validateField(formFields.firstName, null, formFields.firstName.nextElementSibling, "First name is required.");
-			isFormValid &= validateField(formFields.lastName, null, formFields.lastName.nextElementSibling, "Last name is required.");
-			isFormValid &= validateField(formFields.street, null, formFields.street.nextElementSibling, "Street / Subdivision is required.");
-			isFormValid &= validateField(formFields.barangay, null, formFields.barangay.nextElementSibling, "Barangay is required.");
-			isFormValid &= validateField(formFields.municipality, null, formFields.municipality.nextElementSibling, "Municipality is required.");
-			isFormValid &= validateField(formFields.province, null, formFields.province.nextElementSibling, "Province is required.");
-
-			// Validate regex fields
-			isFormValid &= validateField(formFields.phone, phoneRegex, document.getElementById('phone-feedback'), "Phone number is required.", "Invalid Philippine phone number (e.g., 09xxxxxxxxx).");
-			isFormValid &= validateField(formFields.email, emailRegex, document.getElementById('email-feedback'), "Email is required.", "Invalid email format.");
-
-			// Validate optional field lengths
-			[formFields.houseNo, formFields.lotNo, formFields.blockNo].forEach(field => {
-				if (field.value.trim().length > 50) {
-					isFormValid = false;
-					field.classList.add('is-invalid');
-					field.nextElementSibling.textContent = "Cannot exceed 50 characters.";
-				} else {
-					field.classList.remove('is-invalid');
-				}
-			});
-
-
-			if (!isFormValid) {
-				console.log("Form validation failed.");
+		// --- "Place Order" Button Logic (Validation & Data Transfer) ---
+		placeOrderBtn.addEventListener('click', function(event) {
+			console.log("Place Order button clicked. Validating form...");
+			if (!validateShippingForm()) {
+				console.log("Form validation failed. Stopping modal.");
+				event.preventDefault();
+				event.stopPropagation();
+				
 				queueToast("Please fill out all required fields correctly.", true);
 				showToastNotifications();
-				// Find the first invalid field and scroll to it
+				
 				const firstInvalid = orderForm.querySelector('.is-invalid');
 				if (firstInvalid) {
 					firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+					firstInvalid.focus();
 				}
 			} else {
-				console.log("Form validation successful. Proceeding to signup page.");
-
-				// Collect data
-				const guestData = {
-					firstName: formFields.firstName.value.trim(),
-					lastName: formFields.lastName.value.trim(),
-					phone: formFields.phone.value.trim(),
-					email: formFields.email.value.trim(),
-					houseNo: formFields.houseNo.value.trim(),
-					lotNo: formFields.lotNo.value.trim(),
-					blockNo: formFields.blockNo.value.trim(),
-					street: formFields.street.value.trim(),
-					barangay: formFields.barangay.value.trim(),
-					municipality: formFields.municipality.value.trim(),
-					province: formFields.province.value.trim()
-				};
-
-				// Store in sessionStorage
-				sessionStorage.setItem('guestCheckoutData', JSON.stringify(guestData));
-
-				// Redirect to signup page
-				window.location.href = '/signup?source=checkout';
+				console.log("Form validation success. Copying data to modal.");
+				// Copy data from visible form to modal's hidden form
+				for (const [modalFieldId, formFieldId] of Object.entries(modalFieldMap)) {
+					const modalInput = document.getElementById(modalFieldId);
+					const formInput = document.getElementById(formFieldId);
+					if (modalInput && formInput) {
+						modalInput.value = formInput.value;
+					}
+				}
+				// Note: The cart data and total are populated by the 'show.bs.modal' listener below
 			}
 		});
+
+		// --- PAYMENT MODAL LOGIC ---
+		const CART_KEY = 'mkSiopaoCart';
+		const cartFormInput = document.getElementById('form_cartDataJson');
+		const modalSummaryList = paymentModal.querySelector('.order-summary-modal-list');
+		const modalTotalPriceElements = paymentModal.querySelectorAll('.total-price-modal');
+		
+		const gcashInstructions = document.getElementById('gcash-payment-instructions');
+		const codInstructions = document.getElementById('cod-payment-instructions');
+		const gcashRadio = document.getElementById('payment_gcash');
+		const codRadio = document.getElementById('payment_cod');
+		const receiptUploader = document.getElementById('receiptUploader');
+		
+		// 1. Setup Image Uploader
+		if (receiptUploader) {
+			setupImageUploader('receiptUploader');
+		}
+
+		// 2. Add listener to populate modal when shown
+		paymentModal.addEventListener('show.bs.modal', function() {
+			console.log("Payment modal opening. Populating cart data.");
+			
+			const cart = JSON.parse(sessionStorage.getItem(CART_KEY) || '{}');
+			const productIds = Object.keys(cart);
+			
+			// 2a. Populate cart summary
+			modalSummaryList.innerHTML = '';
+			if (productIds.length === 0) {
+				modalSummaryList.innerHTML = '<p class="text-danger">Your cart is empty.</p>';
+			} else {
+				productIds.forEach(id => {
+					const item = cart[id];
+					const itemTotal = item.price * item.quantity;
+					const itemEl = document.createElement('div');
+					itemEl.className = 'd-flex justify-content-between';
+					itemEl.innerHTML = `
+						<span>${item.quantity}x ${item.name}</span>
+						<span class="fw-bold">${formatCurrency(itemTotal)}</span>
+					`;
+					modalSummaryList.appendChild(itemEl);
+				});
+			}
+			
+			// 2b. Populate total price
+			const totalPrice = getCartTotal(cart);
+			modalTotalPriceElements.forEach(el => {
+				el.textContent = formatCurrency(totalPrice);
+			});
+			
+			// 2c. Populate hidden cart JSON
+			cartFormInput.value = JSON.stringify(cart);
+			
+			// 2d. Reset uploader and payment toggle
+			if (receiptUploader) receiptUploader.resetUploader();
+			
+			// 2e. Clear notes field
+			const notesField = document.getElementById('form_notes');
+			if (notesField) notesField.value = '';
+			
+			// 2f. Reset to GCash default
+			gcashRadio.checked = true;
+			togglePaymentMethod();
+
+			// 2g. Reset submit button
+			const submitBtn = paymentModal.querySelector('button[type="submit"]');
+			if (submitBtn) {
+				submitBtn.disabled = false;
+				submitBtn.innerHTML = 'Confirm & Place Order';
+			}
+		});
+		
+		// 3. Add listeners for payment method toggle
+		const togglePaymentMethod = () => {
+			if (codRadio.checked) {
+				codInstructions.style.display = 'block';
+				gcashInstructions.style.display = 'none';
+				if (receiptUploader) receiptUploader.querySelector('.image-uploader-input').required = false;
+			} else {
+				codInstructions.style.display = 'none';
+				gcashInstructions.style.display = 'block';
+				if (receiptUploader) receiptUploader.querySelector('.image-uploader-input').required = true;
+			}
+		};
+		
+		if (gcashRadio) gcashRadio.addEventListener('change', togglePaymentMethod);
+		if (codRadio) codRadio.addEventListener('change', togglePaymentMethod);
+		
+		
+		// 4. Add listener for form validation (e.g., check for receipt)
+		const paymentForm = document.getElementById('payment-form');
+		if(paymentForm) {
+			paymentForm.addEventListener('submit', function(event) {
+				if (gcashRadio.checked) {
+					const receiptInput = receiptUploader.querySelector('.image-uploader-input');
+					if (!receiptInput.files || receiptInput.files.length === 0) {
+						event.preventDefault();
+						queueToast("Please upload your payment receipt to proceed.", true);
+						showToastNotifications();
+						return; // Stop submission
+					}
+				}
+				// Disable submit button to prevent double-click
+				const submitBtn = paymentForm.querySelector('button[type="submit"]');
+				if (submitBtn) {
+					submitBtn.disabled = true;
+					submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Placing Order...';
+				}
+			});
+		}
 	}
 	// ========================================================================
-	// == END: NEW ORDER FORM VALIDATION LOGIC ==
+	// == END: CUSTOMER ORDER FORM & MODAL LOGIC ==
 	// ========================================================================
 });

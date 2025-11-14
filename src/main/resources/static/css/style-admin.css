@@ -151,6 +151,13 @@
 	color: var(--light);
 }
 
+/* == ADDED: New Status Badge Style == */
+.status-badge.status-pending-verification {
+	background-color: #6f42c1; /* Bootstrap Purple */
+	color: var(--light);
+}
+/* == END ADDED == */
+
 .status-badge.status-no_stock {
 	background-color: var(--dark);
 	color: var(--light);

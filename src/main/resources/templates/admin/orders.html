@@ -62,9 +62,19 @@
 		<div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
 			<a th:href="@{/admin/orders}" class="btn btn-outline-primary"
 				th:classappend="${param.status == null ? 'active' : ''}">All
-				Orders</a> <a th:href="@{/admin/orders(status='PENDING')}"
+				Orders</a> 
+			<a th:href="@{/admin/orders(status='PENDING_VERIFICATION')}"
+				class="btn btn-outline-primary"
+				style="--bs-btn-color: #6f42c1; --bs-btn-border-color: #6f42c1;"
+				onmouseover="this.style.backgroundColor='#6f42c1'; this.style.color='white';"
+				onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='#6f42c1'; }"
+				th:classappend="${param.status == 'PENDING_VERIFICATION' ? 'active' : ''}"
+				th:styleappend="${param.status == 'PENDING_VERIFICATION' ? 'background-color: #6f42c1; color: white; border-color: #6f42c1;' : ''}">
+				Pending Verification
+			</a>
+			<a th:href="@{/admin/orders(status='PENDING')}"
 				class="btn btn-outline-warning"
-				th:classappend="${param.status == 'PENDING' ? 'active' : ''}">Pending</a>
+				th:classappend="${param.status == 'PENDING' ? 'active' : ''}">Pending (COD)</a>
 			<a th:href="@{/admin/orders(status='PROCESSING')}"
 				class="btn btn-outline-info"
 				th:classappend="${param.status == 'PROCESSING' ? 'active' : ''}">Processing</a>
@@ -130,9 +140,12 @@
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</td>
 								<td
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
-								<td><span class="status-badge" th:text="${order.status}"
-									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
-										Status </span></td>
+								<td>
+									<span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
+										th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
+										Status 
+									</span>
+								</td>
 								<td>
 									<button class="btn btn-sm btn-action-view">View</button>
 								</td>

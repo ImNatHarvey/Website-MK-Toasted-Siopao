@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.dto.OrderSubmitDto; // --- ADDED ---
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,10 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface OrderService {
+
+	// --- ADDED ---
+	Order createOrder(User user, OrderSubmitDto orderDto, String receiptImagePath);
+	// --- END ADDED ---
 
 	Optional<Order> findOrderById(Long id);
 

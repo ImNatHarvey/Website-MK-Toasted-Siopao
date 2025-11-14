@@ -117,6 +117,7 @@ function setupImageUploader(containerId) {
 	}
 
 	if (!removeImageHiddenInput) {
+		// This is a soft warning, as the customer-side uploader doesn't use the 'removeImage' flag
 		console.warn(`Uploader #${containerId} is missing '.image-remove-flag' hidden input. Remove logic will not be tracked.`);
 	}
 

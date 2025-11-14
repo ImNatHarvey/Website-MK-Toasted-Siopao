@@ -314,6 +314,13 @@ function showToastNotifications() {
 
 		for (const key in newMessages) {
 			if (Object.prototype.hasOwnProperty.call(newMessages, key) && newMessages[key]) {
+				
+				// --- FIX FOR "true" TOAST ---
+				if (key === 'clearCart') {
+					continue; // Don't make a toast for this attribute
+				}
+				// --- END FIX ---
+
 				const message = newMessages[key];
 				const isError = key.toLowerCase().includes('error');
 				const toastId = `toast-${Date.now()}-${Math.random()}`; // Unique ID

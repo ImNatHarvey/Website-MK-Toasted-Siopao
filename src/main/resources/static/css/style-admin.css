@@ -24,7 +24,7 @@
 	border-radius: 20px;
 	padding: 6px 16px;
 	font-weight: normal;
-	transition: 0.3s ease;
+	/* transition: 0.3s ease; */ /* <-- TRANSITION REMOVED */
 	/* Remove default Bootstrap hover effects */
 	box-shadow: none !important;
 }

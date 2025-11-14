@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-	th:fragment="layout(content)">
-<head>
+	th:fragment="layout(content, pageScript)"> <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title
@@ -142,5 +141,8 @@
 	<script th:src="@{/js/global-script.js}"></script>
 	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/public-cart.js}"></script>
+	
+	<th:block th:replace="${pageScript} ?: ~{}"></th:block>
+	
 </body>
 </html>

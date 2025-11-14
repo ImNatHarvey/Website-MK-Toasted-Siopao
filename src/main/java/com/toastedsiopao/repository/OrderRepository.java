@@ -22,6 +22,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 			+ "WHERE o.user = :user ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
 	Page<Order> findByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
 
+	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS
+			+ "WHERE o.user = :user AND o.status = :status ORDER BY o.orderDate DESC",
+			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user AND o.status = :status")
+	Page<Order> findByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);
+
 	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "

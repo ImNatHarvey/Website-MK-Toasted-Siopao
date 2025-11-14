@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{customer/base :: layout(~{::main})}">
+	th:replace="~{customer/base :: layout(~{::main}, ~{::script})}">
 <head>
 <meta charset="UTF-8">
 <title>Order - MK Toasted Siopao</title>
 </head>
 <body>
 	<main class="container-fluid px-4 py-4" 
-		th:data-c-firstName="${customer.firstName}"
-		th:data-c-lastName="${customer.lastName}"
+		th:data-c-first-name="${customer.firstName}"
+		th:data-c-last-name="${customer.lastName}"
 		th:data-c-phone="${customer.phone}"
 		th:data-c-email="${customer.email}"
-		th:data-c-houseNo="${customer.houseNo}"
-		th:data-c-lotNo="${customer.lotNo}"
-		th:data-c-blockNo="${customer.blockNo}"
+		th:data-c-house-no="${customer.houseNo}"
+		th:data-c-lot-no="${customer.lotNo}"
+		th:data-c-block-no="${customer.blockNo}"
 		th:data-c-street="${customer.street}"
 		th:data-c-barangay="${customer.barangay}"
 		th:data-c-municipality="${customer.municipality}"
@@ -107,6 +107,12 @@
 								<div class="invalid-feedback">Province is required.</div>
 							</div>
 							
+							<div class="mb-3">
+								<label for="notes" class="form-label">Notes to
+									Store/Rider (Optional)</label>
+								<textarea class="form-control" id="notes" rows="3"
+									placeholder="Leave a note... (e.g., landmark, color of gate)"></textarea>
+							</div>
 						</form>
 					</div>
 				</div>
@@ -136,8 +142,7 @@
 						</div>
 						<div class="d-grid">
 							<button type="button" class="btn btn-checkout px-4" 
-								id="place-order-btn-trigger"
-								data-bs-toggle="modal" data-bs-target="#paymentModal" disabled>
+								id="place-order-btn-trigger" disabled>
 								Place Order
 							</button>
 						</div>
@@ -146,127 +151,13 @@
 			</div>
 		</div>
 		
-		
-		<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg">
-				<div class="modal-content">
-					<form id="payment-form" th:action="@{/u/order/submit}" method="post" enctype="multipart/form-data">
-						
-						<input type="hidden" name="firstName" id="form_firstName">
-						<input type="hidden" name="lastName" id="form_lastName">
-						<input type="hidden" name="phone" id="form_phone">
-						<input type="hidden" name="email" id="form_email">
-						<input type="hidden" name="houseNo" id="form_houseNo">
-						<input type="hidden" name="lotNo" id="form_lotNo">
-						<input type="hidden" name="blockNo" id="form_blockNo">
-						<input type="hidden" name="street" id="form_street">
-						<input type="hidden" name="barangay" id="form_barangay">
-						<input type="hidden" name="municipality" id="form_municipality">
-						<input type="hidden" name="province" id="form_province">
-						<input type="hidden" name="cartDataJson" id="form_cartDataJson">
-						
-						
-						<div class="modal-header modal-header-public">
-							<h5 class="modal-title" id="paymentModalLabel">Confirm Order & Payment</h5>
-							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-						</div>
-						<div class="modal-body">
-							<div class="row">
-								<div class="col-md-6">
-									<h5 class="mb-3">Order Summary</h5>
-									<div class="order-summary-modal-list mb-3"
-										style="max-height: 250px; overflow-y: auto; font-size: 0.9rem;">
-										<p class="text-muted">Loading cart...</p>
-									</div>
-									<div class="d-flex justify-content-between align-items-center mb-3">
-										<h5 class="mb-0">Total:</h5>
-										<span class="total-price-modal fw-bold fs-4 text-primary">₱0.00</span>
-									</div>
-									
-									<hr>
-
-									<div class="mb-3">
-										<label for="form_notes" class="form-label">Notes to Store/Rider (Optional)</label>
-										<textarea class="form-control" name="notes" id="form_notes" rows="3"
-											placeholder="Leave a note... (e.g., landmark, color of gate)"></textarea>
-									</div>
-
-									<h5 class="mb-3">Payment Method</h5>
-									<div class="form-check">
-										<input class="form-check-input" type="radio" name="paymentMethod"
-											id="payment_gcash" value="gcash" checked> 
-										<label class="form-check-label" for="payment_gcash"> GCash (Manual Verification)</label>
-									</div>
-									<div class="form-check mb-4">
-										<input class="form-check-input" type="radio" name="paymentMethod"
-											id="payment_cod" value="cod"> 
-										<label class="form-check-label" for="payment_cod"> Cash on Delivery</label>
-									</div>
-								</div>
-								
-								<div class="col-md-6 border-start-md">
-									
-									<div id="gcash-payment-instructions">
-										<h5 class="mb-3">GCash Payment Instructions</h5>
-										<p class="small text-muted">
-											1. Scan the QR code below to pay the exact amount of
-											<strong class="total-price-modal text-primary">₱0.00</strong>.
-										</p>
-										<div class="text-center mb-3">
-											<img th:src="@{${siteSettings.gcashQrCodeImage}}" 
-												alt="GCash QR Code" class="img-fluid rounded shadow-sm"
-												style="max-width: 250px; object-fit: contain;"
-												onerror="this.onerror=null; this.src='/img/qrplaceholder.jpg';">
-										</div>
-										<p class="small text-muted">
-											2. Take a screenshot of your payment receipt.
-										</p>
-										<p class="small text-muted">
-											3. Upload the screenshot below to confirm your order.
-										</p>
-										
-										<label for="receiptFile" class="form-label">Upload Receipt Screenshot</label>
-										<div class="image-uploader-container mb-3" id="receiptUploader">
-											<input type="file" name="receiptFile"
-												class="image-uploader-input" accept="image/png, image/jpeg, image/gif">
-											<div class="image-drop-zone">
-												<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
-												<p class="mb-0 small">
-													<strong>Choose a file</strong> or drag it here.
-												</p>
-											</div>
-											<div class="image-preview-container">
-												<img src="" alt="Image Preview" class="image-preview">
-												<button type="button"
-													class="btn btn-sm btn-danger image-remove-btn"
-													title="Remove Image">
-													<i class="fa-solid fa-trash"></i>
-												</button>
-											</div>
-										</div>
-									</div>
-									
-									<div id="cod-payment-instructions" style="display: none;">
-										<h5 class="mb-3">Cash on Delivery</h5>
-										<p class="alert alert-info">
-											Please prepare the exact amount of 
-											<strong class="total-price-modal text-primary">₱0.00</strong> 
-											to pay our rider upon delivery.
-										</p>
-									</div>
-									
-								</div>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-custom">Confirm & Place Order</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
+		<div th:replace="~{customer/fragments/payment-modal :: payment-modal}"></div>
 		
 	</main>
+	
+	<th:block th:fragment="script">
+		<script th:src="@{/js/customer-order.js}"></script>
+	</th:block>
+	
 </body>
 </html>

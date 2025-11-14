@@ -28,6 +28,8 @@ public interface OrderService {
 	
 	Page<Order> searchOrders(String keyword, String status, String startDate, String endDate, Pageable pageable); // Updated
 
+	Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable); // --- ADDED ---
+
 	BigDecimal getSalesToday();
 
 	BigDecimal getSalesThisWeek();

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{customer/base :: layout(~{::main})}">
-<head>
+	th:replace="~{customer/base :: layout(~{::main}, ~{})}"><head>
 <title>Order History - MK Toasted Siopao</title>
 </head>
 <body>
@@ -11,7 +10,7 @@
 				<div class="row align-items-center">
 					<div class="col-md-8">
 						<h2 class="section-title mb-1">Order History</h2>
-						<p class="mb-0">View your past orders and track current ones</p>
+						<p class="text-muted mb-0">View your past orders and track current ones</p>
 					</div>
 					<div class="col-md-4 text-end">
 						<a th:href="@{/u/menu}" class="btn btn-custom">Place New Order</a>
@@ -19,56 +18,118 @@
 				</div>
 			</div>
 
-			<div class="filter-buttons mb-4">
-				<h5 class="mb-3">Filter by status:</h5>
-				<button class="btn btn-outline-primary active" data-status="all">All
-					Orders</button>
-				<button class="btn btn-outline-primary" data-status="delivered">Delivered</button>
-				<button class="btn btn-outline-primary" data-status="pending">Pending</button>
-				<button class="btn btn-outline-primary" data-status="cancelled">Cancelled</button>
+			<div class="d-flex justify-content-center flex-wrap gap-2 my-4">
+				<a th:href="@{/u/history}" class="btn btn-outline-primary"
+					th:classappend="${currentStatus == null ? 'active' : ''}">All
+					Orders</a> 
+				<a th:href="@{/u/history(status='PENDING_VERIFICATION')}"
+					class="btn btn-outline-primary"
+					style="--bs-btn-color: #6f42c1; --bs-btn-border-color: #6f42c1;"
+					onmouseover="this.style.backgroundColor='#6f42c1'; this.style.color='white';"
+					onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='#6f42c1'; }"
+					th:classappend="${currentStatus == 'PENDING_VERIFICATION' ? 'active' : ''}"
+					th:styleappend="${currentStatus == 'PENDING_VERIFICATION' ? 'background-color: #6f42c1; color: white; border-color: #6f42c1;' : ''}">
+					Pending Verification
+				</a>
+				<a th:href="@{/u/history(status='PENDING')}"
+					class="btn btn-outline-warning"
+					th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending (COD)</a>
+				<a th:href="@{/u/history(status='PROCESSING')}"
+					class="btn btn-outline-info"
+					th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
+				<a th:href="@{/u/history(status='DELIVERED')}"
+					class="btn btn-outline-success"
+					th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>
+				<a th:href="@{/u/history(status='CANCELLED')}"
+					class="btn btn-outline-danger"
+					th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
+			</div>
+			
+			<div th:if="${orderPage.empty}" class="alert alert-warning text-center" role="alert">
+			  You have no orders matching this status.
 			</div>
 
-			<div id="ordersList">
-				<div class="order-card" data-status="delivered">
-					<div class="d-flex justify-content-between align-items-start mb-3">
+			<div id="ordersList" th:unless="${orderPage.empty}">
+			
+				<div class="card shadow-sm mb-3" th:each="order : ${orderPage.content}">
+					<div class="card-header d-flex justify-content-between align-items-center flex-wrap">
 						<div>
-							<h5 class="mb-1">Order #ORD-1025</h5>
-							<p class="text-muted mb-0">September 3, 2025 • 2:30 PM</p>
+							<h5 class.="mb-1" style="font-size: 1.1rem; font-weight: bold;">
+								Order <span th:text="'#ORD-' + ${order.id}">#ORD-XXXX</span>
+							</h5>
+							<p class="text-muted small mb-0" th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy • h:mm a')}">
+								Date
+							</p>
 						</div>
-						<div class="text-end">
-							<div class="order-status status-delivered">Delivered</div>
-							<h4 class="text-primary mt-2">₱245</h4>
+						<span class="status-badge fs-6" th:text="${#strings.replace(order.status, '_', ' ')}"
+							th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
+							Status
+						</span>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							<div class="col-md-8">
+								<h6 class="mb-2">Items:</h6>
+								<ul class="list-unstyled">
+									<li th:each="item : ${order.items}" th:text="${item.quantity + 'x ' + item.product.name}">
+										2x Product Name
+									</li>
+								</ul>
+								<div th:if="${order.notes != null and !#strings.isEmpty(order.notes)}">
+									<h6 class="mb-2 mt-3">Notes:</h6>
+									<p class_="small text-muted" th:text="${order.notes}"></p>
+								</div>
+							</div>
+							<div class="col-md-4 text-md-end">
+								<h6 class="mb-2">Total Amount</h6>
+								<h4 class="text-primary fw-bold" th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">
+									₱0.00
+								</h4>
+								<h6 class="mb-2 mt-3">Payment</h6>
+								<p class="mb-0" th:text="${#strings.toUpperCase(order.paymentMethod)}">GCASH</p>
+							</div>
 						</div>
 					</div>
-					<div class="mt-3">
-						<button class="btn btn-sm btn-custom me-2">Reorder</button>
-						<button class="btn btn-sm btn-outline-primary">Rate Order</button>
+					<div class="card-footer bg-light" 
+						 th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION' or order.status == 'DELIVERED'}">
+						<button class="btn btn-sm btn-custom me-2" th:if="${order.status == 'DELIVERED'}">
+							<i class="fa-solid fa-rotate-right me-1"></i> Reorder
+						</button>
+						<button class="btn btn-sm btn-outline-primary" th:if="${order.status == 'DELIVERED'}">
+							<i class="fa-solid fa-star me-1"></i> Rate Order
+						</button>
+						<button class="btn btn-sm btn-outline-danger" th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}">
+							<i class="fa-solid fa-times me-1"></i> Cancel Order
+						</button>
 					</div>
 				</div>
-				<div class="order-card" data-status="pending">
-					<div class="d-flex justify-content-between align-items-start mb-3">
-						<div>
-							<h5 class="mb-1">Order #ORD-1023</h5>
-							<p class="text-muted mb-0">September 1, 2025 • 12:45 PM</p>
-						</div>
-						<div class="text-end">
-							<div class="order-status status-pending">Pending</div>
-							<h4 class="text-primary mt-2">₱320</h4>
-						</div>
-					</div>
-					<div class="mt-3">
-						<button class="btn btn-sm btn-custom me-2">Cancel Order</button>
-					</div>
-				</div>
+				
 			</div>
 
-			<nav aria-label="Order history pagination" class="mt-5">
+			<nav aria-label="Order history pagination" class="mt-5" th:if="${orderPage.totalPages > 0}">
 				<ul class="pagination justify-content-center">
-					<li class="page-item disabled"><a class="page-link" href="#"
-						tabindex="-1">Previous</a></li>
-					<li class="page-item active"><a class="page-link" href="#">1</a></li>
-					<li class="page-item"><a class="page-link" href="#">2</a></li>
-					<li class="page-item"><a class="page-link" href="#">Next</a></li>
+					<li class="page-item" th:classappend="${orderPage.first} ? 'disabled'">
+						<a class.page-link th:href="@{/u/history(page=${orderPage.number - 1}, size=${size}, status=${currentStatus})}">Previous</a>
+					</li>
+					
+					<th:block th:each="i : ${#numbers.sequence(0, orderPage.totalPages - 1)}"
+						th:if="${orderPage.totalPages <= 7 || i == 0 || i == orderPage.totalPages - 1 || (i >= orderPage.number - 2 && i <= orderPage.number + 2)}">
+						
+						<li class="page-item disabled"
+							th:if="${orderPage.totalPages > 7 && (i == 0 && orderPage.number > 3 || i == orderPage.totalPages - 1 && orderPage.number < orderPage.totalPages - 4)}">
+							<span class="page-link">...</span>
+						</li>
+						
+						<li class="page-item" th:classappend="${i == orderPage.number} ? 'active'">
+							<a class="page-link"
+								th:href="@{/u/history(page=${i}, size=${size}, status=${currentStatus})}"
+								th:text="${i + 1}"></a>
+						</li>
+					</th:block>
+					
+					<li class="page-item" th:classappend="${orderPage.last} ? 'disabled'">
+						<a class="page-link" th:href="@{/u/history(page=${orderPage.number + 1}, size=${size}, status=${currentStatus})}">Next</a>
+					</li>
 				</ul>
 			</nav>
 		</div>

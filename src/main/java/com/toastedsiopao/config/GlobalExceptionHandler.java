@@ -26,10 +26,13 @@ public class GlobalExceptionHandler {
 	public String handleDataIntegrityViolation(DataIntegrityViolationException ex,
 			RedirectAttributes redirectAttributes, HttpServletRequest request) {
 		String referer = request.getHeader("Referer");
-		String message = "Operation failed: The name you entered may already exist, or the item is still in use (e.g., a category is in use by a product).";
+		
+		// --- MODIFIED: Improved error message ---
+		String message = "Operation failed. The item may be in use in an old order or recipe, or the name you entered may already exist.";
 
 		log.warn("Data integrity violation for request [{}]: {}. Sending user-friendly message: {}",
 				request.getRequestURI(), ex.getMessage(), message);
+		// --- END MODIFICATION ---
 
 		redirectAttributes.addFlashAttribute("globalError", message);
 

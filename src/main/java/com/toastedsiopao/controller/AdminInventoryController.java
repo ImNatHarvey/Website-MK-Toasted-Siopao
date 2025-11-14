@@ -6,8 +6,9 @@ import com.toastedsiopao.dto.UnitOfMeasureDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.UnitOfMeasure;
+import com.toastedsiopao.repository.RecipeIngredientRepository; // --- ADDED ---
 import com.toastedsiopao.service.ActivityLogService;
-import com.toastedsiopao.service.AdminService; // --- ADDED ---
+import com.toastedsiopao.service.AdminService; 
 import com.toastedsiopao.service.InventoryCategoryService;
 import com.toastedsiopao.service.InventoryItemService;
 import com.toastedsiopao.service.UnitOfMeasureService;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,6 +52,9 @@ public class AdminInventoryController {
 	private ActivityLogService activityLogService;
 	
 	@Autowired // --- ADDED ---
+	private RecipeIngredientRepository recipeIngredientRepository;
+	
+	@Autowired 
 	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
@@ -202,34 +207,88 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
+	// --- MODIFIED: Renamed endpoint to /delete/{id} ---
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
-	public String deleteInventoryItem(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+	public String deleteOrDeactivateInventoryItem(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, 
 			RedirectAttributes redirectAttributes, Principal principal) {
 		
-		// --- MODIFICATION: Added password validation ---
+		// 1. Validate Password
 		if (!adminService.validateOwnerPassword(password)) {
-			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Action cancelled.");
 			return "redirect:/admin/inventory";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
 		if (itemOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("inventoryError", "Inventory item not found.");
 			return "redirect:/admin/inventory";
 		}
-		String itemName = itemOpt.get().getName();
+		
+		InventoryItem item = itemOpt.get();
+		String itemName = item.getName();
+		
+		// 2. Check Stock
+		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
+			log.warn("Admin {} attempted to delete/deactivate inventory item '{}' (ID: {}) with stock > 0. Blocked.", principal.getName(), itemName, id);
+			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + itemName + "'. Item still has " + item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
+			return "redirect:/admin/inventory";
+		}
 
-		// Let the service throw an exception if deletion fails
-		// The GlobalExceptionHandler will catch it.
-		inventoryItemService.deleteById(id);
-
-		activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
-				"Deleted inventory item: " + itemName + " (ID: " + id + ")");
-		redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
-
+		try {
+			// 3. Check if item is used in any recipes
+			if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
+				// HISTORY EXISTS: Deactivate
+				inventoryItemService.deactivateItem(id);
+				activityLogService.logAdminAction(principal.getName(), "DEACTIVATE_INVENTORY_ITEM",
+						"Deactivated inventory item with recipe usage: " + itemName + " (ID: " + id + ")");
+				redirectAttributes.addFlashAttribute("inventorySuccess",
+						"Item '" + itemName + "' is used in recipes. It has been DEACTIVATED instead of deleted.");
+			} else {
+				// NO HISTORY: Delete Permanently
+				inventoryItemService.deleteItem(id);
+				activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
+						"Permanently deleted inventory item: " + itemName + " (ID: " + id + ")");
+				redirectAttributes.addFlashAttribute("inventorySuccess",
+						"Item '" + itemName + "' had no recipe usage and was PERMANENTLY deleted.");
+			}
+		} catch (DataIntegrityViolationException e) {
+			log.warn("Data integrity violation on delete/deactivate for inventory item {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+		} catch (IllegalArgumentException e) {
+			log.warn("Failed to delete/deactivate inventory item {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+		}
+		
 		return "redirect:/admin/inventory";
 	}
+	
+	@PostMapping("/activate/{id}")
+	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
+	public String activateInventoryItem(@PathVariable("id") Long id,
+			RedirectAttributes redirectAttributes, Principal principal) {
+
+		try {
+			Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
+			if (itemOpt.isEmpty()) {
+				redirectAttributes.addFlashAttribute("inventoryError", "Inventory item not found.");
+				return "redirect:/admin/inventory";
+			}
+			String itemName = itemOpt.get().getName();
+
+			inventoryItemService.activateItem(id);
+
+			activityLogService.logAdminAction(principal.getName(), "ACTIVATE_INVENTORY_ITEM",
+					"Activated inventory item: " + itemName + " (ID: " + id + ")");
+			redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' activated successfully!");
+
+		} catch (Exception e) {
+			log.warn("Failed to activate inventory item {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+		}
+		
+		return "redirect:/admin/inventory";
+	}
+	// --- END MODIFICATION ---
 }

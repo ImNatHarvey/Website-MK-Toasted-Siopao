@@ -48,6 +48,7 @@ public class CustomerMenuController {
 			@RequestParam(value = "size", defaultValue = "8") int size) {
 
 		Pageable pageable = PageRequest.of(page, size);
+		// --- THIS CALL NOW FILTERS FOR ACTIVE PRODUCTS ---
 		Page<Product> productPage = productService.searchProducts(keyword, categoryId, pageable);
 		List<Category> categoryList = categoryService.findAll();
 

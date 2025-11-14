@@ -19,6 +19,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 			+ "LEFT JOIN FETCH p.ingredients i " + "LEFT JOIN FETCH i.inventoryItem ii " + "LEFT JOIN FETCH ii.unit u ";
 
 	String COUNT_PRODUCT = "SELECT COUNT(p) FROM Product p ";
+	
+	// --- ADDED: Clauses for public-facing searches ---
+	String ACTIVE_PRODUCT_CLAUSE = "WHERE p.productStatus = 'ACTIVE' ";
+	String ACTIVE_PRODUCT_AND_CLAUSE = "AND p.productStatus = 'ACTIVE' ";
+	// --- END ADDED ---
 
 	// --- ADDED ---
 	Optional<Product> findByNameIgnoreCase(String name);
@@ -28,17 +33,43 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT)
 	Page<Product> findAll(Pageable pageable);
 
+	// --- MODIFIED: Added stock-based sorting AND ACTIVE clause ---
+	@Query(value = FIND_PRODUCT_WITH_RELATIONS
+			+ ACTIVE_PRODUCT_CLAUSE
+			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", 
+			countQuery = COUNT_PRODUCT + ACTIVE_PRODUCT_CLAUSE)
+	Page<Product> findAllActive(Pageable pageable);
+	// --- END MODIFIED ---
+
 	// --- MODIFIED: Added stock-based sorting ---
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS
 			+ "WHERE p.category = :category ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT
 					+ "WHERE p.category = :category")
 	Page<Product> findByCategory(@Param("category") Category category, Pageable pageable);
+	
+	// --- ADDED: New query for public-facing category search ---
+	@Query(value = FIND_PRODUCT_WITH_RELATIONS
+			+ "WHERE p.category = :category "
+			+ ACTIVE_PRODUCT_AND_CLAUSE
+			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", 
+			countQuery = COUNT_PRODUCT + "WHERE p.category = :category " + ACTIVE_PRODUCT_AND_CLAUSE)
+	Page<Product> findActiveByCategory(@Param("category") Category category, Pageable pageable);
+	// --- END ADDED ---
 
 	// --- MODIFIED: Added stock-based sorting ---
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS
 			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", countQuery = COUNT_PRODUCT
 					+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
 	Page<Product> findByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
+	
+	// --- ADDED: New query for public-facing keyword search ---
+	@Query(value = FIND_PRODUCT_WITH_RELATIONS
+			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+			+ ACTIVE_PRODUCT_AND_CLAUSE
+			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", 
+			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + ACTIVE_PRODUCT_AND_CLAUSE)
+	Page<Product> findActiveByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
+	// --- END ADDED ---
 
 	@Query(value = FIND_PRODUCT_WITH_RELATIONS
 			+ "WHERE LOWER(p.category.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.name ASC", countQuery = COUNT_PRODUCT
@@ -51,6 +82,17 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 					+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + "AND p.category = :category")
 	Page<Product> findByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
 			@Param("category") Category category, Pageable pageable);
+			
+	// --- ADDED: New query for public-facing combined search ---
+	@Query(value = FIND_PRODUCT_WITH_RELATIONS + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+			+ "AND p.category = :category "
+			+ ACTIVE_PRODUCT_AND_CLAUSE
+			+ "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC", 
+			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " 
+			+ "AND p.category = :category " + ACTIVE_PRODUCT_AND_CLAUSE)
+	Page<Product> findActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
+			@Param("category") Category category, Pageable pageable);
+	// --- END ADDED ---
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
 	long countLowStockProducts();

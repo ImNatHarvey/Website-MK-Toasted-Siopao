@@ -126,9 +126,16 @@
 							<span class="status-badge"
 								th:text="${#strings.replace(product.stockStatus, '_', ' ')}"
 								th:classappend="'status-' + ${#strings.toLowerCase(product.stockStatus)}">
-								... </span> <span class="small text-muted"
-								th:text="'(' + ${product.currentStock} + ' in stock)'">...</span>
-
+							</span>
+							<span class="small text-muted"
+								th:text="'(' + ${product.currentStock} + ' in stock)'">
+							</span>
+							
+							<span class="status-badge ms-1"
+								th:text="${product.productStatus != null ? product.productStatus : 'UNKNOWN'}"
+								th:classappend="${product.productStatus == 'ACTIVE' ? 'status-active' : (product.productStatus == 'INACTIVE' ? 'status-cancelled' : 'status-low')}">
+							</span>
+							
 							<span th:if="${product.recipeLocked}"
 								class="badge bg-secondary ms-1"
 								title="Recipe is locked and can no longer be edited."> <i
@@ -170,11 +177,26 @@
 								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
 											 data-recipe-locked=${product.recipeLocked}">
 								Edit</button>
-							<form sec:authorize="hasAuthority('DELETE_PRODUCTS')"
+								
+							<form th:if="${product.productStatus == 'ACTIVE' or product.productStatus == null}"
+								sec:authorize="hasAuthority('DELETE_PRODUCTS')"
 								th:action="@{/admin/products/delete/{id}(id=${product.id})}"
 								method="post" class="d-inline flex-fill"
-								th:data-secure-delete-message="'Are you sure you want to delete the product \'' + ${product.name} + '\'? This requires the Owner password.'">
-								<button type="submit" class="btn btn-sm btn-action-delete w-100">Delete</button>
+								th:data-secure-delete-message="'Are you sure you want to DELETE \'' + ${product.name} + '\'? This is permanent if it has no order history, otherwise it will be deactivated.'">
+								<button type="submit" class="btn btn-sm btn-action-delete w-100"
+									th:disabled="${product.currentStock > 0}"
+									th:title="${product.currentStock > 0 ? 'Cannot delete: Product has stock.' : 'Delete Product'}">
+									Delete</button>
+							</form>
+							
+							<form th:if="${product.productStatus == 'INACTIVE'}"
+								sec:authorize="hasAuthority('DELETE_PRODUCTS')"
+								th:action="@{/admin/products/activate/{id}(id=${product.id})}"
+								method="post" class="d-inline flex-fill"
+								th:data-confirm-save-message="'Are you sure you want to ACTIVATE \'' + ${product.name} + '\'?'">
+								<button type="submit" class="btn btn-sm btn-action-success w-100"
+									title="Activate Product">
+									Activate</button>
 							</form>
 							</div>
 					</div>

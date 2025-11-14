@@ -20,7 +20,13 @@ public interface InventoryItemService {
 
 	InventoryItem save(InventoryItemDto itemDto); 
 
-	void deleteById(Long id);
+	// --- MODIFIED ---
+	void deactivateItem(Long id);
+	
+	void activateItem(Long id);
+	
+	void deleteItem(Long id); // --- ADDED ---
+	// --- END MODIFIED ---
 
 	Optional<InventoryItem> findByName(String name);
 

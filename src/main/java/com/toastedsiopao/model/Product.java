@@ -67,6 +67,11 @@ public class Product {
 
 	@Column(nullable = false)
 	private boolean recipeLocked = false;
+	
+	// --- ADDED ---
+	@Column(nullable = false, length = 20)
+	private String productStatus = "ACTIVE"; // "ACTIVE" or "INACTIVE"
+	// --- END ADDED ---
 
 	@PrePersist
 	@PreUpdate

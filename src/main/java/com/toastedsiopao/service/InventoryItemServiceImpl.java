@@ -12,6 +12,7 @@ import com.toastedsiopao.repository.UnitOfMeasureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -127,6 +128,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (isNew) {
 			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
+			item.setItemStatus("ACTIVE"); // --- ADDED ---
 		}
 
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
@@ -145,18 +147,53 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 	}
 
+	// --- MODIFIED: Replaced deleteById ---
 	@Override
-	public void deleteById(Long id) {
-		// --- MODIFIED: Removed manual pre-check ---
+	public void deactivateItem(Long id) {
 		InventoryItem item = itemRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
 
-		// Let the database throw DataIntegrityViolationException if relations exist
-		// (e.g., in RecipeIngredient)
-		itemRepository.deleteById(id);
+		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
+			throw new IllegalArgumentException("Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
+		}
 
-		log.info("Deleted inventory item: ID={}, Name='{}'", id, item.getName());
+		// Check if this item is used in any product recipes
+		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
+			log.info("Item '{}' is in use by recipes. Deactivating instead of deleting.", item.getName());
+		}
+		
+		item.setItemStatus("INACTIVE");
+		itemRepository.save(item);
+		log.info("Deactivated inventory item: ID={}, Name='{}'", id, item.getName());
 	}
+
+	@Override
+	public void activateItem(Long id) {
+		InventoryItem item = itemRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
+		item.setItemStatus("ACTIVE");
+		itemRepository.save(item);
+		log.info("Activated inventory item: ID={}, Name='{}'", id, item.getName());
+	}
+	
+	@Override
+	public void deleteItem(Long id) {
+		InventoryItem item = itemRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
+		
+		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
+			throw new IllegalArgumentException("Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot delete.");
+		}
+		
+		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
+			throw new DataIntegrityViolationException("Item '" + item.getName() + "' is used in a recipe and cannot be deleted.");
+		}
+		
+		itemRepository.delete(item);
+		log.info("Permanently deleted inventory item: ID={}, Name='{}'", id, item.getName());
+	}
+	// --- END MODIFICATION ---
+
 
 	@Override
 	@Transactional(readOnly = true)

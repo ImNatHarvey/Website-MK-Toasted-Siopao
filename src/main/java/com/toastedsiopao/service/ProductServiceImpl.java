@@ -11,6 +11,7 @@ import com.toastedsiopao.service.InventoryItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -113,6 +114,13 @@ public class ProductServiceImpl implements ProductService {
 			product.setRecipeLocked(true);
 			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
 		}
+		
+		// --- ADDED: Ensure status is set on save ---
+		// (productDto doesn't have status, so we only set it on creation)
+		if (isNew) {
+			product.setProductStatus("ACTIVE");
+		}
+		// --- END ADDED ---
 
 		if (product.isRecipeLocked()) {
 			if (!isNew) {
@@ -179,17 +187,55 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 
+	// --- MODIFIED: Replaced deleteById ---
 	@Override
-	public void deleteById(Long id) {
-		// --- MODIFIED: Removed manual pre-check ---
+	public void deactivateProduct(Long id) {
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
 
-		// Let the database throw DataIntegrityViolationException if relations exist
-		// (e.g., in OrderItem)
-		log.info("Deleting product: ID={}, Name='{}'", id, product.getName());
-		productRepository.deleteById(id);
+		if (product.getCurrentStock() > 0) {
+			throw new IllegalArgumentException("Product '" + product.getName() + "' still has " + product.getCurrentStock() + " stock. Cannot deactivate.");
+		}
+		
+		// Check for orders
+		if (orderItemRepository.countByProduct(product) > 0) {
+			// This is fine, we just deactivate, not delete
+			log.info("Product '{}' is in old orders. Deactivating instead of deleting.", product.getName());
+		}
+
+		product.setProductStatus("INACTIVE");
+		productRepository.save(product);
+		log.info("Deactivated product: ID={}, Name='{}'", id, product.getName());
 	}
+
+	@Override
+	public void activateProduct(Long id) {
+		Product product = productRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+		product.setProductStatus("ACTIVE");
+		productRepository.save(product);
+		log.info("Activated product: ID={}, Name='{}'", id, product.getName());
+	}
+	
+	// --- ADDED ---
+	@Override
+	public void deleteProduct(Long id) {
+		Product product = productRepository.findById(id)
+				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+		
+		if (product.getCurrentStock() > 0) {
+			throw new IllegalArgumentException("Product '" + product.getName() + "' still has " + product.getCurrentStock() + " stock. Cannot delete.");
+		}
+		
+		if (orderItemRepository.countByProduct(product) > 0) {
+			throw new DataIntegrityViolationException("Product '" + product.getName() + "' has order history and cannot be deleted.");
+		}
+		
+		// This will also delete related recipe ingredients thanks to orphanRemoval=true
+		productRepository.delete(product);
+		log.info("Permanently deleted product: ID={}, Name='{}'", id, product.getName());
+	}
+	// --- END ADDED ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -202,10 +248,12 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> searchProducts(String keyword, Pageable pageable) {
+		// --- MODIFIED: This method is now ONLY for public, so it uses active queries ---
 		if (keyword == null || keyword.trim().isEmpty()) {
-			return findAll(pageable);
+			return productRepository.findAllActive(pageable);
 		}
-		return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
+		return productRepository.findActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
+		// --- END MODIFICATION ---
 	}
 
 	@Override
@@ -214,6 +262,31 @@ public class ProductServiceImpl implements ProductService {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
+		// --- MODIFIED: This method is used by public pages, so it MUST filter by ACTIVE status ---
+		if (hasKeyword && hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findActiveByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
+		} else if (hasKeyword) {
+			return productRepository.findActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
+		} else if (hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findActiveByCategory(category, pageable);
+		} else {
+			return productRepository.findAllActive(pageable);
+		}
+		// --- END MODIFICATION ---
+	}
+	
+	// --- ADDED: New method for Admin panel ---
+	@Override
+	@Transactional(readOnly = true)
+	public Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable) {
+		boolean hasKeyword = StringUtils.hasText(keyword);
+		boolean hasCategory = categoryId != null;
+
+		// This version calls the NON-ACTIVE queries
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
@@ -225,9 +298,10 @@ public class ProductServiceImpl implements ProductService {
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
 			return productRepository.findByCategory(category, pageable);
 		} else {
-			return productRepository.findAll(pageable);
+			return productRepository.findAll(pageable); // Admin sees all
 		}
 	}
+	// --- END ADDED ---
 
 	@Override
 	public Product adjustStock(Long productId, int quantityChange, String reason) {

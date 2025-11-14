@@ -58,6 +58,11 @@ public class InventoryItem {
 
 	private LocalDateTime lastUpdated;
 
+	// --- ADDED ---
+	@Column(nullable = false, length = 20)
+	private String itemStatus = "ACTIVE"; // "ACTIVE" or "INACTIVE"
+	// --- END ADDED ---
+	
 	@PrePersist
 	@PreUpdate
 	protected void onUpdate() {

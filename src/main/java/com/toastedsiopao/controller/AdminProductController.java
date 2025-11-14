@@ -7,9 +7,10 @@ import com.toastedsiopao.dto.ProductDto;
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
+import com.toastedsiopao.repository.OrderItemRepository; // --- ADDED ---
 import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.service.ActivityLogService;
-import com.toastedsiopao.service.AdminService; // --- ADDED ---
+import com.toastedsiopao.service.AdminService; 
 import com.toastedsiopao.service.CategoryService;
 import com.toastedsiopao.service.FileStorageService;
 import com.toastedsiopao.service.InventoryItemService;
@@ -18,6 +19,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +39,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors; // IMPORTED
+import java.util.stream.Collectors; 
 
 @Controller
 @RequestMapping("/admin/products")
@@ -57,11 +59,14 @@ public class AdminProductController {
 	private ObjectMapper objectMapper;
 	@Autowired
 	private ProductRepository productRepository;
+	
+	@Autowired // --- ADDED ---
+	private OrderItemRepository orderItemRepository;
 
 	@Autowired
 	private FileStorageService fileStorageService;
 	
-	@Autowired // --- ADDED ---
+	@Autowired 
 	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
@@ -84,7 +89,9 @@ public class AdminProductController {
 
 		log.info("Fetching products with keyword: '{}', categoryId: {}, page: {}, size: {}", keyword, categoryId, page,
 				size);
-		productPage = productService.searchProducts(keyword, categoryId, pageable);
+		// --- THIS IS THE FIX ---
+		productPage = productService.searchAdminProducts(keyword, categoryId, pageable);
+		// --- END FIX ---
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
 
@@ -315,41 +322,98 @@ public class AdminProductController {
 		return "redirect:/admin/products";
 	}
 
+	// --- MODIFIED: This is now the "Smart Delete" endpoint ---
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
-	public String deleteProduct(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+	public String deleteOrDeactivateProduct(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password,
 			RedirectAttributes redirectAttributes, Principal principal) {
-		
-		// --- MODIFICATION: Added password validation ---
+
+		// 1. Validate Password
 		if (!adminService.validateOwnerPassword(password)) {
-			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Action cancelled.");
 			return "redirect:/admin/products";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<Product> productOpt = productService.findById(id);
 		if (productOpt.isEmpty()) {
 			redirectAttributes.addFlashAttribute("productError", "Product not found.");
 			return "redirect:/admin/products";
 		}
-		String productName = productOpt.get().getName();
-
-		String imagePath = productOpt.get().getImageUrl();
-		if (StringUtils.hasText(imagePath)) {
-			fileStorageService.delete(imagePath);
+		
+		Product product = productOpt.get();
+		String productName = product.getName();
+		
+		// 2. Check Stock
+		if (product.getCurrentStock() > 0) {
+			log.warn("Admin {} attempted to delete/deactivate product '{}' (ID: {}) with stock > 0. Blocked.", principal.getName(), productName, id);
+			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + productName + "'. Product still has " + product.getCurrentStock() + " items in stock. Please adjust stock to 0 first.");
+			return "redirect:/admin/products";
 		}
 
-		// Let the service throw an exception if deletion fails
-		// The GlobalExceptionHandler will catch it.
-		productService.deleteById(id);
-
-		activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
-				"Deleted product: " + productName + " (ID: " + id + ")");
-		redirectAttributes.addFlashAttribute("productSuccess", "Product '" + productName + "' deleted successfully!");
-
+		try {
+			// 3. Check Order History
+			if (orderItemRepository.countByProduct(product) > 0) {
+				// HISTORY EXISTS: Deactivate
+				productService.deactivateProduct(id);
+				activityLogService.logAdminAction(principal.getName(), "DEACTIVATE_PRODUCT",
+						"Deactivated product with order history: " + productName + " (ID: " + id + ")");
+				redirectAttributes.addFlashAttribute("productSuccess",
+						"Product '" + productName + "' has order history. It has been DEACTIVATED instead of deleted.");
+			} else {
+				// NO HISTORY: Delete Permanently
+				// First delete image
+				String imagePath = product.getImageUrl();
+				if (StringUtils.hasText(imagePath)) {
+					fileStorageService.delete(imagePath);
+				}
+				// Then delete product (which cascades to recipe)
+				productService.deleteProduct(id);
+				activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
+						"Permanently deleted product: " + productName + " (ID: " + id + ")");
+				redirectAttributes.addFlashAttribute("productSuccess",
+						"Product '" + productName + "' had no order history and was PERMANENTLY deleted.");
+			}
+		} catch (DataIntegrityViolationException e) {
+			// This will catch if we try to delete a product that has order history (failsafe)
+			log.warn("Data integrity violation on delete/deactivate for product {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", "Operation failed. Product has order history and cannot be deleted.");
+		} catch (IllegalArgumentException e) { // Catches stock > 0
+			log.warn("Failed to delete/deactivate product {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+		}
+		
 		return "redirect:/admin/products";
 	}
+	
+	@PostMapping("/activate/{id}")
+	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')") // Use same perm
+	public String activateProduct(@PathVariable("id") Long id,
+			RedirectAttributes redirectAttributes, Principal principal) {
+
+		try {
+			Optional<Product> productOpt = productService.findById(id);
+			if (productOpt.isEmpty()) {
+				redirectAttributes.addFlashAttribute("productError", "Product not found.");
+				return "redirect:/admin/products";
+			}
+			String productName = productOpt.get().getName();
+
+			productService.activateProduct(id);
+
+			activityLogService.logAdminAction(principal.getName(), "ACTIVATE_PRODUCT",
+					"Activated product: " + productName + " (ID: " + id + ")");
+			redirectAttributes.addFlashAttribute("productSuccess",
+					"Product '" + productName + "' activated successfully!");
+
+		} catch (Exception e) {
+			log.warn("Failed to activate product {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+		}
+		
+		return "redirect:/admin/products";
+	}
+	// --- END MODIFICATION ---
 
 	@GetMapping("/calculate-max/{id}")
 	@ResponseBody

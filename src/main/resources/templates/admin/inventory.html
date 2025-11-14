@@ -127,8 +127,8 @@
 								<th>Current Stock</th>
 								<th>Unit</th>
 								<th>Cost Per Unit</th>
-								<th>Total Cost</th>
-								<th>Status</th>
+								<th>Item Status</th> 
+								<th>Stock Status</th> 
 								<th>Actions</th>
 							</tr>
 						</thead>
@@ -141,8 +141,13 @@
 								<td th:text="${item.unit.abbreviation}">kg</td>
 								<td
 									th:text="'₱' + ${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}">₱50.00</td>
-								<td
-									th:text="'₱' + ${#numbers.formatDecimal(item.getTotalCostValue(), 1, 'COMMA', 2, 'POINT')}">₱1,250.00</td>
+								
+								<td>
+									<span class="status-badge"
+										th:text="${item.itemStatus != null ? item.itemStatus : 'UNKNOWN'}"
+										th:classappend="${item.itemStatus == 'ACTIVE' ? 'status-active' : (item.itemStatus == 'INACTIVE' ? 'status-cancelled' : 'status-low')}">
+									</span>
+								</td>
 								<td><span class="status-badge"
 									th:text="${#strings.replace(item.stockStatus, '_', ' ')}"
 									th:classappend="'status-' + ${#strings.toLowerCase(item.stockStatus)}">
@@ -173,17 +178,32 @@
 										th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 2)}"
 										th:data-cost="${item.costPerUnit != null ? #numbers.formatDecimal(item.costPerUnit, 1, 2) : ''}">
 										Edit</button>
-									<form sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
+										
+									<form th:if="${item.itemStatus == 'ACTIVE' or item.itemStatus == null}"
+										sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
-										th:data-secure-delete-message="'Are you sure you want to delete the item \'' + ${item.name} + '\'? This requires the Owner password.'">
-										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
+										th:data-secure-delete-message="'Are you sure you want to DELETE \'' + ${item.name} + '\'? This is permanent if it has no recipe usage, otherwise it will be deactivated.'">
+										<button type="submit" class="btn btn-sm btn-action-delete"
+											th:disabled="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+											th:title="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'Cannot delete: Item has stock.' : 'Delete Item'}">
+											Delete</button>
+									</form>
+									
+									<form th:if="${item.itemStatus == 'INACTIVE'}"
+										sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
+										th:action="@{/admin/inventory/activate/{id}(id=${item.id})}"
+										method="post"
+										th:data-confirm-save-message="'Are you sure you want to ACTIVATE \'' + ${item.name} + '\'?'">
+										<button type="submit" class="btn btn-sm btn-action-success"
+											title="Activate Item">
+											Activate</button>
 									</form>
 									</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(inventoryItems)}">
 								<td colspan="8" class="text-center text-muted"
-									th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No items found.'}">
+									th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No inventory items added yet.'}">
 									No inventory items added yet.</td>
 							</tr>
 						</tbody>

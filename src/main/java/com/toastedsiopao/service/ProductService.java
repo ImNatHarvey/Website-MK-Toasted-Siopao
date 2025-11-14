@@ -16,13 +16,23 @@ public interface ProductService {
 
 	Product save(ProductDto productDto);
 
-	void deleteById(Long id);
+	// --- MODIFIED ---
+	void deactivateProduct(Long id);
+
+	void activateProduct(Long id);
+	
+	void deleteProduct(Long id); // --- ADDED THIS LINE ---
+	// --- END MODIFIED ---
 
 	Page<Product> findByCategory(Long categoryId, Pageable pageable);
 
 	Page<Product> searchProducts(String keyword, Pageable pageable);
 
 	Page<Product> searchProducts(String keyword, Long categoryId, Pageable pageable);
+	
+	// --- ADDED ---
+	Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable);
+	// --- END ADDED ---
 
 	Product adjustStock(Long productId, int quantityChange, String reason);
 

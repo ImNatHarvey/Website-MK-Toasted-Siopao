@@ -49,7 +49,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-xl-4 col-md-12 mb-4">
+			<div class="col-xl-4 col-md-6 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-sales">
 						<i class="fa-solid fa-calendar-days"></i>
@@ -208,38 +208,90 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-lg-2 col-md-6 mb-4">
+			
+			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-info text-center">
+					<div class="stats-icon" style="background-color: #fffbe6; color: #faad14;">
+						<i class="fa-solid fa-arrow-down-short-wide"></i>
+					</div>
+					<div class="stats-info">
 						<div class="stats-label">Low Stock</div>
 						<div class="stats-value" style="color: #faad14;"
 							th:text="${lowStockItems}">0</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-lg-2 col-md-6 mb-4">
+			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-info text-center">
+					<div class="stats-icon" style="background-color: #fff1f0; color: #f5222d;">
+						<i class="fa-solid fa-triangle-exclamation"></i>
+					</div>
+					<div class="stats-info">
 						<div class="stats-label">Critical Stock</div>
 						<div class="stats-value" style="color: #f5222d;"
 							th:text="${criticalStockItems}">0</div>
 					</div>
-					</div>
+				</div>
 			</div>
-			<div class="col-lg-2 col-md-6 mb-4">
+			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-info text-center">
+					<div class="stats-icon" style="background-color: #f0f2f5; color: #595959;">
+						<i class="fa-solid fa-box-open"></i>
+					</div>
+					<div class="stats-info">
 						<div class="stats-label">Out of Stock</div>
 						<div class="stats-value" style="color: #595959;"
 							th:text="${outOfStockItems}">0</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-lg-2 col-md-12 mb-4">
+			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-info text-center">
+					<div class="stats-icon" style="background-color: #f9f0ff; color: #722ed1;">
+						<i class="fa-solid fa-tags"></i>
+					</div>
+					<div class="stats-info">
 						<div class="stats-label">Item Types</div>
 						<div class="stats-value" th:text="${totalInventoryItems}">0</div>
+					</div>
+				</div>
+			</div>
+			</div>
+		
+		<h2 class="dashboard-section-title">Product Summary</h2>
+		<div class="row">
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon" style="background-color: #e6f7ff; color: #1890ff;">
+						<i class="fa-solid fa-burger"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Total Products</div>
+						<div class="stats-value" th:text="${totalProducts}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon" style="background-color: #fffbe6; color: #faad14;">
+						<i class="fa-solid fa-triangle-exclamation"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Products Low on Stock</div>
+						<div class="stats-value" style="color: #faad14;"
+							th:text="${lowStockProducts}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg-4 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon" style="background-color: #fff1f0; color: #f5222d;">
+						<i class="fa-solid fa-circle-xmark"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Products Out of Stock</div>
+						<div class="stats-value" style="color: #f5222d;"
+							th:text="${outOfStockProducts}">0</div>
 					</div>
 				</div>
 			</div>

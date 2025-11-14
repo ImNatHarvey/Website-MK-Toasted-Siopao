@@ -105,6 +105,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.warn("Missing data for Order Status Chart.");
 			return;
 		}
+		
+		// --- MODIFICATION: Aligned colors with dashboard card colors ---
+		const themeColors = [
+			'rgba(17, 63, 103, 0.8)',   // PENDING (GCASH) - Primary Blue
+			'rgba(250, 173, 20, 0.8)',  // PENDING (COD) - Warning Yellow
+			'rgba(24, 144, 255, 0.8)', // PROCESSING - Info Blue
+			'rgba(19, 194, 194, 0.8)', // OUT FOR DELIVERY - Teal
+			'rgba(82, 196, 26, 0.8)',  // DELIVERED - Success Green
+			'rgba(245, 34, 45, 0.8)',  // CANCELLED - Danger Red
+			'rgba(245, 34, 45, 0.8)'   // REJECTED - Danger Red
+		];
+		// --- END MODIFICATION ---
 
 		new Chart(ctx, {
 			type: 'doughnut',
@@ -113,13 +125,7 @@ document.addEventListener('DOMContentLoaded', function() {
 				datasets: [{
 					label: 'Order Status',
 					data: data,
-					backgroundColor: [
-						'rgba(255, 193, 7, 0.8)',
-						'rgba(23, 162, 184, 0.8)',
-						'rgba(40, 167, 69, 0.8)',
-						'rgba(220, 53, 69, 0.8)',
-						'rgba(108, 117, 125, 0.8)'
-					],
+					backgroundColor: themeColors, // --- MODIFIED ---
 					borderColor: '#fff',
 					borderWidth: 2
 				}]

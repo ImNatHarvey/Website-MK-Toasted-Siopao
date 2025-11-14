@@ -98,14 +98,26 @@ public class CustomerOrderController {
 		String receiptImagePath = null;
 		if (orderDto.getPaymentMethod().equalsIgnoreCase("gcash")) {
 			
+			// --- ##### MODIFICATION START ##### ---
 			// --- NEW: Validate Transaction ID ---
-			if (!StringUtils.hasText(orderDto.getTransactionId())) {
+			String txId = orderDto.getTransactionId();
+			if (!StringUtils.hasText(txId)) {
 				log.warn("GCash order submitted without Transaction ID by user: {}", user.getUsername());
+				bindingResult.rejectValue("transactionId", "orderDto.transactionId", "Transaction ID is required for GCash payments.");
+				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); // Pass back the error
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
 				redirectAttributes.addFlashAttribute("orderError", "Transaction ID is required for GCash payments.");
 				return "redirect:/u/order";
+			} else if (txId.length() < 13 || !txId.matches("\\d+")) { // Check length and if it's all digits
+				log.warn("GCash order submitted with invalid Transaction ID '{}' by user: {}", txId, user.getUsername());
+				bindingResult.rejectValue("transactionId", "orderDto.transactionId", "Invalid Transaction ID. It must be 13 digits.");
+				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); // Pass back the error
+				redirectAttributes.addFlashAttribute("orderDto", orderDto);
+				redirectAttributes.addFlashAttribute("orderError", "Invalid Transaction ID. It must be 13 digits.");
+				return "redirect:/u/order";
 			}
 			// --- END NEW ---
+			// --- ##### MODIFICATION END ##### ---
 
 			if (receiptFile == null || receiptFile.isEmpty()) {
 				log.warn("GCash order submitted without receipt file by user: {}", user.getUsername());

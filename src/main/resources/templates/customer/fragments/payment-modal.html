@@ -56,7 +56,7 @@
 									<div class="form-check mb-4">
 										<input class="form-check-input" type="radio" th:field="*{paymentMethod}"
 											id="payment_cod" value="cod"> 
-										<label class="form-check-label" for="payment_cod"> Cash on Delivery</label>
+										<label class="form-check-label" for="payment_cod"> Cash on Delivery </label>
 									</div>
 								</div>
 								
@@ -87,10 +87,10 @@
 											<input type="text" class="form-control" th:field="*{transactionId}" id="form_transactionId"
 												placeholder="Enter 13-digit Transaction ID"
 												th:classappend="${#fields.hasErrors('transactionId')} ? 'is-invalid' : ''">
-											<div class="invalid-feedback" id="transactionId-feedback"
-											     th:errors="*{transactionId}">
-											     </div>
-										</div>
+											<div class="invalid-feedback" id="transactionId-feedback">
+												<span th:if="${#fields.hasErrors('transactionId')}" th:errors="*{transactionId}"></span>
+											</div>
+											</div>
 										<label for="receiptFile" class="form-label">Upload Receipt Screenshot</label>
 										<div class="image-uploader-container mb-3" id="receiptUploader">
 											<input type="file" name="receiptFile"

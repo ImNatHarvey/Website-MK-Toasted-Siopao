@@ -30,7 +30,7 @@
 					onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='var(--primary)'; }"
 					th:classappend="${currentStatus == 'PENDING_VERIFICATION' ? 'active' : ''}"
 					th:styleappend="${currentStatus == 'PENDING_VERIFICATION' ? 'background-color: var(--primary); color: var(--light); border-color: var(--primary);' : ''}">
-					Pending Verification </a> <a
+					Pending (GCASH) </a> <a
 					th:href="@{/u/history(status='PENDING')}"
 					class="btn btn-outline-warning"
 					th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending
@@ -66,7 +66,7 @@
 
 						<div class="d-flex align-items-center gap-2">
 							<span class="status-badge fs-6"
-								th:text="${#strings.replace(order.status, '_', ' ')}"
+								th:text="${order.status == 'PENDING' ? 'PENDING (COD)' : (order.status == 'PENDING_VERIFICATION' ? 'PENDING (GCASH)' : #strings.replace(order.status, '_', ' '))}"
 								th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
 								Status </span>
 

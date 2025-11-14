@@ -67,7 +67,7 @@
 				class="btn btn-outline-primary"
 				style="--bs-btn-color: var(--primary); --bs-btn-border-color: var(--primary); color: var(--primary);"
 				th:classappend="${param.status == 'PENDING_VERIFICATION' ? 'active' : ''}">
-				Pending Verification
+				Pending (GCASH)
 			</a>
 			<a th:href="@{/admin/orders(status='PENDING')}"
 				class="btn btn-outline-warning"
@@ -138,7 +138,8 @@
 								<td
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
 								<td>
-									<span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
+									<span class="status-badge" 
+										th:text="${order.status == 'PENDING' ? 'PENDING (COD)' : (order.status == 'PENDING_VERIFICATION' ? 'PENDING (GCASH)' : #strings.replace(order.status, '_', ' '))}"
 										th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
 										Status 
 									</span>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-	th:fragment="layout(content)">
+	th:fragment="layout(content, pageScript)">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -130,12 +130,20 @@
 
 	<div class="toast-container position-fixed top-0 end-0 p-3"
 		style="z-index: 1100"></div>
+
+	<div id="toast-messages"
+		th:data-success-message="${successMessage}"
+		th:data-error-message="${errorMessage}" style="display: none;"></div>
+		
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 		crossorigin="anonymous"></script>
 
+	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/global-script.js}"></script>
 	<script th:src="@{/js/public-cart.js}"></script>
+
+	<th:block th:replace="${pageScript} ?: ~{}"></th:block>
 </body>
 </html>

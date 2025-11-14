@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{base :: layout(~{::main})}">
+	th:replace="~{base :: layout(~{::main}, ~{::script})}">
 <head>
 <meta charset="UTF-8">
 <title>Order - MK Toasted Siopao</title>
@@ -157,5 +157,10 @@
 			</div>
 		</div>
 	</main>
+	
+	<th:block th:fragment="script">
+		<script th:src="@{/js/public-order.js}"></script>
+	</th:block>
+	
 </body>
 </html>

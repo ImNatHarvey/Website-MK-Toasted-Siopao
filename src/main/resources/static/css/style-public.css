@@ -647,7 +647,7 @@ footer {
 
 .status-badge.status-low, .status-badge.status-pending {
 	background-color: var(--warning);
-	color: var(--dark);
+	color: var(--light); /* <-- MODIFIED from --dark */
 }
 
 .status-badge.status-critical, .status-badge.status-cancelled,

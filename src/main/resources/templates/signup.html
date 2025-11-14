@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{base :: layout(~{::main})}">
+	th:replace="~{base :: layout(~{::main}, ~{::script})}">
 <head>
 <meta charset="UTF-8">
 <title>Sign Up - MK Toasted Siopao</title>
@@ -219,74 +219,76 @@
 			</div>
 		</section>
 
-		<script th:inline="javascript">
-			document
-					.addEventListener(
-							'DOMContentLoaded',
-							function() {
-								const params = new URLSearchParams(
-										window.location.search);
-								if (params.get('source') === 'checkout') {
-									console
-											.log("Signup page loaded from checkout.");
-									const guestDataString = sessionStorage
-											.getItem('guestCheckoutData');
-									if (guestDataString) {
+		<th:block th:fragment="script">
+			<script th:inline="javascript">
+				document
+						.addEventListener(
+								'DOMContentLoaded',
+								function() {
+									const params = new URLSearchParams(
+											window.location.search);
+									if (params.get('source') === 'checkout') {
 										console
-												.log("Found guest checkout data. Pre-filling form.");
-										try {
-											const guestData = JSON
-													.parse(guestDataString);
-
-											// Map of guestData keys to form field IDs
-											const fieldMap = {
-												firstName : 'firstName',
-												lastName : 'lastName',
-												email : 'email',
-												phone : 'phone',
-												houseNo : 'houseNo',
-												lotNo : 'lotNo',
-												blockNo : 'blockNo',
-												street : 'street',
-												barangay : 'barangay',
-												municipality : 'municipality',
-												province : 'province'
-											};
-
-											for ( const key in fieldMap) {
-												const field = document
-														.getElementById(fieldMap[key]);
-												if (field && guestData[key]) {
-													field.value = guestData[key];
-												}
-											}
-
-											// Clean up the session storage
-											sessionStorage
-													.removeItem('guestCheckoutData');
-
-											// Focus the first empty field (username)
-											const usernameField = document
-													.getElementById('username');
-											if (usernameField) {
-												usernameField.focus();
-											}
-
-										} catch (e) {
+												.log("Signup page loaded from checkout.");
+										const guestDataString = sessionStorage
+												.getItem('guestCheckoutData');
+										if (guestDataString) {
 											console
-													.error(
-															"Failed to parse guest checkout data:",
-															e);
-											sessionStorage
-													.removeItem('guestCheckoutData');
+													.log("Found guest checkout data. Pre-filling form.");
+											try {
+												const guestData = JSON
+														.parse(guestDataString);
+	
+												// Map of guestData keys to form field IDs
+												const fieldMap = {
+													firstName : 'firstName',
+													lastName : 'lastName',
+													email : 'email',
+													phone : 'phone',
+													houseNo : 'houseNo',
+													lotNo : 'lotNo',
+													blockNo : 'blockNo',
+													street : 'street',
+													barangay : 'barangay',
+													municipality : 'municipality',
+													province : 'province'
+												};
+	
+												for ( const key in fieldMap) {
+													const field = document
+															.getElementById(fieldMap[key]);
+													if (field && guestData[key]) {
+														field.value = guestData[key];
+													}
+												}
+	
+												// Clean up the session storage
+												sessionStorage
+														.removeItem('guestCheckoutData');
+	
+												// Focus the first empty field (username)
+												const usernameField = document
+														.getElementById('username');
+												if (usernameField) {
+													usernameField.focus();
+												}
+	
+											} catch (e) {
+												console
+														.error(
+																"Failed to parse guest checkout data:",
+																e);
+												sessionStorage
+														.removeItem('guestCheckoutData');
+											}
+										} else {
+											console
+													.log("Loaded from checkout, but no guest data found in session storage.");
 										}
-									} else {
-										console
-												.log("Loaded from checkout, but no guest data found in session storage.");
 									}
-								}
-							});
-		</script>
+								});
+			</script>
+		</th:block>
 	</main>
 </body>
 </html>

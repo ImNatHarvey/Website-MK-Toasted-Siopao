@@ -43,7 +43,7 @@
 							</button>
 							<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
 								title="Clear All"> <i class="fa-solid fa-times"></i> <span
-								class_alias="d-none d-md-inline ms-1">Clear</span>
+								class="d-none d-md-inline ms-1">Clear</span>
 							</a>
 						</div>
 					</div>
@@ -129,27 +129,62 @@
 						<button class="btn btn-sm btn-outline-danger btn-clear-cart"
 							style="float: right; font-size: 0.75rem; padding: 0.2rem 0.5rem;">Clear</button>
 					</h3>
-					<div class="empty-order text-center py-3">
+					
+					<div class="empty-order text-center py-3"
+						th:classappend="${cartItemCount > 0 ? 'd-none' : ''}">
 						<p class="text-muted mb-0">Your bag is empty.</p>
 					</div>
 
-					<div class="order-items-list d-none"
-						style="max-height: 400px; overflow-y: auto;"></div>
-
+					<div class="order-items-list"
+						th:classappend="${cartItemCount == 0 ? 'd-none' : ''}"
+						style="max-height: 400px; overflow-y: auto;">
+						
+						<div class="order-item" th:each="item : ${cartItems}">
+							<div class="order-item-img-container">
+								<img th:src="${item.product.imageUrl != null ? item.product.imageUrl : '/img/placeholder.jpg'}" 
+									 th:alt="${item.product.name}" class="order-item-img"
+									 onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+							</div>
+							<div class="order-item-title" th:text="${item.product.name}">Product Name</div>
+							<div class="quantity-stepper-inline" style="max-width: 90px;">
+								<button class="btn btn-sm btn-action-delete qty-btn minus cart-decrement-btn"
+										th:data-product-id="${item.product.id}">
+									<i class="fa-solid fa-minus"></i>
+								</button>
+								<input type="text" class="form-control form-control-sm qty-input" th:value="${item.quantity}" readonly>
+								<button class="btn btn-sm btn-action-add qty-btn plus cart-increment-btn"
+										th:data-product-id="${item.product.id}"
+										th:data-stock="${item.product.currentStock}">
+									<i class="fa-solid fa-plus"></i>
+								</button>
+							</div>
+							<div class="order-item-total"
+								 th:text="${#numbers.formatCurrency(item.getSubtotal())}">
+								₱0.00
+							</div>
+							<button class="btn btn-sm btn-link text-danger cart-remove-btn"
+									th:data-product-id="${item.product.id}" title="Remove item">
+								<i class="fa-solid fa-trash-can"></i>
+							</button>
+						</div>
+						
+					</div>
 					<div class="mt-4 pt-3 border-top">
 						<div
 							class="d-flex justify-content-between align-items-center mb-3">
 							<h5 class="mb-0">Total:</h5>
-							<span class="total-price fw-bold fs-5">₱0.00</span>
+							<span class="total-price fw-bold fs-5"
+								  th:text="${#numbers.formatCurrency(cartTotal)}">₱0.00</span>
 						</div>
 						<div class="d-grid">
-							<a th:href="@{/u/order}" class="btn btn-checkout px-4 disabled">Proceed
+							<a th:href="@{/u/order}" class="btn btn-checkout px-4"
+							   th:classappend="${cartItemCount == 0 ? 'disabled' : ''}">Proceed
 								to Checkout</a>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+			</div>
 
 		<div th:if="${productPage.totalPages > 0}"
 			class="d-flex justify-content-center mt-4">

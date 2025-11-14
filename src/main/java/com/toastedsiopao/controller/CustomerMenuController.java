@@ -1,23 +1,29 @@
 package com.toastedsiopao.controller;
 
-import com.toastedsiopao.model.Category; // IMPORTED
-import com.toastedsiopao.model.Product; // IMPORTED
+import com.toastedsiopao.model.CartItem; 
+import com.toastedsiopao.model.Category; 
+import com.toastedsiopao.model.Product; 
 import com.toastedsiopao.model.SiteSettings;
-import com.toastedsiopao.service.CategoryService; // IMPORTED
-import com.toastedsiopao.service.ProductService; // IMPORTED
+import com.toastedsiopao.model.User; 
+import com.toastedsiopao.service.CartService; 
+import com.toastedsiopao.service.CategoryService; 
+import com.toastedsiopao.service.CustomerService; 
+import com.toastedsiopao.service.ProductService; 
 import com.toastedsiopao.service.SiteSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; // IMPORTED
-import org.springframework.data.domain.PageRequest; // IMPORTED
-import org.springframework.data.domain.Pageable; // IMPORTED
+import org.springframework.data.domain.Page; 
+import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.Pageable; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam; // IMPORTED
+import org.springframework.web.bind.annotation.RequestParam; 
 
-import java.util.List; // IMPORTED
+import java.math.BigDecimal; 
+import java.security.Principal; 
+import java.util.List; 
 
 @Controller
 @RequestMapping("/u")
@@ -26,13 +32,13 @@ public class CustomerMenuController {
 	@Autowired
 	private SiteSettingsService siteSettingsService;
 
-	// --- ADDED ---
 	@Autowired
 	private ProductService productService;
 
 	@Autowired
 	private CategoryService categoryService;
-	// --- END ADDED ---
+
+	// --- REMOVED: CustomerService and CartService (now in GlobalModelAttributes) ---
 
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
@@ -40,15 +46,14 @@ public class CustomerMenuController {
 		model.addAttribute("siteSettings", settings);
 	}
 
-	// --- MODIFIED ---
 	@GetMapping("/menu")
 	public String customerMenu(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "8") int size) {
+			@RequestParam(value = "size", defaultValue = "8") int size,
+			Principal principal) { 
 
 		Pageable pageable = PageRequest.of(page, size);
-		// --- THIS CALL NOW FILTERS FOR ACTIVE PRODUCTS ---
 		Page<Product> productPage = productService.searchProducts(keyword, categoryId, pageable);
 		List<Category> categoryList = categoryService.findAll();
 
@@ -63,7 +68,8 @@ public class CustomerMenuController {
 		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
 
+		// --- REMOVED: All cart-loading logic is now in GlobalModelAttributes ---
+
 		return "customer/menu";
 	}
-	// --- END MODIFIED ---
 }

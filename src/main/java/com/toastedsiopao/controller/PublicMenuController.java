@@ -1,9 +1,13 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.model.CartItem; 
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.SiteSettings;
+import com.toastedsiopao.model.User; 
+import com.toastedsiopao.service.CartService; 
 import com.toastedsiopao.service.CategoryService;
+import com.toastedsiopao.service.CustomerService; 
 import com.toastedsiopao.service.ProductService;
 import com.toastedsiopao.service.SiteSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +20,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal; 
+import java.security.Principal; 
 import java.util.List;
 
 @Controller
@@ -30,6 +36,8 @@ public class PublicMenuController {
 	@Autowired
 	private CategoryService categoryService;
 
+	// --- REMOVED: CustomerService and CartService (now in GlobalModelAttributes) ---
+
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -40,7 +48,8 @@ public class PublicMenuController {
 	public String menu(Model model, @RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "8") int size) {
+			@RequestParam(value = "size", defaultValue = "8") int size,
+			Principal principal) { 
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<Product> productPage = productService.searchProducts(keyword, categoryId, pageable);
@@ -56,6 +65,8 @@ public class PublicMenuController {
 		model.addAttribute("totalPages", productPage.getTotalPages());
 		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
+
+		// --- REMOVED: All cart-loading logic is now in GlobalModelAttributes ---
 
 		return "menu";
 	}

@@ -14,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const paymentModal = new bootstrap.Modal(paymentModalEl);
 
         // FIX 1: "Copy My Details" Button Logic
-        // Map of form IDs to main element data-c-* attribute suffixes (now camelCase)
         const fieldMap = {
             'shipping-firstName': 'cFirstName',
             'shipping-lastName': 'cLastName',
@@ -32,21 +31,16 @@ document.addEventListener('DOMContentLoaded', function() {
         copyDetailsBtn.addEventListener('click', function() {
             for (const [fieldId, dataKey] of Object.entries(fieldMap)) {
                 const input = document.getElementById(fieldId);
-                const dataValue = mainElement.dataset[dataKey]; // Access camelCase dataset key
+                const dataValue = mainElement.dataset[dataKey]; 
 
-                // BUG 1 FIX: Only populate if dataValue exists.
-                // Removed the 'else' block that was clearing the fields.
                 if (input && dataValue && dataValue !== 'null') {
                     input.value = dataValue;
                 }
             }
-
-            // Show a confirmation toast (relies on admin-utils.js)
             if (typeof queueToast === 'function') {
                 queueToast("Your profile details have been copied to the form.", false);
                 showToastNotifications();
             }
-
             copyDetailsBtn.blur();
         });
 
@@ -134,7 +128,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 console.log("Form validation success. Copying data to modal.");
-                // Copy data from visible form to modal's hidden form
                 for (const [modalFieldId, formFieldId] of Object.entries(modalFieldMap)) {
                     const modalInput = document.getElementById(modalFieldId);
                     const formInput = document.getElementById(formFieldId);
@@ -142,17 +135,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         modalInput.value = formInput.value;
                     }
                 }
-                // Manually show the modal
                 paymentModal.show();
             }
         });
 
-        // --- PAYMENT MODAL LOGIC (Copied from public-cart.js) ---
-        const CART_KEY = 'mkSiopaoCart';
-        const cartFormInput = document.getElementById('form_cartDataJson');
+        // --- PAYMENT MODAL LOGIC (REFACTORED) ---
+        // --- REMOVED: CART_KEY and cartFormInput ---
         const modalSummaryList = paymentModalEl.querySelector('.order-summary-modal-list');
         const modalTotalPriceElements = paymentModalEl.querySelectorAll('.total-price-modal');
         
+        // --- Find the MAIN page's cart (rendered by Thymeleaf) ---
+        const mainCartSummary = document.querySelector('.order-summary');
+        const mainCartList = mainCartSummary ? mainCartSummary.querySelector('.order-items-list') : null;
+        const mainTotalPrice = mainCartSummary ? mainCartSummary.querySelector('.total-price') : null;
+
         const gcashInstructions = document.getElementById('gcash-payment-instructions');
         const codInstructions = document.getElementById('cod-payment-instructions');
         const gcashRadio = document.getElementById('payment_gcash');
@@ -160,61 +156,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const receiptUploader = document.getElementById('receiptUploader');
         
         const transactionIdInput = document.getElementById('form_transactionId');
-        
-        // --- THIS IS THE FIX: Use the specific ID to find the feedback div ---
         const txIdFeedback = document.getElementById('transactionId-feedback');
-        // --- END FIX ---
-        
         const receiptFeedback = document.getElementById('receipt-feedback');
         
-        const formatCurrency = (value) => {
-            return new Intl.NumberFormat('en-PH', {
-                style: 'currency',
-                currency: 'PHP'
-            }).format(value);
-        };
-        const getCartTotal = (cart) => {
-            let total = 0;
-            Object.keys(cart).forEach(id => {
-                const item = cart[id];
-                total += item.price * item.quantity;
-            });
-            return total;
-        };
+        // --- REMOVED: formatCurrency, getCartTotal (no longer needed here) ---
 
         if (receiptUploader && typeof setupImageUploader === 'function') {
             setupImageUploader('receiptUploader');
         }
 
         paymentModalEl.addEventListener('show.bs.modal', function() {
-            console.log("Payment modal opening. Populating cart data.");
+            console.log("Payment modal opening. Populating cart data from main page.");
             
-            const cart = JSON.parse(sessionStorage.getItem(CART_KEY) || '{}');
-            const productIds = Object.keys(cart);
-            
-            modalSummaryList.innerHTML = '';
-            if (productIds.length === 0) {
-                modalSummaryList.innerHTML = '<p class="text-danger">Your cart is empty.</p>';
+            // --- MODIFICATION: Read from main page's sidebar ---
+            if (mainCartList && mainTotalPrice) {
+                // Clone the cart items from the sidebar into the modal
+                modalSummaryList.innerHTML = mainCartList.innerHTML;
+                
+                // --- Post-process: Simplify the cloned items for the modal ---
+                modalSummaryList.querySelectorAll('.order-item').forEach(item => {
+                    const title = item.querySelector('.order-item-title')?.textContent || 'Unknown Item';
+                    const quantity = item.querySelector('.qty-input')?.value || '0';
+                    const total = item.querySelector('.order-item-total')?.textContent || '₱0.00';
+                    
+                    const simpleItemEl = document.createElement('div');
+                    simpleItemEl.className = 'd-flex justify-content-between';
+                    simpleItemEl.innerHTML = `
+                        <span>${quantity}x ${title}</span>
+                        <span class="fw-bold">${total}</span>
+                    `;
+                    item.replaceWith(simpleItemEl); // Replace complex item with simple one
+                });
+                
+                // Copy the total price
+                const totalPriceText = mainTotalPrice.textContent;
+                modalTotalPriceElements.forEach(el => {
+                    el.textContent = totalPriceText;
+                });
+                
             } else {
-                productIds.forEach(id => {
-                    const item = cart[id];
-                    const itemTotal = item.price * item.quantity;
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'd-flex justify-content-between';
-                    itemEl.innerHTML = `
-						<span>${item.quantity}x ${item.name}</span>
-						<span class="fw-bold">${formatCurrency(itemTotal)}</span>
-					`;
-                    modalSummaryList.appendChild(itemEl);
+                 modalSummaryList.innerHTML = '<p class="text-danger">Error: Cart not found.</p>';
+                 modalTotalPriceElements.forEach(el => {
+                    el.textContent = '₱0.00';
                 });
             }
+            // --- END MODIFICATION ---
             
-            const totalPrice = getCartTotal(cart);
-            modalTotalPriceElements.forEach(el => {
-                el.textContent = formatCurrency(totalPrice);
-            });
-            
-            cartFormInput.value = JSON.stringify(cart);
+            // --- REMOVED: cartFormInput.value = ... ---
             
             if (receiptUploader) receiptUploader.resetUploader();
             
@@ -260,7 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
             paymentForm.addEventListener('submit', function(event) {
 				let validationFailed = false;
 				
-				// --- Clear old errors ---
 				if (txIdFeedback) txIdFeedback.classList.remove('d-block');
                 if (transactionIdInput) transactionIdInput.classList.remove('is-invalid');
                 if (receiptFeedback) receiptFeedback.classList.remove('d-block');
@@ -269,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (gcashRadio.checked) {
                     const receiptInput = receiptUploader.querySelector('.image-uploader-input');
                     
-                    // --- Receipt Validation ---
                     if (!receiptInput.files || receiptInput.files.length === 0) {
                         if (typeof queueToast === 'function') {
                             queueToast("Please upload your payment receipt to proceed.", true);
@@ -278,11 +264,10 @@ document.addEventListener('DOMContentLoaded', function() {
 							receiptFeedback.textContent = "Please upload a screenshot of your receipt.";
 							receiptFeedback.classList.add('d-block');
 						}
-						if (receiptUploader) receiptUploader.classList.add('is-invalid'); // Add red border to uploader
+						if (receiptUploader) receiptUploader.classList.add('is-invalid');
                         validationFailed = true;
                     }
                     
-                    // --- Transaction ID Validation ---
                     const txIdValue = transactionIdInput.value.trim();
                     if (txIdValue.length === 0) {
 						if (typeof queueToast === 'function') {
@@ -310,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (validationFailed) {
 					event.preventDefault();
 					if (typeof showToastNotifications === 'function') {
-						showToastNotifications(); // Show all queued toasts
+						showToastNotifications();
 					}
 					return;
 				}
@@ -323,7 +308,4 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-    // ========================================================================
-    // == END: CUSTOMER ORDER FORM & MODAL LOGIC ==
-    // ========================================================================
 });

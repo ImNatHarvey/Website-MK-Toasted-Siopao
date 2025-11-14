@@ -161,10 +161,11 @@
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
 		crossorigin="anonymous"></script>
 
-	<script th:src="@{/js/global-script.js}"></script>
-	<script th:src="@{/js/admin-utils.js}"></script>
-	<script th:src="@{/js/public-cart.js}"></script>
-	<script th:src="@{/js/notification-handler.js}"></script> <th:block th:replace="${pageScript} ?: ~{}"></th:block>
+	<script th:src="@{/js/global-script.js(v=1.9)}"></script>
+	<script th:src="@{/js/admin-utils.js(v=1.9)}"></script>
+	<script th:src="@{/js/customer-cart.js(v=1.9)}"></script>
+	<script th:src="@{/js/notification-handler.js(v=1.9)}"></script> 
+	<th:block th:replace="${pageScript} ?: ~{}"></th:block>
 	
 </body>
 </html>

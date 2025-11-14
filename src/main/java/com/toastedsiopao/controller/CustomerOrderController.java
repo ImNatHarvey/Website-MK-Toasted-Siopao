@@ -1,39 +1,40 @@
 package com.toastedsiopao.controller;
 
-import com.toastedsiopao.dto.OrderSubmitDto; // --- ADDED ---
+import com.toastedsiopao.dto.OrderSubmitDto;
+import com.toastedsiopao.model.CartItem; 
 import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.model.User; 
+import com.toastedsiopao.service.CartService; 
 import com.toastedsiopao.service.CustomerService; 
-import com.toastedsiopao.service.FileStorageService; // --- ADDED ---
-import com.toastedsiopao.service.OrderService; // --- ADDED ---
+import com.toastedsiopao.service.FileStorageService; 
+import com.toastedsiopao.service.OrderService; 
 import com.toastedsiopao.service.SiteSettingsService;
-import jakarta.validation.Valid; // --- ADDED ---
-import org.slf4j.Logger; // --- ADDED ---
-import org.slf4j.LoggerFactory; // --- ADDED ---
+import jakarta.validation.Valid; 
+import org.slf4j.Logger; 
+import org.slf4j.LoggerFactory; 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult; // --- ADDED ---
+import org.springframework.validation.BindingResult; 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
+import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
-import org.springframework.web.multipart.MultipartFile; // --- ADDED ---
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // --- ADDED ---
-import org.springframework.util.StringUtils; // --- THIS IS THE FIX ---
+import org.springframework.web.bind.annotation.RequestParam; 
+import org.springframework.web.multipart.MultipartFile; 
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
+import org.springframework.util.StringUtils; 
 
+import java.math.BigDecimal; 
 import java.security.Principal; 
-import java.util.List; // --- ADDED ---
+import java.util.List; 
 
 @Controller
 @RequestMapping("/u")
 public class CustomerOrderController {
 	
-	// --- ADDED ---
 	private static final Logger log = LoggerFactory.getLogger(CustomerOrderController.class);
 	private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
-	// --- END ADDED ---
 
 	@Autowired
 	private SiteSettingsService siteSettingsService;
@@ -41,13 +42,14 @@ public class CustomerOrderController {
 	@Autowired
 	private CustomerService customerService;
 	
-	// --- ADDED ---
 	@Autowired
 	private OrderService orderService;
 	
 	@Autowired
 	private FileStorageService fileStorageService;
-	// --- END ADDED ---
+	
+	@Autowired
+	private CartService cartService;
 
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
@@ -63,16 +65,21 @@ public class CustomerOrderController {
 		}
 		model.addAttribute("customer", user);
 		
-		// --- ADDED: Add empty DTO for the modal form ---
 		if (!model.containsAttribute("orderDto")) {
 			model.addAttribute("orderDto", new OrderSubmitDto());
 		}
-		// --- END ADDED ---
+		
+		// --- REMOVED: Cart-loading logic is now in GlobalModelAttributes ---
+		// --- We only need to check if the cart is empty for the redirect ---
+		List<CartItem> cartItems = cartService.getCartForUser(user);
+		if (cartItems.isEmpty()) {
+			log.warn("User {} accessed /u/order with an empty cart. Redirecting to menu.", user.getUsername());
+			return "redirect:/u/menu";
+		}
 		
 		return "customer/order";
 	}
 	
-	// --- ADDED: New endpoint to handle order submission ---
 	@PostMapping("/order/submit")
 	public String submitOrder(@Valid @ModelAttribute("orderDto") OrderSubmitDto orderDto,
 	                          BindingResult bindingResult,
@@ -85,21 +92,17 @@ public class CustomerOrderController {
 			return "redirect:/logout";
 		}
 
-		// 1. Validate DTO
 		if (bindingResult.hasErrors()) {
 			log.warn("OrderSubmitDto validation failed for user: {}", user.getUsername());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult);
 			redirectAttributes.addFlashAttribute("orderDto", orderDto);
-			redirectAttributes.addFlashAttribute("orderError", "Validation failed. Please check your details."); // For a toast
-			return "redirect:/u/order"; // Redirect back to the order page
+			redirectAttributes.addFlashAttribute("orderError", "Validation failed. Please check your details.");
+			return "redirect:/u/order";
 		}
 		
-		// 2. Validate File
 		String receiptImagePath = null;
 		if (orderDto.getPaymentMethod().equalsIgnoreCase("gcash")) {
 			
-			// --- ##### MODIFICATION START ##### ---
-			// --- NEW: Validate Transaction ID ---
 			String txId = orderDto.getTransactionId();
 			if (!StringUtils.hasText(txId)) {
 				log.warn("GCash order submitted without Transaction ID by user: {}", user.getUsername());
@@ -116,8 +119,6 @@ public class CustomerOrderController {
 				redirectAttributes.addFlashAttribute("orderError", "Invalid Transaction ID. It must be 13 digits.");
 				return "redirect:/u/order";
 			}
-			// --- END NEW ---
-			// --- ##### MODIFICATION END ##### ---
 
 			if (receiptFile == null || receiptFile.isEmpty()) {
 				log.warn("GCash order submitted without receipt file by user: {}", user.getUsername());
@@ -134,7 +135,6 @@ public class CustomerOrderController {
 				return "redirect:/u/order";
 			}
 
-			// 3. Store File
 			try {
 				receiptImagePath = fileStorageService.store(receiptFile);
 				log.info("Stored payment receipt for user {} at: {}", user.getUsername(), receiptImagePath);
@@ -145,26 +145,22 @@ public class CustomerOrderController {
 				return "redirect:/u/order";
 			}
 		} else {
-			// Handle Cash on Delivery (COD)
 			log.info("Processing Cash on Delivery (COD) order for user: {}", user.getUsername());
 		}
 
-		// 4. Create Order (this is the transactional part)
 		try {
 			orderService.createOrder(user, orderDto, receiptImagePath);
 			
 			redirectAttributes.addFlashAttribute("orderSuccess", "Your order has been placed successfully!");
-			redirectAttributes.addFlashAttribute("clearCart", true); // Flag for JS
+			redirectAttributes.addFlashAttribute("clearCart", true);
 			
-			return "redirect:/u/history"; // Redirect to order history
+			return "redirect:/u/history"; 
 
 		} catch (IllegalArgumentException e) {
-			// This catches validation errors like "Insufficient stock"
 			log.warn("Order creation failed for user {}: {}", user.getUsername(), e.getMessage());
 			redirectAttributes.addFlashAttribute("orderDto", orderDto);
 			redirectAttributes.addFlashAttribute("orderError", e.getMessage());
 			
-			// If stock was the issue, we must delete the uploaded receipt
 			if (receiptImagePath != null) {
 				fileStorageService.delete(receiptImagePath);
 			}
@@ -172,7 +168,6 @@ public class CustomerOrderController {
 			return "redirect:/u/order";
 			
 		} catch (Exception e) {
-			// Catch-all for other runtime errors (e.g., DB connection)
 			log.error("Unexpected error creating order for user {}: {}", user.getUsername(), e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("orderDto", orderDto);
 			redirectAttributes.addFlashAttribute("orderError", "An unexpected error occurred. Please try again.");
@@ -184,5 +179,4 @@ public class CustomerOrderController {
 			return "redirect:/u/order";
 		}
 	}
-	// --- END ADDED ---
 }

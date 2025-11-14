@@ -1,20 +1,23 @@
 package com.toastedsiopao.config;
 
-import com.toastedsiopao.model.Notification; // ADDED
+import com.toastedsiopao.model.CartItem; // --- ADDED ---
+import com.toastedsiopao.model.Notification;
 import com.toastedsiopao.model.SiteSettings;
-import com.toastedsiopao.model.User; // ADDED
-import com.toastedsiopao.service.CustomerService; // ADDED
-import com.toastedsiopao.service.NotificationService; // ADDED
+import com.toastedsiopao.model.User;
+import com.toastedsiopao.service.CartService; // --- ADDED ---
+import com.toastedsiopao.service.CustomerService;
+import com.toastedsiopao.service.NotificationService;
 import com.toastedsiopao.service.SiteSettingsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication; // ADDED
-import org.springframework.security.core.context.SecurityContextHolder; // ADDED
-import org.springframework.ui.Model; // ADDED
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
-import java.security.Principal; // ADDED
-import java.util.List; // ADDED
+import java.math.BigDecimal; // --- ADDED ---
+import java.security.Principal;
+import java.util.List;
 
 @ControllerAdvice
 public class GlobalModelAttributes {
@@ -22,12 +25,15 @@ public class GlobalModelAttributes {
 	@Autowired
 	private SiteSettingsService siteSettingsService;
 
-	// --- ADDED ---
 	@Autowired
 	private NotificationService notificationService;
 
 	@Autowired
 	private CustomerService customerService;
+	
+	// --- ADDED ---
+	@Autowired
+	private CartService cartService;
 	// --- END ADDED ---
 
 	@ModelAttribute("siteSettings")
@@ -35,7 +41,6 @@ public class GlobalModelAttributes {
 		return siteSettingsService.getSiteSettings();
 	}
 
-	// --- ADDED: New method for notifications ---
 	@ModelAttribute
 	public void addGlobalNotificationAttributes(Model model, Principal principal) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -45,6 +50,12 @@ public class GlobalModelAttributes {
 			model.addAttribute("unreadUserNotificationCount", 0L);
 			model.addAttribute("adminNotifications", List.of());
 			model.addAttribute("userNotifications", List.of());
+			
+			// --- ADDED: Empty cart for guests ---
+			model.addAttribute("cartItems", List.of());
+			model.addAttribute("cartTotal", BigDecimal.ZERO);
+			model.addAttribute("cartItemCount", 0);
+			// --- END ADDED ---
 			return;
 		}
 
@@ -61,9 +72,14 @@ public class GlobalModelAttributes {
 			model.addAttribute("adminNotifications", adminNotifications);
 			model.addAttribute("unreadAdminNotificationCount", adminCount);
 			
-			// Add empty user attributes to prevent errors if an admin somehow lands on a customer page
 			model.addAttribute("userNotifications", List.of());
 			model.addAttribute("unreadUserNotificationCount", 0L);
+			
+			// --- ADDED: Empty cart for admin ---
+			model.addAttribute("cartItems", List.of());
+			model.addAttribute("cartTotal", BigDecimal.ZERO);
+			model.addAttribute("cartItemCount", 0);
+			// --- END ADDED ---
 
 		} else if (isCustomer) {
 			// Customer is logged in
@@ -73,9 +89,25 @@ public class GlobalModelAttributes {
 				long userCount = notificationService.countUnreadUserNotifications(user);
 				model.addAttribute("userNotifications", userNotifications);
 				model.addAttribute("unreadUserNotificationCount", userCount);
+				
+				// --- ADDED: Load persistent cart for the customer ---
+				List<CartItem> cartItems = cartService.getCartForUser(user);
+				BigDecimal cartTotal = cartService.getCartTotal(cartItems);
+				int cartItemCount = cartService.getCartItemCount(cartItems);
+
+				model.addAttribute("cartItems", cartItems);
+				model.addAttribute("cartTotal", cartTotal);
+				model.addAttribute("cartItemCount", cartItemCount);
+				// --- END ADDED ---
+				
 			} else {
 				model.addAttribute("userNotifications", List.of());
 				model.addAttribute("unreadUserNotificationCount", 0L);
+				// --- ADDED: Empty cart if user not found (safety) ---
+				model.addAttribute("cartItems", List.of());
+				model.addAttribute("cartTotal", BigDecimal.ZERO);
+				model.addAttribute("cartItemCount", 0);
+				// --- END ADDED ---
 			}
 			
 			// Add empty admin attributes
@@ -83,5 +115,4 @@ public class GlobalModelAttributes {
 			model.addAttribute("unreadAdminNotificationCount", 0L);
 		}
 	}
-	// --- END ADDED ---
 }

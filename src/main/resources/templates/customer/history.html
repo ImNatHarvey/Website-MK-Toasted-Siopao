@@ -43,6 +43,9 @@
 				<a th:href="@{/u/history(status='CANCELLED')}"
 					class="btn btn-outline-danger"
 					th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
+				<a th:href="@{/u/history(status='REJECTED')}"
+					class="btn btn-outline-danger"
+					th:classappend="${currentStatus == 'REJECTED' ? 'active' : ''}">Rejected</a>
 			</div>
 
 			<div th:if="${orderPage.empty}"
@@ -70,10 +73,15 @@
 								th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
 								Status </span>
 
-							<button class="btn btn-sm btn-outline-danger"
-								th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}">
-								<i class="fa-solid fa-times me-1"></i> Cancel Order
-							</button>
+							<form
+								th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
+								th:action="@{/u/history/cancel/{id}(id=${order.id})}"
+								method="post"
+								th:data-confirm-message="'Are you sure you want to cancel order #ORD-' + ${order.id} + '?'">
+								<button type="submit" class="btn btn-sm btn-outline-danger">
+									<i class="fa-solid fa-times me-1"></i> Cancel Order
+								</button>
+							</form>
 						</div>
 					</div>
 					<div class="card-body">
@@ -97,7 +105,8 @@
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">
 									₱0.00</h4>
 								<h6 class="mb-2 mt-3">Payment</h6>
-								<p class="mb-0" th:text="${#strings.toUpperCase(order.paymentMethod)}">GCASH</p>
+								<p class="mb-0"
+									th:text="${#strings.toUpperCase(order.paymentMethod)}">GCASH</p>
 							</div>
 						</div>
 					</div>
@@ -150,7 +159,7 @@
 					</ul>
 				</nav>
 			</div>
-			</div>
+		</div>
 	</main>
 </body>
 </html>

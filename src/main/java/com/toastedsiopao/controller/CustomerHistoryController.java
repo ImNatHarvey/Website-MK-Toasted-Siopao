@@ -14,8 +14,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable; // --- ADDED ---
+import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // --- ADDED ---
 
 import java.security.Principal;
 
@@ -62,4 +65,27 @@ public class CustomerHistoryController {
 
 		return "customer/history";
 	}
+
+	// --- ADDED ---
+	@PostMapping("/history/cancel/{id}")
+	public String cancelOrder(@PathVariable("id") Long orderId, Principal principal,
+			RedirectAttributes redirectAttributes) {
+
+		User user = customerService.findByUsername(principal.getName());
+		if (user == null) {
+			return "redirect:/logout";
+		}
+
+		try {
+			orderService.cancelOrder(orderId, user);
+			redirectAttributes.addFlashAttribute("orderSuccess", "Order #ORD-" + orderId + " has been cancelled.");
+		} catch (IllegalArgumentException e) {
+			redirectAttributes.addFlashAttribute("orderError", e.getMessage());
+		} catch (Exception e) {
+			redirectAttributes.addFlashAttribute("orderError", "An unexpected error occurred. Please try again.");
+		}
+
+		return "redirect:/u/history";
+	}
+	// --- END ADDED ---
 }

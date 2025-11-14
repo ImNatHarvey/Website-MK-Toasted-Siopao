@@ -79,12 +79,27 @@
 			<div class="col-xl-3 col-md-6 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-orders"
+						style="background-color: #e6f7ff; color: var(--primary);">
+						<i class="fa-solid fa-receipt"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Pending (GCASH)</div>
+						<div class="stats-value"
+							th:text="${pendingVerificationOrders}"
+							th:styleappend="${pendingVerificationOrders > 0 ? 'color: var(--primary);' : ''}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
 						style="background-color: #fffbe6; color: #faad14;">
 						<i class="fa-solid fa-clock"></i>
 					</div>
 					<div class="stats-info">
-						<div class="stats-label">Pending</div>
-						<div class="stats-value" th:text="${pendingOrders}">0</div>
+						<div class="stats-label">Pending (COD)</div>
+						<div class="stats-value" th:text="${pendingOrders}"
+							th:styleappend="${pendingOrders > 0 ? 'color: #faad14;' : ''}">0</div>
 					</div>
 				</div>
 			</div>
@@ -112,7 +127,33 @@
 					</div>
 				</div>
 			</div>
-		</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
+						style="background-color: #fff1f0; color: #f5222d;">
+						<i class="fa-solid fa-times"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Cancelled</div>
+						<div class="stats-value" th:text="${cancelledOrders}"
+							th:styleappend="${cancelledOrders > 0 ? 'color: #f5222d;' : ''}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders"
+						style="background-color: #fff1f0; color: #f5222d;">
+						<i class="fa-solid fa-ban"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Rejected</div>
+						<div class="stats-value" th:text="${rejectedOrders}"
+							th:styleappend="${rejectedOrders > 0 ? 'color: #f5222d;' : ''}">0</div>
+					</div>
+				</div>
+			</div>
+			</div>
 
 		<div class="row">
 			<div class="col-xl-8 mb-4">

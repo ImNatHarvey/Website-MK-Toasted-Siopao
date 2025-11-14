@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{}, 'orders')}">
+	th:replace="~{admin/base :: layout(~{::#admin-content-wrapper}, ~{::script}, 'orders')}">
 <head>
 <title>Manage Orders - MK Admin Portal</title>
 </head>
@@ -12,6 +12,10 @@
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Order Management</h1>
 		</div>
+
+		<div
+			th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
+
 		<div class="row text-center mb-4">
 			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
@@ -24,7 +28,17 @@
 			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class="card-title">Pending</h5>
+						<h5 class="card-title">Pending (GCASH)</h5>
+						<p class="display-6 fw-bold"
+							th:text="${pendingVerificationOrders}"
+							style="color: var(--primary);">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Pending (COD)</h5>
 						<p class="display-6 fw-bold text-warning"
 							th:text="${pendingOrders}">0</p>
 					</div>
@@ -39,7 +53,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-lg col-md-6 mb-3">
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Delivered</h5>
@@ -48,12 +62,12 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-lg col-md-6 mb-3">
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
-						<h5 class="card-title">Cancelled</h5>
+						<h5 class="card-title">Cancelled/Rejected</h5>
 						<p class="display-6 fw-bold text-danger"
-							th:text="${cancelledOrders}">0</p>
+							th:text="${cancelledOrders + rejectedOrders}">0</p>
 					</div>
 				</div>
 			</div>
@@ -62,17 +76,15 @@
 		<div class="d-flex justify-content-center flex-wrap gap-2 mb-4">
 			<a th:href="@{/admin/orders}" class="btn btn-outline-primary"
 				th:classappend="${param.status == null ? 'active' : ''}">All
-				Orders</a> 
-			<a th:href="@{/admin/orders(status='PENDING_VERIFICATION')}"
+				Orders</a> <a
+				th:href="@{/admin/orders(status='PENDING_VERIFICATION')}"
 				class="btn btn-outline-primary"
 				style="--bs-btn-color: var(--primary); --bs-btn-border-color: var(--primary); color: var(--primary);"
 				th:classappend="${param.status == 'PENDING_VERIFICATION' ? 'active' : ''}">
-				Pending (GCASH)
-			</a>
-			<a th:href="@{/admin/orders(status='PENDING')}"
+				Pending (GCASH) </a> <a th:href="@{/admin/orders(status='PENDING')}"
 				class="btn btn-outline-warning"
-				th:classappend="${param.status == 'PENDING' ? 'active' : ''}">Pending (COD)</a>
-			<a th:href="@{/admin/orders(status='PROCESSING')}"
+				th:classappend="${param.status == 'PENDING' ? 'active' : ''}">Pending
+				(COD)</a> <a th:href="@{/admin/orders(status='PROCESSING')}"
 				class="btn btn-outline-info"
 				th:classappend="${param.status == 'PROCESSING' ? 'active' : ''}">Processing</a>
 			<a th:href="@{/admin/orders(status='DELIVERED')}"
@@ -81,6 +93,9 @@
 			<a th:href="@{/admin/orders(status='CANCELLED')}"
 				class="btn btn-outline-danger"
 				th:classappend="${param.status == 'CANCELLED' ? 'active' : ''}">Cancelled</a>
+			<a th:href="@{/admin/orders(status='REJECTED')}"
+				class="btn btn-outline-danger"
+				th:classappend="${param.status == 'REJECTED' ? 'active' : ''}">Rejected</a>
 		</div>
 
 		<form th:action="@{/admin/orders}" method="get"
@@ -112,44 +127,93 @@
 			</div>
 			<div class="card-body">
 				<div class="table-responsive">
-					<table class="table table-hover align-middle text-center">
+					<table class="table table-hover align-middle">
 						<thead class="table-light">
 							<tr>
 								<th>Order ID</th>
-								<th>Customer</th>
-								<th>Items Summary</th>
-								<th>Total</th>
 								<th>Date</th>
+								<th>Customer</th>
+								<th>Items</th>
+								<th>Total</th>
+								<th>Payment</th>
 								<th>Status</th>
-								<th>Actions</th>
+								<th style="width: 200px;">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr th:each="order : ${orders}">
+							<tr th:each="order : ${orders}"
+								th:data-order-id="${order.id}"
+								th:data-order-date="${#temporals.format(order.orderDate, 'MMM dd, yyyy • h:mm a')}"
+								th:data-customer-name="${order.shippingFirstName + ' ' + order.shippingLastName}"
+								th:data-customer-phone="${order.shippingPhone}"
+								th:data-customer-address="${order.shippingAddress}"
+								th:data-order-total="${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}"
+								th:data-payment-method="${#strings.toUpperCase(order.paymentMethod)}"
+								th:data-payment-status="${#strings.replace(order.paymentStatus, '_', ' ')}"
+								th:data-order-status="${#strings.replace(order.status, '_', ' ')}"
+								th:data-status-class="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}"
+								th:data-notes="${order.notes}"
+								th:data-receipt-url="${order.paymentReceiptImageUrl}"
+								th:data-items-json="${#strings.listJoin(
+									order.items.![
+										'{' +
+										'&quot;name&quot;:&quot;' + product.name + '&quot;,' +
+										'&quot;quantity&quot;:' + quantity + ',' +
+										'&quot;price&quot;:' + pricePerUnit +
+										'}'
+									],
+									','
+								)}">
 								<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
+								<td
+									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
 								<td
 									th:text="${order.shippingFirstName + ' ' + order.shippingLastName}">Customer
 									Name</td>
-								<td><span th:each="item, iterStat : ${order.items}"
-									th:text="${item.quantity + 'x ' + item.product.name + (!iterStat.last ? ', ' : '')}">
-										Item Summary </span></td>
+								<td class="text-start">
+									<ul class="list-unstyled mb-0 small">
+										<li th:each="item : ${order.items}"
+											th:text="${item.quantity + 'x ' + item.product.name}">
+											Item Summary</li>
+									</ul>
+								</td>
 								<td
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</td>
 								<td
-									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
+									th:text="${#strings.toUpperCase(order.paymentMethod)}">PAYMENT</td>
+								<td><span class="status-badge"
+									th:text="${order.status == 'PENDING' ? 'PENDING (COD)' : (order.status == 'PENDING_VERIFICATION' ? 'PENDING (GCASH)' : #strings.replace(order.status, '_', ' '))}"
+									th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
+										Status </span></td>
 								<td>
-									<span class="status-badge" 
-										th:text="${order.status == 'PENDING' ? 'PENDING (COD)' : (order.status == 'PENDING_VERIFICATION' ? 'PENDING (GCASH)' : #strings.replace(order.status, '_', ' '))}"
-										th:classappend="${order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 'status-' + #strings.toLowerCase(order.status)}">
-										Status 
-									</span>
-								</td>
-								<td>
-									<button class="btn btn-sm btn-action-view">View</button>
+									<div class="d-flex justify-content-center gap-1">
+										<button
+											class="btn btn-sm btn-action-view view-order-btn"
+											data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+
+										<th:block
+											th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
+											sec:authorize="hasAuthority('EDIT_ORDERS')">
+											<form
+												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+												method="post" class="d-inline"
+												th:data-confirm-save-message="'Are you sure you want to ACCEPT Order ' + ${order.id} + '?'">
+												<input type="hidden" name="action" value="accept" />
+												<button type="submit" class="btn btn-sm btn-action-success">Accept</button>
+											</form>
+											<form
+												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+												method="post" class="d-inline"
+												th:data-confirm-message="'Are you sure you want to REJECT Order ' + ${order.id} + '? This will reverse the stock.'">
+												<input type="hidden" name="action" value="reject" />
+												<button type="submit" class="btn btn-sm btn-action-delete">Reject</button>
+											</form>
+										</th:block>
+									</div>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(orders)}">
-								<td colspan="7" class="text-center text-muted"
+								<td colspan="8" class="text-center text-muted"
 									th:text="${(keyword != null or currentStatus != null) ? 'No orders found matching your criteria.' : 'No orders placed yet.'}">
 									No orders placed yet.</td>
 							</tr>
@@ -195,6 +259,12 @@
 				</div>
 			</div>
 		</div>
+
+		<div th:replace="~{admin/fragments/order-modal :: order-view-modal}"></div>
+
 	</div>
+	<th:block th:fragment="script">
+		<script th:src="@{/js/admin-orders.js}"></script>
+	</th:block>
 </body>
 </html>

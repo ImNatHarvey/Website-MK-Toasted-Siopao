@@ -235,6 +235,90 @@ public class OrderServiceImpl implements OrderService {
 			return orderRepository.findAllByDate(startDateTime, endDateTime, pageable); 
 		}
 	}
+
+	// --- NEW PRIVATE HELPER METHOD ---
+	private void reverseStockForOrder(Order order, String reason) {
+		log.info("Reversing stock for order #{}", order.getId());
+		for (OrderItem item : order.getItems()) {
+			try {
+				productService.adjustStock(item.getProduct().getId(), item.getQuantity(), reason);
+				log.info("Restored {} unit(s) of {} (ID: {})", 
+						item.getQuantity(), item.getProduct().getName(), item.getProduct().getId());
+			} catch (Exception e) {
+				// Log critical error. This shouldn't fail, but if it does, we must know.
+				log.error("CRITICAL: Failed to reverse stock for product ID {} during order cancellation/rejection. " +
+						  "Order ID: {}, Product: {}, Qty: {}. Error: {}",
+						  item.getProduct().getId(), order.getId(), item.getProduct().getName(), item.getQuantity(), e.getMessage(), e);
+				// We don't re-throw, as the order status change is the primary goal.
+			}
+		}
+	}
+	
+	// --- NEW IMPLEMENTATIONS ---
+	@Override
+	public Order cancelOrder(Long orderId, User customer) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+
+		if (!order.getUser().getId().equals(customer.getId())) {
+			log.warn("Security violation: User {} attempted to cancel order #{} owned by user {}", 
+					customer.getUsername(), orderId, order.getUser().getUsername());
+			throw new IllegalArgumentException("You do not have permission to cancel this order.");
+		}
+
+		if (!order.getStatus().equals(Order.STATUS_PENDING) && !order.getStatus().equals(Order.STATUS_PENDING_VERIFICATION)) {
+			throw new IllegalArgumentException("This order can no longer be cancelled as it is already " + order.getStatus());
+		}
+
+		order.setStatus(Order.STATUS_CANCELLED);
+		order.setPaymentStatus(Order.PAYMENT_CANCELLED);
+		
+		reverseStockForOrder(order, "Order #" + order.getId() + " Cancelled by Customer");
+		
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order acceptOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+
+		String currentStatus = order.getStatus();
+		if (!currentStatus.equals(Order.STATUS_PENDING) && !currentStatus.equals(Order.STATUS_PENDING_VERIFICATION)) {
+			throw new IllegalArgumentException("Order cannot be accepted. Current status: " + currentStatus);
+		}
+
+		if (currentStatus.equals(Order.STATUS_PENDING)) { // COD
+			order.setStatus(Order.STATUS_PROCESSING);
+			// Payment status remains PENDING until paid on delivery
+		} else { // PENDING_VERIFICATION (GCash)
+			order.setStatus(Order.STATUS_PROCESSING);
+			order.setPaymentStatus(Order.PAYMENT_PAID);
+		}
+
+		log.info("Order #{} accepted. Status set to PROCESSING.", orderId);
+		return orderRepository.save(order);
+	}
+
+	@Override
+	public Order rejectOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+		
+		String currentStatus = order.getStatus();
+		if (!currentStatus.equals(Order.STATUS_PENDING) && !currentStatus.equals(Order.STATUS_PENDING_VERIFICATION)) {
+			throw new IllegalArgumentException("Order cannot be rejected. Current status: " + currentStatus);
+		}
+
+		order.setStatus(Order.STATUS_REJECTED);
+		order.setPaymentStatus(Order.PAYMENT_REJECTED);
+		
+		reverseStockForOrder(order, "Order #" + order.getId() + " Rejected by Admin");
+
+		log.info("Order #{} rejected. Status set to REJECTED.", orderId);
+		return orderRepository.save(order);
+	}
+	// --- END NEW IMPLEMENTATIONS ---
 	
 	@Override
 	@Transactional(readOnly = true)

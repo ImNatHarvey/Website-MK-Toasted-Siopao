@@ -2,6 +2,7 @@ package com.toastedsiopao.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.toastedsiopao.model.Order; // --- ADDED ---
 import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.InventoryItemService;
@@ -53,10 +54,14 @@ public class AdminDashboardController {
 
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();
 		model.addAttribute("totalOrders", orderStatusCounts.values().stream().mapToLong(Long::longValue).sum());
-		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault("PENDING", 0L));
-		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault("PROCESSING", 0L));
-		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault("DELIVERED", 0L));
-		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault("CANCELLED", 0L));
+		// --- MODIFIED: Added all status counts ---
+		model.addAttribute("pendingVerificationOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
+		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING, 0L));
+		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PROCESSING, 0L));
+		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault(Order.STATUS_DELIVERED, 0L));
+		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
+		model.addAttribute("rejectedOrders", orderStatusCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
+		// --- END MODIFIED ---
 
 		model.addAttribute("totalInventoryItems", inventoryItemService.findAll().size()); 
 		model.addAttribute("totalStockQuantity", inventoryItemService.getTotalStockQuantity()); 

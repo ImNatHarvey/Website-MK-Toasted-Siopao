@@ -1,6 +1,7 @@
 package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.service.ActivityLogService; // --- ADDED ---
 import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,9 +13,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable; // --- ADDED ---
+import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; // --- ADDED ---
 
+import java.security.Principal; // --- ADDED ---
 import java.util.Map; 
 
 @Controller
@@ -25,6 +30,11 @@ public class AdminOrderController {
 
 	@Autowired
 	private OrderService orderService;
+
+	// --- ADDED ---
+	@Autowired
+	private ActivityLogService activityLogService;
+	// --- END ADDED ---
 
 	@GetMapping
 	@PreAuthorize("hasAuthority('VIEW_ORDERS')") 
@@ -41,10 +51,14 @@ public class AdminOrderController {
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();
 		long totalOrders = orderStatusCounts.values().stream().mapToLong(Long::longValue).sum();
 		model.addAttribute("totalOrders", totalOrders);
-		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault("PENDING", 0L));
-		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault("PROCESSING", 0L));
-		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault("DELIVERED", 0L));
-		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault("CANCELLED", 0L));
+		// --- MODIFIED: Added all statuses ---
+		model.addAttribute("pendingVerificationOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
+		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING, 0L));
+		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PROCESSING, 0L));
+		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault(Order.STATUS_DELIVERED, 0L));
+		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
+		model.addAttribute("rejectedOrders", orderStatusCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
+		// --- END MODIFIED ---
 
 		model.addAttribute("orderPage", orderPage);
 		model.addAttribute("orders", orderPage.getContent()); 
@@ -58,4 +72,38 @@ public class AdminOrderController {
 
 		return "admin/orders"; 
 	}
+
+	// --- ADDED ---
+	@PostMapping("/update-status/{id}")
+	@PreAuthorize("hasAuthority('EDIT_ORDERS')")
+	public String updateOrderStatus(@PathVariable("id") Long orderId,
+									@RequestParam("action") String action,
+									Principal principal,
+									RedirectAttributes redirectAttributes) {
+		
+		String adminUsername = principal.getName();
+		
+		try {
+			if ("accept".equals(action)) {
+				Order order = orderService.acceptOrder(orderId);
+				activityLogService.logAdminAction(adminUsername, "ACCEPT_ORDER", "Accepted Order #ORD-" + orderId + ". Status set to " + order.getStatus());
+				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " accepted.");
+			} else if ("reject".equals(action)) {
+				Order order = orderService.rejectOrder(orderId);
+				activityLogService.logAdminAction(adminUsername, "REJECT_ORDER", "Rejected Order #ORD-" + orderId + ". Stock reversed.");
+				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " rejected. Stock has been reversed.");
+			} else {
+				throw new IllegalArgumentException("Invalid action.");
+			}
+		} catch (IllegalArgumentException e) {
+			log.warn("Failed to update order status for order #{} by {}: {}", orderId, adminUsername, e.getMessage());
+			redirectAttributes.addFlashAttribute("stockError", "Error updating order: " + e.getMessage());
+		} catch (Exception e) {
+			log.error("Unexpected error updating order status for order #{} by {}", orderId, adminUsername, e);
+			redirectAttributes.addFlashAttribute("stockError", "An unexpected server error occurred.");
+		}
+
+		return "redirect:/admin/orders";
+	}
+	// --- END ADDED ---
 }

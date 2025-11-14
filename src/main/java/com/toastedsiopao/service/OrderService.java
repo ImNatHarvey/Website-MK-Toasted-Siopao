@@ -30,6 +30,12 @@ public interface OrderService {
 
 	Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable); // --- ADDED ---
 
+	// --- ADDED: New methods for order management ---
+	Order cancelOrder(Long orderId, User customer);
+	Order acceptOrder(Long orderId);
+	Order rejectOrder(Long orderId);
+	// --- END ADDED ---
+
 	BigDecimal getSalesToday();
 
 	BigDecimal getSalesThisWeek();

@@ -174,6 +174,7 @@
 									'status-' + #strings.toLowerCase(order.status))}"
 								th:data-notes="${order.notes}"
 								th:data-receipt-url="${order.paymentReceiptImageUrl}"
+								th:data-transaction-id="${order.transactionId}"
 								th:data-items-json="'[' + ${#strings.listJoin(
 									order.items.![
 										'{' +
@@ -249,18 +250,26 @@
 										</th:block>
 										
 										<th:block
-											th:if="${order.status == 'OUT_FOR_DELIVERY' and order.paymentMethod == 'cod'}"
+											th:if="${order.status == 'OUT_FOR_DELIVERY'}"
 											sec:authorize="hasAuthority('EDIT_ORDERS')">
 											<form
+												th:if="${order.paymentMethod == 'cod'}"
 												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
 												method="post" class="d-inline"
 												th:data-confirm-save-message="'Confirm payment received for COD Order ' + ${order.id} + '?'">
-												<input type="hidden" name="action" value="complete" />
+												<input type="hidden" name="action" value="complete_cod" />
+												<button type="submit" class="btn btn-sm btn-action-success">Complete (COD)</button>
+											</form>
+											<form
+												th:if="${order.paymentMethod != 'cod'}"
+												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+												method="post" class="d-inline"
+												th:data-confirm-save-message="'Confirm Order ' + ${order.id} + ' has been delivered?'">
+												<input type="hidden" name="action" value="complete_delivered" />
 												<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
 											</form>
 										</th:block>
-
-									</div>
+										</div>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(orders)}">

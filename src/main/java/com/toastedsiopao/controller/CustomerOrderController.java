@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
 import org.springframework.web.multipart.MultipartFile; // --- ADDED ---
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; // --- ADDED ---
+import org.springframework.util.StringUtils; // --- THIS IS THE FIX ---
 
 import java.security.Principal; 
 import java.util.List; // --- ADDED ---
@@ -96,6 +97,16 @@ public class CustomerOrderController {
 		// 2. Validate File
 		String receiptImagePath = null;
 		if (orderDto.getPaymentMethod().equalsIgnoreCase("gcash")) {
+			
+			// --- NEW: Validate Transaction ID ---
+			if (!StringUtils.hasText(orderDto.getTransactionId())) {
+				log.warn("GCash order submitted without Transaction ID by user: {}", user.getUsername());
+				redirectAttributes.addFlashAttribute("orderDto", orderDto);
+				redirectAttributes.addFlashAttribute("orderError", "Transaction ID is required for GCash payments.");
+				return "redirect:/u/order";
+			}
+			// --- END NEW ---
+
 			if (receiptFile == null || receiptFile.isEmpty()) {
 				log.warn("GCash order submitted without receipt file by user: {}", user.getUsername());
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
@@ -123,8 +134,6 @@ public class CustomerOrderController {
 			}
 		} else {
 			// Handle Cash on Delivery (COD)
-			// No receipt needed, but we can implement COD logic here if needed
-			// For now, we'll just skip the receipt logic
 			log.info("Processing Cash on Delivery (COD) order for user: {}", user.getUsername());
 		}
 
@@ -132,8 +141,6 @@ public class CustomerOrderController {
 		try {
 			orderService.createOrder(user, orderDto, receiptImagePath);
 			
-			// --- TODO: Clear cart from sessionStorage on success ---
-			// We will add a flag for a script on the frontend to do this.
 			redirectAttributes.addFlashAttribute("orderSuccess", "Your order has been placed successfully!");
 			redirectAttributes.addFlashAttribute("clearCart", true); // Flag for JS
 			

@@ -6,7 +6,7 @@
 		<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
 			<div class="modal-dialog modal-lg">
 				<div class="modal-content">
-					<form id="payment-form" th:action="@{/u/order/submit}" method="post" enctype="multipart/form-data">
+					<form id="payment-form" th:action="@{/u/order/submit}" method="post" enctype="multipart/form-data" th:object="${orderDto}">
 						
 						<input type="hidden" name="firstName" id="form_firstName">
 						<input type="hidden" name="lastName" id="form_lastName">
@@ -43,18 +43,18 @@
 
 									<div class="mb-3">
 										<label for="form_notes" class="form-label">Notes to Store/Rider (Optional)</label>
-										<textarea class="form-control" name="notes" id="form_notes" rows="3"
+										<textarea class="form-control" th:field="*{notes}" id="form_notes" rows="3"
 											placeholder="Leave a note... (e.g., landmark, color of gate)"></textarea>
 									</div>
 
 									<h5 class="mb-3">Payment Method</h5>
 									<div class="form-check">
-										<input class="form-check-input" type="radio" name="paymentMethod"
+										<input class="form-check-input" type="radio" th:field="*{paymentMethod}"
 											id="payment_gcash" value="gcash" checked> 
 										<label class="form-check-label" for="payment_gcash"> GCash (Manual Verification)</label>
 									</div>
 									<div class="form-check mb-4">
-										<input class="form-check-input" type="radio" name="paymentMethod"
+										<input class="form-check-input" type="radio" th:field="*{paymentMethod}"
 											id="payment_cod" value="cod"> 
 										<label class="form-check-label" for="payment_cod"> Cash on Delivery</label>
 									</div>
@@ -65,8 +65,7 @@
 									<div id="gcash-payment-instructions">
 										<h5 class="mb-3">GCash Payment Instructions</h5>
 										<p class="small text-muted">
-											1. Scan the QR code below to pay the exact amount of
-											<strong class="total-price-modal text-primary">₱0.00</strong>.
+											1. Scan the QR code or send payment to the details below.
 										</p>
 										<div class="text-center mb-3">
 											<img th:src="@{${siteSettings.gcashQrCodeImage}}" 
@@ -74,13 +73,23 @@
 												style="max-width: 250px; object-fit: contain;"
 												onerror="this.onerror=null; this.src='/img/qrplaceholder.jpg';">
 										</div>
+										<div class="small text-muted mb-3">
+											<p class="mb-0"><strong>Name:</strong> <span th:text="${siteSettings.gcashName != null ? siteSettings.gcashName : '...'}">...</span></p>
+											<p class="mb-0"><strong>Number:</strong> <span th:text="${siteSettings.gcashNumber != null ? siteSettings.gcashNumber : '...'}">...</span></p>
+										</div>
 										<p class="small text-muted">
-											2. Take a screenshot of your payment receipt.
-										</p>
-										<p class="small text-muted">
-											3. Upload the screenshot below to confirm your order.
+											2. Pay the exact amount of
+											<strong class="total-price-modal text-primary">₱0.00</strong>.
 										</p>
 										
+										<div class="mb-3">
+											<label for="form_transactionId" class="form-label">GCash Transaction ID</label>
+											<input type="text" class="form-control" th:field="*{transactionId}" id="form_transactionId"
+												placeholder="Enter 13-digit Transaction ID"
+												th:classappend="${#fields.hasErrors('transactionId')} ? 'is-invalid' : ''">
+											<div class="invalid-feedback" 
+											     th:errors="*{transactionId}"></div>
+										</div>
 										<label for="receiptFile" class="form-label">Upload Receipt Screenshot</label>
 										<div class="image-uploader-container mb-3" id="receiptUploader">
 											<input type="file" name="receiptFile"

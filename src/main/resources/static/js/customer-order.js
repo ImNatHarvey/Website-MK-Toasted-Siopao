@@ -159,6 +159,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const codRadio = document.getElementById('payment_cod');
         const receiptUploader = document.getElementById('receiptUploader');
         
+        // --- NEW: Get Transaction ID field ---
+        const transactionIdInput = document.getElementById('form_transactionId');
+        
         const formatCurrency = (value) => {
             return new Intl.NumberFormat('en-PH', {
                 style: 'currency',
@@ -224,14 +227,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         const togglePaymentMethod = () => {
+			const receiptInput = receiptUploader.querySelector('.image-uploader-input');
             if (codRadio.checked) {
                 codInstructions.style.display = 'block';
                 gcashInstructions.style.display = 'none';
-                if (receiptUploader) receiptUploader.querySelector('.image-uploader-input').required = false;
+                if (receiptInput) receiptInput.required = false;
+                if (transactionIdInput) transactionIdInput.required = false; // --- ADDED ---
             } else {
                 codInstructions.style.display = 'none';
                 gcashInstructions.style.display = 'block';
-                if (receiptUploader) receiptUploader.querySelector('.image-uploader-input').required = true;
+                if (receiptInput) receiptInput.required = true;
+                if (transactionIdInput) transactionIdInput.required = true; // --- ADDED ---
             }
         };
         
@@ -241,17 +247,58 @@ document.addEventListener('DOMContentLoaded', function() {
         const paymentForm = document.getElementById('payment-form');
         if(paymentForm) {
             paymentForm.addEventListener('submit', function(event) {
+				let validationFailed = false; // --- ADDED ---
+				
                 if (gcashRadio.checked) {
                     const receiptInput = receiptUploader.querySelector('.image-uploader-input');
                     if (!receiptInput.files || receiptInput.files.length === 0) {
-                        event.preventDefault();
                         if (typeof queueToast === 'function') {
                             queueToast("Please upload your payment receipt to proceed.", true);
-                            showToastNotifications();
                         }
-                        return;
+                        validationFailed = true; // --- ADDED ---
                     }
+                    
+                    // --- NEW: Transaction ID Validation ---
+                    const txIdValue = transactionIdInput.value.trim();
+                    const txIdFeedback = transactionIdInput.nextElementSibling;
+                    
+                    if (txIdValue.length === 0) {
+						if (typeof queueToast === 'function') {
+                            queueToast("Please enter the GCash Transaction ID.", true);
+                        }
+                        transactionIdInput.classList.add('is-invalid');
+                        if(txIdFeedback) {
+							txIdFeedback.textContent = "Transaction ID is required for GCash.";
+							txIdFeedback.classList.add('d-block'); // --- FIX ---
+						}
+                        validationFailed = true;
+					} else if (txIdValue.length < 13 || !/^\d+$/.test(txIdValue)) {
+						if (typeof queueToast === 'function') {
+                            queueToast("Invalid Transaction ID. It must be 13 digits.", true);
+                        }
+                        transactionIdInput.classList.add('is-invalid');
+                        if(txIdFeedback) {
+							txIdFeedback.textContent = "Invalid Transaction ID. Must be 13 digits.";
+							txIdFeedback.classList.add('d-block'); // --- FIX ---
+						}
+                        validationFailed = true;
+					} else {
+						transactionIdInput.classList.remove('is-invalid');
+						if(txIdFeedback) { // --- FIX ---
+							txIdFeedback.classList.remove('d-block');
+						}
+					}
+                    // --- END NEW ---
                 }
+                
+                if (validationFailed) { // --- ADDED ---
+					event.preventDefault();
+					if (typeof showToastNotifications === 'function') {
+						showToastNotifications();
+					}
+					return;
+				}
+                
                 const submitBtn = paymentForm.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = true;

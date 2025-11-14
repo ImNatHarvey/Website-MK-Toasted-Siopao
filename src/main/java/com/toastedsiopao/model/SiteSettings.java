@@ -92,4 +92,12 @@ public class SiteSettings {
 
 	@Column(length = 255)
 	private String gcashQrCodeImage = "/img/qrplaceholder.jpg";
+	
+	// --- ADDED: GCash Details ---
+	@Column(length = 100)
+	private String gcashName = "MK Toasted Siopao";
+	
+	@Column(length = 20)
+	private String gcashNumber = "09XX-XXX-XXXX";
+	// --- END ADDED ---
 }

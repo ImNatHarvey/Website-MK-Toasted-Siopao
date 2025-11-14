@@ -126,6 +126,7 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			newOrder.setStatus(Order.STATUS_PENDING_VERIFICATION);
 			newOrder.setPaymentStatus(Order.PAYMENT_FOR_VERIFICATION);
+			newOrder.setTransactionId(orderDto.getTransactionId()); // --- ADDED THIS LINE ---
 		}
 		
 		newOrder.setPaymentReceiptImageUrl(receiptImagePath);
@@ -402,7 +403,45 @@ public class OrderServiceImpl implements OrderService {
 		
 		return savedOrder;
 	}
-	// --- END NEW IMPLEMENTATIONS ---
+	
+	// --- THIS IS THE NEWLY IMPLEMENTED METHOD ---
+	@Override
+	public Order completeDeliveredOrder(Long orderId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
+
+		if (!order.getStatus().equals(Order.STATUS_OUT_FOR_DELIVERY)) {
+			throw new IllegalArgumentException("Only orders 'Out for Delivery' can be marked as delivered.");
+		}
+		
+		if (order.getPaymentMethod().equalsIgnoreCase("cod")) {
+			throw new IllegalArgumentException("This action is for pre-paid (non-COD) orders. Use 'Complete COD' action instead.");
+		}
+		
+		if (!order.getPaymentStatus().equals(Order.PAYMENT_PAID)) {
+			log.warn("Admin is completing an order (ID: {}) that is not marked as PAID. Current payment status: {}", orderId, order.getPaymentStatus());
+			// We allow this, but it's unusual. The "acceptOrder" step should have set GCash to PAID.
+		}
+		
+		order.setStatus(Order.STATUS_DELIVERED);
+		// Payment status is already PAID, so no change needed.
+		
+		log.info("Pre-Paid Order #{} status set to DELIVERED.", orderId);
+		Order savedOrder = orderRepository.save(order);
+
+		// --- Send Email ---
+		try {
+			String subject = "Your Order has been Delivered!";
+			String message = "Your order has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
+			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
+		} catch (MessagingException e) {
+			log.error("Failed to send 'Order Delivered' email for Order #{}", savedOrder.getId(), e);
+		}
+		// --- End Email ---
+		
+		return savedOrder;
+	}
+	// --- END NEW IMPLEMENTATION ---
 	
 	@Override
 	@Transactional(readOnly = true)

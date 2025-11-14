@@ -62,4 +62,9 @@ public class OrderSubmitDto {
 
 	@NotBlank(message = "Cart data cannot be empty.")
 	private String cartDataJson; // A JSON string of the cart from sessionStorage
+	
+	// --- ADDED ---
+	@Size(max = 255, message = "Transaction ID cannot exceed 255 characters")
+	private String transactionId;
+	// --- END ADDED ---
 }

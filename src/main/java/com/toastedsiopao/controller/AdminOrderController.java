@@ -99,10 +99,14 @@ public class AdminOrderController {
 				Order order = orderService.shipOrder(orderId);
 				activityLogService.logAdminAction(adminUsername, "SHIP_ORDER", "Shipped Order #ORD-" + orderId + ". Status set to " + order.getStatus());
 				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " is now Out for Delivery.");
-			} else if ("complete".equals(action)) {
+			} else if ("complete_cod".equals(action)) {
 				Order order = orderService.completeCodOrder(orderId);
 				activityLogService.logAdminAction(adminUsername, "COMPLETE_ORDER", "Completed (COD) Order #ORD-" + orderId + ". Status set to " + order.getStatus());
 				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " has been completed and paid.");
+			} else if ("complete_delivered".equals(action)) { // --- NEW ACTION ---
+				Order order = orderService.completeDeliveredOrder(orderId);
+				activityLogService.logAdminAction(adminUsername, "COMPLETE_ORDER", "Completed (Pre-Paid) Order #ORD-" + orderId + ". Status set to " + order.getStatus());
+				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " has been marked as delivered.");
 			} else {
 				throw new IllegalArgumentException("Invalid action.");
 			}

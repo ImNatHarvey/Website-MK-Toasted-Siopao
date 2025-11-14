@@ -19,6 +19,10 @@ document.addEventListener('DOMContentLoaded', function() {
 		const paymentMethod = viewOrderModal.querySelector('#viewPaymentMethod');
 		const paymentStatus = viewOrderModal.querySelector('#viewPaymentStatus');
 		
+		// --- NEW: Transaction ID elements ---
+		const transactionIdContainer = viewOrderModal.querySelector('#viewTransactionIdContainer');
+		const transactionIdSpan = viewOrderModal.querySelector('#viewTransactionId');
+		
 		const receiptContainer = viewOrderModal.querySelector('#viewReceiptContainer');
 		const receiptLink = viewOrderModal.querySelector('#viewReceiptLink');
 		const receiptImage = viewOrderModal.querySelector('#viewReceiptImage');
@@ -89,6 +93,15 @@ document.addEventListener('DOMContentLoaded', function() {
 				receiptImage.src = '';
 				receiptLink.href = '#';
 				receiptContainer.style.display = 'none';
+			}
+			
+			// --- NEW: Handle Transaction ID ---
+			if (dataset.paymentMethod === 'GCASH' && dataset.transactionId && dataset.transactionId !== 'null') {
+				transactionIdSpan.textContent = dataset.transactionId;
+				transactionIdContainer.style.display = 'block';
+			} else {
+				transactionIdSpan.textContent = '';
+				transactionIdContainer.style.display = 'none';
 			}
 
 			// --- Handle Items List ---

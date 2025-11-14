@@ -70,7 +70,19 @@
 								Recommended: <strong>400x400px (1:1 Square)</strong>.
 							</div>
 						</div>
-					</div>
+						<div class="col-md-8">
+							<div class="mb-3">
+								<label for="gcashName" class="form-label">GCash Account Name</label>
+								<input type="text" id="gcashName" class="form-control"
+									th:field="*{gcashName}" placeholder="e.g., Juan D.">
+							</div>
+							<div class="mb-3">
+								<label for="gcashNumber" class="form-label">GCash Account Number</label>
+								<input type="text" id="gcashNumber" class="form-control"
+									th:field="*{gcashNumber}" placeholder="e.g., 09123456789">
+							</div>
+						</div>
+						</div>
 				</div>
 			</section>
 

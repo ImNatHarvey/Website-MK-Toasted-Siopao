@@ -143,6 +143,12 @@ public class AdminSiteController {
 		try {
 			// --- 1. Update Text Fields ---
 			settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
+			
+			// --- ADDED: Save new GCash fields ---
+			settingsToUpdate.setGcashName(formSettings.getGcashName());
+			settingsToUpdate.setGcashNumber(formSettings.getGcashNumber());
+			// --- END ADDED ---
+			
 			settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());
 			settingsToUpdate.setFeatureCard1Title(formSettings.getFeatureCard1Title());
 			settingsToUpdate.setFeatureCard1Text(formSettings.getFeatureCard1Text());

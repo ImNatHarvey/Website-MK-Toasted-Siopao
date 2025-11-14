@@ -38,6 +38,7 @@ public interface OrderService {
 	// --- NEW METHODS FOR OUR FLOW ---
 	Order shipOrder(Long orderId);
 	Order completeCodOrder(Long orderId);
+	Order completeDeliveredOrder(Long orderId); // --- THIS IS THE NEW METHOD ---
 	// --- END NEW METHODS ---
 	
 	// --- END ADDED ---

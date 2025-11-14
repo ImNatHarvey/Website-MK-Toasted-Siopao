@@ -85,6 +85,11 @@ public class Order {
 	@Column(length = 500)
 	private String notes;
 	// --- END ADDED ---
+	
+	// --- ADDED: GCash Transaction ID field ---
+	@Column(length = 255)
+	private String transactionId;
+	// --- END ADDED ---
 
 	@PrePersist
 	protected void onCreate() {

@@ -65,11 +65,8 @@
 				Orders</a> 
 			<a th:href="@{/admin/orders(status='PENDING_VERIFICATION')}"
 				class="btn btn-outline-primary"
-				style="--bs-btn-color: #6f42c1; --bs-btn-border-color: #6f42c1;"
-				onmouseover="this.style.backgroundColor='#6f42c1'; this.style.color='white';"
-				onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='#6f42c1'; }"
-				th:classappend="${param.status == 'PENDING_VERIFICATION' ? 'active' : ''}"
-				th:styleappend="${param.status == 'PENDING_VERIFICATION' ? 'background-color: #6f42c1; color: white; border-color: #6f42c1;' : ''}">
+				style="--bs-btn-color: var(--primary); --bs-btn-border-color: var(--primary); color: var(--primary);"
+				th:classappend="${param.status == 'PENDING_VERIFICATION' ? 'active' : ''}">
 				Pending Verification
 			</a>
 			<a th:href="@{/admin/orders(status='PENDING')}"

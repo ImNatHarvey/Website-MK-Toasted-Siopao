@@ -23,7 +23,7 @@
 .nav-link {
 	color: var(--light); /* CHANGED: Light text for dark bg */
 	margin: 0 10px;
-	transition: color 0.2s ease;
+	/* transition: color 0.2s ease; */ /* <-- REMOVED */
 	border-bottom: 2px solid transparent; /* Added for active state */
 	padding-top: 0.5rem;
 	padding-bottom: 0.5rem;
@@ -99,7 +99,7 @@
 .btn-outline-info {
 	border-radius: 20px;
 	padding: 6px 16px;
-	font-weight: normal;
+	font-weight: bold; /* <-- MODIFIED from normal */
 	/* transition: 0.3s ease; */ /* TRANSITION REMOVED */
     box-shadow: none !important;
 }
@@ -147,7 +147,7 @@
 }
 .btn-outline-warning.active, .btn-outline-warning:hover {
 	background-color: var(--warning) !important;
-	color: var(--dark) !important; /* Warning text is dark */
+	color: var(--light) !important; /* <-- MODIFIED from --dark */
 	border-color: var(--warning) !important;
 	font-weight: bold;
 }
@@ -205,14 +205,16 @@
 	border: 1px solid #eee;
 	border-radius: 15px;
 	overflow: hidden;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	/* transition: transform 0.2s ease, box-shadow 0.2s ease; */ /* <-- REMOVED */
 	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
 
+/*
 .card:hover {
 	transform: translateY(-5px);
 	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
+*/ /* <-- REMOVED */
 
 /* This is the card image style from index.html */
 .card-img-top {
@@ -237,7 +239,7 @@
 	font-weight: bold;
 	border-radius: 20px;
 	padding: 6px 16px;
-	transition: 0.3s ease;
+	/* transition: 0.3s ease; */ /* <-- REMOVED */
 	border-color: var(--accent);
 }
 
@@ -272,7 +274,7 @@
 	font-weight: bold;
 	border-radius: 25px;
 	padding: 10px;
-	transition: 0.3s ease;
+	/* transition: 0.3s ease; */ /* <-- REMOVED */
 	border: 1px solid var(--accent);
 	width: 100%; /* Make it full width */
 }
@@ -661,7 +663,7 @@ footer {
 
 /* == ADDED: New Status Badge Style == */
 .status-badge.status-pending-verification {
-	background-color: #6f42c1; /* Bootstrap Purple */
+	background-color: var(--primary); /* <-- MODIFIED from #6f42c1 */
 	color: var(--light);
 }
 /* == END ADDED == */

@@ -279,6 +279,32 @@ function initThresholdSliders(modalElement) {
 	});
 }
 
+// --- ADDED: Global function to queue toasts from client-side JS ---
+const TOAST_QUEUE_KEY = 'toastQueue';
+function queueToast(message, isError = false) {
+	if (!message) return;
+	
+	let queue = [];
+	try {
+		queue = JSON.parse(sessionStorage.getItem(TOAST_QUEUE_KEY) || '[]');
+	} catch (e) {
+		console.error("Failed to parse toast queue from sessionStorage:", e);
+		queue = [];
+	}
+
+	const toastId = `toast-${Date.now()}-${Math.random()}`;
+	
+	queue.push({
+		id: toastId,
+		message: message,
+		isError: isError,
+		timestamp: Date.now()
+	});
+
+	sessionStorage.setItem(TOAST_QUEUE_KEY, JSON.stringify(queue));
+}
+// --- END ADDED FUNCTION ---
+
 /**
  * UPDATED FUNCTION: TOAST NOTIFICATION HANDLER
  * This function now uses sessionStorage to create a persistent queue.
@@ -287,7 +313,7 @@ function initThresholdSliders(modalElement) {
  * div is not present on the current page (e.g., Dashboard).
  */
 function showToastNotifications() {
-	const TOAST_QUEUE_KEY = 'toastQueue';
+	// const TOAST_QUEUE_KEY = 'toastQueue'; // Already defined above
 	const toastContainer = document.querySelector('.toast-container');
 
 	// 1. Check for visual container. If this is missing, we can't do anything.

@@ -87,8 +87,9 @@
 											<input type="text" class="form-control" th:field="*{transactionId}" id="form_transactionId"
 												placeholder="Enter 13-digit Transaction ID"
 												th:classappend="${#fields.hasErrors('transactionId')} ? 'is-invalid' : ''">
-											<div class="invalid-feedback" 
-											     th:errors="*{transactionId}"></div>
+											<div class="invalid-feedback" id="transactionId-feedback"
+											     th:errors="*{transactionId}">
+											     </div>
 										</div>
 										<label for="receiptFile" class="form-label">Upload Receipt Screenshot</label>
 										<div class="image-uploader-container mb-3" id="receiptUploader">
@@ -109,6 +110,8 @@
 												</button>
 											</div>
 										</div>
+										<div class="invalid-feedback" id="receipt-feedback">
+											</div>
 									</div>
 									
 									<div id="cod-payment-instructions" style="display: none;">

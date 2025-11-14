@@ -159,8 +159,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const codRadio = document.getElementById('payment_cod');
         const receiptUploader = document.getElementById('receiptUploader');
         
-        // --- NEW: Get Transaction ID field ---
         const transactionIdInput = document.getElementById('form_transactionId');
+        
+        // --- THIS IS THE FIX: Use the specific ID to find the feedback div ---
+        const txIdFeedback = document.getElementById('transactionId-feedback');
+        // --- END FIX ---
+        
+        const receiptFeedback = document.getElementById('receipt-feedback');
         
         const formatCurrency = (value) => {
             return new Intl.NumberFormat('en-PH', {
@@ -232,12 +237,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 codInstructions.style.display = 'block';
                 gcashInstructions.style.display = 'none';
                 if (receiptInput) receiptInput.required = false;
-                if (transactionIdInput) transactionIdInput.required = false; // --- ADDED ---
+                if (transactionIdInput) transactionIdInput.required = false;
+                
+                if (txIdFeedback) txIdFeedback.classList.remove('d-block');
+                if (transactionIdInput) transactionIdInput.classList.remove('is-invalid');
+                if (receiptFeedback) receiptFeedback.classList.remove('d-block');
+                if (receiptUploader) receiptUploader.classList.remove('is-invalid');
+                
             } else {
                 codInstructions.style.display = 'none';
                 gcashInstructions.style.display = 'block';
                 if (receiptInput) receiptInput.required = true;
-                if (transactionIdInput) transactionIdInput.required = true; // --- ADDED ---
+                if (transactionIdInput) transactionIdInput.required = true;
             }
         };
         
@@ -247,21 +258,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const paymentForm = document.getElementById('payment-form');
         if(paymentForm) {
             paymentForm.addEventListener('submit', function(event) {
-				let validationFailed = false; // --- ADDED ---
+				let validationFailed = false;
+				
+				// --- Clear old errors ---
+				if (txIdFeedback) txIdFeedback.classList.remove('d-block');
+                if (transactionIdInput) transactionIdInput.classList.remove('is-invalid');
+                if (receiptFeedback) receiptFeedback.classList.remove('d-block');
+                if (receiptUploader) receiptUploader.classList.remove('is-invalid');
 				
                 if (gcashRadio.checked) {
                     const receiptInput = receiptUploader.querySelector('.image-uploader-input');
+                    
+                    // --- Receipt Validation ---
                     if (!receiptInput.files || receiptInput.files.length === 0) {
                         if (typeof queueToast === 'function') {
                             queueToast("Please upload your payment receipt to proceed.", true);
                         }
-                        validationFailed = true; // --- ADDED ---
+                        if (receiptFeedback) {
+							receiptFeedback.textContent = "Please upload a screenshot of your receipt.";
+							receiptFeedback.classList.add('d-block');
+						}
+						if (receiptUploader) receiptUploader.classList.add('is-invalid'); // Add red border to uploader
+                        validationFailed = true;
                     }
                     
-                    // --- NEW: Transaction ID Validation ---
+                    // --- Transaction ID Validation ---
                     const txIdValue = transactionIdInput.value.trim();
-                    const txIdFeedback = transactionIdInput.nextElementSibling;
-                    
                     if (txIdValue.length === 0) {
 						if (typeof queueToast === 'function') {
                             queueToast("Please enter the GCash Transaction ID.", true);
@@ -269,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         transactionIdInput.classList.add('is-invalid');
                         if(txIdFeedback) {
 							txIdFeedback.textContent = "Transaction ID is required for GCash.";
-							txIdFeedback.classList.add('d-block'); // --- FIX ---
+							txIdFeedback.classList.add('d-block');
 						}
                         validationFailed = true;
 					} else if (txIdValue.length < 13 || !/^\d+$/.test(txIdValue)) {
@@ -279,22 +301,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         transactionIdInput.classList.add('is-invalid');
                         if(txIdFeedback) {
 							txIdFeedback.textContent = "Invalid Transaction ID. Must be 13 digits.";
-							txIdFeedback.classList.add('d-block'); // --- FIX ---
+							txIdFeedback.classList.add('d-block');
 						}
                         validationFailed = true;
-					} else {
-						transactionIdInput.classList.remove('is-invalid');
-						if(txIdFeedback) { // --- FIX ---
-							txIdFeedback.classList.remove('d-block');
-						}
 					}
-                    // --- END NEW ---
                 }
                 
-                if (validationFailed) { // --- ADDED ---
+                if (validationFailed) {
 					event.preventDefault();
 					if (typeof showToastNotifications === 'function') {
-						showToastNotifications();
+						showToastNotifications(); // Show all queued toasts
 					}
 					return;
 				}

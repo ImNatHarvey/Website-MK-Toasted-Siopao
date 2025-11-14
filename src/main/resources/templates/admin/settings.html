@@ -39,6 +39,43 @@
 
 			<section class="mb-4">
 				<div class="card p-4 shadow-sm">
+					<h2 class="h4">Payment Settings</h2>
+					<div class="row">
+						<div class="col-md-4">
+							<label class="form-label">GCash QR Code</label>
+							<p class="form-text">This QR code will be shown to customers
+								at checkout.</p>
+							<div class="image-uploader-container" id="gcashQrUploader">
+								<input type="hidden" th:field="*{gcashQrCodeImage}" /> <input
+									type="hidden" name="removeGcashQrCode" value="false"
+									class="image-remove-flag" /> <input type="file"
+									name="gcashQrCodeFile" class="image-uploader-input"
+									accept="image/jpeg, image/png">
+								<div class="image-drop-zone">
+									<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+									<p class="mb-0 small">
+										<strong>Choose file</strong> or drag here.
+									</p>
+								</div>
+								<div class="image-preview-container">
+									<img src="" alt="Image Preview" class="image-preview">
+									<button type="button"
+										class="btn btn-sm btn-danger image-remove-btn"
+										title="Remove Image">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</div>
+							</div>
+							<div class="form-text">
+								Recommended: <strong>400x400px (1:1 Square)</strong>.
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="mb-4">
+				<div class="card p-4 shadow-sm">
 					<h2 class="h4">Homepage Carousel (Slider)</h2>
 					<div class="row">
 						<div class="col-md-4 mb-3">
@@ -64,6 +101,9 @@
 									</button>
 								</div>
 							</div>
+							<div class="form-text">
+								Recommended: <strong>1600x700px (Widescreen)</strong>.
+							</div>
 						</div>
 						<div class="col-md-4 mb-3">
 							<label class="form-label">Carousel Image 2</label>
@@ -88,6 +128,9 @@
 									</button>
 								</div>
 							</div>
+							<div class="form-text">
+								Recommended: <strong>1600x700px (Widescreen)</strong>.
+							</div>
 						</div>
 						<div class="col-md-4 mb-3">
 							<label class="form-label">Carousel Image 3</label>
@@ -111,6 +154,9 @@
 										<i class="fa-solid fa-trash"></i>
 									</button>
 								</div>
+							</div>
+							<div class="form-text">
+								Recommended: <strong>1600x700px (Widescreen)</strong>.
 							</div>
 						</div>
 					</div>
@@ -154,6 +200,9 @@
 												</button>
 											</div>
 										</div>
+										<div class="form-text">
+											Recommended: <strong>400x300px (4:3)</strong>.
+										</div>
 									</div>
 									<div class="mb-2">
 										<label class="form-label small">Title</label> <input
@@ -194,6 +243,9 @@
 													<i class="fa-solid fa-trash"></i>
 												</button>
 											</div>
+										</div>
+										<div class="form-text">
+											Recommended: <strong>400x300px (4:3)</strong>.
 										</div>
 									</div>
 									<div class="mb-2">
@@ -236,6 +288,9 @@
 												</button>
 											</div>
 										</div>
+										<div class="form-text">
+											Recommended: <strong>400x300px (4:3)</strong>.
+										</div>
 									</div>
 									<div class="mb-2">
 										<label class="form-label small">Title</label> <input
@@ -276,6 +331,9 @@
 													<i class="fa-solid fa-trash"></i>
 												</button>
 											</div>
+										</div>
+										<div class="form-text">
+											Recommended: <strong>400x300px (4:3)</strong>.
 										</div>
 									</div>
 									<div class="mb-2">
@@ -349,6 +407,9 @@
 										</button>
 									</div>
 								</div>
+								<div class="form-text">
+									Recommended: <strong>600x400px (3:2 Ratio)</strong>.
+								</div>
 							</div>
 						</div>
 					</div>
@@ -363,39 +424,49 @@
 							type="text" id="aboutTitle" class="form-control"
 							th:field="*{aboutTitle}">
 					</div>
-					<div class="mb-3">
-						<label for="aboutDescription1" class="form-label">Description
-							Paragraph 1</label>
-						<textarea id="aboutDescription1" rows="8" class="form-control"
-							th:field="*{aboutDescription1}"></textarea>
-					</div>
-					<div class="mb-3">
-						<label for="aboutDescription2" class_w="form-label">Description
-							Paragraph 2</label>
-						<textarea id="aboutDescription2" rows="8" class="form-control"
-							th:field="*{aboutDescription2}"></textarea>
-					</div>
-					<div class="mb-3">
-						<label class="form-label small">Image</label>
-						<div class="image-uploader-container" id="aboutUploader">
-							<input type="hidden" th:field="*{aboutImage}" /> <input
-								type="hidden" name="removeAboutImage" value="false"
-								class="image-remove-flag" /> <input type="file"
-								name="aboutImageFile" class="image-uploader-input"
-								accept="image/jpeg, image/png, image/gif">
-							<div class="image-drop-zone">
-								<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
-								<p class="mb-0 small">
-									<strong>Choose file</strong> or drag here.
-									</s_>
+
+					<div class="row">
+						<div class="col-md-4">
+							<div class="mb-3">
+								<label class="form-label small">Image</label>
+								<div class="image-uploader-container" id="aboutUploader">
+									<input type="hidden" th:field="*{aboutImage}" /> <input
+										type="hidden" name="removeAboutImage" value="false"
+										class="image-remove-flag" /> <input type="file"
+										name="aboutImageFile" class="image-uploader-input"
+										accept="image/jpeg, image/png, image/gif">
+									<div class="image-drop-zone">
+										<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+										<p class="mb-0 small">
+											<strong>Choose file</strong> or drag here.
+										</p>
+									</div>
+									<div class="image-preview-container">
+										<img src="" alt="Image Preview" class="image-preview">
+										<button type="button"
+											class="btn btn-sm btn-danger image-remove-btn"
+											title="Remove Image">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
+								</div>
+								<div class="form-text">
+									Recommended: <strong>600x800px (3:4 Portrait)</strong>.
+								</div>
 							</div>
-							<div class="image-preview-container">
-								<img src="" alt="Image Preview" class="image-preview">
-								<button type="button"
-									class="btn btn-sm btn-danger image-remove-btn"
-									title="Remove Image">
-									<i class="fa-solid fa-trash"></i>
-								</button>
+						</div>
+						<div class="col-md-8">
+							<div class="mb-3">
+								<label for="aboutDescription1" class="form-label">Description
+									Paragraph 1</label>
+								<textarea id="aboutDescription1" rows="8" class="form-control"
+									th:field="*{aboutDescription1}"></textarea>
+							</div>
+							<div class="mb-3">
+								<label for="aboutDescription2" class="form-label">Description
+									Paragraph 2</label>
+								<textarea id="aboutDescription2" rows="8" class="form-control"
+									th:field="*{aboutDescription2}"></textarea>
 							</div>
 						</div>
 					</div>

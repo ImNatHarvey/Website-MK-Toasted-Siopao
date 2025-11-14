@@ -914,3 +914,43 @@ select.form-control-readonly {
 		display: none;
 	}
 }
+
+/* Specific styling for Site Settings uploaders */
+
+/* Carousel: Make them wide */
+#carousel1Uploader .image-preview, #carousel1Uploader .image-drop-zone,
+	#carousel2Uploader .image-preview, #carousel2Uploader .image-drop-zone,
+	#carousel3Uploader .image-preview, #carousel3Uploader .image-drop-zone
+	{
+	height: 150px;
+	min-height: 150px; /* Override drop-zone min-height */
+}
+
+/* Feature Cards: Default 200px height is fine from .image-preview */
+/* Why Us: Default 200px height is fine */
+
+/* About Us: Make it look more portrait */
+#aboutUploader .image-preview, #aboutUploader .image-drop-zone {
+	height: 400px; /* Make preview taller */
+	min-height: 400px;
+}
+
+/* GCash QR Uploader: Keep it square */
+#gcashQrUploader {
+	width: 250px; /* Set a fixed width */
+	height: 250px; /* Set a fixed height */
+	margin: 0; /* Removed auto margin */
+}
+
+#gcashQrUploader .image-drop-zone {
+	min-height: 0; /* Reset min-height */
+	height: 100%; /* Fill the container height */
+	padding: 1rem; /* Adjust padding */
+}
+
+#gcashQrUploader .image-preview {
+	height: 100%; /* Fill the container height */
+	width: 100%; /* Fill the container width */
+	object-fit: contain; /* 'contain' is better for QR codes */
+	background-color: #f0f0f0; /* Background for non-square QR codes */
+}

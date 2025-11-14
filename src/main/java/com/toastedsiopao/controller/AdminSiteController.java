@@ -56,7 +56,7 @@ public class AdminSiteController {
 	 * @param currentPath The existing image path stored in the database.
 	 * @param defaultPath The default placeholder path for this image.
 	 * @return The final path (new, default, or current) to be saved to the
-	 *         database.
+	 * database.
 	 */
 	private String handleImageUpload(MultipartFile file, boolean removeImage, String currentPath, String defaultPath) {
 		String oldPathToDelete = null;
@@ -117,6 +117,7 @@ public class AdminSiteController {
 			@RequestParam(value = "featureCard4ImageFile", required = false) MultipartFile featureCard4ImageFile,
 			@RequestParam(value = "whyUsImageFile", required = false) MultipartFile whyUsImageFile,
 			@RequestParam(value = "aboutImageFile", required = false) MultipartFile aboutImageFile,
+			@RequestParam(value = "gcashQrCodeFile", required = false) MultipartFile gcashQrCodeFile,
 			// --- END MODIFIED ---
 
 			// --- Carousel Remove Flags ---
@@ -131,6 +132,7 @@ public class AdminSiteController {
 			// --- Other Page Remove Flags ---
 			@RequestParam(value = "removeWhyUsImage", defaultValue = "false") boolean removeWhyUsImage,
 			@RequestParam(value = "removeAboutImage", defaultValue = "false") boolean removeAboutImage,
+			@RequestParam(value = "removeGcashQrCode", defaultValue = "false") boolean removeGcashQrCode,
 			RedirectAttributes redirectAttributes, Principal principal) {
 
 		log.info("Updating site settings...");
@@ -164,6 +166,9 @@ public class AdminSiteController {
 			settingsToUpdate.setFooterText(formSettings.getFooterText());
 
 			// --- 2. Handle Image Uploads ---
+			settingsToUpdate.setGcashQrCodeImage(handleImageUpload(gcashQrCodeFile, removeGcashQrCode,
+					settingsToUpdate.getGcashQrCodeImage(), defaultSettings.getGcashQrCodeImage()));
+
 			settingsToUpdate.setCarouselImage1(handleImageUpload(carouselImage1File, removeCarouselImage1,
 					settingsToUpdate.getCarouselImage1(), defaultSettings.getCarouselImage1()));
 

@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	const uploaderIds = [
 		'carousel1Uploader', 'carousel2Uploader', 'carousel3Uploader',
 		'feature1Uploader', 'feature2Uploader', 'feature3Uploader', 'feature4Uploader',
-		'whyUsUploader', 'aboutUploader'
+		'whyUsUploader', 'aboutUploader', 'gcashQrUploader'
 	];
 
 	uploaderIds.forEach(id => {

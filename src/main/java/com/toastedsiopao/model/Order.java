@@ -54,6 +54,9 @@ public class Order {
 	private List<OrderItem> items = new ArrayList<>();
 
 	private LocalDateTime lastUpdated;
+	
+	@Column(length = 255)
+	private String paymentReceiptImageUrl;
 
 	@PrePersist
 	protected void onCreate() {

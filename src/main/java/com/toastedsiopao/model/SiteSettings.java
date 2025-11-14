@@ -89,4 +89,7 @@ public class SiteSettings {
 	@Column(length = 255)
 	private String footerText = "© 2025 MK Toasted Siopao | All Rights Reserved";
 	// --- END MODIFIED ---
+
+	@Column(length = 255)
+	private String gcashQrCodeImage = "/img/qrplaceholder.jpg";
 }

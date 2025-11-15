@@ -4,7 +4,7 @@ import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.EntityGraph; // --- IMPORT ADDED ---
+import org.springframework.data.jpa.repository.EntityGraph; 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,100 +16,78 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-	// --- REMOVED: Problematic FIND_PRODUCT_WITH_RELATIONS string ---
-
 	String COUNT_PRODUCT = "SELECT COUNT(p) FROM Product p ";
 	
-	// --- ADDED: Clauses for public-facing searches ---
 	String ACTIVE_PRODUCT_CLAUSE = "WHERE p.productStatus = 'ACTIVE' ";
 	String ACTIVE_PRODUCT_AND_CLAUSE = "AND p.productStatus = 'ACTIVE' ";
-	// --- END ADDED ---
 	
-	// --- ADDED: Re-usable custom sorting ---
 	String CUSTOM_SORT = "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC";
-	// --- END ADDED ---
 
-	// --- ADDED ---
 	Optional<Product> findByNameIgnoreCase(String name);
 
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p " + CUSTOM_SORT, 
-		   countQuery = COUNT_PRODUCT)
-	Page<Product> findAll(Pageable pageable);
+	// --- START: MODIFIED 2-STEP PAGINATION QUERIES ---
 
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	// 1. Find Paginated IDs
+
+	@Query(value = "SELECT p.id FROM Product p " + CUSTOM_SORT, 
+		   countQuery = COUNT_PRODUCT)
+	Page<Long> findIdsAll(Pageable pageable);
+
+	@Query(value = "SELECT p.id FROM Product p "
 			+ ACTIVE_PRODUCT_CLAUSE
 			+ CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + ACTIVE_PRODUCT_CLAUSE)
-	Page<Product> findAllActive(Pageable pageable);
-	// --- END MODIFIED ---
+	Page<Long> findIdsAllActive(Pageable pageable);
 
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE p.category = :category " + CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + "WHERE p.category = :category")
-	Page<Product> findByCategory(@Param("category") Category category, Pageable pageable);
+	Page<Long> findIdsByCategory(@Param("category") Category category, Pageable pageable);
 	
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE p.category = :category "
 			+ ACTIVE_PRODUCT_AND_CLAUSE
 			+ CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + "WHERE p.category = :category " + ACTIVE_PRODUCT_AND_CLAUSE)
-	Page<Product> findActiveByCategory(@Param("category") Category category, Pageable pageable);
-	// --- END ADDED ---
+	Page<Long> findIdsActiveByCategory(@Param("category") Category category, Pageable pageable);
 
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-	Page<Product> findByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
+	Page<Long> findIdsByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
 	
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
 			+ ACTIVE_PRODUCT_AND_CLAUSE
 			+ CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + ACTIVE_PRODUCT_AND_CLAUSE)
-	Page<Product> findActiveByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
-	// --- END ADDED ---
+	Page<Long> findIdsActiveByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
 
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
-			+ "WHERE LOWER(p.category.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.name ASC", 
-			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.category.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-	Page<Product> findByCategoryNameIgnoreCase(@Param("keyword") String categoryName, Pageable pageable);
-
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
 			+ "AND p.category = :category " + CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT
 					+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " + "AND p.category = :category")
-	Page<Product> findByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
+	Page<Long> findIdsByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
 			@Param("category") Category category, Pageable pageable);
 			
-	// --- MODIFIED: Added @EntityGraph, removed JOIN FETCH from query value ---
-	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
-	@Query(value = "SELECT p FROM Product p "
+	@Query(value = "SELECT p.id FROM Product p "
 			+ "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) "
 			+ "AND p.category = :category "
 			+ ACTIVE_PRODUCT_AND_CLAUSE
 			+ CUSTOM_SORT, 
 			countQuery = COUNT_PRODUCT + "WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " 
 			+ "AND p.category = :category " + ACTIVE_PRODUCT_AND_CLAUSE)
-	Page<Product> findActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
+	Page<Long> findIdsActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
 			@Param("category") Category category, Pageable pageable);
-	// --- END ADDED ---
+
+	// 2. Find Details for those IDs
+	
+	@Query("SELECT p FROM Product p WHERE p.id IN :ids " + CUSTOM_SORT)
+	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
+	List<Product> findWithDetailsByIds(@Param("ids") List<Long> ids);
+
+	// --- END: MODIFIED 2-STEP PAGINATION QUERIES ---
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
 	long countLowStockProducts();
@@ -117,4 +95,14 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= 0")
 	long countOutOfStockProducts();
 
+	// --- REMOVED: Old paginated queries that caused the warning ---
+	// Page<Product> findAll(Pageable pageable);
+	// Page<Product> findAllActive(Pageable pageable);
+	// Page<Product> findByCategory(@Param("category") Category category, Pageable pageable);
+	// Page<Product> findActiveByCategory(@Param("category") Category category, Pageable pageable);
+	// Page<Product> findByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
+	// Page<Product> findActiveByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
+	// Page<Product> findByCategoryNameIgnoreCase(@Param("keyword") String categoryName, Pageable pageable);
+	// Page<Product> findByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword, ...);
+	// Page<Product> findActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword, ...);
 }

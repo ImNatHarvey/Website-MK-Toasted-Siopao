@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl; // --- ADDED ---
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,7 +21,9 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections; // --- ADDED ---
 import java.util.List;
+import java.util.Map; // --- ADDED ---
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -65,11 +68,40 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 	// --- END ADDED ---
+	
+	// --- START: NEW HELPER METHOD ---
+	/**
+	 * Helper method to perform the 2-step paginated fetch.
+	 * 1. Fetches a page of IDs.
+	 * 2. Fetches the full details for those IDs.
+	 * 3. Reconstructs a Page<Product> object.
+	 */
+	private Page<Product> getPaginatedProducts(Page<Long> idPage, Pageable pageable) {
+		List<Long> ids = idPage.getContent();
+		if (ids.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, idPage.getTotalElements());
+		}
+		
+		List<Product> products = productRepository.findWithDetailsByIds(ids);
+		
+		// Re-sort the fetched products to match the ID page's order
+		Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
+		List<Product> sortedProducts = ids.stream()
+				.map(id -> productMap.get(id))
+				.filter(p -> p != null) // Filter out potential nulls if an ID wasn't found (shouldn't happen in-transaction)
+				.collect(Collectors.toList());
+		
+		return new PageImpl<>(sortedProducts, pageable, idPage.getTotalElements());
+	}
+	// --- END: NEW HELPER METHOD ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findAll(Pageable pageable) {
-		return productRepository.findAll(pageable);
+		// --- MODIFIED ---
+		Page<Long> idPage = productRepository.findIdsAll(pageable);
+		return getPaginatedProducts(idPage, pageable);
+		// --- END MODIFIED ---
 	}
 
 	@Override
@@ -242,18 +274,23 @@ public class ProductServiceImpl implements ProductService {
 	public Page<Product> findByCategory(Long categoryId, Pageable pageable) {
 		Category category = categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-		return productRepository.findByCategory(category, pageable);
+		// --- MODIFIED ---
+		Page<Long> idPage = productRepository.findIdsByCategory(category, pageable);
+		return getPaginatedProducts(idPage, pageable);
+		// --- END MODIFIED ---
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> searchProducts(String keyword, Pageable pageable) {
-		// --- MODIFIED: This method is now ONLY for public, so it uses active queries ---
+		// --- MODIFIED ---
 		if (keyword == null || keyword.trim().isEmpty()) {
-			return productRepository.findAllActive(pageable);
+			Page<Long> idPage = productRepository.findIdsAllActive(pageable);
+			return getPaginatedProducts(idPage, pageable);
 		}
-		return productRepository.findActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
-		// --- END MODIFICATION ---
+		Page<Long> idPage = productRepository.findIdsActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
+		return getPaginatedProducts(idPage, pageable);
+		// --- END MODIFIED ---
 	}
 
 	@Override
@@ -263,20 +300,22 @@ public class ProductServiceImpl implements ProductService {
 		boolean hasCategory = categoryId != null;
 
 		// --- MODIFIED: This method is used by public pages, so it MUST filter by ACTIVE status ---
+		Page<Long> idPage;
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findActiveByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
+			idPage = productRepository.findIdsActiveByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
 		} else if (hasKeyword) {
-			return productRepository.findActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
+			idPage = productRepository.findIdsActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
 		} else if (hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findActiveByCategory(category, pageable);
+			idPage = productRepository.findIdsActiveByCategory(category, pageable);
 		} else {
-			return productRepository.findAllActive(pageable);
+			idPage = productRepository.findIdsAllActive(pageable);
 		}
-		// --- END MODIFICATION ---
+		return getPaginatedProducts(idPage, pageable);
+		// --- END MODIFIED ---
 	}
 	
 	// --- ADDED: New method for Admin panel ---
@@ -286,20 +325,23 @@ public class ProductServiceImpl implements ProductService {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
-		// This version calls the NON-ACTIVE queries
+		// --- MODIFIED: This version calls the NON-ACTIVE queries ---
+		Page<Long> idPage;
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
+			idPage = productRepository.findIdsByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
 		} else if (hasKeyword) {
-			return productRepository.findByNameContainingIgnoreCase(keyword.trim(), pageable);
+			idPage = productRepository.findIdsByNameContainingIgnoreCase(keyword.trim(), pageable);
 		} else if (hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findByCategory(category, pageable);
+			idPage = productRepository.findIdsByCategory(category, pageable);
 		} else {
-			return productRepository.findAll(pageable); // Admin sees all
+			idPage = productRepository.findIdsAll(pageable); // Admin sees all
 		}
+		return getPaginatedProducts(idPage, pageable);
+		// --- END MODIFIED ---
 	}
 	// --- END ADDED ---
 

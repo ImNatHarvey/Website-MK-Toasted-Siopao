@@ -1,6 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("customer-cart.js loaded.");
 
+	// --- CSRF TOKEN ---
+	const csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
+	const csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+	
+	const csrfHeader = csrfHeaderEl ? csrfHeaderEl.content : null;
+	const csrfToken = csrfTokenEl ? csrfTokenEl.content : null;
+	// --- END CSRF ---
+
     const cartSummary = document.querySelector('.order-summary');
     if (!cartSummary) {
         console.log("Cart summary not found. Skipping customer cart logic.");
@@ -11,13 +19,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const api = {
         call: async (endpoint, payload) => {
             try {
+				// --- CSRF FIX: Build headers ---
+				const headers = {
+                    'Content-Type': 'application/json',
+                };
+                if (csrfHeader && csrfToken) {
+					headers[csrfHeader] = csrfToken;
+				}
+				// --- END CSRF FIX ---
+				
                 const response = await fetch(`/api/cart/${endpoint}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: headers, // --- CSRF FIX: Use dynamic headers ---
                     body: JSON.stringify(payload),
                 });
+                
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || `Server error: ${response.status}`);
@@ -43,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderItemsList = cartSummary.querySelector('.order-items-list');
     const emptyOrderDiv = cartSummary.querySelector('.empty-order');
     const totalPriceEl = cartSummary.querySelector('.total-price');
-    const checkoutButton = cartSummary.querySelector('.btn-checkout');
+    const checkoutButton = cartSummary.querySelector('.btn-checkout'); // This is an <a> tag in customer/menu
 
     // Helper: Format Currency
     const formatCurrency = (value) => {

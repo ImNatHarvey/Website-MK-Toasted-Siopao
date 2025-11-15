@@ -8,6 +8,8 @@
 				<div class="modal-content">
 					<form id="payment-form" th:action="@{/u/order/submit}" method="post" enctype="multipart/form-data" th:object="${orderDto}">
 						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<input type="hidden" name="firstName" id="form_firstName">
 						<input type="hidden" name="lastName" id="form_lastName">
 						<input type="hidden" name="phone" id="form_phone">

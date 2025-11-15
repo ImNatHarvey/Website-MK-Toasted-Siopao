@@ -184,6 +184,9 @@
 										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to DELETE \'' + ${item.name} + '\'? This is permanent if it has no recipe usage, otherwise it will be deactivated.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+										
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
 											th:title="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'Cannot delete: Item has stock.' : 'Delete Item'}">
@@ -195,6 +198,9 @@
 										th:action="@{/admin/inventory/activate/{id}(id=${item.id})}"
 										method="post"
 										th:data-confirm-save-message="'Are you sure you want to ACTIVATE \'' + ${item.name} + '\'?'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+										
 										<button type="submit" class="btn btn-sm btn-action-success"
 											title="Activate Item">
 											Activate</button>

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
 
 import java.math.BigDecimal; 
 import java.security.Principal; 
@@ -47,4 +48,11 @@ public class PublicPageController {
 	public String accessDenied() {
 		return "access-denied";
 	}
+	
+	// --- THIS IS THE FIX ---
+	@PostMapping("/access-denied")
+	public String accessDeniedPost() {
+		return "access-denied";
+	}
+	// --- END FIX ---
 }

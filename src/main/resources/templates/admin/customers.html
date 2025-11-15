@@ -152,6 +152,9 @@
 										th:action="@{/admin/customers/delete/{id}(id=${customer.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to delete the customer \'' + ${customer.username} + '\'? This requires the Owner password.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+										
 										<button type="submit" class="btn btn-sm btn-action-delete">Delete</button>
 									</form>
 									</td>

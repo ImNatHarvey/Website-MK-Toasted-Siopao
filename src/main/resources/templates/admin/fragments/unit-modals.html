@@ -18,6 +18,9 @@
 						<form sec:authorize="hasAuthority('MANAGE_UNITS')"
 							th:action="@{/admin/inventory/units/add}" method="post"
 							th:object="${unitOfMeasureDto}" id="addUnitForm" class="mb-4">
+							
+							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+							
 							<h6>Add New Unit</h6>
 
 							<div class="row g-2 mb-2">
@@ -70,6 +73,9 @@
 										th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to delete the unit \'' + ${unit.name} + '\'? This requires the Owner password.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+										
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>
@@ -91,6 +97,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/inventory/units/update}" method="post"
 						th:object="${unitOfMeasureUpdateDto}" id="editUnitForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="editUnitModalLabel">Edit Unit of
 								Measure</h5>

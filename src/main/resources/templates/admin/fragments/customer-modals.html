@@ -9,6 +9,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/customers/add-customer}" method="post"
 						th:object="${customerCreateDto}" id="addCustomerForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="addCustomerModalLabel">Add New
 								Customer User</h5>
@@ -132,6 +135,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/customers/update}" method="post"
 						th:object="${customerUpdateDto}" id="editCustomerForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="editCustomerModalLabel">Edit
 								Customer Account</h5>

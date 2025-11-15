@@ -2,6 +2,15 @@ document.addEventListener('DOMContentLoaded', function() {
 	// ========================================================================
 	// == START: PUBLIC CART LOGIC (REFACTORED for Full Cart Management) ==
 	// ========================================================================
+	
+	// --- CSRF TOKEN ---
+	const csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
+	const csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+	
+	const csrfHeader = csrfHeaderEl ? csrfHeaderEl.content : null;
+	const csrfToken = csrfTokenEl ? csrfTokenEl.content : null;
+	// --- END CSRF ---
+	
 	const cartSummary = document.querySelector('.order-summary');
 	if (cartSummary) {
 		console.log("Cart summary found. Initializing public cart logic.");

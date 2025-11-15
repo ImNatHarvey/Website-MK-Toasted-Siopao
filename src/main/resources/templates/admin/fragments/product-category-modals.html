@@ -18,6 +18,9 @@
 						<form sec:authorize="hasAuthority('ADD_PRODUCTS')"
 							th:action="@{/admin/products/categories/add}" method="post"
 							th:object="${categoryDto}" id="addCategoryForm" class="mb-4">
+							
+							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+							
 							<h6 class="mb-3">Add New Category</h6>
 							<div class="row g-2">
 								<div class="col-md-9">
@@ -53,6 +56,9 @@
 										th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This requires the Owner password.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+										
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>
@@ -75,6 +81,9 @@
 					<form th:action="@{/admin/products/categories/update}"
 						method="post" th:object="${categoryUpdateDto}"
 						id="editCategoryForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="editCategoryModalLabel">Edit
 								Category</h5>

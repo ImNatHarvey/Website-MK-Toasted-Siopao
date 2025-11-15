@@ -92,6 +92,9 @@
 								th:action="@{/u/history/cancel/{id}(id=${order.id})}"
 								method="post"
 								th:data-confirm-message="'Are you sure you want to cancel order #ORD-' + ${order.id} + '?'">
+								
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+								
 								<button type="submit" class="btn btn-sm btn-outline-danger">
 									<i class="fa-solid fa-times me-1"></i> Cancel Order
 								</button>

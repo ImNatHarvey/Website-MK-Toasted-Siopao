@@ -13,6 +13,10 @@
 				<h4 class="mb-4">Personal Information</h4>
 				<form id="profileForm" th:action="@{/u/profile/update-details}"
 					th:object="${profileDto}" method="post">
+
+					<input type="hidden" th:name="${_csrf.parameterName}"
+						th:value="${_csrf.token}" />
+
 					<div class="row mb-3">
 						<div class="col-md-6">
 							<label for="firstName" class="form-label">First Name</label> <input
@@ -66,7 +70,7 @@
 						</div>
 						<div class="col">
 							<label for="lotNo" class="form-label">Lot No.</label> <input
-								type.text class="form-control" placeholder="Lot No." id="lotNo"
+								type="text" class="form-control" placeholder="Lot No." id="lotNo"
 								th:field="*{lotNo}" th:errorclass="is-invalid">
 							<div class="invalid-feedback"
 								th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}"></div>
@@ -113,7 +117,7 @@
 							th:if="${#fields.hasErrors('province')}" th:errors="*{province}"></div>
 					</div>
 
-					<button type.submit class="btn btn-custom mt-3">Save
+					<button type="submit" class="btn btn-custom mt-3">Save
 						Profile Changes</button>
 				</form>
 			</div>
@@ -122,6 +126,10 @@
 				<h4 class="mb-4">Change Password</h4>
 				<form id="passwordForm" th:action="@{/u/profile/update-password}"
 					th:object="${passwordDto}" method="post">
+
+					<input type="hidden" th:name="${_csrf.parameterName}"
+						th:value="${_csrf.token}" />
+
 					<div class="row mb-3">
 						<div class="col-md-6">
 							<label for="currentPassword" class="form-label">Current

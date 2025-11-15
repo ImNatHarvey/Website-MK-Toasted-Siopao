@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Map; // --- ADDED ---
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -18,16 +19,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference; // --- ADDED ---
+import com.fasterxml.jackson.databind.ObjectMapper; // --- ADDED ---
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerPasswordDto;
 import com.toastedsiopao.dto.CustomerProfileDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.dto.PasswordResetDto;
+import com.toastedsiopao.model.CartItem; // --- ADDED ---
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.Product; // --- ADDED ---
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
+import com.toastedsiopao.repository.CartItemRepository; // --- ADDED ---
 import com.toastedsiopao.repository.OrderRepository;
+import com.toastedsiopao.repository.ProductRepository; // --- ADDED ---
 import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
 
@@ -60,6 +67,25 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private EmailService emailService;
+	
+	// --- ADDED ---
+	@Autowired
+	private ObjectMapper objectMapper;
+
+	@Autowired
+	private ProductRepository productRepository;
+
+	@Autowired
+	private CartItemRepository cartItemRepository;
+	
+	// Copied from OrderServiceImpl/CartServiceImpl to parse cart JSON
+	private static class CartItemDto {
+		public String name;
+		public double price;
+		public String image;
+		public int quantity;
+	}
+	// --- END ADDED ---
 
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
@@ -95,7 +121,45 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setMunicipality(userDto.getMunicipality());
 		newUser.setProvince(userDto.getProvince());
 
-		return userRepository.save(newUser);
+		User savedUser = userRepository.save(newUser); // --- MODIFIED: Save first ---
+
+		// --- ADDED: Guest Cart Migration Logic ---
+		if (StringUtils.hasText(userDto.getCartDataJson())) {
+			log.info("Migrating guest cart for new user: {}", savedUser.getUsername());
+			try {
+				TypeReference<Map<Long, CartItemDto>> typeRef = new TypeReference<>() {};
+				Map<Long, CartItemDto> cart = objectMapper.readValue(userDto.getCartDataJson(), typeRef);
+				
+				if (!cart.isEmpty()) {
+					for (Map.Entry<Long, CartItemDto> entry : cart.entrySet()) {
+						Long productId = entry.getKey();
+						int quantity = entry.getValue().quantity;
+						
+						Optional<Product> productOpt = productRepository.findById(productId);
+						if (productOpt.isPresent() && quantity > 0) {
+							Product product = productOpt.get();
+							if ("ACTIVE".equals(product.getProductStatus()) && product.getCurrentStock() >= quantity) {
+								// Check if this item already exists (shouldn't for a new user, but good practice)
+								Optional<CartItem> existingItemOpt = cartItemRepository.findByUserAndProduct(savedUser, product);
+								if (existingItemOpt.isEmpty()) {
+									CartItem newCartItem = new CartItem(savedUser, product, quantity);
+									cartItemRepository.save(newCartItem);
+									log.info("Migrated product {} (Qty: {}) to new user {}'s cart.", product.getName(), quantity, savedUser.getUsername());
+								}
+							} else {
+								log.warn("Skipping migration for product ID {}: Not active or insufficient stock.", productId);
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				log.error("Failed to migrate guest cart for user {}: {}", savedUser.getUsername(), e.getMessage(), e);
+				// Do not throw an exception here, signup should still succeed.
+			}
+		}
+		// --- END ADDED ---
+		
+		return savedUser; // --- MODIFIED: Return the saved user ---
 	}
 
 	@Override

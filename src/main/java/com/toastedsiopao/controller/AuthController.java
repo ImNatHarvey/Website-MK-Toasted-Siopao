@@ -4,19 +4,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // ADDED
+import org.springframework.ui.Model; 
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.util.StringUtils; // --- THIS IS THE FIX ---
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
-import com.toastedsiopao.dto.PasswordResetDto; // ADDED
-import com.toastedsiopao.model.SiteSettings; // --- RE-ADDED ---
+import com.toastedsiopao.dto.PasswordResetDto; 
+import com.toastedsiopao.model.SiteSettings; 
 import com.toastedsiopao.service.CustomerService;
-import com.toastedsiopao.service.SiteSettingsService; // --- RE-ADDED ---
+import com.toastedsiopao.service.SiteSettingsService; 
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -29,10 +30,10 @@ public class AuthController {
 	@Autowired
 	private CustomerService customerService;
 
-	@Autowired // --- RE-ADDED ---
+	@Autowired 
 	private SiteSettingsService siteSettingsService;
 
-	@ModelAttribute // --- RE-ADDED ---
+	@ModelAttribute 
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);
@@ -44,44 +45,44 @@ public class AuthController {
 	}
 
 	@GetMapping("/signup")
-	public String showSignupForm(Model model, @RequestParam(value = "source", required = false) String source) { // MODIFIED
+	public String showSignupForm(Model model, @RequestParam(value = "source", required = false) String source) { 
 		if (!model.containsAttribute("customerSignUpDto")) {
 			model.addAttribute("customerSignUpDto", new CustomerSignUpDto());
 		}
 
-		// --- ADDED ---
 		if ("checkout".equals(source)) {
 			model.addAttribute("checkoutMessage", "Please create an account to proceed with your order.");
 		}
-		// --- END ADDED ---
 
 		return "signup";
 	}
 
 	@PostMapping("/signup")
 	public String processSignup(@Valid @ModelAttribute("customerSignUpDto") CustomerSignUpDto userDto,
-			BindingResult result, RedirectAttributes redirectAttributes) {
+			BindingResult result, @RequestParam(value = "source", required = false) String source, 
+			RedirectAttributes redirectAttributes) {
 
 		if (result.hasErrors()) {
 			log.warn("Signup form validation failed (DTO level). Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup";
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
 		}
 
 		try {
 			customerService.saveCustomer(userDto);
 			log.info("Signup successful for username: {}", userDto.getUsername());
 
-			// --- MODIFIED: Check if they came from checkout to redirect to order page ---
-			// For now, just redirect to login. We can enhance this later.
-			// The original plan was to auto-login, but that's more complex.
-			// Let's stick to the user's plan: data transfer.
-			// --- END MODIFIED ---
-
 			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
-			return "redirect:/login";
+			
+			String redirectUrl = "/login";
+			if ("checkout".equals(source)) {
+				// Add a parameter to the login redirect, so the success handler knows where to send them.
+				redirectUrl = "/login?source=checkout"; 
+				log.info("Signup from checkout successful. Redirecting to login with source=checkout.");
+			}
+			return "redirect:" + redirectUrl;
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Signup failed (Service level validation): {}", e.getMessage());
@@ -99,14 +100,14 @@ public class AuthController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup";
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
 
 		} catch (Exception e) {
 			log.error("Unexpected error during signup for username {}: {}", userDto.getUsername(), e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("errorMessage",
 					"An unexpected error occurred during registration. Please try again later.");
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup";
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
 		}
 	}
 
@@ -136,7 +137,6 @@ public class AuthController {
 		return "redirect:/login";
 	}
 
-	// --- ADDED: Show the reset password form page ---
 	@GetMapping("/reset-password")
 	public String showResetPasswordForm(@RequestParam("token") String token, Model model,
 			RedirectAttributes redirectAttributes) {
@@ -155,7 +155,6 @@ public class AuthController {
 		return "reset-password";
 	}
 
-	// --- ADDED: Process the reset password form submission ---
 	@PostMapping("/reset-password")
 	public String processResetPassword(@Valid @ModelAttribute("passwordResetDto") PasswordResetDto passwordResetDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Model model) {

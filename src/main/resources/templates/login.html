@@ -37,7 +37,8 @@
 								aria-label="Close"></button>
 						</div>
 
-						<form id="loginForm" method="post" th:action="@{/login}">
+						<form id="loginForm" method="post" 
+							  th:action="@{/login(source=${param.source})}">
 							<div class="mb-3">
 								<label for="username" class="form-label">Username</label> <input
 									type="text" class="form-control" id="username" name="username"
@@ -66,7 +67,7 @@
 						</form>
 
 						<p class="text-center">
-							Don't have an account? <a th:href="@{/signup}">Sign up here</a>
+							Don't have an account? <a th:href="@{/signup(source=${param.source})}">Sign up here</a>
 						</p>
 					</div>
 				</div>

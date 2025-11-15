@@ -33,6 +33,9 @@
 
 						<form id="signupForm" method="post" th:action="@{/signup}"
 							th:object="${customerSignUpDto}">
+							
+							<input type="hidden" name="source" th:value="${param.source}">
+							<input type="hidden" th:field="*{cartDataJson}" id="cartDataJsonInput">
 
 							<div class="row">
 
@@ -232,6 +235,18 @@
 												.log("Signup page loaded from checkout.");
 										const guestDataString = sessionStorage
 												.getItem('guestCheckoutData');
+												
+										// --- MODIFIED ---
+										const cartDataString = sessionStorage
+												.getItem('mkSiopaoCart');
+										const cartInput = document.getElementById('cartDataJsonInput');
+										
+										if (cartInput && cartDataString) {
+											console.log("Found guest cart data. Attaching to form.");
+											cartInput.value = cartDataString;
+										}
+										// --- END MODIFIED ---
+												
 										if (guestDataString) {
 											console
 													.log("Found guest checkout data. Pre-filling form.");
@@ -262,7 +277,7 @@
 													}
 												}
 	
-												// Clean up the session storage
+												// Clean up the address data, but NOT the cart data
 												sessionStorage
 														.removeItem('guestCheckoutData');
 	
@@ -285,6 +300,17 @@
 											console
 													.log("Loaded from checkout, but no guest data found in session storage.");
 										}
+										
+										// --- ADDED ---
+										// Clear the cart from session storage AFTER submitting the form
+										const signupForm = document.getElementById('signupForm');
+										if (signupForm) {
+											signupForm.addEventListener('submit', function() {
+												console.log("Signup submitted, clearing guest cart from session storage.");
+												sessionStorage.removeItem('mkSiopaoCart');
+											});
+										}
+										// --- END ADDED ---
 									}
 								});
 			</script>

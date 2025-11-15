@@ -19,6 +19,8 @@
 						<form sec:authorize="hasRole('OWNER')"
 							th:action="@{/admin/admins/roles/add}" method="post"
 							th:object="${roleDto}" id="addRoleForm" class="mb-4">
+							
+							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 							<h6 class="mb-3">Add New Role</h6>
 							<div class="mb-3">
 								<label for="newRoleName" class="form-label">Role Name</label> <input
@@ -125,6 +127,8 @@
 										th:action="@{/admin/admins/roles/delete/{id}(id=${role.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to delete the role \'' + ${role.name.replace('ROLE_', '')} + '\'? This requires the Owner password.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${role.name == 'ROLE_OWNER'}"
 											th:title="${role.name == 'ROLE_OWNER' ? 'Owner role cannot be deleted.' : 'Delete Role'}">
@@ -148,6 +152,8 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/roles/update}" method="post"
 						th:object="${roleUpdateDto}" id="editRoleForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 						<div class="modal-header">
 							<h5 class="modal-title" id="editRoleModalLabel">Edit Role</h5>
 							<button type="button" class="btn-close" data-bs-dismiss="modal"

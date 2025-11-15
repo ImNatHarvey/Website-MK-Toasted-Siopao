@@ -11,6 +11,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/add}" method="post"
 						th:object="${adminAccountCreateDto}" id="addAdminForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="addAdminModalLabel">Add New
 								Admin Account</h5>
@@ -115,6 +118,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/update}" method="post"
 						th:object="${adminUpdateDto}" id="editAdminForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						
 						<div class="modal-header">
 							<h5 class="modal-title" id="editAdminModalLabel">Edit Admin
 								Account</h5>
@@ -258,6 +264,8 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/profile/update}" method="post"
 						th:object="${adminProfileDto}" id="editProfileForm">
+						
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 						<div class="modal-header">
 							<h5 class="modal-title" id="editProfileModalLabel">Edit My
 								Profile</h5>

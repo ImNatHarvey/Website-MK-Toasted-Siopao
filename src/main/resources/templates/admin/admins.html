@@ -159,6 +159,8 @@
 										th:action="@{/admin/admins/delete/{id}(id=${admin.id})}"
 										method="post"
 										th:data-secure-delete-message="'Are you sure you want to delete the admin \'' + ${admin.username} + '\'? This requires the Owner password.'">
+										
+										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 										<button type="submit" class="btn btn-sm btn-action-delete"
 											th:disabled="${admin.username == currentUsername || (admin.role != null and admin.role.name == 'ROLE_OWNER')}"
 											th:title="${admin.username == currentUsername ? 'You cannot delete your own account.' : (admin.role != null and admin.role.name == 'ROLE_OWNER' ? 'The Owner account cannot be deleted.' : 'Delete Admin')}">Delete</button>

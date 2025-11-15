@@ -1,6 +1,14 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("notification-handler.js loaded.");
 
+	// --- CSRF TOKEN ---
+	const csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
+	const csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+	
+	const csrfHeader = csrfHeaderEl ? csrfHeaderEl.content : null;
+	const csrfToken = csrfTokenEl ? csrfTokenEl.content : null;
+	// --- END CSRF ---
+
     /**
      * Decrements all notification badges of a specific class.
      * @param {string} badgeClass - The class selector for the badges (e.g., '.admin-notification-badge')
@@ -58,10 +66,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 window.location.href = destinationUrl;
                 return;
             }
+            
+            // --- THIS IS THE FIX: Added CSRF headers ---
+            const headers = {
+                'Content-Type': 'application/json',
+            };
+            if (csrfHeader && csrfToken) {
+                headers[csrfHeader] = csrfToken;
+            }
+            // --- END FIX ---
 
             // Send the "mark as read" request
             fetch(`${apiPath}${notificationId}`, {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: headers // --- THIS IS THE FIX ---
                 })
                 .then(response => {
                     if (response.ok) {

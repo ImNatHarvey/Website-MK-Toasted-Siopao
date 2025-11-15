@@ -21,8 +21,11 @@
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
 <link rel="stylesheet" th:href="@{/css/style-public.css(v=1.9)}">
+<link rel="stylesheet" th:href="@{/css/loader.css(v=1.9)}">
 </head>
 <body class="d-flex flex-column min-vh-100">
+
+	<div class="preloader"><div class="preloader-spinner"></div></div>
 
 	<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
 		<div class="container-fluid"
@@ -165,6 +168,7 @@
 	<script th:src="@{/js/admin-utils.js(v=1.9)}"></script>
 	<script th:src="@{/js/customer-cart.js(v=1.9)}"></script>
 	<script th:src="@{/js/notification-handler.js(v=1.9)}"></script> 
+	<script th:src="@{/js/loader.js(v=1.9)}"></script>
 	<th:block th:replace="${pageScript} ?: ~{}"></th:block>
 	
 </body>

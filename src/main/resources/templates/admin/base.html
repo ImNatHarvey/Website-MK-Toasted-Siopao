@@ -20,8 +20,12 @@
 
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
 <link rel="stylesheet" th:href="@{/css/style-admin.css(v=1.9)}">
+<link rel="stylesheet" th:href="@{/css/loader.css(v=1.9)}">
 </head>
 <body id="admin-body">
+
+	<div class="preloader"><div class="preloader-spinner"></div></div>
+
 	<nav class="admin-mobile-nav">
 		<button class="sidebar-toggle-btn" id="sidebarToggle">
 			<i class="fa-solid fa-bars"></i>
@@ -345,6 +349,8 @@
 	<script th:src="@{/js/admin-utils.js}"></script>
 	<script th:src="@{/js/global-script.js}"></script>
 	<script th:src="@{/js/admin-global.js}"></script>
-	<script th:src="@{/js/notification-handler.js}"></script> <div th:replace="${pageScript}"></div>
+	<script th:src="@{/js/notification-handler.js}"></script>
+	<script th:src="@{/js/loader.js(v=1.9)}"></script>
+	<div th:replace="${pageScript}"></div>
 </body>
 </html>

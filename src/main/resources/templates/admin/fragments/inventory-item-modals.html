@@ -65,7 +65,7 @@
 										<option value="">-- Select Unit --</option>
 										<option th:each="unit : ${unitsOfMeasure}"
 											th:value="${unit.id}"
-											th:text="${unit.name + ' (' + unit.unit.abbreviation + ')'}"></option>
+											th:text="${unit.name + ' (' + unit.abbreviation + ')'}"></option>
 									</select>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('unitId')}" th:errors="*{unitId}">Unit

@@ -69,13 +69,13 @@ public class CustomerOrderController {
 			model.addAttribute("orderDto", new OrderSubmitDto());
 		}
 		
-		// --- REMOVED: Cart-loading logic is now in GlobalModelAttributes ---
-		// --- We only need to check if the cart is empty for the redirect ---
-		List<CartItem> cartItems = cartService.getCartForUser(user);
-		if (cartItems.isEmpty()) {
-			log.warn("User {} accessed /u/order with an empty cart. Redirecting to menu.", user.getUsername());
-			return "redirect:/u/menu";
-		}
+		// --- MODIFICATION: Commented out the empty cart check ---
+		// List<CartItem> cartItems = cartService.getCartForUser(user);
+		// if (cartItems.isEmpty()) {
+		// 	log.warn("User {} accessed /u/order with an empty cart. Redirecting to menu.", user.getUsername());
+		// 	return "redirect:/u/menu";
+		// }
+		// --- END MODIFICATION ---
 		
 		return "customer/order";
 	}

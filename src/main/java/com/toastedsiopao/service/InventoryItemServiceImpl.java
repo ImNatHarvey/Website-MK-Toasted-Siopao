@@ -12,7 +12,7 @@ import com.toastedsiopao.repository.UnitOfMeasureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException; 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -162,14 +162,15 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
 
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
-			throw new IllegalArgumentException("Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
+			throw new IllegalArgumentException(
+					"Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
 		}
 
 		// Check if this item is used in any product recipes
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
 			log.info("Item '{}' is in use by recipes. Deactivating instead of deleting.", item.getName());
 		}
-		
+
 		item.setItemStatus("INACTIVE");
 		itemRepository.save(item);
 		log.info("Deactivated inventory item: ID={}, Name='{}'", id, item.getName());
@@ -183,25 +184,26 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		itemRepository.save(item);
 		log.info("Activated inventory item: ID={}, Name='{}'", id, item.getName());
 	}
-	
+
 	@Override
 	public void deleteItem(Long id) {
 		InventoryItem item = itemRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
-		
+
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
-			throw new IllegalArgumentException("Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot delete.");
+			throw new IllegalArgumentException(
+					"Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot delete.");
 		}
-		
+
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-			throw new DataIntegrityViolationException("Item '" + item.getName() + "' is used in a recipe and cannot be deleted.");
+			throw new DataIntegrityViolationException(
+					"Item '" + item.getName() + "' is used in a recipe and cannot be deleted.");
 		}
-		
+
 		itemRepository.delete(item);
 		log.info("Permanently deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
 	// --- END MODIFICATION ---
-
 
 	@Override
 	@Transactional(readOnly = true)
@@ -248,7 +250,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		// --- THIS IS THE FIX ---
 		InventoryItem item = itemRepository.findByIdForUpdate(itemId) // Use locking find
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
-		
+
 		// Check status before adjusting stock
 		if (!"ACTIVE".equals(item.getItemStatus())) {
 			throw new IllegalArgumentException("Cannot adjust stock for an INACTIVE item: " + item.getName());

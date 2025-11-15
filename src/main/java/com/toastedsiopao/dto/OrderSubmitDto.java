@@ -64,8 +64,8 @@ public class OrderSubmitDto {
 	private String cartDataJson; // A JSON string of the cart from sessionStorage
 	// --- END MODIFICATION ---
 	
-	// --- ADDED ---
-	@Size(max = 255, message = "Transaction ID cannot exceed 255 characters")
+	// --- THIS IS THE FIX ---
+	// Removed @Size(max = 255)
 	private String transactionId;
-	// --- END ADDED ---
+	// --- END FIX ---
 }

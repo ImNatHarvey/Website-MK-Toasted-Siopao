@@ -111,9 +111,11 @@ public class CustomerOrderController {
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
 				redirectAttributes.addFlashAttribute("orderError", "Transaction ID is required for GCash payments.");
 				return "redirect:/u/order";
-			} else if (txId.length() < 13 || !txId.matches("\\d+")) { // Check length and if it's all digits
+			// --- THIS IS THE FIX ---
+			} else if (!txId.matches("^\\d{13}$")) { // Check for exactly 13 digits
 				log.warn("GCash order submitted with invalid Transaction ID '{}' by user: {}", txId, user.getUsername());
 				bindingResult.rejectValue("transactionId", "orderDto.transactionId", "Invalid Transaction ID. It must be 13 digits.");
+			// --- END FIX ---
 				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); // Pass back the error
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
 				redirectAttributes.addFlashAttribute("orderError", "Invalid Transaction ID. It must be 13 digits.");

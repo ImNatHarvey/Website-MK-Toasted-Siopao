@@ -268,7 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         validationFailed = true;
                     }
                     
+                    // --- THIS IS THE FIX ---
                     const txIdValue = transactionIdInput.value.trim();
+                    const txIdRegex = /^\d{13}$/; // Regex for exactly 13 digits
+
                     if (txIdValue.length === 0) {
 						if (typeof queueToast === 'function') {
                             queueToast("Please enter the GCash Transaction ID.", true);
@@ -279,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
 							txIdFeedback.classList.add('d-block');
 						}
                         validationFailed = true;
-					} else if (txIdValue.length < 13 || !/^\d+$/.test(txIdValue)) {
+					} else if (!txIdRegex.test(txIdValue)) { // Test against the regex
 						if (typeof queueToast === 'function') {
                             queueToast("Invalid Transaction ID. It must be 13 digits.", true);
                         }
@@ -290,6 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
 						}
                         validationFailed = true;
 					}
+                    // --- END FIX ---
                 }
                 
                 if (validationFailed) {

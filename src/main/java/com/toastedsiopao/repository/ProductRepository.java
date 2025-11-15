@@ -6,10 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph; 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock; // --- ADDED ---
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import jakarta.persistence.LockModeType; // --- ADDED ---
 import java.util.List;
 import java.util.Optional; 
 
@@ -87,6 +89,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
 	List<Product> findWithDetailsByIds(@Param("ids") List<Long> ids);
 
+	// --- THIS IS THE FIX ---
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT p FROM Product p WHERE p.id = :id")
+	Optional<Product> findByIdForUpdate(@Param("id") Long id);
+	// --- END FIX ---
+
 	// --- END: MODIFIED 2-STEP PAGINATION QUERIES ---
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
@@ -96,13 +104,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	long countOutOfStockProducts();
 
 	// --- REMOVED: Old paginated queries that caused the warning ---
-	// Page<Product> findAll(Pageable pageable);
-	// Page<Product> findAllActive(Pageable pageable);
-	// Page<Product> findByCategory(@Param("category") Category category, Pageable pageable);
-	// Page<Product> findActiveByCategory(@Param("category") Category category, Pageable pageable);
-	// Page<Product> findByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
-	// Page<Product> findActiveByNameContainingIgnoreCase(@Param("keyword") String keyword, Pageable pageable);
-	// Page<Product> findByCategoryNameIgnoreCase(@Param("keyword") String categoryName, Pageable pageable);
-	// Page<Product> findByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword, ...);
-	// Page<Product> findActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword, ...);
 }

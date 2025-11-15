@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException; 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl; // --- ADDED ---
+import org.springframework.data.domain.PageImpl; 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,9 +21,9 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections; // --- ADDED ---
+import java.util.Collections; 
 import java.util.List;
-import java.util.Map; // --- ADDED ---
+import java.util.Map; 
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -347,8 +347,10 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public Product adjustStock(Long productId, int quantityChange, String reason) {
-		Product product = productRepository.findById(productId)
+		// --- THIS IS THE FIX ---
+		Product product = productRepository.findByIdForUpdate(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+		// --- END FIX ---
 
 		// --- MODIFIED: This logic now only runs if it's "Production" ---
 		if (quantityChange > 0 && "Production".equals(reason)) {

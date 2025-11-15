@@ -113,16 +113,16 @@ public class AdminProductController {
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
 
-		// This replaces the old inventoryStockMapJson logic.
-		// It fetches ALL products with their ingredients to populate the "Manage Stock"
-		// modal,
-		// addressing a bug where the modal only showed paginated products.
-		Page<Product> allProductsPage = productRepository.findAll(Pageable.unpaged());
+		// --- THIS IS THE FIX ---
+		// This now only fetches ACTIVE products, but still gets their ingredients
+		// for the "Max" button's th:if
+		Page<Product> allProductsPage = productService.searchProducts(null, null, Pageable.unpaged());
+		// --- END FIX ---
 		model.addAttribute("allProductsForStockModal", allProductsPage.getContent());
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", productPage.getTotalPages());
-		model.addAttribute("totalItems", productPage.getTotalElements());
+		model.addAttribute("totalItems", productPage.getTotalElements()); 
 		model.addAttribute("size", size);
 
 		if (!model.containsAttribute("productDto")) {

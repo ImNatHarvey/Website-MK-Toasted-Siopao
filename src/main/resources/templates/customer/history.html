@@ -25,11 +25,7 @@
 					th:classappend="${currentStatus == null ? 'active' : ''}">All
 					Orders</a> <a th:href="@{/u/history(status='PENDING_VERIFICATION')}"
 					class="btn btn-outline-primary"
-					style="--bs-btn-color: var(--primary); --bs-btn-border-color: var(--primary);"
-					onmouseover="this.style.backgroundColor='var(--primary)'; this.style.color='var(--light)';"
-					onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='var(--primary)'; }"
-					th:classappend="${currentStatus == 'PENDING_VERIFICATION' ? 'active' : ''}"
-					th:styleappend="${currentStatus == 'PENDING_VERIFICATION' ? 'background-color: var(--primary); color: var(--light); border-color: var(--primary);' : ''}">
+					th:classappend="${currentStatus == 'PENDING_VERIFICATION' ? 'active' : ''}">
 					Pending (GCASH) </a> <a th:href="@{/u/history(status='PENDING')}"
 					class="btn btn-outline-warning"
 					th:classappend="${currentStatus == 'PENDING' ? 'active' : ''}">Pending
@@ -38,12 +34,8 @@
 					th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
 
 				<a th:href="@{/u/history(status='OUT_FOR_DELIVERY')}"
-					class="btn btn-outline-info"
-					style="--bs-btn-color: #13c2c2; --bs-btn-border-color: #13c2c2; color: #13c2c2;"
-					onmouseover="this.style.backgroundColor='#13c2c2'; this.style.color='var(--light)';"
-					onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='#13c2c2'; }"
-					th:classappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'active' : ''}"
-					th:styleappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'background-color: #13c2c2; color: var(--light); border-color: #13c2c2;' : ''}">
+					class="btn btn-outline-delivery"
+					th:classappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'active' : ''}">
 					Out for Delivery </a> <a th:href="@{/u/history(status='DELIVERED')}"
 					class="btn btn-outline-success"
 					th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}">Delivered</a>

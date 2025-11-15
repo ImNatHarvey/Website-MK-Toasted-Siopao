@@ -96,7 +96,8 @@
 .btn-outline-success,
 .btn-outline-danger,
 .btn-outline-warning,
-.btn-outline-info {
+.btn-outline-info,
+.btn-outline-delivery {
 	border-radius: 20px;
 	padding: 6px 16px;
 	font-weight: bold; /* <-- MODIFIED from normal */
@@ -163,6 +164,20 @@
 	border-color: var(--info) !important;
 	font-weight: bold;
 }
+
+/* --- ADDED: Custom style for Out for Delivery button --- */
+.btn-outline-delivery {
+	color: #13c2c2;
+	border-color: #13c2c2;
+}
+
+.btn-outline-delivery.active, .btn-outline-delivery:hover {
+	background-color: #13c2c2 !important;
+	color: var(--light) !important;
+	border-color: #13c2c2 !important;
+	font-weight: bold;
+}
+/* --- END ADDED --- */
 
 
 /* ADDED: Style for small filter buttons */

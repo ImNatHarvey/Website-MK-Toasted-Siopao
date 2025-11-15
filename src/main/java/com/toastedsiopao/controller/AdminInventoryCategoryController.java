@@ -3,6 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.service.ActivityLogService;
+import com.toastedsiopao.service.AdminService; // --- ADDED ---
 import com.toastedsiopao.service.InventoryCategoryService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -33,6 +35,9 @@ public class AdminInventoryCategoryController {
 
 	@Autowired
 	private ActivityLogService activityLogService;
+
+	@Autowired // --- ADDED ---
+	private AdminService adminService;
 
 	@ModelAttribute("inventoryCategoryDto")
 	public InventoryCategoryDto inventoryCategoryDto() {
@@ -133,10 +138,17 @@ public class AdminInventoryCategoryController {
 	}
 
 	@PostMapping("/delete/{id}")
-	public String deleteInventoryCategory(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
+	public String deleteInventoryCategory(@PathVariable("id") Long id,
+			@RequestParam(value = "password", required = false) String password, // --- MODIFIED ---
+			RedirectAttributes redirectAttributes,
 			Principal principal) {
 
-		// --- REMOVED: try-catch block ---
+		// --- MODIFICATION: Added password validation ---
+		if (!adminService.validateOwnerPassword(password)) {
+			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
+			return "redirect:/admin/inventory";
+		}
+		// --- END MODIFICATION ---
 
 		Optional<InventoryCategory> categoryOpt = inventoryCategoryService.findById(id);
 		if (categoryOpt.isEmpty()) {

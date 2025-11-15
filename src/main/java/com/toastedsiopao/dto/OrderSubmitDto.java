@@ -60,8 +60,9 @@ public class OrderSubmitDto {
 	@Size(max = 500, message = "Notes cannot exceed 500 characters")
 	private String notes;
 
-	@NotBlank(message = "Cart data cannot be empty.")
+	// --- MODIFIED: Removed @NotBlank validation ---
 	private String cartDataJson; // A JSON string of the cart from sessionStorage
+	// --- END MODIFICATION ---
 	
 	// --- ADDED ---
 	@Size(max = 255, message = "Transaction ID cannot exceed 255 characters")

@@ -152,7 +152,9 @@ public class CustomerOrderController {
 			orderService.createOrder(user, orderDto, receiptImagePath);
 			
 			redirectAttributes.addFlashAttribute("orderSuccess", "Your order has been placed successfully!");
-			redirectAttributes.addFlashAttribute("clearCart", true);
+			// --- REMOVED: The service now clears the cart ---
+			// redirectAttributes.addFlashAttribute("clearCart", true);
+			// --- END REMOVED ---
 			
 			return "redirect:/u/history"; 
 

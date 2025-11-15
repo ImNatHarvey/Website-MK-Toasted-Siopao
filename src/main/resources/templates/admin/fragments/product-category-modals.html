@@ -52,7 +52,7 @@
 									<form sec:authorize="hasAuthority('EDIT_PRODUCTS')"
 										th:action="@{/admin/products/categories/delete/{id}(id=${cat.id})}"
 										method="post"
-										th:data-confirm-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This cannot be undone.'">
+										th:data-secure-delete-message="'Are you sure you want to delete the category \'' + ${cat.name} + '\'? This requires the Owner password.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>

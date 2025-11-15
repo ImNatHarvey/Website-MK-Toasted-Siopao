@@ -69,7 +69,7 @@
 									<form
 										th:action="@{/admin/inventory/units/delete/{id}(id=${unit.id})}"
 										method="post"
-										th:data-confirm-message="'Are you sure you want to delete the unit \'' + ${unit.name} + '\'? Ensure no items are using it.'">
+										th:data-secure-delete-message="'Are you sure you want to delete the unit \'' + ${unit.name} + '\'? This requires the Owner password.'">
 										<button type="submit" class="btn btn-sm btn-action-delete">
 											Delete</button>
 									</form>

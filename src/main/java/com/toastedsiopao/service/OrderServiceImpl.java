@@ -3,6 +3,7 @@ package com.toastedsiopao.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.OrderSubmitDto;
+import com.toastedsiopao.model.CartItem; // --- ADDED ---
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
 import com.toastedsiopao.model.Product;
@@ -14,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl; // --- ADDED ---
+import org.springframework.data.domain.PageImpl; 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList; 
-import java.util.Collections; // --- ADDED ---
+import java.util.Collections; 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,9 +64,12 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private EmailService emailService;
 	
-	// --- ADDED ---
 	@Autowired
 	private NotificationService notificationService;
+	
+	// --- ADDED ---
+	@Autowired
+	private CartService cartService;
 	// --- END ADDED ---
 	
 	private static class CartItemDto {
@@ -75,36 +79,29 @@ public class OrderServiceImpl implements OrderService {
 		public int quantity;
 	}
 
+	// --- MODIFICATION: This method is now rewritten ---
 	@Override
 	public Order createOrder(User user, OrderSubmitDto orderDto, String receiptImagePath) {
 		log.info("Attempting to create order for user: {}", user.getUsername());
 		
-		Map<Long, CartItemDto> cart;
-		try {
-			TypeReference<Map<Long, CartItemDto>> typeRef = new TypeReference<>() {};
-			cart = objectMapper.readValue(orderDto.getCartDataJson(), typeRef);
-			if (cart.isEmpty()) {
-				throw new IllegalArgumentException("Cannot create order with an empty cart.");
-			}
-		} catch (Exception e) {
-			log.error("Failed to parse cartDataJson for user {}: {}", user.getUsername(), e.getMessage());
-			throw new RuntimeException("Error parsing cart data.", e);
+		// --- FIX: Get cart from the database via CartService ---
+		List<CartItem> dbCart = cartService.getCartForUser(user);
+		if (dbCart.isEmpty()) {
+			throw new IllegalArgumentException("Cannot create order with an empty cart.");
 		}
+		// --- END FIX ---
 
 		BigDecimal calculatedTotal = BigDecimal.ZERO;
 		List<OrderItem> orderItems = new ArrayList<>();
 		
-		for (Map.Entry<Long, CartItemDto> entry : cart.entrySet()) {
-			Long productId = entry.getKey();
-			CartItemDto cartItem = entry.getValue();
-			int quantityToOrder = cartItem.quantity;
+		// --- FIX: Iterate over the DB cart items ---
+		for (CartItem cartItem : dbCart) {
+			int quantityToOrder = cartItem.getQuantity();
+			Product product = cartItem.getProduct(); // Product is already loaded from CartService
 
 			if (quantityToOrder <= 0) {
-				throw new IllegalArgumentException("Cart contains item with invalid quantity: " + cartItem.name);
+				throw new IllegalArgumentException("Cart contains item with invalid quantity: " + product.getName());
 			}
-
-			Product product = productRepository.findById(productId)
-					.orElseThrow(() -> new IllegalArgumentException("Product not found: " + cartItem.name));
 
 			if (product.getCurrentStock() < quantityToOrder) {
 				throw new IllegalArgumentException("Insufficient stock for: " + product.getName() + 
@@ -117,6 +114,7 @@ public class OrderServiceImpl implements OrderService {
 			
 			orderItems.add(new OrderItem(product, quantityToOrder, itemPrice));
 		}
+		// --- END FIX ---
 		
 		log.info("Stock validated for {} items. Total: ₱{}", orderItems.size(), calculatedTotal);
 		
@@ -196,9 +194,15 @@ public class OrderServiceImpl implements OrderService {
 		String notifLink = "/admin/orders?status=" + savedOrder.getStatus();
 		notificationService.createAdminNotification(notifMessage, notifLink);
 		// --- END ADDED ---
+
+		// --- ADDED: Clear cart directly from service ---
+		cartService.clearCart(user);
+		log.info("Cleared cart for user {}.", user.getUsername());
+		// --- END ADDED ---
 		
 		return savedOrder;
 	}
+	// --- END MODIFICATION ---
 
 	@Override
 	@Transactional(readOnly = true)

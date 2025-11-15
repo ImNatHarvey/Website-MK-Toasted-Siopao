@@ -321,7 +321,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: flex-start; /* Aligns button to the left */
-	transition: justify-content 0.3s ease-in-out;
+	/* transition: justify-content 0.3s ease-in-out; */ /* <-- THIS WAS THE BUG. REMOVED. */
 	/* == ADDED: Ensure header shrinks with sidebar == */
 	width: 100%;
 	overflow: hidden;
@@ -366,7 +366,7 @@
 
 .admin-sidebar .nav-link i.fa-fw {
 	margin-right: 8px;
-	transition: margin 0.3s ease-in-out;
+	/* transition: margin 0.3s ease-in-out; */ /* <-- THIS WAS THE BUG. REMOVED. */
 }
 
 .admin-content {
@@ -391,8 +391,8 @@ body.sidebar-toggled .admin-content {
 }
 
 body.sidebar-toggled .sidebar-header {
-	justify-content: center; /* == CHANGED: Center icon when mini == */
-	padding: 0;
+	justify-content: flex-start; /* <-- THIS IS THE FIX: Was 'center' */
+	padding: 0 0.75rem; /* <-- THIS IS THE FIX: Match untoggled header */
 }
 
 /* == ADDED: Default style for the button in the header == */
@@ -403,13 +403,16 @@ body.sidebar-toggled .sidebar-header {
 }
 
 /* == ADDED: Centering for the button when toggled == */
+/* --- THIS ENTIRE BLOCK IS THE FIX --- */
+/* Remove all the old centering styles for the toggled button */
 body.sidebar-toggled .sidebar-header .sidebar-toggle-btn {
 	margin-right: 0;
-	padding: 0.75rem 1rem;
-	width: 100%;
-	text-align: center;
-	font-size: 1.5rem;
+	padding: 0.5rem 0.75rem; /* Match the default button padding */
+	width: auto; /* Reset width */
+	text-align: left; /* Reset text-align */
+	font-size: 1.25rem; /* Reset font-size */
 }
+/* --- END FIX --- */
 
 body.sidebar-toggled .sidebar-brand-text {
 	display: none; /* Hide brand text */
@@ -420,8 +423,8 @@ body.sidebar-toggled .nav-link-text {
 }
 
 body.sidebar-toggled .admin-sidebar .nav-link {
-	text-align: center; /* Center the icon */
-	padding: 0.75rem 1rem;
+	text-align: left; /* <-- THIS IS THE FIX: Was 'center' */
+	padding: 0.75rem 1.5rem; /* <-- THIS IS THE FIX: Match untoggled left padding */
 }
 
 body.sidebar-toggled .admin-sidebar .nav-link i.fa-fw {

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl; // --- ADDED ---
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +32,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList; 
+import java.util.Collections; // --- ADDED ---
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -224,16 +226,16 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findAllOrders(Pageable pageable) { 
-		return orderRepository.findAllByDate(null, null, pageable); 
+		return orderRepository.findAll(pageable); // --- MODIFIED: Was findAllByDate(null, null, pageable) ---
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findOrdersByStatus(String status, Pageable pageable) { 
 		if (!StringUtils.hasText(status)) {
-			return findAllOrders(pageable); 
+			return searchOrders(null, null, null, null, pageable); // --- MODIFIED: Use new search ---
 		}
-		return orderRepository.searchByStatusAndDate(status.toUpperCase(), null, null, pageable); 
+		return searchOrders(null, status.toUpperCase(), null, null, pageable); // --- MODIFIED: Use new search ---
 	}
 	
 	@Override
@@ -265,17 +267,36 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		String upperStatus = hasStatus ? status.toUpperCase() : null;
+		
+		// --- START: MODIFIED 2-STEP FETCH ---
+		
+		Page<Long> orderIdPage;
 
 		if (hasKeyword && hasStatus) {
-			return orderRepository.searchOrdersByKeywordAndStatus(keyword.trim(), upperStatus, startDateTime,
+			orderIdPage = orderRepository.findIdsByKeywordAndStatus(keyword.trim(), upperStatus, startDateTime,
 					endDateTime, pageable); 
 		} else if (hasKeyword) {
-			return orderRepository.searchOrdersByKeyword(keyword.trim(), startDateTime, endDateTime, pageable);
+			orderIdPage = orderRepository.findIdsByKeyword(keyword.trim(), startDateTime, endDateTime, pageable);
 		} else if (hasStatus) {
-			return orderRepository.searchByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); 
+			orderIdPage = orderRepository.findIdsByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); 
 		} else {
-			return orderRepository.findAllByDate(startDateTime, endDateTime, pageable); 
+			orderIdPage = orderRepository.findIdsByDate(startDateTime, endDateTime, pageable); 
 		}
+		
+		List<Long> orderIds = orderIdPage.getContent();
+		
+		if (orderIds.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
+		}
+		
+		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
+		
+		// Re-sort the fetched orders to match the ID page's order (since IN clause doesn't guarantee order)
+		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
+		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
+
+		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
+		// --- END: MODIFIED 2-STEP FETCH ---
 	}
 
 	private void reverseStockForOrder(Order order, String reason) {

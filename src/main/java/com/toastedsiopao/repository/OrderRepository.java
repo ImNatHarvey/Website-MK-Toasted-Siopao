@@ -4,6 +4,7 @@ import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,37 +17,43 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-	String ADMIN_ORDER_JOINS = "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p ";
+	// --- REMOVED: ADMIN_ORDER_JOINS ---
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS
+	@Query(value = "SELECT DISTINCT o FROM Order o "
+			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
 			+ "WHERE o.user = :user ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
 	Page<Order> findByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS
+	@Query(value = "SELECT DISTINCT o FROM Order o "
+			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
 			+ "WHERE o.user = :user AND o.status = :status ORDER BY o.orderDate DESC",
 			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user AND o.status = :status")
 	Page<Order> findByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE "
+	// --- START: MODIFIED METHODS FOR EFFICIENT PAGINATION ---
+	
+	// 1. Find paginated IDs
+
+	@Query(value = "SELECT o.id FROM Order o WHERE "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
 			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE "
 					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
-	Page<Order> findAllByDate(@Param("startDateTime") LocalDateTime startDateTime,
+	Page<Long> findIdsByDate(@Param("startDateTime") LocalDateTime startDateTime,
 			@Param("endDateTime") LocalDateTime endDateTime, Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE o.status = :status AND "
+	@Query(value = "SELECT o.id FROM Order o WHERE o.status = :status AND "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) "
 			+ "ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.status = :status AND "
 					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
-	Page<Order> searchByStatusAndDate(@Param("status") String status,
+	Page<Long> findIdsByStatusAndDate(@Param("status") String status,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE "
+	@Query(value = "SELECT o.id FROM Order o WHERE "
 			+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
@@ -58,11 +65,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 					+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
 					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
-	Page<Order> searchOrdersByKeyword(@Param("keyword") String keyword,
+	Page<Long> findIdsByKeyword(@Param("keyword") String keyword,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o " + ADMIN_ORDER_JOINS + "WHERE o.status = :status AND "
+	@Query(value = "SELECT o.id FROM Order o WHERE o.status = :status AND "
 			+ "(CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
@@ -74,9 +81,17 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 					+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND "
 					+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
 					+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) ")
-	Page<Order> searchOrdersByKeywordAndStatus(@Param("keyword") String keyword, @Param("status") String status,
+	Page<Long> findIdsByKeywordAndStatus(@Param("keyword") String keyword, @Param("status") String status,
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable);
+	
+	// 2. Find full details for the paginated IDs
+	
+	@Query("SELECT o FROM Order o LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p WHERE o.id IN :ids ORDER BY o.orderDate DESC")
+	@EntityGraph(attributePaths = {"items", "items.product"})
+	List<Order> findWithDetailsByIds(@Param("ids") List<Long> ids);
+
+	// --- END: MODIFIED METHODS ---
 
 	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.orderDate BETWEEN :start AND :end AND o.status = 'DELIVERED'")
 	BigDecimal findTotalSalesBetweenDates(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);

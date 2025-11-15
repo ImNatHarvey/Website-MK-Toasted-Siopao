@@ -60,8 +60,10 @@ public class AdminInventoryController {
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
 		redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
-		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
-		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAll());
+		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll()); // Keeps edit/add modal populated
+		// --- THIS IS THE FIX ---
+		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAllActive()); // For stock modal
+		// --- END FIX ---
 	}
 
 	@GetMapping
@@ -76,9 +78,13 @@ public class AdminInventoryController {
 
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
-		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAll();
+		
+		// --- THIS IS THE FIX ---
+		// Only show ACTIVE items in the "Manage Stock" modal
+		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAllActive();
+		// --- END FIX ---
 
-		List<InventoryItem> allItems = inventoryItemService.findAll();
+		List<InventoryItem> allItems = inventoryItemService.findAll(); // Keep this for total value calculation
 		BigDecimal totalInventoryValue = allItems.stream().map(InventoryItem::getTotalCostValue).reduce(BigDecimal.ZERO,
 				BigDecimal::add);
 

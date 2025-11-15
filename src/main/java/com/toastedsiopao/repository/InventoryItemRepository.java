@@ -43,6 +43,11 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 	@Query(FIND_ITEM_WITH_RELATIONS + "ORDER BY i.name ASC")
 	List<InventoryItem> findAllByOrderByNameAsc();
 
+	// --- THIS IS THE FIX ---
+	@Query(FIND_ITEM_WITH_RELATIONS + "WHERE i.itemStatus = 'ACTIVE' ORDER BY i.name ASC")
+	List<InventoryItem> findAllActiveByOrderByNameAsc();
+	// --- END FIX ---
+
 	@Query("SELECT i FROM InventoryItem i WHERE i.currentStock <= i.lowStockThreshold AND i.currentStock > i.criticalStockThreshold ORDER BY i.name ASC")
 	List<InventoryItem> findLowStockItems();
 

@@ -69,6 +69,14 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.findAllByOrderByNameAsc();
 	}
 
+	// --- THIS IS THE FIX (IMPLEMENTATION) ---
+	@Override
+	@Transactional(readOnly = true)
+	public List<InventoryItem> findAllActive() {
+		return itemRepository.findAllActiveByOrderByNameAsc();
+	}
+	// --- END FIX ---
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<InventoryItem> findAll(Pageable pageable) {
@@ -237,9 +245,15 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
-		// Logic unchanged
-		InventoryItem item = itemRepository.findById(itemId)
+		// --- THIS IS THE FIX ---
+		InventoryItem item = itemRepository.findByIdForUpdate(itemId) // Use locking find
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
+		
+		// Check status before adjusting stock
+		if (!"ACTIVE".equals(item.getItemStatus())) {
+			throw new IllegalArgumentException("Cannot adjust stock for an INACTIVE item: " + item.getName());
+		}
+		// --- END FIX ---
 
 		BigDecimal newStock = item.getCurrentStock().add(quantityChange);
 		if (newStock.compareTo(BigDecimal.ZERO) < 0) {

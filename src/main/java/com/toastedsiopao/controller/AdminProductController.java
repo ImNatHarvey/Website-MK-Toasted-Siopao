@@ -71,7 +71,9 @@ public class AdminProductController {
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+		// --- THIS IS THE FIX ---
+		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAllActive());
+		// --- END FIX ---
 	}
 
 	@GetMapping
@@ -85,7 +87,10 @@ public class AdminProductController {
 		Page<Product> productPage;
 
 		List<Category> categoryList = categoryService.findAll();
-		List<InventoryItem> inventoryItems = inventoryItemService.findAll();
+		// --- THIS IS THE FIX ---
+		// Only show ACTIVE items in the dropdowns for creating/editing recipes
+		List<InventoryItem> inventoryItems = inventoryItemService.findAllActive();
+		// --- END FIX ---
 
 		log.info("Fetching products with keyword: '{}', categoryId: {}, page: {}, size: {}", keyword, categoryId, page,
 				size);

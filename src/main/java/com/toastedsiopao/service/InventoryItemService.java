@@ -13,6 +13,8 @@ import java.util.Optional;
 public interface InventoryItemService {
 
 	List<InventoryItem> findAll(); 
+	
+	List<InventoryItem> findAllActive(); // --- THIS IS THE FIX ---
 
 	Page<InventoryItem> findAll(Pageable pageable); 
 

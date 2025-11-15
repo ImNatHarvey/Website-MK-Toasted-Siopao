@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision; // --- IMPORT ADDED ---
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,10 +46,28 @@ public class SecurityConfig {
 				// CSRF protection is now ENABLED by default.
 
 				.authorizeHttpRequests(auth -> auth
+						// --- MODIFIED: Split permitAll() rule ---
+						// Rule 1: Static assets and core pages (login, about, home, etc.) are still permitAll
 						.requestMatchers("/css/**", "/img/**", "/js/**", "/img/uploads/**", "/favicon.ico", "/",
-								"/menu", "/about", "/order", "/login", "/signup", "/access-denied", "/logout",
+								"/about", "/login", "/access-denied", "/logout",
 								"/forgot-password", "/reset-password")
 						.permitAll()
+
+						// Rule 2: NEW RULE for pages for guests OR customers, but NOT admins
+						.requestMatchers("/menu", "/order", "/signup")
+						.access((authentication, context) -> {
+							// Check if user is anonymous OR has CUSTOMER role
+							boolean isAnonymous = !authentication.get().isAuthenticated() || authentication.get()
+									.getAuthorities().stream()
+									.anyMatch(a -> a.getAuthority().equals("ROLE_ANONYMOUS"));
+							boolean isCustomer = authentication.get().getAuthorities().stream()
+									.anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
+							
+							// Grant access if (anonymous OR customer), deny otherwise (i.e., for admins)
+							return (isAnonymous || isCustomer) ? new AuthorizationDecision(true)
+									: new AuthorizationDecision(false);
+						})
+						// --- END MODIFICATION ---
 
 						.requestMatchers("/admin/**").hasAuthority("VIEW_DASHBOARD").requestMatchers("/u/**")
 						.hasRole("CUSTOMER")

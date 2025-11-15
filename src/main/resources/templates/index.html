@@ -16,17 +16,20 @@
 					<div class="carousel-item active">
 						<img th:src="@{${siteSettings.carouselImage1}}"
 							class="d-block w-100 carousel-image"
-							alt="Siopao Carousel Image 1">
+							alt="Siopao Carousel Image 1"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 					</div>
 					<div class="carousel-item">
 						<img th:src="@{${siteSettings.carouselImage2}}"
 							class="d-block w-100 carousel-image"
-							alt="Siopao Carousel Image 2">
+							alt="Siopao Carousel Image 2"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 					</div>
 					<div class="carousel-item">
 						<img th:src="@{${siteSettings.carouselImage3}}"
 							class="d-block w-100 carousel-image"
-							alt="Siopao Carousel Image 3">
+							alt="Siopao Carousel Image 3"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 					</div>
 				</div>
 			</div>
@@ -40,7 +43,8 @@
 						<div class="card h-100">
 							<img th:src="@{${siteSettings.featureCard1Image}}"
 								class="card-img-top" alt="Feature Card 1"
-								style="height: 200px; object-fit: cover;">
+								style="height: 200px; object-fit: cover;"
+								onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 							<div class="card-body">
 								<h5 class="card-title"
 									th:text="${siteSettings.featureCard1Title}">Favorite</h5>
@@ -53,7 +57,8 @@
 						<div class="card h-100">
 							<img th:src="@{${siteSettings.featureCard2Image}}"
 								class="card-img-top" alt="Feature Card 2"
-								style="height: 200px; object-fit: cover;">
+								style="height: 200px; object-fit: cover;"
+								onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 							<div class="card-body">
 								<h5 class="card-title"
 									th:text="${siteSettings.featureCard2Title}">Combo</h5>
@@ -66,7 +71,8 @@
 						<div class="card h-100">
 							<img th:src="@{${siteSettings.featureCard3Image}}"
 								class="card-img-top" alt="Feature Card 3"
-								style="height: 200px; object-fit: cover;">
+								style="height: 200px; object-fit: cover;"
+								onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 							<div class="card-body">
 								<h5 class="card-title"
 									th:text="${siteSettings.featureCard3Title}">Siopao</h5>
@@ -79,7 +85,8 @@
 						<div class="card h-100">
 							<img th:src="@{${siteSettings.featureCard4Image}}"
 								class="card-img-top" alt="Feature Card 4"
-								style="height: 200px; object-fit: cover;">
+								style="height: 200px; object-fit: cover;"
+								onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 							<div class="card-body">
 								<h5 class="card-title"
 									th:text="${siteSettings.featureCard4Title}">Drinks</h5>
@@ -112,7 +119,8 @@
 				<div class="col-md-4 text-end">
 					<img th:src="@{${siteSettings.whyUsImage}}" class="feature-img"
 						alt="Toasted Siopao"
-						style="width: 70%; height: auto; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+						style="width: 70%; height: auto; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 				</div>
 			</div>
 		</div>

@@ -13,7 +13,8 @@
 			<div class="col-md-6 text-center">
 				<img th:src="@{${siteSettings.aboutImage}}" alt="Our Team"
 					class="img-fluid rounded shadow-sm"
-					style="max-height: 400px; object-fit: cover;">
+					style="max-height: 400px; object-fit: cover;"
+					onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 			</div>
 			<div class="col-md-6">
 				<p class="fs-5 mb-3" th:text="${siteSettings.aboutDescription1}">MK

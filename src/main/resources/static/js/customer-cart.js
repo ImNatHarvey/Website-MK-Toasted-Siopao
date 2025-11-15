@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 itemEl.className = 'order-item';
                 itemEl.innerHTML = `
                     <div class="order-item-img-container">
-                        <img src="${item.image}" alt="${item.name}" class="order-item-img">
+                        <img src="${item.image}" alt="${item.name}" class="order-item-img" onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
                     </div>
                     <div class="order-item-title">${item.name}</div>
                     <div class="quantity-stepper-inline" style="max-width: 90px;">

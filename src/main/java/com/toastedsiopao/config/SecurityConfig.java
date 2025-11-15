@@ -41,9 +41,8 @@ public class SecurityConfig {
 			throws Exception {
 		http.addFilterBefore(loginWhitespaceFilter, UsernamePasswordAuthenticationFilter.class)
 
-				// --- ADDED: Disable CSRF protection to allow forms to be submitted ---
-				.csrf(csrf -> csrf.disable())
-				// --- END ADDED ---
+				// --- REMOVED: .csrf(csrf -> csrf.disable()) ---
+				// CSRF protection is now ENABLED by default.
 
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/css/**", "/img/**", "/js/**", "/img/uploads/**", "/favicon.ico", "/",

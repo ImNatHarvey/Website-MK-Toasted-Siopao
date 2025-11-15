@@ -37,48 +37,52 @@ document.addEventListener('DOMContentLoaded', function() {
 			const permissionGrid = viewAdminModal.querySelector('#viewAdminPermissionGrid');
 			permissionGrid.innerHTML = ''; // Clear old content
 
-			// Define the 8 management modules and their corresponding key permission
-			const managementModules = {
-				'VIEW_CUSTOMERS': 'Customer Management',
-				'VIEW_ADMINS': 'Admin Management',
-				'VIEW_ORDERS': 'Order Management',
-				'VIEW_PRODUCTS': 'Product Management',
-				'VIEW_INVENTORY': 'Inventory MManagement',
-				'VIEW_TRANSACTIONS': 'Transaction History',
-				'EDIT_SITE_SETTINGS': 'Site Management',
-				'VIEW_ACTIVITY_LOG': 'Activity Log'
-			};
-
 			// Create a Set for quick lookup of assigned permissions
 			const assignedPermSet = new Set(permissionsString.split(',').filter(p => p.trim() !== ''));
 
-			// Iterate over the 8 management modules
-			for (const permKey in managementModules) {
-				const hasPermission = assignedPermSet.has(permKey);
-				const friendlyName = managementModules[permKey];
+			// Define the management modules and their associated permissions
+			const managementModules = [
+				{ name: 'Customer Management', perms: ['VIEW_CUSTOMERS', 'ADD_CUSTOMERS', 'EDIT_CUSTOMERS', 'DELETE_CUSTOMERS'] },
+				{ name: 'Admin Management', perms: ['VIEW_ADMINS', 'ADD_ADMINS', 'EDIT_ADMINS', 'DELETE_ADMINS'] },
+				{ name: 'Order Management', perms: ['VIEW_ORDERS', 'EDIT_ORDERS'] },
+				{ name: 'Product Management', perms: ['VIEW_PRODUCTS', 'ADD_PRODUCTS', 'EDIT_PRODUCTS', 'DELETE_PRODUCTS', 'ADJUST_PRODUCT_STOCK'] },
+				{ name: 'Inventory Management', perms: ['VIEW_INVENTORY', 'ADD_INVENTORY_ITEMS', 'EDIT_INVENTORY_ITEMS', 'DELETE_INVENTORY_ITEMS', 'ADJUST_INVENTORY_STOCK', 'MANAGE_INVENTORY_CATEGORIES', 'MANAGE_UNITS'] },
+				{ name: 'Transaction History', perms: ['VIEW_TRANSACTIONS'] },
+				{ name: 'Site Management', perms: ['EDIT_SITE_SETTINGS'] },
+				{ name: 'Activity Log', perms: ['VIEW_ACTIVITY_LOG'] }
+			];
 
+			// Iterate over the management modules
+			managementModules.forEach(module => {
+				// Check if ANY of the module's permissions are in the user's permission set
+				const hasPermission = module.perms.some(permKey => assignedPermSet.has(permKey));
+				const friendlyName = module.name;
+	
 				const permItem = document.createElement('div');
 				permItem.className = 'd-flex align-items-center gap-2 mb-2';
 				// Use col-6 to make it two columns
 				permItem.style.flexBasis = 'calc(50% - 0.5rem)';
-
+	
 				const icon = document.createElement('i');
 				icon.className = hasPermission ? 'fa-solid fa-check text-success' : 'fa-solid fa-times text-danger';
 				icon.style.width = '20px'; // Ensure alignment
-
+	
 				const text = document.createElement('span');
 				text.textContent = friendlyName;
-
+	
 				permItem.appendChild(icon);
 				permItem.appendChild(text);
 				permissionGrid.appendChild(permItem);
-			}
+			});
 
-			// Handle case where no permissions are found
-			if (assignedPermSet.size === 0) {
+			// Handle case where no module permissions are found
+			const hasAnyModulePermission = managementModules.some(module => module.perms.some(permKey => assignedPermSet.has(permKey)));
+			
+			if (!hasAnyModulePermission) {
 				const noPermsDiv = document.createElement('div');
 				noPermsDiv.className = 'text-muted col-12';
-				noPermsDiv.textContent = 'No management modules assigned to this role.';
+				// All admins have VIEW_DASHBOARD, so we just note no *management* modules.
+				noPermsDiv.textContent = 'No management modules assigned to this role (only base dashboard access).';
 				permissionGrid.appendChild(noPermsDiv);
 			}
 			// --- END UPDATED LOGIC ---

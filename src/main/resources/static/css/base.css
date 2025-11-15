@@ -182,3 +182,171 @@ body {
 /* ======================================================================== */
 /* == END: CENTRALIZED TOAST STYLES == */
 /* ======================================================================== */
+
+/* ======================================================================== */
+/* == START: COMMON PAGINATION STYLING (MOVED FROM ADMIN/PUBLIC) == */
+/* ======================================================================== */
+.pagination .page-item .page-link {
+	color: var(--primary);
+}
+
+.pagination .page-item.active .page-link {
+	background-color: var(--primary);
+	border-color: var(--primary);
+	color: var(--light);
+}
+
+.pagination .page-item.disabled .page-link {
+	color: var(--muted-text);
+}
+/* ======================================================================== */
+/* == END: COMMON PAGINATION STYLING == */
+/* ======================================================================== */
+
+/* ======================================================================== */
+/* == START: COMMON FILTER BUTTON STYLING (MOVED FROM ADMIN/PUBLIC) == */
+/* ======================================================================== */
+.btn-outline-primary, .btn-outline-success, .btn-outline-danger,
+	.btn-outline-warning, .btn-outline-info, .btn-outline-delivery {
+	border-radius: 20px;
+	padding: 6px 16px;
+	font-weight: bold;
+	box-shadow: none !important;
+}
+
+/* --- Primary --- */
+.btn-outline-primary {
+	color: var(--primary);
+	border-color: var(--primary);
+}
+
+.btn-outline-primary.active, .btn-outline-primary:hover {
+	background-color: var(--primary) !important;
+	color: var(--light) !important;
+	border-color: var(--primary) !important;
+	font-weight: bold;
+}
+
+/* --- Success (Delivered) --- */
+.btn-outline-success {
+	color: var(--success);
+	border-color: var(--success);
+}
+
+.btn-outline-success.active, .btn-outline-success:hover {
+	background-color: var(--success) !important;
+	color: var(--light) !important;
+	border-color: var(--success) !important;
+	font-weight: bold;
+}
+
+/* --- Danger (Cancelled) --- */
+.btn-outline-danger {
+	color: var(--danger);
+	border-color: var(--danger);
+}
+
+.btn-outline-danger.active, .btn-outline-danger:hover {
+	background-color: var(--danger) !important;
+	color: var(--light) !important;
+	border-color: var(--danger) !important;
+	font-weight: bold;
+}
+
+/* --- Warning (Pending) --- */
+.btn-outline-warning {
+	color: var(--warning);
+	border-color: var(--warning);
+}
+
+.btn-outline-warning.active, .btn-outline-warning:hover {
+	background-color: var(--warning) !important;
+	color: var(--light) !important;
+	border-color: var(--warning) !important;
+	font-weight: bold;
+}
+
+/* --- Info (Processing) --- */
+.btn-outline-info {
+	color: var(--info);
+	border-color: var(--info);
+}
+
+.btn-outline-info.active, .btn-outline-info:hover {
+	background-color: var(--info) !important;
+	color: var(--light) !important;
+	border-color: var(--info) !important;
+	font-weight: bold;
+}
+
+/* --- Custom style for Out for Delivery button --- */
+.btn-outline-delivery {
+	color: #13c2c2;
+	border-color: #13c2c2;
+}
+
+.btn-outline-delivery.active, .btn-outline-delivery:hover {
+	background-color: #13c2c2 !important;
+	color: var(--light) !important;
+	border-color: #13c2c2 !important;
+	font-weight: bold;
+}
+/* ======================================================================== */
+/* == END: COMMON FILTER BUTTON STYLING == */
+/* ======================================================================== */
+
+/* ======================================================================== */
+/* == START: COMMON STATUS BADGE STYLING (MOVED FROM ADMIN/PUBLIC) == */
+/* ======================================================================== */
+.status-badge {
+	padding: 0.35em 0.65em;
+	font-size: 0.8em;
+	font-weight: 700;
+	line-height: 1;
+	color: var(--dark);
+	text-align: center;
+	white-space: nowrap;
+	vertical-align: baseline;
+	border-radius: 0.375rem;
+	background-color: var(--muted-text);
+}
+
+.status-badge.status-normal, .status-badge.status-active, .status-badge.status-delivered,
+	.status-badge.status-completed {
+	background-color: var(--success);
+	color: var(--light);
+}
+
+.status-badge.status-low, .status-badge.status-pending {
+	background-color: var(--warning);
+	color: var(--light);
+}
+
+.status-badge.status-critical, .status-badge.status-cancelled,
+	.status-badge.status-inactive, .status-badge.status-rejected {
+	background-color: var(--danger);
+	color: var(--light);
+}
+
+.status-badge.status-processing {
+	background-color: var(--info);
+	color: var(--light);
+}
+
+.status-badge.status-pending-verification {
+	background-color: var(--primary);
+	color: var(--light);
+}
+
+.status-badge.status-out-for-delivery {
+	background-color: #13c2c2;
+	color: var(--light);
+}
+
+.status-badge.status-no_stock {
+	background-color: var(--dark);
+	color: var(--light);
+}
+/* ======================================================================== */
+/* == END: COMMON STATUS BADGE STYLING == */
+/* ======================================================================== */

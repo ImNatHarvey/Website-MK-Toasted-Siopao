@@ -5,6 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.domain.PageRequest; // --- ADDED ---
+import org.springframework.data.domain.Pageable; // --- ADDED ---
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -222,7 +224,6 @@ public class AdminReportController {
         }
     }
 
-    // === NEW ENDPOINT FOR INVOICE PDF ===
     @GetMapping("/invoice/{id}")
     @PreAuthorize("hasAuthority('VIEW_ORDERS')")
     public ResponseEntity<InputStreamResource> downloadInvoicePdf(@PathVariable("id") Long orderId) {
@@ -252,6 +253,40 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
             log.error("Unexpected error generating invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // === NEW ENDPOINT FOR ACTIVITY LOG PDF ===
+    @GetMapping("/activity-log/pdf")
+    @PreAuthorize("hasAuthority('VIEW_ACTIVITY_LOG')")
+    public ResponseEntity<InputStreamResource> downloadActivityLogPdf(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        log.info("Generating activity log PDF report for page: [{}], size: [{}]", page, size);
+        
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            ByteArrayInputStream bis = reportService.generateActivityLogPdf(pageable);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Activity_Log_Page-" + (page + 1) + "_" + timestamp + ".pdf";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate activity log PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating activity log PDF report: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

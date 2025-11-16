@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.ActivityLogEntry; // --- ADDED ---
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -11,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page; // --- ADDED ---
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +53,9 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ActivityLogService activityLogService; // --- ADDED ---
 
     private LocalDateTime parseDate(String date, boolean isEndDate) {
         if (!StringUtils.hasText(date)) {
@@ -434,13 +439,20 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
 
-    // === NEW INVOICE PDF METHOD ===
+    // === INVOICE PDF METHOD ===
     @Override
     public ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException {
         Order order = orderService.findOrderForInvoice(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
         
         return pdfService.generateInvoicePdf(order);
+    }
+
+    // === NEW ACTIVITY LOG PDF METHOD ===
+    @Override
+    public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {
+        Page<ActivityLogEntry> logPage = activityLogService.getAllLogs(pageable);
+        return pdfService.generateActivityLogPdf(logPage);
     }
 
 
@@ -499,7 +511,6 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private void autoSizeColumns(Sheet sheet, int numColumns) {
-        // --- THIS IS THE FIX: Changed to a standard for-loop ---
         for (int i = 0; i < numColumns; i++) {
             sheet.autoSizeColumn(i);
         }

@@ -1,8 +1,10 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.ActivityLogEntry; // --- ADDED ---
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.Product; 
+import org.springframework.data.domain.Page; // --- ADDED ---
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -52,5 +54,14 @@ public interface PdfService {
      * @throws IOException if the PDF generation fails.
      */
     ByteArrayInputStream generateInvoicePdf(Order order) throws IOException;
+
+    /**
+     * Generates a PDF of the admin activity log for a specific page.
+     *
+     * @param logPage The Page<ActivityLogEntry> object containing the logs.
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if the PDF generation fails.
+     */
+    ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException;
 
 }

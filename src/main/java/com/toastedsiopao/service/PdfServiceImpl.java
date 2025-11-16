@@ -5,6 +5,7 @@ import com.lowagie.text.Font;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.toastedsiopao.model.ActivityLogEntry; // --- ADDED ---
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -13,7 +14,8 @@ import com.toastedsiopao.model.SiteSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource; // --- ADDED ---
+import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page; // --- ADDED ---
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -47,7 +49,7 @@ public class PdfServiceImpl implements PdfService {
     private InventoryCategoryService inventoryCategoryService;
 
     @Autowired
-    private FileStorageService fileStorageService; // --- ADDED ---
+    private FileStorageService fileStorageService; 
 
     // --- Define Fonts ---
     private static final Font FONT_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
@@ -341,7 +343,6 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    // === INVOICE PDF IMPLEMENTATION ===
     @Override
     public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -477,6 +478,64 @@ public class PdfServiceImpl implements PdfService {
                 document.add(notesBody);
             }
 
+
+        } catch (DocumentException e) {
+            log.error("DocumentException during PDF generation: {}", e.getMessage(), e);
+            throw new IOException("Error creating PDF document", e);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    // === NEW ACTIVITY LOG PDF IMPLEMENTATION ===
+    @Override
+    public ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException {
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (Document document = new Document(PageSize.A4.rotate())) { // Landscape
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // === 1. Add Title ===
+            Paragraph title = new Paragraph(settings.getWebsiteName() + " - Admin Activity Log", FONT_TITLE);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            // === 2. Add Page Info ===
+            String pageInfo = String.format("Page %d of %d (Entries %d-%d of %d)",
+                    logPage.getNumber() + 1,
+                    logPage.getTotalPages(),
+                    logPage.getPageable().getOffset() + 1,
+                    logPage.getPageable().getOffset() + logPage.getNumberOfElements(),
+                    logPage.getTotalElements());
+
+            Paragraph subtitle = new Paragraph(pageInfo, FONT_SUBTITLE);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15f);
+            document.add(subtitle);
+
+            // === 3. Add Detailed Log Table ===
+            PdfPTable detailTable = new PdfPTable(4); // 4 columns
+            detailTable.setWidthPercentage(100);
+            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f }); // Relative widths
+
+            // --- Table Header ---
+            addTableHeader(detailTable, "Timestamp");
+            addTableHeader(detailTable, "Admin User");
+            addTableHeader(detailTable, "Action");
+            addTableHeader(detailTable, "Details");
+
+            // --- Table Body ---
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            for (ActivityLogEntry logEntry : logPage.getContent()) {
+                addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, logEntry.getUsername(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, logEntry.getAction(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, StringUtils.hasText(logEntry.getDetails()) ? logEntry.getDetails() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
+            }
+
+            document.add(detailTable);
 
         } catch (DocumentException e) {
             log.error("DocumentException during PDF generation: {}", e.getMessage(), e);

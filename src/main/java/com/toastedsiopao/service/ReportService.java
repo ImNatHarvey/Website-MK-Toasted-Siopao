@@ -1,5 +1,7 @@
 package com.toastedsiopao.service;
 
+import org.springframework.data.domain.Pageable; // --- ADDED ---
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
@@ -78,4 +80,13 @@ public interface ReportService {
      * @throws IllegalArgumentException if the order is not found.
      */
     ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException;
+
+    /**
+     * Generates a PDF of the admin activity log for a specific page.
+     *
+     * @param pageable The Pageable object defining the page and size to fetch.
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if there's an error creating the PDF.
+     */
+    ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException;
 }

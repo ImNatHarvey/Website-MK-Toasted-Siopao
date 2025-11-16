@@ -71,11 +71,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate) throws IOException { // --- MODIFIED ---
+    public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate) throws IOException { 
         LocalDateTime startDateTime = parseDate(startDate, false);
         LocalDateTime endDateTime = parseDate(endDate, true);
 
-        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); // --- MODIFIED ---
+        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); 
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -227,11 +227,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ByteArrayInputStream generateFinancialReportPdf(String keyword, String startDate, String endDate) throws IOException { // --- MODIFIED ---
+    public ByteArrayInputStream generateFinancialReportPdf(String keyword, String startDate, String endDate) throws IOException { 
         LocalDateTime startDateTime = parseDate(startDate, false);
         LocalDateTime endDateTime = parseDate(endDate, true);
 
-        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); // --- MODIFIED ---
+        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); 
         
         return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
@@ -440,13 +440,14 @@ public class ReportServiceImpl implements ReportService {
     }
 
     // === INVOICE PDF METHOD ===
+	// --- START: MODIFIED METHOD ---
     @Override
-    public ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException {
-        Order order = orderService.findOrderForInvoice(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
-        
+    public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException, IllegalArgumentException {
+        // The check for the order's existence is now done in the controller.
+        // We just receive the valid order object.
         return pdfService.generateInvoicePdf(order);
     }
+	// --- END: MODIFIED METHOD ---
 
     // === ACTIVITY LOG PDF METHOD ===
     @Override

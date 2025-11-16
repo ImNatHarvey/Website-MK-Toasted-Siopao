@@ -1,5 +1,7 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.model.Order; // --- ADDED ---
+import com.toastedsiopao.service.OrderService; // --- ADDED ---
 import com.toastedsiopao.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional; // --- ADDED ---
 
 @Controller
 @RequestMapping("/admin/reports")
@@ -30,18 +33,23 @@ public class AdminReportController {
 
     @Autowired
     private ReportService reportService;
+    
+    // --- ADDED ---
+    @Autowired
+    private OrderService orderService;
+    // --- END ADDED ---
 
     @GetMapping("/financial")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReport(
-            @RequestParam(value = "keyword", required = false) String keyword, // --- ADDED ---
+            @RequestParam(value = "keyword", required = false) String keyword, 
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
 
-        log.info("Generating financial report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); // --- MODIFIED ---
+        log.info("Generating financial report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateFinancialReport(keyword, startDate, endDate); // --- MODIFIED ---
+            ByteArrayInputStream bis = reportService.generateFinancialReport(keyword, startDate, endDate); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -68,14 +76,14 @@ public class AdminReportController {
     @GetMapping("/financial/pdf")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReportPdf(
-            @RequestParam(value = "keyword", required = false) String keyword, // --- ADDED ---
+            @RequestParam(value = "keyword", required = false) String keyword, 
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
 
-        log.info("Generating financial PDF report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); // --- MODIFIED ---
+        log.info("Generating financial PDF report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateFinancialReportPdf(keyword, startDate, endDate); // --- MODIFIED ---
+            ByteArrayInputStream bis = reportService.generateFinancialReportPdf(keyword, startDate, endDate); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -233,7 +241,14 @@ public class AdminReportController {
         log.info("Generating invoice PDF for Order ID: {}", orderId);
 
         try {
-            ByteArrayInputStream bis = reportService.generateInvoicePdf(orderId);
+			// --- START: MODIFIED CODE ---
+			// 1. Fetch the order first
+            Order order = orderService.findOrderForInvoice(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+			
+			// 2. Pass the Order object
+            ByteArrayInputStream bis = reportService.generateInvoicePdf(order);
+			// --- END: MODIFIED CODE ---
 
             HttpHeaders headers = new HttpHeaders();
             String fileName = "Invoice_ORD-" + orderId + ".pdf";

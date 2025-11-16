@@ -4,6 +4,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import com.toastedsiopao.model.Order; // --- ADDED ---
 
 public interface ReportService {
 
@@ -76,12 +77,12 @@ public interface ReportService {
     /**
      * Generates a single invoice/receipt for a specific order.
      *
-     * @param orderId The ID of the order to generate an invoice for.
+     * @param order The fully populated Order object to generate an invoice for. // --- MODIFIED ---
      * @return A ByteArrayInputStream containing the .pdf file data.
      * @throws IOException              if there's an error creating the PDF.
      * @throws IllegalArgumentException if the order is not found.
      */
-    ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException;
+    ByteArrayInputStream generateInvoicePdf(Order order) throws IOException, IllegalArgumentException; // --- MODIFIED ---
 
     /**
      * Generates a PDF of the admin activity log for a specific page.

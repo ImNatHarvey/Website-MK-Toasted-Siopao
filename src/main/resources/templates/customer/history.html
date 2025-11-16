@@ -79,6 +79,12 @@
 									'status-' + #strings.toLowerCase(order.status))}">
 								Status </span>
 
+							<a th:if="${order.status != 'PENDING' and order.status != 'PENDING_VERIFICATION'}"
+							   th:href="@{/u/history/invoice/{id}(id=${order.id})}"
+							   class="btn btn-sm btn-action-view" target="_blank">
+								<i class="fa-solid fa-print me-1"></i> View Receipt
+							</a>
+							
 							<form
 								th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
 								th:action="@{/u/history/cancel/{id}(id=${order.id})}"
@@ -91,7 +97,8 @@
 									<i class="fa-solid fa-times me-1"></i> Cancel Order
 								</button>
 							</form>
-						</div>
+							
+							</div>
 					</div>
 					<div class="card-body">
 						<div class="row">

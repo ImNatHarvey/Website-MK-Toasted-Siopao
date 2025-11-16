@@ -58,4 +58,16 @@ public interface OrderService {
 	BigDecimal getTotalRevenueAllTime();
 
 	long getTotalTransactionsAllTime();
+
+	BigDecimal getTotalPotentialRevenue();
+
+	// --- START: ADDED COGS METHODS ---
+	BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end);
+	
+	BigDecimal getCogsToday();
+
+	BigDecimal getCogsThisWeek();
+
+	BigDecimal getCogsThisMonth();
+	// --- END: ADDED COGS METHODS ---
 }

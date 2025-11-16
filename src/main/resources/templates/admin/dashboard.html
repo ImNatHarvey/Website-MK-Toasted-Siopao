@@ -24,8 +24,9 @@
 		</div>
 
 		<h2 class="dashboard-section-title">Financial Summary</h2>
+		
 		<div class="row">
-			<div class="col-xl-4 col-md-6 mb-4">
+			<div class="col-xl-4 col-md-4 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-sales">
 						<i class="fa-solid fa-peso-sign"></i>
@@ -37,7 +38,38 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-xl-4 col-md-6 mb-4">
+			
+			<div class="col-xl-4 col-md-4 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-orders" 
+						style="background-color: #fff1f0; color: #f5222d;">
+						<i class="fa-solid fa-money-bill-transfer"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Est. Cost of Goods Sold Today</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(cogsToday, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-xl-4 col-md-4 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-inventory" 
+						style="background-color: #f6ffed; color: #52c41a;">
+						<i class="fa-solid fa-hand-holding-dollar"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Est. Gross Profit Today</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(grossProfitToday, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row">
+			<div class="col-xl col-md-6 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-sales">
 						<i class="fa-solid fa-calendar-week"></i>
@@ -46,10 +78,12 @@
 						<div class="stats-label">Sales This Week</div>
 						<div class="stats-value"
 							th:text="'₱' + ${#numbers.formatDecimal(salesThisWeek, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+						<div class="stats-sub-value"
+							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisWeek, 1, 'COMMA', 2, 'POINT')}">GP: ₱0.00</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-xl-4 col-md-6 mb-4">
+			<div class="col-xl col-md-6 mb-4">
 				<div class="stats-card-v2">
 					<div class="stats-icon icon-sales">
 						<i class="fa-solid fa-calendar-days"></i>
@@ -58,6 +92,36 @@
 						<div class="stats-label">Sales This Month</div>
 						<div class="stats-value"
 							th:text="'₱' + ${#numbers.formatDecimal(salesThisMonth, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+						<div class="stats-sub-value"
+							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisMonth, 1, 'COMMA', 2, 'POINT')}">GP: ₱0.00</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-xl col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-sales" 
+						style="background-color: #f9f0ff; color: #722ed1;">
+						<i class="fa-solid fa-calculator"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Avg. Order Value</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(avgOrderValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-xl col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon" 
+						style="background-color: #e6f7ff; color: #1890ff;">
+						<i class="fa-solid fa-hourglass-half"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Potential Revenue</div>
+						<div class="stats-value"
+							th:text="'₱' + ${#numbers.formatDecimal(potentialRevenue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 					</div>
 				</div>
 			</div>

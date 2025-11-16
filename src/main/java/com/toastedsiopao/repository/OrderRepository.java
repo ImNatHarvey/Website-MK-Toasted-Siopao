@@ -110,4 +110,18 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	@Query("SELECT COUNT(o) FROM Order o WHERE o.status = 'DELIVERED'")
 	long countTotalTransactionsAllTime();
+
+	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status IN ('PENDING', 'PENDING_VERIFICATION', 'PROCESSING', 'OUT_FOR_DELIVERY')")
+	BigDecimal findTotalPotentialRevenue();
+	
+	// --- START: ADDED NEW COGS FETCH METHOD ---
+	@Query("SELECT DISTINCT o FROM Order o "
+			+ "JOIN FETCH o.items oi "
+			+ "JOIN oi.product p "
+			+ "LEFT JOIN FETCH p.ingredients ri "
+			+ "LEFT JOIN FETCH ri.inventoryItem ii "
+			+ "WHERE o.status = 'DELIVERED' AND o.orderDate BETWEEN :start AND :end "
+			+ "ORDER BY o.orderDate DESC")
+	List<Order> findDeliveredOrdersWithCogsDetails(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+	// --- END: ADDED NEW COGS FETCH METHOD ---
 }

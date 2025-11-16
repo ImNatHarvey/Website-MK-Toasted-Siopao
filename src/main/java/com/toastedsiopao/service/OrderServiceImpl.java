@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.OrderSubmitDto;
 import com.toastedsiopao.model.CartItem; // --- ADDED ---
+import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
 import com.toastedsiopao.model.Product;
+import com.toastedsiopao.model.RecipeIngredient;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.OrderRepository;
 import com.toastedsiopao.repository.ProductRepository;
@@ -103,7 +105,7 @@ public class OrderServiceImpl implements OrderService {
 				throw new IllegalArgumentException("Cart contains item with invalid quantity: " + product.getName());
 			}
 
-			if (product.getCurrentStock() < quantityToOrder) {
+			if (!"ACTIVE".equals(product.getProductStatus()) || product.getCurrentStock() < quantityToOrder) {
 				throw new IllegalArgumentException("Insufficient stock for: " + product.getName() + 
 												   ". Requested: " + quantityToOrder + ", Available: " + product.getCurrentStock());
 			}
@@ -521,6 +523,82 @@ public class OrderServiceImpl implements OrderService {
 		return savedOrder;
 	}
 	
+	// --- COGS CALCULATION HELPERS AND IMPLEMENTATION (START) ---
+	
+	private BigDecimal calculateOrderCogs(Order order) {
+		BigDecimal totalCogs = BigDecimal.ZERO;
+		
+		for (OrderItem orderItem : order.getItems()) {
+			Product product = orderItem.getProduct();
+			int orderedQuantity = orderItem.getQuantity();
+
+			// Accessing ingredients should not cause an N+1 if the query was set up correctly (JOIN FETCH)
+			if (product.getIngredients() == null || product.getIngredients().isEmpty()) {
+				log.warn("Product '{}' in order #{} has no ingredients defined. Skipping COGS.", product.getName(), order.getId());
+				continue;
+			}
+			
+			for (RecipeIngredient ingredient : product.getIngredients()) {
+				BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
+				InventoryItem item = ingredient.getInventoryItem();
+				
+				if (item == null || item.getCostPerUnit() == null || quantityNeeded == null) {
+					log.warn("Invalid ingredient data for product '{}'. Skipping ingredient COGS.", product.getName());
+					continue;
+				}
+				
+				// Total Cogs for this ingredient = Ordered Qty * Qty per unit * Cost per unit
+				BigDecimal itemCogs = quantityNeeded
+						.multiply(item.getCostPerUnit())
+						.multiply(new BigDecimal(orderedQuantity));
+
+				totalCogs = totalCogs.add(itemCogs);
+			}
+		}
+		
+		return totalCogs;
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end) {
+		// This uses the custom repository query to fetch all required entities in one go
+		List<Order> deliveredOrders = orderRepository.findDeliveredOrdersWithCogsDetails(start, end);
+		
+		BigDecimal totalCogs = BigDecimal.ZERO;
+		for (Order order : deliveredOrders) {
+			totalCogs = totalCogs.add(calculateOrderCogs(order));
+		}
+		
+		return totalCogs;
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getCogsToday() {
+		LocalDateTime now = LocalDateTime.now(clock);
+		LocalDateTime startOfDay = now.with(LocalTime.MIN);
+		return getEstimatedCogsBetweenDates(startOfDay, now);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getCogsThisWeek() {
+		LocalDateTime now = LocalDateTime.now(clock);
+		LocalDateTime startOfWeek = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).with(LocalTime.MIN);
+		return getEstimatedCogsBetweenDates(startOfWeek, now);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getCogsThisMonth() {
+		LocalDateTime now = LocalDateTime.now(clock);
+		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
+		return getEstimatedCogsBetweenDates(startOfMonth, now);
+	}
+	
+	// --- COGS CALCULATION HELPERS AND IMPLEMENTATION (END) ---
+
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getSalesToday() {
@@ -587,5 +665,12 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional(readOnly = true)
 	public long getTotalTransactionsAllTime() {
 		return orderRepository.countTotalTransactionsAllTime();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal getTotalPotentialRevenue() {
+		BigDecimal total = orderRepository.findTotalPotentialRevenue();
+		return total != null ? total : BigDecimal.ZERO;
 	}
 }

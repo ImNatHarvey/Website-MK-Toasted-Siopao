@@ -18,12 +18,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode; 
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList; // --- ADDED ---
-import java.util.LinkedHashMap; // --- ADDED ---
+import java.util.ArrayList; 
+import java.util.LinkedHashMap; 
 import java.util.List;
 import java.util.Map;
 
@@ -84,9 +85,38 @@ public class AdminDashboardController {
 		log.info("Loading admin dashboard...");
 
 		// --- Sales Summary ---
-		model.addAttribute("salesToday", orderService.getSalesToday());
-		model.addAttribute("salesThisWeek", orderService.getSalesThisWeek());
-		model.addAttribute("salesThisMonth", orderService.getSalesThisMonth());
+		BigDecimal salesToday = orderService.getSalesToday();
+		BigDecimal salesThisWeek = orderService.getSalesThisWeek();
+		BigDecimal salesThisMonth = orderService.getSalesThisMonth();
+		
+		model.addAttribute("salesToday", salesToday);
+		model.addAttribute("salesThisWeek", salesThisWeek);
+		model.addAttribute("salesThisMonth", salesThisMonth);
+
+		// --- COGS & GP Summary (ADDED) ---
+		BigDecimal cogsToday = orderService.getCogsToday();
+		BigDecimal cogsThisWeek = orderService.getCogsThisWeek();
+		BigDecimal cogsThisMonth = orderService.getCogsThisMonth();
+		
+		model.addAttribute("cogsToday", cogsToday);
+		model.addAttribute("cogsThisWeek", cogsThisWeek);
+		model.addAttribute("cogsThisMonth", cogsThisMonth);
+		
+		model.addAttribute("grossProfitToday", salesToday.subtract(cogsToday));
+		model.addAttribute("grossProfitThisWeek", salesThisWeek.subtract(cogsThisWeek));
+		model.addAttribute("grossProfitThisMonth", salesThisMonth.subtract(cogsThisMonth));
+		// --- END COGS/GP Summary ---
+
+		// --- AOV & Potential Revenue ---
+		BigDecimal totalRevenue = orderService.getTotalRevenueAllTime();
+		long totalTransactions = orderService.getTotalTransactionsAllTime();
+		BigDecimal avgOrderValue = BigDecimal.ZERO;
+		if (totalTransactions > 0) {
+			avgOrderValue = totalRevenue.divide(new BigDecimal(totalTransactions), 2, RoundingMode.HALF_UP);
+		}
+		model.addAttribute("avgOrderValue", avgOrderValue);
+		model.addAttribute("potentialRevenue", orderService.getTotalPotentialRevenue());
+		// --- End AOV & Potential Revenue ---
 
 		// --- Order Summary ---
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();

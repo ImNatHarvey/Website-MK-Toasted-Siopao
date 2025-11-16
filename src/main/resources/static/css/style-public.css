@@ -549,6 +549,44 @@ footer {
 /* ... REMOVED ... */
 /* == END REMOVED == */
 
+/* == START: NEW PASSWORD TOGGLE STYLES == */
+.password-toggle-wrapper {
+	position: relative;
+}
+
+.password-toggle-wrapper .password-toggle-icon {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: #6c757d;
+	z-index: 5;
+}
+
+/* Make password inputs have space for the icon */
+.password-toggle-wrapper input[type="password"],
+.password-toggle-wrapper input[type="text"].form-control {
+	padding-right: 2.5rem;
+}
+
+/* Handle inputs inside an input-group */
+.input-group .password-toggle-icon {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: #6c757d;
+	z-index: 5;
+}
+
+.input-group input[type="password"].form-control,
+.input-group input[type="text"].form-control {
+	padding-right: 2.5rem;
+}
+/* == END: NEW PASSWORD TOGGLE STYLES == */
+
 /* == ADDED: Image Uploader Styles (copied from admin) == */
 .image-uploader-container {
 	position: relative;

@@ -34,6 +34,44 @@
 /* ... REMOVED ... */
 /* == END STATUS BADGE STYLES == */
 
+/* == START: NEW PASSWORD TOGGLE STYLES == */
+.password-toggle-wrapper {
+	position: relative;
+}
+
+.password-toggle-wrapper .password-toggle-icon {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: #6c757d;
+	z-index: 5;
+}
+
+/* Make password inputs have space for the icon */
+.password-toggle-wrapper input[type="password"],
+.password-toggle-wrapper input[type="text"] {
+	padding-right: 2.5rem;
+}
+
+/* Handle inputs inside an input-group */
+.input-group .password-toggle-icon {
+	position: absolute;
+	right: 12px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+	color: #6c757d;
+	z-index: 5;
+}
+
+.input-group input[type="password"],
+.input-group input[type="text"] {
+	padding-right: 2.5rem;
+}
+/* == END: NEW PASSWORD TOGGLE STYLES == */
+
 .section-title {
 	color: var(--primary);
 	font-weight: bold;

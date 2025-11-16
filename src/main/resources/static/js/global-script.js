@@ -17,6 +17,85 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	const urlParams = new URLSearchParams(window.location.search);
 	const modalToShow = urlParams.get('showModal');
+	
+	// ========================================================================
+	// == START: NEW PASSWORD TOGGLE LOGIC ==
+	// ========================================================================
+
+	/**
+	 * Initializes a password visibility toggle icon for a given input field.
+	 * @param {HTMLInputElement} inputElement - The password input field.
+	 */
+	function initPasswordToggle(inputElement) {
+		// Check if it's a password field
+		if (!inputElement || inputElement.type !== 'password') {
+			return;
+		}
+
+		const parent = inputElement.parentElement;
+
+		// Prevent double-init
+		if (parent.querySelector('.password-toggle-icon')) {
+			return;
+		}
+		
+		// Create the icon
+		const icon = document.createElement('i');
+		icon.classList.add('fa-solid', 'fa-eye', 'password-toggle-icon');
+		icon.setAttribute('title', 'Show password');
+		
+		// Add click listener
+		icon.addEventListener('click', () => {
+			if (inputElement.type === 'password') {
+				inputElement.type = 'text';
+				icon.classList.remove('fa-eye');
+				icon.classList.add('fa-eye-slash');
+				icon.setAttribute('title', 'Hide password');
+			} else {
+				inputElement.type = 'password';
+				icon.classList.remove('fa-eye-slash');
+				icon.classList.add('fa-eye');
+				icon.setAttribute('title', 'Show password');
+			}
+		});
+
+		// Check if parent is an input-group
+		if (parent.classList.contains('input-group')) {
+			// If it's an input group, just append the icon.
+			// The input-group itself provides the relative positioning.
+			parent.appendChild(icon);
+		} else {
+			// If it's a standalone input, create a wrapper
+			const wrapper = document.createElement('div');
+			wrapper.classList.add('password-toggle-wrapper');
+			
+			// Replace the input with the wrapper
+			parent.insertBefore(wrapper, inputElement);
+			
+			// Move the input inside the wrapper
+			wrapper.appendChild(inputElement);
+			
+			// Append the icon inside the wrapper
+			wrapper.appendChild(icon);
+		}
+	}
+
+	/**
+	 * Finds and initializes all password toggles within a given container (or the whole document).
+	 * @param {HTMLElement} container - The element to search within.
+	 */
+	function initAllPasswordToggles(container) {
+		const passwordFields = (container || document).querySelectorAll('input[type="password"]');
+		passwordFields.forEach(initPasswordToggle);
+	}
+
+	// --- Initialize for all non-modal fields on page load ---
+	initAllPasswordToggles(document.body);
+	
+	// ========================================================================
+	// == END: NEW PASSWORD TOGGLE LOGIC ==
+	// ========================================================================
+
 
 	if (modalToShow) {
 		console.log(`URL parameter 'showModal' found: ${modalToShow}`);
@@ -64,6 +143,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
 							modalElement.addEventListener('shown.bs.modal', () => {
 								console.log(`#${modalToShow} fully shown. Applying manual validation styles...`);
+								
+								// --- ADDED: Initialize password toggles inside the modal ---
+								initAllPasswordToggles(modalElement);
+								
 								const errorMessages = modalElement.querySelectorAll('.invalid-feedback');
 
 								errorMessages.forEach(msg => {

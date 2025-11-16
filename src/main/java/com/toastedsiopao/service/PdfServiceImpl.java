@@ -1,13 +1,11 @@
 package com.toastedsiopao.service;
 
-// --- FIX: Added the missing import for OrderService ---
-import com.toastedsiopao.service.OrderService; 
-
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
+import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.SiteSettings;
 import org.slf4j.Logger;
@@ -15,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -39,6 +38,14 @@ public class PdfServiceImpl implements PdfService {
     @Autowired
     private OrderService orderService; // To calculate COGS for each order
 
+    // --- NEWLY ADDED ---
+    @Autowired
+    private InventoryItemService inventoryItemService;
+
+    @Autowired
+    private InventoryCategoryService inventoryCategoryService;
+    // ===================
+
     // --- Define Fonts ---
     private static final Font FONT_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
     private static final Font FONT_SUBTITLE = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY);
@@ -51,7 +58,6 @@ public class PdfServiceImpl implements PdfService {
     private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); // --primary
     private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230); // Light gray
 
-    // --- THIS IS THE FIX: This @Override annotation is now valid ---
     @Override
     public ByteArrayInputStream generateFinancialReportPdf(List<Order> orders, LocalDateTime start, LocalDateTime end) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -149,6 +155,96 @@ public class PdfServiceImpl implements PdfService {
             addTableFooterCell(detailTable, formatCurrency(totalSales), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
             addTableFooterCell(detailTable, formatCurrency(totalCogs), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
             addTableFooterCell(detailTable, formatCurrency(grossProfit), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
+
+            document.add(detailTable);
+
+        } catch (DocumentException e) {
+            log.error("DocumentException during PDF generation: {}", e.getMessage(), e);
+            throw new IOException("Error creating PDF document", e);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
+    // === NEW METHOD IMPLEMENTATION ===
+    @Override
+    public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException {
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (Document document = new Document(PageSize.A4)) { // Portrait for this report
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // === 1. Add Title ===
+            Paragraph title = new Paragraph(settings.getWebsiteName() + " - Inventory Stock Report", FONT_TITLE);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            // === 2. Add Filter Info ===
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Keyword='" + keyword + "' ";
+            }
+            if (categoryId != null) {
+                String catName = inventoryCategoryService.findById(categoryId).map(c -> c.getName()).orElse("ID " + categoryId);
+                filterDesc += "Category='" + catName + "'";
+            }
+            if (!StringUtils.hasText(keyword) && categoryId == null) {
+                filterDesc += "None (All Items)";
+            }
+            Paragraph subtitle = new Paragraph(filterDesc, FONT_SUBTITLE);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15f);
+            document.add(subtitle);
+
+            // === 3. Add Summary ===
+            BigDecimal grandTotalValue = items.stream()
+                    .map(InventoryItem::getTotalCostValue)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            PdfPTable summaryTable = new PdfPTable(4); // 4 columns
+            summaryTable.setWidthPercentage(100);
+            summaryTable.setWidths(new float[] { 2f, 1f, 2.5f, 2f });
+            summaryTable.setSpacingAfter(20f);
+
+            addSummaryCell(summaryTable, "Total Item Types:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT);
+            addSummaryCell(summaryTable, String.valueOf(items.size()), FONT_TOTAL_CELL, Element.ALIGN_LEFT);
+            addSummaryCell(summaryTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT);
+            addSummaryCell(summaryTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_LEFT);
+            
+            document.add(summaryTable);
+            
+            // === 4. Add Detailed Inventory Table ===
+            PdfPTable detailTable = new PdfPTable(8); // 8 columns
+            detailTable.setWidthPercentage(100);
+            detailTable.setWidths(new float[] { 0.8f, 2.5f, 1.8f, 1f, 0.8f, 1.2f, 1.5f, 1f });
+
+            // --- Table Header ---
+            addTableHeader(detailTable, "ID");
+            addTableHeader(detailTable, "Item Name");
+            addTableHeader(detailTable, "Category");
+            addTableHeader(detailTable, "Stock");
+            addTableHeader(detailTable, "Unit");
+            addTableHeader(detailTable, "Cost/Unit");
+            addTableHeader(detailTable, "Total Value");
+            addTableHeader(detailTable, "Status");
+            
+            // --- Table Body ---
+            for (InventoryItem item : items) {
+                addTableCell(detailTable, item.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, item.getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, item.getCategory().getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, item.getCurrentStock().toString(), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, item.getUnit().getAbbreviation(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, formatCurrency(item.getCostPerUnit()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, formatCurrency(item.getTotalCostValue()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, item.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
+            }
+            
+            // --- Table Footer (Grand Total) ---
+            addTableFooterCell(detailTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 6);
+            addTableFooterCell(detailTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 2);
 
             document.add(detailTable);
 

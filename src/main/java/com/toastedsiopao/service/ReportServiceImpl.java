@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
 import com.toastedsiopao.model.SiteSettings;
@@ -8,6 +9,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +40,14 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private PdfService pdfService;
+
+    // === NEWLY ADDED ===
+    @Autowired
+    private InventoryItemService inventoryItemService;
+
+    @Autowired
+    private InventoryCategoryService inventoryCategoryService;
+    // ===================
 
     private LocalDateTime parseDate(String date, boolean isEndDate) {
         if (!StringUtils.hasText(date)) {
@@ -71,7 +81,6 @@ public class ReportServiceImpl implements ReportService {
 
             // === Summary Sheet ===
             Sheet summarySheet = workbook.createSheet("Summary");
-            // --- THIS IS THE FIX: Added totalCurrencyStyle to the method call ---
             createSummarySheet(summarySheet, orders, settings, headerStyle, boldStyle, currencyStyle, totalCurrencyStyle, startDateTime, endDateTime);
 
             // === Detailed Breakdown Sheet ===
@@ -89,7 +98,6 @@ public class ReportServiceImpl implements ReportService {
 
     private void createSummarySheet(Sheet sheet, List<Order> orders, SiteSettings settings,
             CellStyle headerStyle, CellStyle boldStyle, CellStyle currencyStyle,
-            // --- THIS IS THE FIX: Added totalCurrencyStyle as a parameter ---
             CellStyle totalCurrencyStyle,
             LocalDateTime start, LocalDateTime end) {
 
@@ -210,6 +218,129 @@ public class ReportServiceImpl implements ReportService {
         createCurrencyCell(totalRow, 6, grandTotalProfit, totalCurrencyStyle);
     }
 
+    @Override
+    public ByteArrayInputStream generateFinancialReportPdf(String startDate, String endDate) throws IOException {
+        LocalDateTime startDateTime = parseDate(startDate, false);
+        LocalDateTime endDateTime = parseDate(endDate, true);
+
+        List<Order> orders = orderService.findDeliveredOrdersForReport(startDateTime, endDateTime);
+        
+        return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
+    }
+
+    // === NEW INVENTORY REPORT METHODS ===
+
+    /**
+     * Fetches inventory items based on optional filters.
+     * This reuses the same search logic as the inventory page.
+     */
+    private List<InventoryItem> getFilteredInventoryItems(String keyword, Long categoryId) {
+        // Use Pageable.unpaged() to get all items matching the filter, not just one page
+        return inventoryItemService.searchItems(keyword, categoryId, Pageable.unpaged()).getContent();
+    }
+
+    @Override
+    public ByteArrayInputStream generateInventoryReport(String keyword, Long categoryId) throws IOException {
+        List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+            
+            // --- Create Styles ---
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle currencyStyle = createCurrencyStyle(workbook);
+            CellStyle boldStyle = createBoldStyle(workbook);
+            CellStyle totalRowStyle = createTotalRowStyle(workbook);
+            CellStyle totalCurrencyStyle = createTotalCurrencyStyle(workbook, totalRowStyle);
+            CellStyle numericStyle = workbook.createCellStyle();
+            numericStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
+
+            // --- Create Sheet ---
+            Sheet sheet = workbook.createSheet("Inventory Report");
+            AtomicInteger rowIdx = new AtomicInteger(0);
+
+            // --- Title ---
+            Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue(settings.getWebsiteName() + " - Inventory Stock Report");
+            titleCell.setCellStyle(headerStyle);
+
+            // --- Filters Used ---
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Keyword='" + keyword + "' ";
+            }
+            if (categoryId != null) {
+                String catName = inventoryCategoryService.findById(categoryId).map(c -> c.getName()).orElse("ID " + categoryId);
+                filterDesc += "Category='" + catName + "'";
+            }
+            if (!StringUtils.hasText(keyword) && categoryId == null) {
+                filterDesc += "None (All Items)";
+            }
+            Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
+            dateRow.createCell(0).setCellValue(filterDesc);
+            dateRow.getCell(0).setCellStyle(boldStyle);
+
+            rowIdx.getAndIncrement(); // Spacer
+
+            // --- Header Row ---
+            String[] headers = { "Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Total Cost Value", "Item Status", "Stock Status" };
+            Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // --- Data Rows ---
+            BigDecimal grandTotalValue = BigDecimal.ZERO;
+            for (InventoryItem item : items) {
+                Row row = sheet.createRow(rowIdx.getAndIncrement());
+                
+                row.createCell(0).setCellValue(item.getId());
+                row.createCell(1).setCellValue(item.getName());
+                row.createCell(2).setCellValue(item.getCategory().getName());
+                
+                Cell stockCell = row.createCell(3);
+                stockCell.setCellValue(item.getCurrentStock().doubleValue());
+                stockCell.setCellStyle(numericStyle);
+                
+                row.createCell(4).setCellValue(item.getUnit().getAbbreviation());
+                
+                createCurrencyCell(row, 5, item.getCostPerUnit(), currencyStyle);
+                
+                BigDecimal totalCostValue = item.getTotalCostValue();
+                createCurrencyCell(row, 6, totalCostValue, currencyStyle);
+                
+                row.createCell(7).setCellValue(item.getItemStatus());
+                row.createCell(8).setCellValue(item.getStockStatus());
+
+                grandTotalValue = grandTotalValue.add(totalCostValue);
+            }
+
+            // --- Total Row ---
+            Row totalRow = sheet.createRow(rowIdx.getAndIncrement());
+            for (int i = 0; i < headers.length; i++) {
+                totalRow.createCell(i).setCellStyle(totalRowStyle);
+            }
+            totalRow.getCell(5).setCellValue("Total Inventory Value:");
+            createCurrencyCell(totalRow, 6, grandTotalValue, totalCurrencyStyle);
+            
+            autoSizeColumns(sheet, headers.length);
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    @Override
+    public ByteArrayInputStream generateInventoryReportPdf(String keyword, Long categoryId) throws IOException {
+        List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
+        // This will be implemented in the next batch
+        return pdfService.generateInventoryReportPdf(items, keyword, categoryId);
+    }
+
+
     // === Styling Helpers ===
 
     private CellStyle createHeaderStyle(Workbook workbook) {
@@ -268,18 +399,5 @@ public class ReportServiceImpl implements ReportService {
         for (int i = 0; i < numColumns; i++) {
             sheet.autoSizeColumn(i);
         }
-    }
-
-    // === PDF Generation (Placeholder) ===
-
-    @Override
-    public ByteArrayInputStream generateFinancialReportPdf(String startDate, String endDate) throws IOException {
-        LocalDateTime startDateTime = parseDate(startDate, false);
-        LocalDateTime endDateTime = parseDate(endDate, true);
-
-        List<Order> orders = orderService.findDeliveredOrdersForReport(startDateTime, endDateTime);
-        
-        // This will be implemented in the next batch
-        return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
 }

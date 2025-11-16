@@ -28,4 +28,24 @@ public interface ReportService {
      * @throws IOException if there's an error creating the PDF.
      */
     ByteArrayInputStream generateFinancialReportPdf(String startDate, String endDate) throws IOException;
+
+    /**
+     * Generates an inventory report in Excel format.
+     *
+     * @param keyword    The search term for item name (can be null).
+     * @param categoryId The category ID to filter by (can be null).
+     * @return A ByteArrayInputStream containing the .xlsx file data.
+     * @throws IOException if there's an error creating the Excel file.
+     */
+    ByteArrayInputStream generateInventoryReport(String keyword, Long categoryId) throws IOException;
+
+    /**
+     * Generates an inventory report in PDF format.
+     *
+     * @param keyword    The search term for item name (can be null).
+     * @param categoryId The category ID to filter by (can be null).
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if there's an error creating the PDF.
+     */
+    ByteArrayInputStream generateInventoryReportPdf(String keyword, Long categoryId) throws IOException;
 }

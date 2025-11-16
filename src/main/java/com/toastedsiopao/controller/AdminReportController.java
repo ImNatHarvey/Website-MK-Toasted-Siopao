@@ -21,7 +21,6 @@ import java.time.format.DateTimeFormatter;
 
 @Controller
 @RequestMapping("/admin/reports")
-@PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
 public class AdminReportController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminReportController.class);
@@ -30,6 +29,7 @@ public class AdminReportController {
     private ReportService reportService;
 
     @GetMapping("/financial")
+    @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReport(
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
@@ -61,8 +61,8 @@ public class AdminReportController {
         }
     }
 
-    // === NEW ENDPOINT ADDED ===
     @GetMapping("/financial/pdf")
+    @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReportPdf(
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
@@ -76,7 +76,6 @@ public class AdminReportController {
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             String fileName = "Financial_Report_" + timestamp + ".pdf";
 
-            // --- THIS IS THE FIX: Changed "inline" to "attachment" ---
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName); // Download directly
 
             return ResponseEntity
@@ -93,5 +92,70 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    // === END NEW ENDPOINT ===
+
+    // === NEW ENDPOINTS FOR INVENTORY REPORT ===
+
+    @GetMapping("/inventory")
+    @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
+    public ResponseEntity<InputStreamResource> downloadInventoryReport(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category", required = false) Long categoryId) {
+
+        log.info("Generating inventory EXCEL report for keyword: [{}], categoryId: [{}]", keyword, categoryId);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateInventoryReport(keyword, categoryId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Inventory_Report_" + timestamp + ".xlsx";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate inventory Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating inventory Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/inventory/pdf")
+    @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
+    public ResponseEntity<InputStreamResource> downloadInventoryReportPdf(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category", required = false) Long categoryId) {
+
+        log.info("Generating inventory PDF report for keyword: [{}], categoryId: [{}]", keyword, categoryId);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateInventoryReportPdf(keyword, categoryId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Inventory_Report_" + timestamp + ".pdf";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate inventory PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating inventory PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

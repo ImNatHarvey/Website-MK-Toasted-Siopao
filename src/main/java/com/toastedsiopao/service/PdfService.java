@@ -1,5 +1,6 @@
 package com.toastedsiopao.service;
 
+import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 
 import java.io.ByteArrayInputStream;
@@ -7,7 +8,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-// --- THIS IS THE FIX: Changed 'class' to 'interface' ---
 public interface PdfService {
 
     /**
@@ -20,5 +20,16 @@ public interface PdfService {
      * @throws IOException if the PDF generation fails.
      */
     ByteArrayInputStream generateFinancialReportPdf(List<Order> orders, LocalDateTime start, LocalDateTime end) throws IOException;
+
+    /**
+     * Generates a PDF inventory report from a list of items.
+     *
+     * @param items      The list of inventory items to include.
+     * @param keyword    The search keyword used (for the title).
+     * @param categoryId The category ID used (for the title).
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if the PDF generation fails.
+     */
+    ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException;
 
 }

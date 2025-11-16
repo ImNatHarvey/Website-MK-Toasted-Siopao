@@ -1,6 +1,6 @@
 # Stage 1: Build the application using a Maven image
 # Uses the JDK 17 environment for building
-FROM maven:3.9.5-jdk-17-slim AS build
+FROM maven:3.9.6-eclipse-temurin-17-alpine AS build
 WORKDIR /app
 
 # Copy Maven wrapper, pom.xml, and the .mvn folder for dependency caching

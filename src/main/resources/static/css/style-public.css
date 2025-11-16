@@ -351,7 +351,7 @@ footer {
 /* On smaller screens, make it smaller */
 @media ( max-width : 768px) {
 	.carousel-image {
-		height: 40vh; /* 40% of viewport height on mobile */
+		height: 35vh; /* 35% of viewport height on mobile */
 	}
 }
 /* == END MODIFIED == */
@@ -695,3 +695,64 @@ footer {
   }
 }
 /* == END ADDED: Mobile Fixes == */
+
+/* == ADDED: Styles for Quick Action Card in horizontal scroll == */
+.horizontal-scroll-wrapper .quick-action-card {
+	display: inline-block;
+	width: 280px; /* Match product card width */
+	margin-right: 1rem;
+	white-space: normal; /* Reset white-space for card content */
+	vertical-align: top;
+	float: none; /* Disable floating */
+}
+
+.horizontal-scroll-wrapper .quick-action-card:last-child {
+	margin-right: 0;
+}
+
+/* == ADDED: Base styles for quick-action-card and welcome-card (customer dashboard) == */
+.quick-action-card {
+	background-color: var(--light);
+	border: 1px solid #eee;
+	border-radius: 15px;
+	overflow: hidden;
+	box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+	padding: 1.5rem;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+}
+
+.quick-action-card .action-icon {
+	font-size: 2.5rem;
+	color: var(--primary);
+	margin-bottom: 1rem;
+}
+
+.quick-action-card h5 {
+	color: var(--primary);
+	font-weight: bold;
+}
+
+.quick-action-card p {
+	font-size: 0.9rem;
+	color: var(--muted-text);
+	flex-grow: 1; /* Pushes button to bottom */
+}
+
+.quick-action-card .btn-custom {
+	margin-top: auto; /* Aligns button to bottom */
+}
+
+.welcome-card {
+	background-color: var(--secondary);
+	border-radius: 15px;
+	padding: 2rem;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-card h3 {
+	color: var(--primary);
+	font-weight: bold;
+}
+/* == END ADDED == */

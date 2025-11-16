@@ -37,12 +37,12 @@
 				th:text="${siteSettings != null ? siteSettings.websiteName : 'MK Toasted Siopao'}">
 				MK Toasted Siopao </a>
 			<button class="navbar-toggler" type="button"
-				data-bs-toggle="collapse" data-bs-target="#customerNavbar"
-				aria-controls="customerNavbar" aria-expanded="false"
+				data-bs-toggle="collapse" data-bs-target="#navbarNav"
+				aria-controls="navbarNav" aria-expanded="false"
 				aria-label="Toggle navigation">
 				<span class="navbar-toggler-icon"></span>
 			</button>
-			<div class="collapse navbar-collapse" id="customerNavbar">
+			<div class="collapse navbar-collapse" id="navbarNav">
 
 				<ul class="navbar-nav mx-auto text-center"
 					sec:authorize="isAuthenticated()">
@@ -139,7 +139,7 @@
 		</div>
 	</nav>
 	<main
-		class="flex-grow-1 main-content-public-wrapper homepage-main-content">
+		class="flex-grow-1 main-content-public-wrapper">
 		<div th:replace="${content}"></div>
 	</main>
 

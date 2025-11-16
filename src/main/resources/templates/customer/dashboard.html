@@ -7,43 +7,36 @@
 </head>
 <body>
 	<main>
-		<div id="carouselExampleSlidesOnly" class="carousel slide"
-			data-bs-ride="carousel">
-			<div class="carousel-inner">
-				<div class="carousel-item active">
-					<img th:src="@{${siteSettings.carouselImage1}}"
-						class="d-block w-100 carousel-image" alt="Siopao Carousel Image 1"
-						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-				</div>
-				<div class="carousel-item">
-					<img th:src="@{${siteSettings.carouselImage2}}"
-						class="d-block w-100 carousel-image" alt="Siopao Carousel Image 2"
-						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-				</div>
-				<div class="carousel-item">
-					<img th:src="@{${siteSettings.carouselImage3}}"
-						class="d-block w-100 carousel-image" alt="Siopao Carousel Image 3"
-						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-				</div>
-			</div>
-		</div>
-
-		<div class="container featured-products-section">
-			<div class="welcome-card mb-5">
-				<div class="row align-items-center">
-					<div class="col-md-8">
-						<h3>
-							Welcome back, <span sec:authentication="name">Customer</span>!
-						</h3>
-						<p class="mb-0">Ready to order your favorite toasted siopao?</p>
+		<div class="homepage-main-content">
+			<div id="carouselExampleSlidesOnly" class="carousel slide"
+				data-bs-ride="carousel">
+				<div class="carousel-inner">
+					<div class="carousel-item active">
+						<img th:src="@{${siteSettings.carouselImage1}}"
+							class="d-block w-100 carousel-image"
+							alt="Siopao Carousel Image 1"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					</div>
+					<div class="carousel-item">
+						<img th:src="@{${siteSettings.carouselImage2}}"
+							class="d-block w-100 carousel-image"
+							alt="Siopao Carousel Image 2"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					</div>
+					<div class="carousel-item">
+						<img th:src="@{${siteSettings.carouselImage3}}"
+							class="d-block w-100 carousel-image"
+							alt="Siopao Carousel Image 3"
+							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
 					</div>
 				</div>
 			</div>
 
-			<h4 class="section-title mb-4">Quick Actions</h4>
-			<div class="row mb-5">
-				<div class="col-md-3 mb-3">
-					<div class="quick-action-card">
+			<div class="container featured-products-section">
+
+				<h4 class="text-center mb-4 section-title">Quick Actions</h4>
+				<div class="horizontal-scroll-wrapper mb-5">
+					<div class="quick-action-card h-100">
 						<div class="action-icon">
 							<i class="bi bi-cart"></i>
 						</div>
@@ -51,9 +44,7 @@
 						<p>Browse our menu and place an order</p>
 						<a th:href="@{/u/menu}" class="btn btn-custom mt-2">Order Now</a>
 					</div>
-				</div>
-				<div class="col-md-3 mb-3">
-					<div class="quick-action-card">
+					<div class="quick-action-card h-100">
 						<div class="action-icon">
 							<i class="bi bi-clock-history"></i>
 						</div>
@@ -62,9 +53,7 @@
 						<a th:href="@{/u/history}" class="btn btn-custom mt-2">View
 							History</a>
 					</div>
-				</div>
-				<div class="col-md-3 mb-3">
-					<div class="quick-action-card">
+					<div class="quick-action-card h-100">
 						<div class="action-icon">
 							<i class="bi bi-person"></i>
 						</div>
@@ -73,9 +62,7 @@
 						<a th:href="@{/u/profile}" class="btn btn-custom mt-2">Edit
 							Profile</a>
 					</div>
-				</div>
-				<div class="col-md-3 mb-3">
-					<div class="quick-action-card">
+					<div class="quick-action-card h-100">
 						<div class="action-icon">
 							<i class="bi bi-geo-alt"></i>
 						</div>
@@ -87,71 +74,64 @@
 				</div>
 			</div>
 		</div>
-		<div class="container my-5">
+
+		<div class="container my-4">
 			<h2 class="text-center mb-4 section-title"
 				th:text="${siteSettings.featuredProductsTitle}">Our Featured
 				Products</h2>
-			<div class="row row-cols-1 row-cols-md-4 g-4">
-				<div class="col">
-					<div class="card h-100">
-						<img th:src="@{${siteSettings.featureCard1Image}}"
-							class="card-img-top" alt="Feature Card 1"
-							style="height: 200px; object-fit: cover;"
-							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-						<div class="card-body">
-							<h5 class="card-title"
-								th:text="${siteSettings.featureCard1Title}">Favorite</h5>
-							<p class="card-text" th:text="${siteSettings.featureCard1Text}">Our
-								best-selling toasted siopao flavors, loved by everyone.</p>
-						</div>
+			<div class="horizontal-scroll-wrapper">
+				<div class="card h-100">
+					<img th:src="@{${siteSettings.featureCard1Image}}"
+						class="card-img-top" alt="Feature Card 1"
+						style="height: 200px; object-fit: cover;"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					<div class="card-body">
+						<h5 class="card-title"
+							th:text="${siteSettings.featureCard1Title}">Favorite</h5>
+						<p class="card-text" th:text="${siteSettings.featureCard1Text}">Our
+							best-selling toasted siopao flavors, loved by everyone.</p>
 					</div>
 				</div>
-				<div class="col">
-					<div class="card h-100">
-						<img th:src="@{${siteSettings.featureCard2Image}}"
-							class="card-img-top" alt="Feature Card 2"
-							style="height: 200px; object-fit: cover;"
-							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-						<div class="card-body">
-							<h5 class="card-title"
-								th:text="${siteSettings.featureCard2Title}">Combo</h5>
-							<p class="card-text" th:text="${siteSettings.featureCard2Text}">Perfectly
-								paired combos with siopao, drinks, and more.</p>
-						</div>
+				<div class="card h-100">
+					<img th:src="@{${siteSettings.featureCard2Image}}"
+						class="card-img-top" alt="Feature Card 2"
+						style="height: 200px; object-fit: cover;"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					<div class="card-body">
+						<h5 class="card-title"
+							th:text="${siteSettings.featureCard2Title}">Combo</h5>
+						<p class="card-text" th:text="${siteSettings.featureCard2Text}">Perfectly
+							paired combos with siopao, drinks, and more.</p>
 					</div>
 				</div>
-				<div class="col">
-					<div class="card h-100">
-						<img th:src="@{${siteSettings.featureCard3Image}}"
-							class="card-img-top" alt="Feature Card 3"
-							style="height: 200px; object-fit: cover;"
-							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-						<div class="card-body">
-							<h5 class="card-title"
-								th:text="${siteSettings.featureCard3Title}">Siopao</h5>
-							<p class="card-text" th:text="${siteSettings.featureCard3Text}">Freshly
-								made toasted siopao, crispy outside, soft inside.</p>
-						</div>
+				<div class="card h-100">
+					<img th:src="@{${siteSettings.featureCard3Image}}"
+						class="card-img-top" alt="Feature Card 3"
+						style="height: 200px; object-fit: cover;"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					<div class="card-body">
+						<h5 class="card-title"
+							th:text="${siteSettings.featureCard3Title}">Siopao</h5>
+						<p class="card-text" th:text="${siteSettings.featureCard3Text}">Freshly
+							made toasted siopao, crispy outside, soft inside.</p>
 					</div>
 				</div>
-				<div class="col">
-					<div class="card h-100">
-						<img th:src="@{${siteSettings.featureCard4Image}}"
-							class="card-img-top" alt="Feature Card 4"
-							style="height: 200px; object-fit: cover;"
-							onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
-						<div class="card-body">
-							<h5 class="card-title"
-								th:text="${siteSettings.featureCard4Title}">Drinks</h5>
-							<p class="card-text" th:text="${siteSettings.featureCard4Text}">Refreshing
-								drinks to pair with your favorite siopao.</p>
-						</div>
+				<div class="card h-100">
+					<img th:src="@{${siteSettings.featureCard4Image}}"
+						class="card-img-top" alt="Feature Card 4"
+						style="height: 200px; object-fit: cover;"
+						onerror="this.onerror=null; this.src='/img/placeholder.jpg';">
+					<div class="card-body">
+						<h5 class="card-title"
+							th:text="${siteSettings.featureCard4Title}">Drinks</h5>
+						<p class="card-text" th:text="${siteSettings.featureCard4Text}">Refreshing
+							drinks to pair with your favorite siopao.</p>
 					</div>
 				</div>
 			</div>
 		</div>
 
-		<div class="container my-5">
+		<div class="container my-4">
 			<div class="promo-banner text-center">
 				<h4 th:text="${siteSettings.promoTitle}">Special Promo!</h4>
 				<p th:text="${siteSettings.promoText}">Get 2 Toasted Siopao + 1
@@ -159,7 +139,7 @@
 			</div>
 		</div>
 
-		<div class="container my-5">
+		<div class="container my-4">
 			<div class="row align-items-center">
 				<div class="col-md-8">
 					<h4 class="section-title" th:text="${siteSettings.whyUsTitle}">Why
@@ -168,7 +148,7 @@
 						inside! Perfect for your cravings — delicious, filling, and
 						budget-friendly.</p>
 				</div>
-				<div class="col-md-4 text-end">
+				<div class="col-md-4 text-center text-md-end">
 					<img th:src="@{${siteSettings.whyUsImage}}" class="feature-img"
 						alt="Toasted Siopao"
 						style="width: 70%; height: auto; border-radius: 15px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);"

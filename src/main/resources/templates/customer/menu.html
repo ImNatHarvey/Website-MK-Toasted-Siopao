@@ -27,24 +27,25 @@
 						</div>
 					</div>
 
-					<div class="d-flex flex-column flex-md-row gap-2">
-						<div class="flex-grow-1">
-							<label for="keyword" class="form-label">Search by Name</label> <input
-								type="text" class="form-control" id="keyword" name="keyword"
-								th:value="${keyword}" placeholder="Enter product name...">
-							<input type="hidden" name="category"
+					<div class="mb-2">
+						<label for="keyword" class="form-label">Search by Name</label>
+						<div class="d-flex flex-column flex-md-row gap-2">
+							<input type="text" class="form-control" id="keyword"
+								name="keyword" th:value="${keyword}"
+								placeholder="Enter product name..."> <input
+								type="hidden" name="category"
 								th:value="${selectedCategoryId}" />
-						</div>
-						<div class="d-flex gap-2 align-self-md-end"
-							style="flex-shrink: 0;">
-							<button type="submit" class="btn btn-action-view" title="Search">
-								<i class="fa-solid fa-search"></i> <span
-									class="d-none d-md-inline ms-1">Search</span>
-							</button>
-							<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
-								title="Clear All"> <i class="fa-solid fa-times"></i> <span
+							<div class="d-flex gap-2 align-self-md-start"
+								style="flex-shrink: 0;">
+								<button type="submit" class="btn btn-action-view" title="Search">
+									<i class="fa-solid fa-search"></i> <span
+										class="d-none d-md-inline ms-1">Search</span>
+								</button>
+								<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
+									title="Clear All"> <i class="fa-solid fa-times"></i> <span
 									class="d-none d-md-inline ms-1">Clear</span>
-							</a>
+								</a>
+							</div>
 						</div>
 					</div>
 				</form>
@@ -56,7 +57,7 @@
 				</div>
 
 				<div th:unless="${productPage.empty}"
-					class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"
+					class="row row-cols-2 row-cols-md-2 row-cols-lg-4 g-3"
 					id="product-list-container">
 					<div class="col" th:each="product : ${productPage.content}">
 						<div class="card h-100 shadow-sm product-card-public"

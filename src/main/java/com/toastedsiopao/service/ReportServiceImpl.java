@@ -49,10 +49,8 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private InventoryCategoryService inventoryCategoryService;
 
-    // === NEWLY ADDED ===
     @Autowired
     private ProductService productService;
-    // ===================
 
     private LocalDateTime parseDate(String date, boolean isEndDate) {
         if (!StringUtils.hasText(date)) {
@@ -339,7 +337,7 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateInventoryReportPdf(items, keyword, categoryId);
     }
 
-    // === NEW PRODUCT REPORT METHODS ===
+    // === PRODUCT REPORT METHODS ===
 
     private List<Product> getFilteredProducts(String keyword, Long categoryId) {
         // This new service method fetches all products with their recipes
@@ -433,8 +431,16 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException {
         List<Product> products = getFilteredProducts(keyword, categoryId);
-        // This will be implemented in the next batch
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
+    }
+
+    // === NEW INVOICE PDF METHOD ===
+    @Override
+    public ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException {
+        Order order = orderService.findOrderForInvoice(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
+        
+        return pdfService.generateInvoicePdf(order);
     }
 
 
@@ -493,6 +499,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private void autoSizeColumns(Sheet sheet, int numColumns) {
+        // --- THIS IS THE FIX: Changed to a standard for-loop ---
         for (int i = 0; i < numColumns; i++) {
             sheet.autoSizeColumn(i);
         }

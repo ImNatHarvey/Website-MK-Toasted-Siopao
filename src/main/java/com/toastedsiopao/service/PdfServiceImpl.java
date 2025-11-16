@@ -7,11 +7,13 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.OrderItem;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.SiteSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource; // --- ADDED ---
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -44,6 +46,9 @@ public class PdfServiceImpl implements PdfService {
     @Autowired
     private InventoryCategoryService inventoryCategoryService;
 
+    @Autowired
+    private FileStorageService fileStorageService; // --- ADDED ---
+
     // --- Define Fonts ---
     private static final Font FONT_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
     private static final Font FONT_SUBTITLE = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY);
@@ -52,6 +57,13 @@ public class PdfServiceImpl implements PdfService {
     private static final Font FONT_BOLD_CELL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.BLACK);
     private static final Font FONT_TOTAL_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
     private static final Font FONT_TOTAL_CELL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
+
+    // --- NEW Fonts for Invoice ---
+    private static final Font FONT_INVOICE_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, Color.BLACK);
+    private static final Font FONT_INVOICE_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
+    private static final Font FONT_INVOICE_BODY = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
+    private static final Font FONT_INVOICE_TOTAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
+
 
     private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); // --primary
     private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230); // Light gray
@@ -254,7 +266,7 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    // === NEW METHOD IMPLEMENTATION FOR PRODUCT REPORT ===
+    
     @Override
     public ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -275,7 +287,6 @@ public class PdfServiceImpl implements PdfService {
                 filterDesc += "Keyword='" + keyword + "' ";
             }
             if (categoryId != null) {
-                // We can get the category name from the first product if it exists
                 String catName = products.isEmpty() ? "ID " + categoryId : products.get(0).getCategory().getName();
                 filterDesc += "Category='" + catName + "'";
             }
@@ -330,6 +341,151 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
+    // === INVOICE PDF IMPLEMENTATION ===
+    @Override
+    public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException {
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (Document document = new Document(PageSize.A4)) { // Portrait
+            PdfWriter.getInstance(document, out);
+            document.open();
+            
+            // === 1. Title ===
+            Paragraph title = new Paragraph("INVOICE / ORDER RECEIPT", FONT_INVOICE_TITLE);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+            
+            Paragraph storeName = new Paragraph(settings.getWebsiteName(), FONT_INVOICE_BODY);
+            storeName.setAlignment(Element.ALIGN_CENTER);
+            storeName.setSpacingAfter(20f);
+            document.add(storeName);
+
+            // === 2. Order & Customer Details (2-column layout) ===
+            PdfPTable infoTable = new PdfPTable(2);
+            infoTable.setWidthPercentage(100);
+            infoTable.setWidths(new float[] { 1f, 1f });
+
+            // --- Column 1: Order Details ---
+            PdfPCell orderCell = new PdfPCell();
+            orderCell.setBorder(Rectangle.NO_BORDER);
+            orderCell.setPadding(5);
+            orderCell.addElement(new Phrase("ORDER ID:", FONT_INVOICE_HEADER));
+            orderCell.addElement(new Phrase("ORD-" + order.getId(), FONT_INVOICE_BODY));
+            
+            orderCell.addElement(Chunk.NEWLINE);
+            orderCell.addElement(new Phrase("ORDER DATE:", FONT_INVOICE_HEADER));
+            orderCell.addElement(new Phrase(order.getOrderDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy, h:mm a")), FONT_INVOICE_BODY));
+            
+            orderCell.addElement(Chunk.NEWLINE);
+            orderCell.addElement(new Phrase("PAYMENT METHOD:", FONT_INVOICE_HEADER));
+            orderCell.addElement(new Phrase(order.getPaymentMethod().toUpperCase(), FONT_INVOICE_BODY));
+            
+            orderCell.addElement(Chunk.NEWLINE);
+            orderCell.addElement(new Phrase("PAYMENT STATUS:", FONT_INVOICE_HEADER));
+            orderCell.addElement(new Phrase(order.getPaymentStatus().replace("_", " "), FONT_INVOICE_BODY));
+
+            // --- MODIFICATION: Add Transaction ID and QR Code ---
+            if ("gcash".equalsIgnoreCase(order.getPaymentMethod())) {
+                if (StringUtils.hasText(order.getTransactionId())) {
+                    orderCell.addElement(Chunk.NEWLINE);
+                    orderCell.addElement(new Phrase("GCASH TRANSACTION ID:", FONT_INVOICE_HEADER));
+                    orderCell.addElement(new Phrase(order.getTransactionId(), FONT_INVOICE_BODY));
+                }
+                if (StringUtils.hasText(order.getPaymentReceiptImageUrl())) {
+                    orderCell.addElement(Chunk.NEWLINE);
+                    orderCell.addElement(new Phrase("GCASH RECEIPT QR:", FONT_INVOICE_HEADER));
+                    try {
+                        Resource qrCodeResource = fileStorageService.loadAsResource(order.getPaymentReceiptImageUrl());
+                        if (qrCodeResource != null && qrCodeResource.exists()) {
+                            Image qrImage = Image.getInstance(qrCodeResource.getURL());
+                            qrImage.scaleToFit(100, 100); // Scale image to fit
+                            orderCell.addElement(qrImage);
+                        } else {
+                            log.warn("Could not load QR code image for invoice: {}", order.getPaymentReceiptImageUrl());
+                            orderCell.addElement(new Phrase("[Image not found]", FONT_INVOICE_BODY));
+                        }
+                    } catch (Exception e) {
+                        log.error("Error loading QR code image for PDF: {}", e.getMessage());
+                        orderCell.addElement(new Phrase("[Error loading image]", FONT_INVOICE_BODY));
+                    }
+                }
+            }
+            // --- END MODIFICATION ---
+
+            // --- Column 2: Customer Details ---
+            PdfPCell customerCell = new PdfPCell();
+            customerCell.setBorder(Rectangle.NO_BORDER);
+            customerCell.setPadding(5);
+            customerCell.addElement(new Phrase("BILL TO:", FONT_INVOICE_HEADER));
+            customerCell.addElement(new Phrase(order.getShippingFirstName() + " " + order.getShippingLastName(), FONT_INVOICE_BODY));
+            customerCell.addElement(new Phrase(order.getShippingPhone(), FONT_INVOICE_BODY));
+            customerCell.addElement(new Phrase(order.getShippingEmail(), FONT_INVOICE_BODY));
+            
+            customerCell.addElement(Chunk.NEWLINE);
+            customerCell.addElement(new Phrase("SHIPPING ADDRESS:", FONT_INVOICE_HEADER));
+            customerCell.addElement(new Phrase(order.getShippingAddress(), FONT_INVOICE_BODY));
+            
+            infoTable.addCell(orderCell);
+            infoTable.addCell(customerCell);
+            document.add(infoTable);
+
+            // === 3. Line Items Table ===
+            PdfPTable itemsTable = new PdfPTable(4);
+            itemsTable.setWidthPercentage(100);
+            itemsTable.setWidths(new float[] { 4f, 1f, 1.5f, 1.5f });
+            itemsTable.setSpacingBefore(20f);
+            
+            // --- Items Header ---
+            addTableHeader(itemsTable, "Item Description");
+            addTableHeader(itemsTable, "Qty");
+            addTableHeader(itemsTable, "Unit Price");
+            addTableHeader(itemsTable, "Total");
+            
+            // --- Items Body ---
+            for (OrderItem item : order.getItems()) {
+                addTableCell(itemsTable, item.getProduct().getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(itemsTable, item.getQuantity().toString(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(itemsTable, formatCurrency(item.getPricePerUnit()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(itemsTable, formatCurrency(item.getTotalPrice()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+            }
+            
+            // --- Items Footer (Total) ---
+            PdfPCell totalLabelCell = new PdfPCell(new Phrase("TOTAL AMOUNT", FONT_INVOICE_TOTAL));
+            totalLabelCell.setColspan(3);
+            totalLabelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalLabelCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            totalLabelCell.setPadding(8);
+            totalLabelCell.setBorder(Rectangle.NO_BORDER);
+            itemsTable.addCell(totalLabelCell);
+            
+            PdfPCell totalValueCell = new PdfPCell(new Phrase(formatCurrency(order.getTotalAmount()), FONT_INVOICE_TOTAL));
+            totalValueCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+            totalValueCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+            totalValueCell.setPadding(8);
+            totalValueCell.setBackgroundColor(COLOR_TOTAL_ROW_BG);
+            itemsTable.addCell(totalValueCell);
+            
+            document.add(itemsTable);
+            
+            // === 4. Notes ===
+            if (StringUtils.hasText(order.getNotes())) {
+                Paragraph notesHeader = new Paragraph("NOTES:", FONT_INVOICE_HEADER);
+                notesHeader.setSpacingBefore(15f);
+                document.add(notesHeader);
+                Paragraph notesBody = new Paragraph(order.getNotes(), FONT_INVOICE_BODY);
+                document.add(notesBody);
+            }
+
+
+        } catch (DocumentException e) {
+            log.error("DocumentException during PDF generation: {}", e.getMessage(), e);
+            throw new IOException("Error creating PDF document", e);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
 
     // === PDF Cell Helpers ===
 
@@ -347,6 +503,8 @@ public class PdfServiceImpl implements PdfService {
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_TOP);
         cell.setPadding(4);
+        cell.setBorderWidth(0.5f);
+        cell.setBorderColor(Color.LIGHT_GRAY);
         table.addCell(cell);
     }
 

@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -157,8 +158,6 @@ public class AdminReportController {
         }
     }
 
-    // === NEW ENDPOINTS FOR PRODUCT REPORT ===
-
     @GetMapping("/products")
     @PreAuthorize("hasAuthority('VIEW_PRODUCTS')")
     public ResponseEntity<InputStreamResource> downloadProductReport(
@@ -219,6 +218,40 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
             log.error("Unexpected error generating product PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // === NEW ENDPOINT FOR INVOICE PDF ===
+    @GetMapping("/invoice/{id}")
+    @PreAuthorize("hasAuthority('VIEW_ORDERS')")
+    public ResponseEntity<InputStreamResource> downloadInvoicePdf(@PathVariable("id") Long orderId) {
+
+        log.info("Generating invoice PDF for Order ID: {}", orderId);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateInvoicePdf(orderId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String fileName = "Invoice_ORD-" + orderId + ".pdf";
+            
+            // This time, we use "inline" to try and open it in the browser
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage());
+            return ResponseEntity.notFound().build(); // 404 if order not found
+        } catch (IOException e) {
+            log.error("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating invoice PDF for order {}: {}", orderId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

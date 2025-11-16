@@ -89,4 +89,13 @@ public interface OrderService {
 	 */
 	BigDecimal calculateCogsForOrder(Order order);
 	// === NEW METHODS FOR REPORTING (END) ===
+
+	/**
+	 * Finds a single order by its ID, fully populated with items, products,
+	 * and user details for generating an invoice.
+	 *
+	 * @param orderId The ID of the order to find.
+	 * @return An Optional containing the fully populated Order, or empty if not found.
+	 */
+	Optional<Order> findOrderForInvoice(Long orderId);
 }

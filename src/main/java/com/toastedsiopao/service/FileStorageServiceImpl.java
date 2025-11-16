@@ -4,12 +4,15 @@ import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource; // --- ADDED ---
+import org.springframework.core.io.UrlResource; // --- ADDED ---
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException; // --- ADDED ---
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -102,6 +105,30 @@ public class FileStorageServiceImpl implements FileStorageService {
 		} catch (IOException e) {
 			log.error("Failed to delete file: {}", filename, e);
 			throw new RuntimeException("Failed to delete file", e);
+		}
+	}
+
+	// === NEW METHOD IMPLEMENTATION ===
+	@Override
+	public Resource loadAsResource(String filename) {
+		if (!StringUtils.hasText(filename)) {
+			return null;
+		}
+		try {
+			// Get only the filename (e.g., "image.png" from "/img/uploads/image.png")
+			String actualFilename = Paths.get(filename).getFileName().toString();
+			Path file = rootLocation.resolve(actualFilename);
+			Resource resource = new UrlResource(file.toUri());
+
+			if (resource.exists() || resource.isReadable()) {
+				return resource;
+			} else {
+				log.warn("Could not read file: {}", filename);
+				return null;
+			}
+		} catch (MalformedURLException e) {
+			log.error("Could not create URL for file: {}", filename, e);
+			return null;
 		}
 	}
 }

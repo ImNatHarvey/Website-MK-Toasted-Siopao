@@ -688,4 +688,10 @@ public class OrderServiceImpl implements OrderService {
 		return calculateOrderCogs(order);
 	}
 	// === NEW METHODS FOR REPORTING (END) ===
+
+	@Override
+	@Transactional(readOnly = true)
+	public Optional<Order> findOrderForInvoice(Long orderId) {
+		return orderRepository.findOrderForInvoiceById(orderId);
+	}
 }

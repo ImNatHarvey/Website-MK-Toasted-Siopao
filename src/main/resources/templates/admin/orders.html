@@ -218,7 +218,13 @@
 										<button
 											class="btn btn-sm btn-action-view view-order-btn"
 											data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
-
+										
+										<a th:href="@{/admin/reports/invoice/{id}(id=${order.id})}"
+											class="btn btn-sm btn-custom-outline" target="_blank"
+											title="Print Invoice/Receipt"
+											sec:authorize="hasAuthority('VIEW_ORDERS')">
+											<i class="fa-solid fa-print"></i>
+										</a>
 										<th:block
 											th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
 											sec:authorize="hasAuthority('EDIT_ORDERS')">
@@ -266,7 +272,7 @@
 												
 												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 												<input type="hidden" name="action" value="complete_cod" />
-												<button type="submit" class="btn btn-sm btn-action-success">Complete (COD)</button>
+												<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
 											</form>
 											<form
 												th:if="${!#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"

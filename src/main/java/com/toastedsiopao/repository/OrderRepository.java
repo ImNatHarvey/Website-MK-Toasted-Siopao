@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -125,23 +126,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	List<Order> findDeliveredOrdersWithCogsDetails(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 	// --- END: ADDED NEW COGS FETCH METHOD ---
 
-	// --- ADDED: For Financial Report ---
-	@Query("SELECT o FROM Order o "
-			+ "LEFT JOIN FETCH o.items oi "
-			+ "LEFT JOIN FETCH oi.product p "
-			+ "LEFT JOIN FETCH p.ingredients ri "
-			+ "LEFT JOIN FETCH ri.inventoryItem ii "
-			+ "WHERE o.status = 'DELIVERED' AND "
-			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
-			+ "(:endDateTime IS NULL OR o.orderDate <= :endDateTime) AND "
-			+ "(:keyword IS NULL OR "
-			+ "CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
-			+ "LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
-			+ "LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
-			+ "ORDER BY o.orderDate DESC")
-	List<Order> findDeliveredOrdersForReport(
-			@Param("keyword") String keyword,
-			@Param("startDateTime") LocalDateTime startDateTime, 
-			@Param("endDateTime") LocalDateTime endDateTime);
-	// --- END ADDED ---
+	// === NEW QUERY FOR INVOICE PDF ===
+	@Query("SELECT o FROM Order o LEFT JOIN FETCH o.user u LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p WHERE o.id = :orderId")
+	Optional<Order> findOrderForInvoiceById(@Param("orderId") Long orderId);
 }

@@ -68,4 +68,14 @@ public interface ReportService {
      * @throws IOException if there's an error creating the PDF.
      */
     ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException;
+
+    /**
+     * Generates a single invoice/receipt for a specific order.
+     *
+     * @param orderId The ID of the order to generate an invoice for.
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException              if there's an error creating the PDF.
+     * @throws IllegalArgumentException if the order is not found.
+     */
+    ByteArrayInputStream generateInvoicePdf(Long orderId) throws IOException, IllegalArgumentException;
 }

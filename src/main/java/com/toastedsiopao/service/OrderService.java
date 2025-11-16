@@ -70,4 +70,23 @@ public interface OrderService {
 
 	BigDecimal getCogsThisMonth();
 	// --- END: ADDED COGS METHODS ---
+
+	// === NEW METHODS FOR REPORTING (START) ===
+	/**
+	 * Finds all delivered orders within a date range, fully populated with
+	 * items, products, and ingredients for COGS calculation.
+	 * * @param start Start time (inclusive)
+	 * @param end   End time (inclusive)
+	 * @return A List of fully populated Order objects.
+	 */
+	List<Order> findDeliveredOrdersForReport(LocalDateTime start, LocalDateTime end);
+
+	/**
+	 * Calculates the Cost of Goods Sold (COGS) for a single, given order.
+	 * * @param order The Order object (must have items, products, and ingredients
+	 * eagerly loaded).
+	 * @return The total COGS for that order as a BigDecimal.
+	 */
+	BigDecimal calculateCogsForOrder(Order order);
+	// === NEW METHODS FOR REPORTING (END) ===
 }

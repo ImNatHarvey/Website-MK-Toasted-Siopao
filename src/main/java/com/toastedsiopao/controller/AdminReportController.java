@@ -1,0 +1,97 @@
+package com.toastedsiopao.controller;
+
+import com.toastedsiopao.service.ReportService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+@Controller
+@RequestMapping("/admin/reports")
+@PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
+public class AdminReportController {
+
+    private static final Logger log = LoggerFactory.getLogger(AdminReportController.class);
+
+    @Autowired
+    private ReportService reportService;
+
+    @GetMapping("/financial")
+    public ResponseEntity<InputStreamResource> downloadFinancialReport(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+
+        log.info("Generating financial report for start: [{}], end: [{}]", startDate, endDate);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateFinancialReport(startDate, endDate);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Financial_Report_" + timestamp + ".xlsx";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate financial report: {}", e.getMessage(), e);
+            // In a real app, you might redirect to an error page
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating financial report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // === NEW ENDPOINT ADDED ===
+    @GetMapping("/financial/pdf")
+    public ResponseEntity<InputStreamResource> downloadFinancialReportPdf(
+            @RequestParam(value = "startDate", required = false) String startDate,
+            @RequestParam(value = "endDate", required = false) String endDate) {
+
+        log.info("Generating financial PDF report for start: [{}], end: [{}]", startDate, endDate);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateFinancialReportPdf(startDate, endDate);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Financial_Report_" + timestamp + ".pdf";
+
+            // --- THIS IS THE FIX: Changed "inline" to "attachment" ---
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName); // Download directly
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate financial PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating financial PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    // === END NEW ENDPOINT ===
+}

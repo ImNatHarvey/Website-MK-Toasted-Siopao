@@ -1,0 +1,31 @@
+package com.toastedsiopao.service;
+
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+public interface ReportService {
+
+    /**
+     * Generates a financial report (Sales, COGS, Profit) in Excel format.
+     *
+     * @param startDate The start date for the report (yyyy-MM-dd format). Can be
+     * null.
+     * @param endDate   The end date for the report (yyyy-MM-dd format). Can be
+     * null.
+     * @return A ByteArrayInputStream containing the .xlsx file data.
+     * @throws IOException if there's an error creating the Excel file.
+     */
+    ByteArrayInputStream generateFinancialReport(String startDate, String endDate) throws IOException;
+
+    /**
+     * Generates a financial report (Sales, COGS, Profit) in PDF format.
+     *
+     * @param startDate The start date for the report (yyyy-MM-dd format). Can be
+     * null.
+     * @param endDate   The end date for the report (yyyy-MM-dd format). Can be
+     * null.
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if there's an error creating the PDF.
+     */
+    ByteArrayInputStream generateFinancialReportPdf(String startDate, String endDate) throws IOException;
+}

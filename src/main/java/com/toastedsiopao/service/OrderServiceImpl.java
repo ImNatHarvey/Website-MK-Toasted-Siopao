@@ -673,4 +673,19 @@ public class OrderServiceImpl implements OrderService {
 		BigDecimal total = orderRepository.findTotalPotentialRevenue();
 		return total != null ? total : BigDecimal.ZERO;
 	}
+
+	// === NEW METHODS FOR REPORTING (START) ===
+	@Override
+	@Transactional(readOnly = true)
+	public List<Order> findDeliveredOrdersForReport(LocalDateTime start, LocalDateTime end) {
+		return orderRepository.findDeliveredOrdersWithCogsDetails(start, end);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public BigDecimal calculateCogsForOrder(Order order) {
+		// This public method just wraps the private one
+		return calculateOrderCogs(order);
+	}
+	// === NEW METHODS FOR REPORTING (END) ===
 }

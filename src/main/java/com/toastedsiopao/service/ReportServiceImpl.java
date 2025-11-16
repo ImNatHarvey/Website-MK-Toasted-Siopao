@@ -3,6 +3,8 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
+import com.toastedsiopao.model.Product;
+import com.toastedsiopao.model.RecipeIngredient;
 import com.toastedsiopao.model.SiteSettings;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -41,12 +43,15 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private PdfService pdfService;
 
-    // === NEWLY ADDED ===
     @Autowired
     private InventoryItemService inventoryItemService;
 
     @Autowired
     private InventoryCategoryService inventoryCategoryService;
+
+    // === NEWLY ADDED ===
+    @Autowired
+    private ProductService productService;
     // ===================
 
     private LocalDateTime parseDate(String date, boolean isEndDate) {
@@ -228,14 +233,9 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
 
-    // === NEW INVENTORY REPORT METHODS ===
+    // === INVENTORY REPORT METHODS ===
 
-    /**
-     * Fetches inventory items based on optional filters.
-     * This reuses the same search logic as the inventory page.
-     */
     private List<InventoryItem> getFilteredInventoryItems(String keyword, Long categoryId) {
-        // Use Pageable.unpaged() to get all items matching the filter, not just one page
         return inventoryItemService.searchItems(keyword, categoryId, Pageable.unpaged()).getContent();
     }
 
@@ -336,8 +336,105 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public ByteArrayInputStream generateInventoryReportPdf(String keyword, Long categoryId) throws IOException {
         List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
-        // This will be implemented in the next batch
         return pdfService.generateInventoryReportPdf(items, keyword, categoryId);
+    }
+
+    // === NEW PRODUCT REPORT METHODS ===
+
+    private List<Product> getFilteredProducts(String keyword, Long categoryId) {
+        // This new service method fetches all products with their recipes
+        return productService.findAllForReport(keyword, categoryId);
+    }
+
+    @Override
+    public ByteArrayInputStream generateProductReport(String keyword, Long categoryId) throws IOException {
+        List<Product> products = getFilteredProducts(keyword, categoryId);
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+
+            // --- Create Styles ---
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle currencyStyle = createCurrencyStyle(workbook);
+            CellStyle boldStyle = createBoldStyle(workbook);
+
+            // --- Create Sheet ---
+            Sheet sheet = workbook.createSheet("Product Report");
+            AtomicInteger rowIdx = new AtomicInteger(0);
+
+            // --- Title ---
+            Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue(settings.getWebsiteName() + " - Product & Recipe Report");
+            titleCell.setCellStyle(headerStyle);
+
+            // --- Filters Used ---
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Keyword='" + keyword + "' ";
+            }
+            if (categoryId != null) {
+                // We need to fetch the category name, but ProductService doesn't do that.
+                // For now, just use ID. We can improve this later if needed.
+                filterDesc += "Category ID='" + categoryId + "'";
+            }
+            if (!StringUtils.hasText(keyword) && categoryId == null) {
+                filterDesc += "None (All Products)";
+            }
+            Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
+            dateRow.createCell(0).setCellValue(filterDesc);
+            dateRow.getCell(0).setCellStyle(boldStyle);
+
+            rowIdx.getAndIncrement(); // Spacer
+
+            // --- Header Row ---
+            String[] headers = { "Product ID", "Product Name", "Category", "Price", "Current Stock", "Product Status", "Stock Status", "Recipe Ingredients" };
+            Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            // --- Data Rows ---
+            for (Product product : products) {
+                Row row = sheet.createRow(rowIdx.getAndIncrement());
+
+                // Format the recipe
+                String recipe = product.getIngredients().stream()
+                        .map(ing -> ing.getQuantityNeeded() + " " +
+                                (ing.getInventoryItem().getUnit() != null ? ing.getInventoryItem().getUnit().getAbbreviation() : "units") +
+                                " of " + ing.getInventoryItem().getName())
+                        .collect(Collectors.joining("\n")); // Newline for each ingredient in the cell
+
+                row.createCell(0).setCellValue(product.getId());
+                row.createCell(1).setCellValue(product.getName());
+                row.createCell(2).setCellValue(product.getCategory().getName());
+                createCurrencyCell(row, 3, product.getPrice(), currencyStyle);
+                row.createCell(4).setCellValue(product.getCurrentStock());
+                row.createCell(5).setCellValue(product.getProductStatus());
+                row.createCell(6).setCellValue(product.getStockStatus());
+                
+                Cell recipeCell = row.createCell(7);
+                recipeCell.setCellValue(recipe);
+                // Apply wrap text style to recipe cell
+                CellStyle wrapStyle = workbook.createCellStyle();
+                wrapStyle.setWrapText(true);
+                recipeCell.setCellStyle(wrapStyle);
+            }
+            
+            autoSizeColumns(sheet, headers.length);
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    @Override
+    public ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException {
+        List<Product> products = getFilteredProducts(keyword, categoryId);
+        // This will be implemented in the next batch
+        return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
 
 

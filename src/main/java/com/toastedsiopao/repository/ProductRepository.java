@@ -104,4 +104,18 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	long countOutOfStockProducts();
 
 	// --- REMOVED: Old paginated queries that caused the warning ---
+
+	// === NEW QUERIES FOR PRODUCT REPORT ===
+	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u ORDER BY p.name ASC")
+	List<Product> findAllFullProducts();
+
+	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) ORDER BY p.name ASC")
+	List<Product> findFullProductsByName(@Param("keyword") String keyword);
+
+	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u WHERE p.category = :category ORDER BY p.name ASC")
+	List<Product> findFullProductsByCategory(@Param("category") Category category);
+
+	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND p.category = :category ORDER BY p.name ASC")
+	List<Product> findFullProductsByNameAndCategory(@Param("keyword") String keyword, @Param("category") Category category);
+	// =======================================
 }

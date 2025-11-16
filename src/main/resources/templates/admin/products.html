@@ -95,7 +95,24 @@
 						title="Clear Filters"> <i class="fa-solid fa-times"></i> <span
 						class="d-none d-md-inline ms-1">Clear</span>
 					</a>
-				</div>
+					<div class="btn-group">
+						<button type="button"
+							class="btn btn-action-success dropdown-toggle"
+							data-bs-toggle="dropdown" aria-expanded="false">
+							<i class="fa-solid fa-download me-1"></i> Export
+						</button>
+						<ul class="dropdown-menu dropdown-menu-end">
+							<li><button class="dropdown-item" type="submit"
+									formaction="/admin/reports/products" formmethod="get">
+									<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
+								</button></li>
+							<li><button class="dropdown-item" type="submit"
+									formaction="/admin/reports/products/pdf" formmethod="get">
+									<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
+								</button></li>
+						</ul>
+					</div>
+					</div>
 			</div>
 		</form>
 

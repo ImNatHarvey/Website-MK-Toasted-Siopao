@@ -44,4 +44,8 @@ public interface ProductService {
 
 	int calculateMaxProducible(Long productId);
 
+	// === NEW METHOD FOR REPORTING ===
+	List<Product> findAllForReport(String keyword, Long categoryId);
+	// ================================
+
 }

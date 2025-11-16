@@ -93,8 +93,6 @@ public class AdminReportController {
         }
     }
 
-    // === NEW ENDPOINTS FOR INVENTORY REPORT ===
-
     @GetMapping("/inventory")
     @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
     public ResponseEntity<InputStreamResource> downloadInventoryReport(
@@ -155,6 +153,72 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
             log.error("Unexpected error generating inventory PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // === NEW ENDPOINTS FOR PRODUCT REPORT ===
+
+    @GetMapping("/products")
+    @PreAuthorize("hasAuthority('VIEW_PRODUCTS')")
+    public ResponseEntity<InputStreamResource> downloadProductReport(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category", required = false) Long categoryId) {
+
+        log.info("Generating product EXCEL report for keyword: [{}], categoryId: [{}]", keyword, categoryId);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateProductReport(keyword, categoryId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Product_Report_" + timestamp + ".xlsx";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate product Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating product Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/products/pdf")
+    @PreAuthorize("hasAuthority('VIEW_PRODUCTS')")
+    public ResponseEntity<InputStreamResource> downloadProductReportPdf(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "category", required = false) Long categoryId) {
+
+        log.info("Generating product PDF report for keyword: [{}], categoryId: [{}]", keyword, categoryId);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateProductReportPdf(keyword, categoryId);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "Product_Report_" + timestamp + ".pdf";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate product PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating product PDF report: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

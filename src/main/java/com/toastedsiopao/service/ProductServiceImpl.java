@@ -509,4 +509,29 @@ public class ProductServiceImpl implements ProductService {
 
 		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
 	}
+
+	// === NEW METHOD FOR REPORTING ===
+	@Override
+	@Transactional(readOnly = true)
+	public List<Product> findAllForReport(String keyword, Long categoryId) {
+		boolean hasKeyword = StringUtils.hasText(keyword);
+		boolean hasCategory = categoryId != null;
+
+		// This query fetches all products with their recipes, which is what we need
+		// for the report. It's not paginated.
+		if (hasKeyword && hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findFullProductsByNameAndCategory(keyword.trim(), category);
+		} else if (hasKeyword) {
+			return productRepository.findFullProductsByName(keyword.trim());
+		} else if (hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findFullProductsByCategory(category);
+		} else {
+			return productRepository.findAllFullProducts();
+		}
+	}
+	// ================================
 }

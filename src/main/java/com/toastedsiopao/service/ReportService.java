@@ -48,4 +48,24 @@ public interface ReportService {
      * @throws IOException if there's an error creating the PDF.
      */
     ByteArrayInputStream generateInventoryReportPdf(String keyword, Long categoryId) throws IOException;
+
+    /**
+     * Generates a product report (with recipes) in Excel format.
+     *
+     * @param keyword    The search term for product name (can be null).
+     * @param categoryId The category ID to filter by (can be null).
+     * @return A ByteArrayInputStream containing the .xlsx file data.
+     * @throws IOException if there's an error creating the Excel file.
+     */
+    ByteArrayInputStream generateProductReport(String keyword, Long categoryId) throws IOException;
+
+    /**
+     * Generates a product report (with recipes) in PDF format.
+     *
+     * @param keyword    The search term for product name (can be null).
+     * @param categoryId The category ID to filter by (can be null).
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if there's an error creating the PDF.
+     */
+    ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException;
 }

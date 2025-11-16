@@ -7,6 +7,7 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.SiteSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Transactional(readOnly = true)
@@ -38,13 +38,11 @@ public class PdfServiceImpl implements PdfService {
     @Autowired
     private OrderService orderService; // To calculate COGS for each order
 
-    // --- NEWLY ADDED ---
     @Autowired
     private InventoryItemService inventoryItemService;
 
     @Autowired
     private InventoryCategoryService inventoryCategoryService;
-    // ===================
 
     // --- Define Fonts ---
     private static final Font FONT_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
@@ -166,7 +164,7 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    // === NEW METHOD IMPLEMENTATION ===
+    
     @Override
     public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -255,6 +253,83 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
+
+    // === NEW METHOD IMPLEMENTATION FOR PRODUCT REPORT ===
+    @Override
+    public ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException {
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (Document document = new Document(PageSize.A4.rotate())) { // Landscape
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // === 1. Add Title ===
+            Paragraph title = new Paragraph(settings.getWebsiteName() + " - Product & Recipe Report", FONT_TITLE);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            // === 2. Add Filter Info ===
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Keyword='" + keyword + "' ";
+            }
+            if (categoryId != null) {
+                // We can get the category name from the first product if it exists
+                String catName = products.isEmpty() ? "ID " + categoryId : products.get(0).getCategory().getName();
+                filterDesc += "Category='" + catName + "'";
+            }
+            if (!StringUtils.hasText(keyword) && categoryId == null) {
+                filterDesc += "None (All Products)";
+            }
+            Paragraph subtitle = new Paragraph(filterDesc, FONT_SUBTITLE);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15f);
+            document.add(subtitle);
+
+            // === 3. Add Detailed Product Table ===
+            PdfPTable detailTable = new PdfPTable(8); // 8 columns
+            detailTable.setWidthPercentage(100);
+            detailTable.setWidths(new float[] { 0.8f, 2f, 1.5f, 1f, 1f, 1f, 1.2f, 3.5f }); // Relative widths
+
+            // --- Table Header ---
+            addTableHeader(detailTable, "ID");
+            addTableHeader(detailTable, "Product Name");
+            addTableHeader(detailTable, "Category");
+            addTableHeader(detailTable, "Price");
+            addTableHeader(detailTable, "Stock");
+            addTableHeader(detailTable, "Prod. Status");
+            addTableHeader(detailTable, "Stock Status");
+            addTableHeader(detailTable, "Recipe Ingredients");
+            
+            // --- Table Body ---
+            for (Product product : products) {
+                String recipe = product.getIngredients().stream()
+                        .map(ing -> ing.getQuantityNeeded() + " " +
+                                (ing.getInventoryItem().getUnit() != null ? ing.getInventoryItem().getUnit().getAbbreviation() : "units") +
+                                " of " + ing.getInventoryItem().getName())
+                        .collect(Collectors.joining("\n")); // Newline for each ingredient
+
+                addTableCell(detailTable, product.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, product.getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, product.getCategory().getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, formatCurrency(product.getPrice()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, product.getCurrentStock().toString(), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, product.getProductStatus(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, product.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, recipe.isEmpty() ? "N/A" : recipe, FONT_TABLE_CELL, Element.ALIGN_LEFT);
+            }
+
+            document.add(detailTable);
+
+        } catch (DocumentException e) {
+            log.error("DocumentException during PDF generation: {}", e.getMessage(), e);
+            throw new IOException("Error creating PDF document", e);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
+
 
     // === PDF Cell Helpers ===
 

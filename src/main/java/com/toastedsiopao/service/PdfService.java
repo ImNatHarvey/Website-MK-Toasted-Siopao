@@ -2,6 +2,7 @@ package com.toastedsiopao.service;
 
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
+import com.toastedsiopao.model.Product; // --- ADDED ---
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -31,5 +32,16 @@ public interface PdfService {
      * @throws IOException if the PDF generation fails.
      */
     ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException;
+
+    /**
+     * Generates a PDF product report from a list of products.
+     *
+     * @param products   The list of products to include.
+     * @param keyword    The search keyword used (for the title).
+     * @param categoryId The category ID used (for the title).
+     * @return A ByteArrayInputStream containing the .pdf file data.
+     * @throws IOException if the PDF generation fails.
+     */
+    ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException;
 
 }

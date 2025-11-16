@@ -35,8 +35,7 @@
 							<input type="hidden" name="category"
 								th:value="${selectedCategoryId}" />
 						</div>
-						<div class="d-flex gap-2 align-self-md-end"
-							style="flex-shrink: 0;">
+						<div class="d-flex gap-2 align-self-md-end justify-content-center justify-content-md-start" style="flex-shrink: 0;">
 							<button type="submit" class="btn btn-action-view" title="Search">
 								<i class="fa-solid fa-search"></i> <span
 									class="d-none d-md-inline ms-1">Search</span>
@@ -47,6 +46,7 @@
 							</a>
 						</div>
 					</div>
+					
 				</form>
 				<div th:if="${productPage.empty}"
 					class="alert alert-warning text-center" role="alert">
@@ -56,7 +56,7 @@
 				</div>
 
 				<div th:unless="${productPage.empty}"
-					class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"
+					class="row row-cols-2 row-cols-md-2 row-cols-lg-4 g-3"
 					id="product-list-container">
 					<div class="col" th:each="product : ${productPage.content}">
 						<div class="card h-100 shadow-sm product-card-public"

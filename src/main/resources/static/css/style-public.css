@@ -364,13 +364,14 @@ footer {
 	min-height: calc(100vh - var(--top-nav-height));
 }
 
+/* MODIFIED: Added flex-grow and related properties back */
 .featured-products-section {
-	flex-grow: 1; /* This makes the section take up remaining space */
-	display: flex;
-	flex-direction: column;
-	justify-content: center; /* This vertically centers the content */
 	padding-top: 2rem;
 	padding-bottom: 2rem;
+	flex-grow: 1; /* Make this section fill remaining space */
+	display: flex;
+	flex-direction: column;
+	justify-content: center; /* Center its content vertically */
 }
 /* == END ADDED == */
 
@@ -423,13 +424,13 @@ footer {
 .quantity-stepper-inline {
 	display: flex;
 	width: 100%;
-	max-width: 110px; /* Max width for the inline stepper */
+	max-width: 100px; /* MODIFIED: Was 110px */
 	flex-shrink: 1;
 }
 
 .quantity-stepper-inline .qty-btn {
 	flex-shrink: 0;
-	width: 32px; /* Smaller buttons */
+	width: 30px; /* MODIFIED: Was 32px */
 	z-index: 1;
 	font-size: 0.7rem;
 	padding: 0.25rem 0.5rem;
@@ -445,7 +446,7 @@ footer {
 
 .quantity-stepper-inline .qty-input {
 	flex-grow: 1;
-	width: 35px; /* Smaller input */
+	width: 30px; /* MODIFIED: Was 35px */
 	text-align: center;
 	border-left: 0;
 	border-right: 0;
@@ -617,3 +618,80 @@ footer {
 	display: block;
 }
 /* == END ADDED: Image Uploader Styles == */
+
+/* == ADDED: Horizontal Scroll Wrapper == */
+.horizontal-scroll-wrapper {
+  overflow-x: auto;
+  white-space: nowrap;
+  padding-bottom: 1rem; /* To make space for scrollbar */
+  text-align: center; /* THIS IS THE FIX: Centers the inline-block cards */
+}
+
+.horizontal-scroll-wrapper .card {
+  display: inline-block;
+  width: 280px; /* Fixed width for each card */
+  margin-right: 1rem;
+  white-space: normal; /* Reset white-space for card content */
+  vertical-align: top;
+  float: none; /* Disable floating */
+}
+
+.horizontal-scroll-wrapper .card:last-child {
+	margin-right: 0;
+}
+
+/* Hide scrollbar for a cleaner look */
+.horizontal-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.horizontal-scroll-wrapper {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+/* == END ADDED: Horizontal Scroll Wrapper == */
+
+/* == ADDED: Mobile Fixes for Navbar and Spacing == */
+@media (max-width: 991.98px) {
+  /* Fixes the collapsed navbar dropdown */
+  .navbar-collapse {
+    background-color: var(--primary); /* Add the dark background */
+    padding: 1rem; /* Add some spacing */
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--secondary); /* Add a separator */
+    border-radius: 0 0 0.375rem 0.375rem;
+  }
+  
+  .navbar-collapse .d-flex.justify-content-center {
+    flex-direction: column; /* Stack buttons vertically */
+    gap: 0.5rem; /* Add space between buttons */
+    margin-top: 1rem; /* Add space above buttons */
+  }
+  
+  /* MODIFIED: Re-added text-align: center */
+  .navbar-collapse .d-flex.justify-content-center .btn {
+    width: 100%; /* Make buttons full-width */
+    text-align: center; /* Center the text inside */
+  }
+  
+  /* Reduces vertical spacing on mobile */
+  .my-5 {
+  	margin-top: 2rem !important;
+  	margin-bottom: 2rem !important;
+  }
+  
+  /* ADDED: Tighter spacing for mobile homepage */
+  .my-4 {
+  	margin-top: 1.5rem !important;
+  	margin-bottom: 1.5rem !important;
+  }
+  
+  .featured-products-section {
+	padding-top: 1.5rem;
+	padding-bottom: 1.5rem;
+  }
+  
+  .cta-section {
+	padding: 2.5rem 1rem;
+  }
+}
+/* == END ADDED: Mobile Fixes == */

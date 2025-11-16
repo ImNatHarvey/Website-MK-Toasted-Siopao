@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # 1. Database Service (MySQL)
+  # ----------------------------------------------------
+  mysql-db:
+    image: mysql:8.0
+    container_name: mk-siopao-db
+    restart: always
+    environment:
+      # Uses variables from the .env file
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: mk_siopao_db
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Persist the MySQL data to a managed Docker volume
+      - mysql_data:/var/lib/mysql
+    ports:
+      # Expose port 3306 on the host as 3307 for optional external tools
+      - "3307:3306" 
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ----------------------------------------------------
+  # 2. Application Service (Spring Boot)
+  # ----------------------------------------------------
+  mk-siopao-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mk-siopao-app
+    restart: always
+    # Application only starts once the database is confirmed to be ready
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+    environment:
+      # ⚠️ Overrides spring.datasource.url in application.properties
+      # 'mysql-db' is the service name defined above, used as the hostname.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/mk_siopao_db?createDatabaseIfNotExist=true
+      # Pass environment variables needed by the app from the .env file
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      GMAIL_USERNAME: ${GMAIL_USERNAME}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+      MK_ADMIN_USERNAME: ${MK_ADMIN_USERNAME}
+      MK_ADMIN_PASSWORD: ${MK_ADMIN_PASSWORD}
+    
+    volumes:
+      # Persist file uploads (images) to a managed Docker volume
+      - uploads_data:/mk-uploads
+    
+    ports:
+      # Expose the application on host port 8080
+      - "8080:8080"
+    
+volumes:
+  mysql_data:
+  uploads_data:

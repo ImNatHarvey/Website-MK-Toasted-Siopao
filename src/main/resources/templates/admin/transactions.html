@@ -76,7 +76,6 @@
 						class="fa-solid fa-times"></i> <span
 						class="d-none d-md-inline ms-1">Clear</span>
 					</a>
-					
 					<div class="btn-group">
 						<button type="button"
 							class="btn btn-action-success dropdown-toggle"
@@ -94,7 +93,7 @@
 								</button></li>
 						</ul>
 					</div>
-					</div>
+				</div>
 			</div>
 		</form>
 
@@ -158,10 +157,15 @@
 								<td><span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
 									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
 										Status </span></td>
-								<td>
-									<button class="btn btn-sm btn-action-view view-order-btn"
+								<td class="d-flex justify-content-center gap-1"> <button class="btn btn-sm btn-action-view view-order-btn"
 										data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
-								</td>
+									<a th:href="@{/admin/reports/invoice/{id}(id=${order.id})}"
+										class="btn btn-sm btn-custom-outline" target="_blank"
+										title="Print Invoice/Receipt"
+										sec:authorize="hasAuthority('VIEW_ORDERS')">
+										<i class="fa-solid fa-print"></i>
+									</a>
+									</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(transactions)}">
 								<td colspan="7" class="text-center text-muted"

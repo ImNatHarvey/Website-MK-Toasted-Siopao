@@ -5,7 +5,7 @@ import com.lowagie.text.Font;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
-import com.toastedsiopao.model.ActivityLogEntry; // --- ADDED ---
+import com.toastedsiopao.model.ActivityLogEntry; 
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
-import org.springframework.data.domain.Page; // --- ADDED ---
+import org.springframework.data.domain.Page; 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -569,8 +569,7 @@ public class PdfServiceImpl implements PdfService {
 
     private void addTableFooterCell(PdfPTable table, String data, Font font, int alignment, int colSpan) {
         PdfPCell cell = new PdfPCell(new Phrase(data, font));
-        cell.setHorizontalAlignment(alignment);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        cell.setHorizontalAlignment(Element.ALIGN_MIDDLE);
         cell.setBackgroundColor(COLOR_TOTAL_ROW_BG);
         cell.setColspan(colSpan);
         cell.setPadding(5);

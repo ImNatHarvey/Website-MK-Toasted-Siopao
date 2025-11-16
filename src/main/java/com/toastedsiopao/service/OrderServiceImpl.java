@@ -563,7 +563,8 @@ public class OrderServiceImpl implements OrderService {
 	@Transactional(readOnly = true)
 	public BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end) {
 		// This uses the custom repository query to fetch all required entities in one go
-		List<Order> deliveredOrders = orderRepository.findDeliveredOrdersWithCogsDetails(start, end);
+		// --- BUG FIX: Pass null for keyword as this is a general dashboard metric ---
+		List<Order> deliveredOrders = orderRepository.findDeliveredOrdersWithCogsDetails(null, start, end);
 		
 		BigDecimal totalCogs = BigDecimal.ZERO;
 		for (Order order : deliveredOrders) {
@@ -677,8 +678,8 @@ public class OrderServiceImpl implements OrderService {
 	// === NEW METHODS FOR REPORTING (START) ===
 	@Override
 	@Transactional(readOnly = true)
-	public List<Order> findDeliveredOrdersForReport(LocalDateTime start, LocalDateTime end) {
-		return orderRepository.findDeliveredOrdersWithCogsDetails(start, end);
+	public List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end) { // --- MODIFIED ---
+		return orderRepository.findDeliveredOrdersWithCogsDetails(keyword, start, end); // --- MODIFIED ---
 	}
 
 	@Override

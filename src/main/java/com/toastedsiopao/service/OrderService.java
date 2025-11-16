@@ -75,11 +75,12 @@ public interface OrderService {
 	/**
 	 * Finds all delivered orders within a date range, fully populated with
 	 * items, products, and ingredients for COGS calculation.
-	 * * @param start Start time (inclusive)
+	 * @param keyword The search term for customer name/order ID (can be null).
+	 * @param start Start time (inclusive)
 	 * @param end   End time (inclusive)
 	 * @return A List of fully populated Order objects.
 	 */
-	List<Order> findDeliveredOrdersForReport(LocalDateTime start, LocalDateTime end);
+	List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end);
 
 	/**
 	 * Calculates the Cost of Goods Sold (COGS) for a single, given order.

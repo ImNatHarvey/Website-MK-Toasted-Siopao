@@ -115,16 +115,23 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status IN ('PENDING', 'PENDING_VERIFICATION', 'PROCESSING', 'OUT_FOR_DELIVERY')")
 	BigDecimal findTotalPotentialRevenue();
 	
-	// --- START: ADDED NEW COGS FETCH METHOD ---
+	// --- START: MODIFIED COGS FETCH METHOD ---
 	@Query("SELECT DISTINCT o FROM Order o "
 			+ "JOIN FETCH o.items oi "
 			+ "JOIN oi.product p "
 			+ "LEFT JOIN FETCH p.ingredients ri "
 			+ "LEFT JOIN FETCH ri.inventoryItem ii "
-			+ "WHERE o.status = 'DELIVERED' AND o.orderDate BETWEEN :start AND :end "
+			+ "WHERE o.status = 'DELIVERED' "
+			+ "AND (:start IS NULL OR o.orderDate >= :start) " // --- FIX: Handle null start date ---
+			+ "AND (:end IS NULL OR o.orderDate <= :end) "     // --- FIX: Handle null end date ---
+			+ "AND (:keyword IS NULL OR "                     // --- FIX: Handle null keyword ---
+			+ "    CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
+			+ "    LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
+			+ "    LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))"
+			+ ") "
 			+ "ORDER BY o.orderDate DESC")
-	List<Order> findDeliveredOrdersWithCogsDetails(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-	// --- END: ADDED NEW COGS FETCH METHOD ---
+	List<Order> findDeliveredOrdersWithCogsDetails(@Param("keyword") String keyword, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+	// --- END: MODIFIED COGS FETCH METHOD ---
 
 	// === NEW QUERY FOR INVOICE PDF ===
 	@Query("SELECT o FROM Order o LEFT JOIN FETCH o.user u LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p WHERE o.id = :orderId")

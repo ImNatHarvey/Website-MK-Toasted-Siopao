@@ -5,8 +5,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.domain.PageRequest; // --- ADDED ---
-import org.springframework.data.domain.Pageable; // --- ADDED ---
+import org.springframework.data.domain.PageRequest; 
+import org.springframework.data.domain.Pageable; 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,13 +34,14 @@ public class AdminReportController {
     @GetMapping("/financial")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReport(
+            @RequestParam(value = "keyword", required = false) String keyword, // --- ADDED ---
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
 
-        log.info("Generating financial report for start: [{}], end: [{}]", startDate, endDate);
+        log.info("Generating financial report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); // --- MODIFIED ---
 
         try {
-            ByteArrayInputStream bis = reportService.generateFinancialReport(startDate, endDate);
+            ByteArrayInputStream bis = reportService.generateFinancialReport(keyword, startDate, endDate); // --- MODIFIED ---
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -67,13 +68,14 @@ public class AdminReportController {
     @GetMapping("/financial/pdf")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReportPdf(
+            @RequestParam(value = "keyword", required = false) String keyword, // --- ADDED ---
             @RequestParam(value = "startDate", required = false) String startDate,
             @RequestParam(value = "endDate", required = false) String endDate) {
 
-        log.info("Generating financial PDF report for start: [{}], end: [{}]", startDate, endDate);
+        log.info("Generating financial PDF report for keyword: [{}], start: [{}], end: [{}]", keyword, startDate, endDate); // --- MODIFIED ---
 
         try {
-            ByteArrayInputStream bis = reportService.generateFinancialReportPdf(startDate, endDate);
+            ByteArrayInputStream bis = reportService.generateFinancialReportPdf(keyword, startDate, endDate); // --- MODIFIED ---
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -236,7 +238,6 @@ public class AdminReportController {
             HttpHeaders headers = new HttpHeaders();
             String fileName = "Invoice_ORD-" + orderId + ".pdf";
             
-            // This time, we use "inline" to try and open it in the browser
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + fileName);
 
             return ResponseEntity
@@ -257,7 +258,6 @@ public class AdminReportController {
         }
     }
 
-    // === NEW ENDPOINT FOR ACTIVITY LOG PDF ===
     @GetMapping("/activity-log/pdf")
     @PreAuthorize("hasAuthority('VIEW_ACTIVITY_LOG')")
     public ResponseEntity<InputStreamResource> downloadActivityLogPdf(

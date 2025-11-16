@@ -1,6 +1,6 @@
 package com.toastedsiopao.service;
 
-import com.toastedsiopao.model.ActivityLogEntry; // --- ADDED ---
+import com.toastedsiopao.model.ActivityLogEntry; 
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -12,7 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page; // --- ADDED ---
+import org.springframework.data.domain.Page; 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +55,7 @@ public class ReportServiceImpl implements ReportService {
     private ProductService productService;
 
     @Autowired
-    private ActivityLogService activityLogService; // --- ADDED ---
+    private ActivityLogService activityLogService; 
 
     private LocalDateTime parseDate(String date, boolean isEndDate) {
         if (!StringUtils.hasText(date)) {
@@ -71,11 +71,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ByteArrayInputStream generateFinancialReport(String startDate, String endDate) throws IOException {
+    public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate) throws IOException { // --- MODIFIED ---
         LocalDateTime startDateTime = parseDate(startDate, false);
         LocalDateTime endDateTime = parseDate(endDate, true);
 
-        List<Order> orders = orderService.findDeliveredOrdersForReport(startDateTime, endDateTime);
+        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); // --- MODIFIED ---
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -227,11 +227,11 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public ByteArrayInputStream generateFinancialReportPdf(String startDate, String endDate) throws IOException {
+    public ByteArrayInputStream generateFinancialReportPdf(String keyword, String startDate, String endDate) throws IOException { // --- MODIFIED ---
         LocalDateTime startDateTime = parseDate(startDate, false);
         LocalDateTime endDateTime = parseDate(endDate, true);
 
-        List<Order> orders = orderService.findDeliveredOrdersForReport(startDateTime, endDateTime);
+        List<Order> orders = orderService.findDeliveredOrdersForReport(keyword, startDateTime, endDateTime); // --- MODIFIED ---
         
         return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
@@ -448,7 +448,7 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateInvoicePdf(order);
     }
 
-    // === NEW ACTIVITY LOG PDF METHOD ===
+    // === ACTIVITY LOG PDF METHOD ===
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {
         Page<ActivityLogEntry> logPage = activityLogService.getAllLogs(pageable);

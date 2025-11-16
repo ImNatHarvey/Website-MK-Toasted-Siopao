@@ -13,6 +13,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+// --- IMPORT ADDED ---
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -26,6 +28,11 @@ public class SecurityConfig {
 
 	@Autowired
 	private CustomerAuthenticationSuccessHandler customerAuthenticationSuccessHandler;
+
+	// --- ADDED ---
+	@Autowired
+	private AuthenticationFailureHandler customAuthenticationFailureHandler;
+	// --- END ADDED ---
 
 	@Bean
 	public static PasswordEncoder passwordEncoder() {
@@ -74,7 +81,10 @@ public class SecurityConfig {
 
 						.anyRequest().authenticated())
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
-						.successHandler(customerAuthenticationSuccessHandler).failureUrl("/login?error=true")
+						.successHandler(customerAuthenticationSuccessHandler)
+						// --- MODIFIED ---
+						.failureHandler(customAuthenticationFailureHandler)
+						// --- END MODIFIED ---
 						.permitAll())
 
 				// --- MODIFICATION: Added Remember Me Configuration ---

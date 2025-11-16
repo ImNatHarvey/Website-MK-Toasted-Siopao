@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
+// --- IMPORT REMOVED ---
+// import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +19,7 @@ import com.toastedsiopao.service.CustomerService;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet; // ADDED
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
 	private static final Logger log = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
+	private static final String CUSTOMER_ROLE_NAME = "ROLE_CUSTOMER";
 
 	@Autowired
 	private CustomerService customerService;
@@ -53,11 +56,27 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		} else {
 			log.warn("--- User {} has a NULL role! ---", user.getUsername());
 		}
+		
+		// --- START: MODIFICATION FOR INACTIVE ADMINS ---
+		boolean enabled = true;
+		String roleName = (user.getRole() != null) ? user.getRole().getName() : "";
 
+		// Check if the user is an admin (not a customer) AND their status is INACTIVE
+		if (!CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
+			enabled = false;
+			log.warn("--- User {} is an admin and is set to INACTIVE. Marking as disabled. ---", user.getUsername());
+		} else if (CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
+			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---", user.getUsername());
+			// We still allow them to log in, so 'enabled' remains true.
+		}
+		
 		Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
 
+		// Use the full constructor to pass the 'enabled' status
+		// This allows DaoAuthenticationProvider to throw the DisabledException itself.
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-				authorities);
+				enabled, true, true, true, authorities);
+		// --- END: MODIFICATION FOR INACTIVE ADMINS ---
 	}
 
 	private Collection<? extends GrantedAuthority> getAuthorities(User user) {

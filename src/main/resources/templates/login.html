@@ -16,8 +16,16 @@
 						<p class="text-center text-muted mb-4">Log in to your account
 							to continue.</p>
 
-						<div th:if="${param.error}" class="alert alert-danger"
+						<div th:if="${param.error == 'credentials' or param.error == 'true'}" class="alert alert-danger"
 							role="alert">Invalid username or password.</div>
+						
+						<div th:if="${param.error == 'disabled'}" class="alert alert-danger"
+							role="alert">Your account is inactive. Please contact the
+							system Owner.</div>
+							
+						<div th:if="${param.error == 'internal'}" class="alert alert-danger"
+							role="alert">An unexpected error occurred. Please try
+							again.</div>
 						<div th:if="${param.logout}" class="alert alert-success"
 							role="alert">You have been logged out.</div>
 

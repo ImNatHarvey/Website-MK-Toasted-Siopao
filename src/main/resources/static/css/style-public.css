@@ -756,3 +756,28 @@ footer {
 	font-weight: bold;
 }
 /* == END ADDED == */
+
+/* == ADDED: Carousel Control Visibility == */
+.carousel-control-prev,
+.carousel-control-next {
+	opacity: 0.5; /* Make them visible by default */
+	transition: opacity 0.15s ease;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+	opacity: 0.9; /* Make them darker on hover */
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+	background-color: rgba(0, 0, 0, 0.3); /* Add a dark background to the icon */
+	border-radius: 50%;
+	padding: 1.25rem; /* Make the icon background larger */
+	background-size: 50% 50%; /* Make the arrow inside smaller */
+}
+
+.carousel-indicators [data-bs-target] {
+	background-color: var(--primary); /* Make indicators match site theme */
+}
+/* == END ADDED: Carousel Control Visibility == */

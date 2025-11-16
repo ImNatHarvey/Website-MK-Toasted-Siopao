@@ -37,11 +37,11 @@
 								th:value="${selectedCategoryId}" />
 							<div class="d-flex gap-2 align-self-md-start"
 								style="flex-shrink: 0;">
-								<button type="submit" class="btn btn-action-view" title="Search">
+								<button type="submit" class="btn btn-sm btn-action-view" title="Search">
 									<i class="fa-solid fa-search"></i> <span
 										class="d-none d-md-inline ms-1">Search</span>
 								</button>
-								<a th:href="@{/u/menu}" class="btn btn-custom-secondary"
+								<a th:href="@{/u/menu}" class="btn btn-sm btn-custom-secondary"
 									title="Clear All"> <i class="fa-solid fa-times"></i> <span
 									class="d-none d-md-inline ms-1">Clear</span>
 								</a>
@@ -76,7 +76,7 @@
 									th:text="${product.category.name}">...</p>
 								
 								<div
-									class="d-flex justify-content-between align-items-center mb-2 price-stepper-row">
+									class="d-flex justify-content-between align-items-center flex-wrap mb-2 price-stepper-row">
 									<p class="mb-0">
 										<strong class="fs-5">₱<span
 											th:text="${#numbers.formatDecimal(product.price, 1, 'COMMA', 2, 'POINT')}">...</span></strong>

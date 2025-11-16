@@ -134,6 +134,14 @@ body {
 	border-color: #1e7e34;
 }
 
+/* --- ADDED: Button Sizing Overrides --- */
+.btn-custom.btn-sm,
+.btn-custom-secondary.btn-sm,
+.btn-custom-outline.btn-sm {
+	padding: 0.25rem 0.75rem; /* A bit more padding than default btn-sm */
+	font-size: 0.875rem;
+}
+
 /* --- Disabled States --- */
 .btn-action-edit:disabled, .btn-action-edit.disabled {
 	background-color: var(--warning);

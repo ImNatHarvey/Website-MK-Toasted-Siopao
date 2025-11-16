@@ -27,26 +27,23 @@
 						</div>
 					</div>
 
-					<div class="d-flex flex-column flex-md-row gap-2">
-						<div class="flex-grow-1">
-							<label for="keyword" class="form-label">Search by Name</label> <input
-								type="text" class="form-control" id="keyword" name="keyword"
-								th:value="${keyword}" placeholder="Enter product name...">
-							<input type="hidden" name="category"
-								th:value="${selectedCategoryId}" />
-						</div>
-						<div class="d-flex gap-2 align-self-md-end justify-content-center justify-content-md-start" style="flex-shrink: 0;">
-							<button type="submit" class="btn btn-action-view" title="Search">
-								<i class="fa-solid fa-search"></i> <span
-									class="d-none d-md-inline ms-1">Search</span>
-							</button>
-							<a th:href="@{/menu}" class="btn btn-custom-secondary"
-								title="Clear All"> <i class="fa-solid fa-times"></i> <span
-								class="d-none d-md-inline ms-1">Clear</span>
-							</a>
-						</div>
+					<div class="mb-2">
+						<label for="keyword" class="form-label">Search by Name</label> <input
+							type="text" class="form-control" id="keyword" name="keyword"
+							th:value="${keyword}" placeholder="Enter product name..."> <input
+							type="hidden" name="category" th:value="${selectedCategoryId}" />
 					</div>
-					
+					<div class="d-flex gap-2 justify-content-start">
+						<button type="submit" class="btn btn-action-view" title="Search">
+							<i class="fa-solid fa-search"></i> <span
+								class="d-none d-md-inline ms-1">Search</span>
+						</button>
+						<a th:href="@{/menu}" class="btn btn-custom-secondary"
+							title="Clear All"> <i class="fa-solid fa-times"></i> <span
+							class="d-none d-md-inline ms-1">Clear</span>
+						</a>
+					</div>
+
 				</form>
 				<div th:if="${productPage.empty}"
 					class="alert alert-warning text-center" role="alert">

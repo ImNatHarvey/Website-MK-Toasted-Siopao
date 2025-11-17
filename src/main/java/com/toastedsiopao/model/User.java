@@ -1,5 +1,6 @@
 package com.toastedsiopao.model;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.CollectionTable; // REMOVED
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection; // REMOVED
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany; // --- IMPORT ADDED ---
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
@@ -19,7 +21,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList; // --- IMPORT ADDED ---
 import java.util.HashSet;
+import java.util.List; // --- IMPORT ADDED ---
 import java.util.Set;
 
 @Entity
@@ -52,6 +56,11 @@ public class User {
 	// @Column(name = "permission", nullable = false)
 	// private Set<String> permissions = new HashSet<>();
 	// --- END REMOVED ---
+	
+	// --- START: NEW RELATIONSHIP ---
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private List<IssueReport> issueReports = new ArrayList<>();
+	// --- END: NEW RELATIONSHIP ---
 
 	@Column(length = 50)
 	private String firstName;

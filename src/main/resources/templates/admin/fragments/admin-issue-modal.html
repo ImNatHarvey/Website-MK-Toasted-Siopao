@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="admin-issue-modal">
+		<div class="modal fade" id="viewIssuesModal" tabindex="-1" aria-labelledby="viewIssuesModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="viewIssuesModalLabel">Issue Reports for Order #ORD-XXXX</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="viewIssuesModalBody">
+						
+						<div class="text-center" id="viewIssuesLoadingSpinner">
+							<div class="spinner-border text-primary" role="status">
+								<span class="visually-hidden">Loading...</span>
+							</div>
+							<p class="mt-2">Loading reports...</p>
+						</div>
+						
+						<div id="viewIssuesListContainer"></div>
+						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

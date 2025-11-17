@@ -38,13 +38,11 @@ public class MKToastedSiopaoWebsiteApplication {
 	@Autowired
 	private PasswordEncoder passwordEncoder;
 
-	// --- ADDED: Injected admin credentials ---
 	@Value("${mk.admin.username}")
 	private String adminUsername;
 
 	@Value("${mk.admin.password}")
 	private String adminPassword;
-	// --- END ADDED ---
 
 	public static void main(String[] args) {
 		SpringApplication.run(MKToastedSiopaoWebsiteApplication.class, args);
@@ -58,12 +56,41 @@ public class MKToastedSiopaoWebsiteApplication {
 	@Bean
 	CommandLineRunner initDatabase() {
 		return args -> {
-			Role ownerRole = roleRepository.findByName("ROLE_OWNER").orElseGet(() -> {
+			
+			// --- START: NEW REFACTOR FOR OWNER ROLE ---
+			final Role ownerRole; // Make it final from the start
+			
+			Optional<Role> ownerRoleOpt = roleRepository.findByName("ROLE_OWNER");
+			boolean needsSave = false;
+			Role roleToSave; // Use a temp variable for modification
+
+			if (ownerRoleOpt.isEmpty()) {
+				// --- Path 1: Role does not exist, create it ---
 				log.info(">>> Creating 'ROLE_OWNER' role...");
-				Role newOwnerRole = new Role("ROLE_OWNER");
-				Arrays.stream(Permission.values()).forEach(permission -> newOwnerRole.addPermission(permission.name()));
-				return roleRepository.save(newOwnerRole);
-			});
+				roleToSave = new Role("ROLE_OWNER");
+				Arrays.stream(Permission.values()).forEach(permission -> roleToSave.addPermission(permission.name()));
+				needsSave = true;
+			} else {
+				// --- Path 2: Role exists, check for missing permissions ---
+				roleToSave = ownerRoleOpt.get();
+				long missingPerms = Arrays.stream(Permission.values())
+					.filter(permission -> !roleToSave.getPermissions().contains(permission.name()))
+					.count();
+				
+				if (missingPerms > 0) {
+					log.warn(">>> ROLE_OWNER is missing {} permissions. Adding them now...", missingPerms);
+					Arrays.stream(Permission.values()).forEach(permission -> roleToSave.addPermission(permission.name()));
+					needsSave = true;
+				}
+			}
+
+			if (needsSave) {
+				log.info(">>> Saving updates to ROLE_OWNER...");
+				ownerRole = roleRepository.save(roleToSave); // Assign to final variable
+			} else {
+				ownerRole = roleToSave; // Assign existing to final variable
+			}
+			// --- END: NEW REFACTOR ---
 
 			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_CUSTOMER' role...");
@@ -71,29 +98,27 @@ public class MKToastedSiopaoWebsiteApplication {
 				return roleRepository.save(newCustomerRole);
 			});
 
-			// --- MODIFIED: Use injected variables instead of hardcoded strings ---
-			// String adminUsername = "mktoastedadmin"; // REMOVED
-			// String adminPassword = "mktoasted123"; // REMOVED
+			// Admin logic
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
-
 			if (existingAdminOptional.isEmpty()) {
 				log.info(">>> Creating admin user '{}'", adminUsername);
 				User adminUser = new User();
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				adminUser.setRole(ownerRole);
+				adminUser.setRole(ownerRole); // Use final variable
 				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
 				userRepository.save(adminUser);
 				log.info(">>> Admin user created.");
 			} else {
-				// --- END MODIFIED ---
 				User adminUser = existingAdminOptional.get();
 				boolean needsUpdate = false;
-				if (adminUser.getRole() == null) {
-					adminUser.setRole(ownerRole);
+				
+				if (adminUser.getRole() == null || !adminUser.getRole().getName().equals("ROLE_OWNER")) {
+					adminUser.setRole(ownerRole); // Use final variable
 					needsUpdate = true;
 				}
+				
 				if (adminUser.getCreatedAt() == null) {
 					adminUser.setCreatedAt(LocalDateTime.now().minusDays(1));
 					needsUpdate = true;
@@ -115,6 +140,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				}
 			}
 
+			// Customer logic
 			String customerUsername = "testcustomer";
 			String customerPassword = "password123";
 			Optional<User> existingCustomerOptional = userRepository.findByUsername(customerUsername);

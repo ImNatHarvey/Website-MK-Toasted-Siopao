@@ -157,15 +157,34 @@
 								<td><span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
 									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
 										Status </span></td>
-								<td class="d-flex justify-content-center gap-1"> <button class="btn btn-sm btn-action-view view-order-btn"
-										data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
-									<a th:href="@{/admin/reports/invoice/{id}(id=${order.id})}"
-										class="btn btn-sm btn-custom-outline" target="_blank"
-										title="Print Invoice/Receipt"
-										sec:authorize="hasAuthority('VIEW_ORDERS')">
-										<i class="fa-solid fa-print"></i>
-									</a>
-									</td>
+								
+								<td>
+									<div class="d-flex justify-content-center gap-1">
+										<button class="btn btn-sm btn-action-view view-order-btn"
+											data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+										<a th:href="@{/admin/reports/invoice/{id}(id=${order.id})}"
+											class="btn btn-sm btn-custom-outline" target="_blank"
+											title="Print Invoice/Receipt"
+											sec:authorize="hasAuthority('VIEW_ORDERS')">
+											<i class="fa-solid fa-print"></i>
+										</a>
+										
+										<button type="button"
+											class="btn btn-sm btn-custom-outline"
+											th:classappend="${openIssueCounts.get(order.id) != null ? 'btn-outline-danger' : ''}"
+											th:if="${#authorization.expression('hasAuthority(''VIEW_ISSUE_REPORTS'')')}"
+											data-bs-toggle="modal" data-bs-target="#viewIssuesModal"
+											th:data-order-id="${order.id}"
+											th:title="${openIssueCounts.get(order.id) != null ? 'View ' + openIssueCounts.get(order.id) + ' Open Issue(s)' : 'View Issues'}">
+											<i class="fa-solid fa-flag"></i>
+											<span th:if="${openIssueCounts.get(order.id) != null}"
+												  class="badge bg-danger rounded-pill"
+												  style="font-size: 0.6rem; vertical-align: top; margin-left: -5px;"
+												  th:text="${openIssueCounts.get(order.id)}"></span>
+										</button>
+										</div>
+								</td>
+								
 							</tr>
 							<tr th:if="${#lists.isEmpty(transactions)}">
 								<td colspan="7" class="text-center text-muted"
@@ -189,7 +208,7 @@
 							<th:block
 								th:each="i : ${#numbers.sequence(0, transactionPage.totalPages - 1)}"
 								th:if="${transactionPage.totalPages <= 7 || i == 0 || i == transactionPage.totalPages - 1 || (i >= transactionPage.number - 2 && i <= transactionPage.number + 2)}">
-								<li class="page-item disabled"
+								<li class="item disabled"
 									th:if="${transactionPage.totalPages > 7 && (i == 0 && transactionPage.number > 3 || i == transactionPage.totalPages - 1 && transactionPage.number < transactionPage.totalPages - 4)}">
 									<span class="page-link">...</span>
 								</li>

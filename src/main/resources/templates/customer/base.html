@@ -154,15 +154,17 @@
 	<div class="toast-container position-fixed top-0 end-0 p-3"
 		style="z-index: 1100"></div>
 
-	<div id="toast-messages" th:data-profile-success="${profileSuccess}"
-		th:data-profile-error="${profileError}"
-		th:data-password-success="${passwordSuccess}"
-		th:data-password-error="${passwordError}"
-		th:data-order-success="${orderSuccess}"
-		th:data-order-error="${orderError}" 
-		th:data-clear-cart="${clearCart}"
-		style="display: none;"></div>
+	<div id="toast-messages" 
+		 th:data-profile-success="${profileSuccess}"
+		 th:data-profile-error="${profileError}"
+		 th:data-password-success="${passwordSuccess}"
+		 th:data-password-error="${passwordError}"
+		 th:data-order-success="${orderSuccess}"
+		 th:data-order-error="${orderError}" 
+		 th:data-clear-cart="${clearCart}"
+		 th:data-issue-success="${issueSuccess}" th:data-issue-error="${issueError}"     style="display: none;"></div>
 
+	<div th:replace="~{customer/fragments/issue-report-modal :: issue-report-modal}"></div>
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"

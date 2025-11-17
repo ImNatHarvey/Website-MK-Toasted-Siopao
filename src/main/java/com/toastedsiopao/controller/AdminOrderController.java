@@ -1,7 +1,8 @@
 package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.Order;
-import com.toastedsiopao.service.ActivityLogService; // --- ADDED ---
+import com.toastedsiopao.service.ActivityLogService; 
+import com.toastedsiopao.service.IssueReportService; // --- ADDED ---
 import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,14 +14,16 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable; // --- ADDED ---
-import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
+import org.springframework.web.bind.annotation.PathVariable; 
+import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // --- ADDED ---
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
-import java.security.Principal; // --- ADDED ---
+import java.security.Principal; 
+import java.util.List; // --- ADDED ---
 import java.util.Map; 
+import java.util.stream.Collectors; // --- ADDED ---
 
 @Controller
 @RequestMapping("/admin/orders") 
@@ -31,10 +34,13 @@ public class AdminOrderController {
 	@Autowired
 	private OrderService orderService;
 
-	// --- ADDED ---
 	@Autowired
 	private ActivityLogService activityLogService;
-	// --- END ADDED ---
+	
+	// --- START: ADDED ---
+	@Autowired
+	private IssueReportService issueReportService;
+	// --- END: ADDED ---
 
 	@GetMapping
 	@PreAuthorize("hasAuthority('VIEW_ORDERS')") 
@@ -51,17 +57,13 @@ public class AdminOrderController {
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();
 		long totalOrders = orderStatusCounts.values().stream().mapToLong(Long::longValue).sum();
 		model.addAttribute("totalOrders", totalOrders);
-		// --- MODIFIED: Added all statuses ---
 		model.addAttribute("pendingVerificationOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
 		model.addAttribute("pendingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING, 0L));
 		model.addAttribute("processingOrders", orderStatusCounts.getOrDefault(Order.STATUS_PROCESSING, 0L));
-		// --- NEW ---
 		model.addAttribute("outForDeliveryOrders", orderStatusCounts.getOrDefault(Order.STATUS_OUT_FOR_DELIVERY, 0L));
-		// --- END NEW ---
 		model.addAttribute("deliveredOrders", orderStatusCounts.getOrDefault(Order.STATUS_DELIVERED, 0L));
 		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
 		model.addAttribute("rejectedOrders", orderStatusCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
-		// --- END MODIFIED ---
 
 		model.addAttribute("orderPage", orderPage);
 		model.addAttribute("orders", orderPage.getContent()); 
@@ -72,11 +74,20 @@ public class AdminOrderController {
 		model.addAttribute("totalPages", orderPage.getTotalPages());
 		model.addAttribute("totalItems", orderPage.getTotalElements()); 
 		model.addAttribute("size", size);
+		
+		// --- START: ADDED ---
+		// Fetch open issue counts for the orders on the current page
+		List<Long> orderIdsOnPage = orderPage.getContent().stream()
+				.map(Order::getId)
+				.collect(Collectors.toList());
+		
+		Map<Long, Long> openIssueCounts = issueReportService.getOpenIssueCountsForOrders(orderIdsOnPage);
+		model.addAttribute("openIssueCounts", openIssueCounts);
+		// --- END: ADDED ---
 
 		return "admin/orders"; 
 	}
 
-	// --- MODIFIED ---
 	@PostMapping("/update-status/{id}")
 	@PreAuthorize("hasAuthority('EDIT_ORDERS')")
 	public String updateOrderStatus(@PathVariable("id") Long orderId,
@@ -103,7 +114,7 @@ public class AdminOrderController {
 				Order order = orderService.completeCodOrder(orderId);
 				activityLogService.logAdminAction(adminUsername, "COMPLETE_ORDER", "Completed (COD) Order #ORD-" + orderId + ". Status set to " + order.getStatus());
 				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " has been completed and paid.");
-			} else if ("complete_delivered".equals(action)) { // --- NEW ACTION ---
+			} else if ("complete_delivered".equals(action)) { 
 				Order order = orderService.completeDeliveredOrder(orderId);
 				activityLogService.logAdminAction(adminUsername, "COMPLETE_ORDER", "Completed (Pre-Paid) Order #ORD-" + orderId + ". Status set to " + order.getStatus());
 				redirectAttributes.addFlashAttribute("stockSuccess", "Order #ORD-" + orderId + " has been marked as delivered.");
@@ -120,5 +131,4 @@ public class AdminOrderController {
 
 		return "redirect:/admin/orders";
 	}
-	// --- END MODIFIED ---
 }

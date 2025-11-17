@@ -1,43 +1,47 @@
 package com.toastedsiopao.controller;
 
+import com.toastedsiopao.dto.IssueReportDto; 
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.CustomerService;
+import com.toastedsiopao.service.IssueReportService; 
 import com.toastedsiopao.service.NotificationService; 
 import com.toastedsiopao.service.OrderService;
-import com.toastedsiopao.service.ReportService; // --- ADDED ---
+import com.toastedsiopao.service.ReportService; 
 import com.toastedsiopao.service.SiteSettingsService;
-import org.slf4j.Logger; // --- ADDED ---
-import org.slf4j.LoggerFactory; // --- ADDED ---
+import jakarta.validation.Valid; 
+import org.slf4j.Logger; 
+import org.slf4j.LoggerFactory; 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource; // --- ADDED ---
+import org.springframework.core.io.InputStreamResource; 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpHeaders; // --- ADDED ---
-import org.springframework.http.MediaType; // --- ADDED ---
-import org.springframework.http.ResponseEntity; // --- ADDED ---
+import org.springframework.http.HttpHeaders; 
+import org.springframework.http.MediaType; 
+import org.springframework.http.ResponseEntity; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult; 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable; 
 import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile; 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
-import java.io.ByteArrayInputStream; // --- ADDED ---
-import java.io.IOException; // --- ADDED ---
+import java.io.ByteArrayInputStream; 
+import java.io.IOException; 
 import java.security.Principal;
-import java.util.Optional; // --- ADDED ---
+import java.util.Optional; 
 
 @Controller
 @RequestMapping("/u")
 public class CustomerHistoryController {
 	
-	// --- ADDED ---
 	private static final Logger log = LoggerFactory.getLogger(CustomerHistoryController.class);
 
 	@Autowired
@@ -52,15 +56,22 @@ public class CustomerHistoryController {
 	@Autowired
 	private NotificationService notificationService;
 	
-	// --- ADDED ---
 	@Autowired
 	private ReportService reportService;
-	// --- END ADDED ---
+	
+	@Autowired
+	private IssueReportService issueReportService;
 
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);
+		
+		// --- START: REMOVED ---
+		// if (!model.containsAttribute("issueReportDto")) {
+		// 	model.addAttribute("issueReportDto", new IssueReportDto());
+		// }
+		// --- END: REMOVED ---
 	}
 
 	@GetMapping("/history")
@@ -115,7 +126,50 @@ public class CustomerHistoryController {
 		return "redirect:/u/history";
 	}
 	
-	// --- START: NEW METHOD ---
+	@PostMapping("/history/report-issue")
+	public String reportIssue(@Valid @ModelAttribute("issueReportDto") IssueReportDto reportDto,
+							  BindingResult bindingResult,
+							  @RequestParam("attachmentFile") MultipartFile attachmentFile,
+							  Principal principal,
+							  RedirectAttributes redirectAttributes) {
+
+		User user = customerService.findByUsername(principal.getName());
+		if (user == null) {
+			return "redirect:/logout"; // Should not happen, but good practice
+		}
+
+		if (bindingResult.hasErrors()) {
+			log.warn("IssueReportDto validation failed for user: {}", user.getUsername());
+			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.issueReportDto", bindingResult);
+			redirectAttributes.addFlashAttribute("issueReportDto", reportDto);
+			redirectAttributes.addFlashAttribute("issueError", "Validation failed. Please check the fields below.");
+			// --- This is a bit of a hack to re-open the modal on failure ---
+			// We can't use the standard ?showModal= URL param because we're on a different page
+			// We'll rely on the modal's JS to check for this attribute
+			redirectAttributes.addFlashAttribute("reOpenIssueModal", reportDto.getOrderId());
+			return "redirect:/u/history";
+		}
+
+		try {
+			issueReportService.createIssueReport(user, reportDto, attachmentFile);
+			redirectAttributes.addFlashAttribute("issueSuccess", "Your issue report for Order #ORD-" + reportDto.getOrderId() + " has been submitted successfully.");
+		
+		} catch (IllegalArgumentException e) {
+			log.warn("Issue report submission failed for user {}: {}", user.getUsername(), e.getMessage());
+			redirectAttributes.addFlashAttribute("issueReportDto", reportDto);
+			redirectAttributes.addFlashAttribute("issueError", e.getMessage());
+			redirectAttributes.addFlashAttribute("reOpenIssueModal", reportDto.getOrderId());
+		
+		} catch (Exception e) {
+			log.error("Unexpected error submitting issue report for user {}: {}", user.getUsername(), e.getMessage(), e);
+			redirectAttributes.addFlashAttribute("issueReportDto", reportDto);
+			redirectAttributes.addFlashAttribute("issueError", "An unexpected error occurred. Please try again.");
+			redirectAttributes.addFlashAttribute("reOpenIssueModal", reportDto.getOrderId());
+		}
+
+		return "redirect:/u/history";
+	}
+	
 	@GetMapping("/history/invoice/{id}")
 	public ResponseEntity<InputStreamResource> downloadMyInvoice(@PathVariable("id") Long orderId, Principal principal) {
 
@@ -163,5 +217,4 @@ public class CustomerHistoryController {
 			return ResponseEntity.internalServerError().build();
 		}
 	}
-	// --- END: NEW METHOD ---
 }

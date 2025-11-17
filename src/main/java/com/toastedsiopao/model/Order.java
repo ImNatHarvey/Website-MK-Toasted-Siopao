@@ -75,6 +75,11 @@ public class Order {
 	
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private List<OrderItem> items = new ArrayList<>();
+	
+	// --- START: NEW RELATIONSHIP ---
+	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	private List<IssueReport> issueReports = new ArrayList<>();
+	// --- END: NEW RELATIONSHIP ---
 
 	private LocalDateTime lastUpdated;
 	

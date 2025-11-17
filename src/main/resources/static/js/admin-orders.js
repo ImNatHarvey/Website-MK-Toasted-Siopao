@@ -1,5 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-orders.js loaded");
+	
+	// --- CSRF TOKEN (Copied from other JS files) ---
+	const csrfHeaderEl = document.querySelector('meta[name="_csrf_header"]');
+	const csrfTokenEl = document.querySelector('meta[name="_csrf"]');
+	
+	const csrfHeader = csrfHeaderEl ? csrfHeaderEl.content : null;
+	const csrfToken = csrfTokenEl ? csrfTokenEl.content : null;
+	// --- END CSRF ---
 
 	const viewOrderModal = document.getElementById('viewOrderModal');
 	if (viewOrderModal) {
@@ -19,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		const paymentMethod = viewOrderModal.querySelector('#viewPaymentMethod');
 		const paymentStatus = viewOrderModal.querySelector('#viewPaymentStatus');
 		
-		// --- NEW: Transaction ID elements ---
 		const transactionIdContainer = viewOrderModal.querySelector('#viewTransactionIdContainer');
 		const transactionIdSpan = viewOrderModal.querySelector('#viewTransactionId');
 		
@@ -95,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				receiptContainer.style.display = 'none';
 			}
 			
-			// --- NEW: Handle Transaction ID ---
 			if (dataset.paymentMethod === 'GCASH' && dataset.transactionId && dataset.transactionId !== 'null') {
 				transactionIdSpan.textContent = dataset.transactionId;
 				transactionIdContainer.style.display = 'block';
@@ -108,15 +114,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			itemsList.innerHTML = ''; // Clear previous items
 			try {
 				let items = [];
-				// --- ***** THIS IS THE FIX ***** ---
 				if (dataset.itemsJson && dataset.itemsJson.startsWith('[')) {
-					// The data is now a valid JSON string, so we can parse it directly.
 					items = JSON.parse(dataset.itemsJson);
 				} else if (dataset.itemsJson) {
-					// Fallback just in case, but should not be used
 					items = [JSON.parse(dataset.itemsJson)];
 				}
-				// --- ***** END OF FIX ***** ---
 
 				if (items.length > 0) {
 					items.forEach(item => {
@@ -139,5 +141,213 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemsList.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error loading items.</td></tr>';
 			}
 		});
+	}
+	
+	const viewIssuesModal = document.getElementById('viewIssuesModal');
+	if (viewIssuesModal) {
+		const modalLabel = viewIssuesModal.querySelector('#viewIssuesModalLabel');
+		const modalBody = viewIssuesModal.querySelector('#viewIssuesModalBody');
+		const loadingSpinner = viewIssuesModal.querySelector('#viewIssuesLoadingSpinner');
+		const listContainer = viewIssuesModal.querySelector('#viewIssuesListContainer');
+
+		viewIssuesModal.addEventListener('show.bs.modal', async function(event) {
+			const button = event.relatedTarget;
+			const orderId = button.dataset.orderId;
+
+			if (!orderId) return;
+			
+			// 1. Reset modal state
+			modalLabel.textContent = `Issue Reports for Order #ORD-${orderId}`;
+			listContainer.innerHTML = '';
+			listContainer.dataset.orderId = orderId; // --- Store orderId for later ---
+			loadingSpinner.style.display = 'block';
+
+			// 2. Fetch data from API
+			try {
+				const response = await fetch(`/api/issues/order/${orderId}`);
+				if (!response.ok) {
+					let errorMsg = `Failed to fetch: ${response.statusText}`;
+					try {
+						const errData = await response.json();
+						errorMsg = errData.error || errorMsg;
+					} catch (e) {
+						const textData = await response.text();
+						if(textData.includes('<')) { 
+							errorMsg = "An unexpected server error occurred.";
+						} else {
+							errorMsg = textData;
+						}
+					}
+					throw new Error(errorMsg);
+				}
+				const reports = await response.json();
+				
+				// 3. Render data
+				renderIssueReports(reports, listContainer);
+
+			} catch (error) {
+				console.error("Error fetching issue reports:", error);
+				listContainer.innerHTML = `<div class="alert alert-danger">Could not load issue reports. ${error.message}</div>`;
+			} finally {
+				loadingSpinner.style.display = 'none';
+			}
+		});
+
+		// 4. Add event listener for "Resolve" button clicks
+		listContainer.addEventListener('click', async function(event) {
+			const resolveButton = event.target.closest('.btn-resolve-issue');
+			if (!resolveButton) return;
+
+			event.preventDefault();
+			const issueId = resolveButton.dataset.issueId;
+			const card = resolveButton.closest('.card');
+			const notesTextarea = card.querySelector('.admin-notes-textarea');
+			const adminNotes = notesTextarea.value;
+
+			resolveButton.disabled = true;
+			resolveButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Resolving...';
+
+			const headers = { 'Content-Type': 'application/json' };
+			if (csrfHeader && csrfToken) {
+				headers[csrfHeader] = csrfToken;
+			}
+			
+			try {
+				const response = await fetch(`/api/issues/resolve/${issueId}`, {
+					method: 'POST',
+					headers: headers,
+					body: JSON.stringify({ adminNotes: adminNotes })
+				});
+
+				const result = await response.json();
+
+				if (!response.ok) {
+					throw new Error(result.error || 'Failed to resolve issue.');
+				}
+
+				// Success: Update the UI for this specific card
+				const badge = card.querySelector('.status-badge');
+				if (badge) {
+					badge.classList.remove('status-cancelled');
+					badge.classList.add('status-active');
+					badge.textContent = 'Resolved';
+				}
+				card.querySelector('.card-header').classList.remove('bg-danger', 'text-white');
+				card.querySelector('.card-body').style.display = 'none'; // Hide body
+				card.querySelector('.card-footer').style.display = 'none'; // Hide footer
+				
+				// Add a "Resolved" message
+				const resolvedInfo = document.createElement('div');
+				resolvedInfo.className = 'card-body';
+				resolvedInfo.innerHTML = `
+					<p class="mb-1"><strong>Resolved by:</strong> ${result.resolvedByAdmin}</p>
+					<p class="mb-1"><strong>Resolved at:</strong> ${result.resolvedAt}</p>
+					<p class="mb-0"><strong>Admin Notes:</strong> ${result.adminNotes || 'N/A'}</p>
+				`;
+				card.appendChild(resolvedInfo);
+				
+				// Update the main page badge (find the button that opened the modal)
+				const orderId = card.closest('#viewIssuesListContainer').dataset.orderId;
+				const triggerButton = document.querySelector(`button[data-bs-target="#viewIssuesModal"][data-order-id="${orderId}"]`);
+				if(triggerButton) {
+					updateOpenIssueBadge(triggerButton);
+				}
+				
+
+			} catch (error) {
+				console.error("Error resolving issue:", error);
+				alert(`Error: ${error.message}`); // Simple alert for now
+				resolveButton.disabled = false;
+				resolveButton.innerHTML = '<i class="fa-solid fa-check me-1"></i> Mark as Resolved';
+			}
+		});
+	}
+	
+	function renderIssueReports(reports, container) {
+		if (!reports || reports.length === 0) {
+			container.innerHTML = '<div class="alert alert-success">No issues reported for this order.</div>';
+			return;
+		}
+
+		reports.forEach(report => {
+			const card = document.createElement('div');
+			card.className = 'card mb-3';
+			
+			const reportedAt = report.reportedAt; 
+			const statusText = report.open ? 'Open' : 'Resolved';
+			const statusClass = report.open ? 'status-cancelled' : 'status-active';
+			const headerClass = report.open ? 'bg-danger text-white' : '';
+
+			let detailsHtml = report.details ? `<p class="card-text">${report.details}</p>` : '<p class="card-text text-muted">No details provided.</p>';
+			
+			let attachmentHtml = '';
+			if (report.attachmentImageUrl) {
+				attachmentHtml = `
+					<div class="mt-3">
+						<strong>Attachment:</strong><br>
+						<a href="${report.attachmentImageUrl}" target="_blank">
+							<img src="${report.attachmentImageUrl}" alt="Attachment" style="max-width: 200px; max-height: 200px; object-fit: contain; border: 1px solid #ddd; border-radius: 4px; margin-top: 5px;">
+						</a>
+					</div>
+				`;
+			}
+			
+			let footerHtml = '';
+			if (report.open) {
+				footerHtml = `
+					<div class="card-footer">
+						<div class="mb-2">
+							<label for="adminNotes-${report.id}" class="form-label small"><strong>Resolution Notes (Optional):</strong></label>
+							<textarea class="form-control form-control-sm admin-notes-textarea" id="adminNotes-${report.id}" rows="2" placeholder="Add notes for the customer..."></textarea>
+						</div>
+						<button class="btn btn-sm btn-action-success btn-resolve-issue" data-issue-id="${report.id}">
+						<i class="fa-solid fa-check me-1"></i> Mark as Resolved
+						</button>
+					</div>
+				`;
+			} else {
+				// Show resolution info if closed
+				const resolvedAt = report.resolvedAt; 
+				footerHtml = `
+					<div class="card-footer bg-light">
+						<p class="small mb-1"><strong>Resolved by:</strong> ${report.resolvedByAdmin || 'N/A'}</p>
+						<p class="small mb-1"><strong>Resolved at:</strong> ${resolvedAt}</p>
+						<p class="small mb-0"><strong>Admin Notes:</strong> ${report.adminNotes || 'N/A'}</p>
+					</div>
+				`;
+			}
+
+			card.innerHTML = `
+				<div class="card-header d-flex justify-content-between align-items-center ${headerClass}">
+					<h6 class="mb-0">Report #${report.id}: ${report.summary}</h6>
+					<span class="status-badge ${statusClass}">${statusText}</span>
+				</div>
+				<div class="card-body" ${!report.open ? 'style="display: none;"' : ''}>
+					<p class="small text-muted mb-2">Reported by ${report.username} on ${reportedAt}</p>
+					${detailsHtml}
+					${attachmentHtml}
+				</div>
+				${footerHtml}
+			`;
+			container.appendChild(card);
+		});
+	}
+	
+	// Helper to update the badge on the main page after resolving an issue
+	function updateOpenIssueBadge(triggerButton) {
+		const badge = triggerButton.querySelector('.badge');
+		if (!badge) return; // No badge, nothing to do
+		
+		let count = parseInt(badge.textContent, 10);
+		if (count > 1) {
+			count--;
+			badge.textContent = count;
+			triggerButton.title = `View ${count} Open Issue(s)`;
+		} else {
+			// Last issue was resolved, remove badge and red outline
+			badge.remove();
+			triggerButton.classList.remove('btn-outline-danger');
+			triggerButton.title = 'View Issues';
+		}
 	}
 });

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="issue-report-modal">
+		<div class="modal fade" id="reportIssueModal" tabindex="-1" aria-labelledby="reportIssueModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form id="reportIssueForm" th:action="@{/u/history/report-issue}" method="post" enctype="multipart/form-data" th:object="${issueReportDto}">
+						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+						<input type="hidden" th:field="*{orderId}" id="reportIssueOrderId" />
+						
+						<div class="modal-header modal-header-public">
+							<h5 class="modal-title" id="reportIssueModalLabel">Report an Issue for Order #</h5>
+							<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						</div>
+						<div class="modal-body">
+							
+							<div class="mb-3">
+								<label for="reportIssueSummary" class="form-label">Summary</label>
+								<input type="text" class="form-control" th:field="*{summary}" id="reportIssueSummary" placeholder="e.g., Missing item, Wrong item" th:errorclass="is-invalid" required>
+								<div class="invalid-feedback" th:if="${#fields.hasErrors('summary')}" th:errors="*{summary}"></div>
+							</div>
+							
+							<div class="mb-3">
+								<label for="reportIssueDetails" class="form-label">Details</label>
+								<textarea class="form-control" th:field="*{details}" id="reportIssueDetails" rows="4" placeholder="Please provide more details about the problem... (optional)" th:errorclass="is-invalid"></textarea>
+								<div class="invalid-feedback" th:if="${#fields.hasErrors('details')}" th:errors="*{details}"></div>
+							</div>
+							
+							<div class="mb-3">
+								<label class="form-label">Attachment (Optional)</label>
+								<div class="image-uploader-container" id="reportIssueUploader">
+									<input type="file" name="attachmentFile" class="image-uploader-input" accept="image/png, image/jpeg, image/gif">
+									<div class="image-drop-zone">
+										<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+										<p class="mb-0 small">
+											<strong>Choose a file</strong> or drag it here.
+										</p>
+									</div>
+									<div class="image-preview-container">
+										<img src="" alt="Image Preview" class="image-preview">
+										<button type="button" class="btn btn-sm btn-danger image-remove-btn" title="Remove Image">
+											<i class="fa-solid fa-trash"></i>
+										</button>
+									</div>
+								</div>
+								<div class="form-text">You can attach a photo of the item or receipt (images only).</div>
+							</div>
+							</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-custom">Report Issue</button>
+							<button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+		<script th:inline="javascript">
+			document.addEventListener('DOMContentLoaded', function() {
+				const reportIssueModalEl = document.getElementById('reportIssueModal');
+				if (reportIssueModalEl) {
+					const reportIssueModal = new bootstrap.Modal(reportIssueModalEl);
+					const form = reportIssueModalEl.querySelector('#reportIssueForm');
+					const orderIdInput = reportIssueModalEl.querySelector('#reportIssueOrderId');
+					const modalLabel = reportIssueModalEl.querySelector('#reportIssueModalLabel');
+					
+					// --- START: NEW ---
+					// Initialize the image uploader
+					setupImageUploader('reportIssueUploader');
+					const uploader = document.getElementById('reportIssueUploader');
+					// --- END: NEW ---
+					
+					// Function to clear validation errors
+					const clearValidation = () => {
+						form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+						form.querySelectorAll('.invalid-feedback').forEach(el => {
+							if (el.getAttribute('th:if') === null) {
+								el.textContent = '';
+							}
+						});
+					};
+
+					// Listen for the 'show.bs.modal' event to populate the Order ID
+					reportIssueModalEl.addEventListener('show.bs.modal', function(event) {
+						const button = event.relatedTarget;
+						const orderId = button.dataset.orderId;
+						
+						if (orderId) {
+							orderIdInput.value = orderId;
+							modalLabel.textContent = 'Report an Issue for Order #ORD-' + orderId;
+						} else {
+							console.error("Could not find order ID for issue report modal.");
+						}
+
+						// Reset form and clear validation on every fresh open
+						// (unless it's a validation reopen)
+						const isValidationReopen = reportIssueModalEl.dataset.isValidationReopen === 'true';
+						if (!isValidationReopen) {
+							form.reset();
+							orderIdInput.value = orderId; // Re-set order ID after reset
+							clearValidation();
+							// --- START: NEW ---
+							if (uploader && typeof uploader.resetUploader === 'function') {
+								uploader.resetUploader();
+							}
+							// --- END: NEW ---
+						}
+					});
+
+					// Clear validation state on hide if it wasn't a validation reopen
+					reportIssueModalEl.addEventListener('hidden.bs.modal', function() {
+						const isValidationReopen = reportIssueModalEl.dataset.isValidationReopen === 'true';
+						if (isValidationReopen) {
+							// Clear the flag
+							reportIssueModalEl.removeAttribute('data-is-validation-reopen');
+						} else {
+							// Form was already reset on 'show', just ensure validation is clear
+							clearValidation();
+							// --- START: NEW ---
+							if (uploader && typeof uploader.resetUploader === 'function') {
+								uploader.resetUploader();
+							}
+							// --- END: NEW ---
+						}
+					});
+				}
+			});
+		</script>
+	</div>
+
+</body>
+</html>

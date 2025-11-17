@@ -11,6 +11,9 @@ public enum Permission {
 	DELETE_ADMINS("Delete Admins"),
 
 	VIEW_ORDERS("View Order Management"), EDIT_ORDERS("Update Order Status"),
+	
+	VIEW_ISSUE_REPORTS("View Customer-Reported Issues"),
+	RESOLVE_ISSUE_REPORTS("Resolve Customer-Reported Issues"), // --- NEW PERMISSION ---
 
 	VIEW_PRODUCTS("View Product Management"), ADD_PRODUCTS("Add Products"), EDIT_PRODUCTS("Edit Products"),
 	DELETE_PRODUCTS("Delete Products"), ADJUST_PRODUCT_STOCK("Adjust Product Stock (Production/Wastage)"),

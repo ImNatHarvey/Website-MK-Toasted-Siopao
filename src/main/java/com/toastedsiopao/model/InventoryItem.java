@@ -6,7 +6,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,11 +31,15 @@ public class InventoryItem {
 	@NotNull(message = "Category must be selected")
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private InventoryCategory category;
 
 	@NotNull(message = "Unit must be selected")
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "unit_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private UnitOfMeasure unit;
 
 	@NotNull(message = "Current stock cannot be null")

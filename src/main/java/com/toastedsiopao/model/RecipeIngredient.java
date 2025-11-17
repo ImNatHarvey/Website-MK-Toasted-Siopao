@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.math.BigDecimal;
 
@@ -21,11 +23,15 @@ public class RecipeIngredient {
 	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "product_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private Product product;
 
 	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "inventory_item_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private InventoryItem inventoryItem;
 
 	@NotNull(message = "Quantity needed cannot be null")

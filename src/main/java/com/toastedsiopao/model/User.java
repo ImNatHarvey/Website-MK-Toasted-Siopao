@@ -18,7 +18,9 @@ import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.time.LocalDateTime;
 import java.util.ArrayList; // --- IMPORT ADDED ---
@@ -47,6 +49,8 @@ public class User {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "role_id")
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private Role role;
 
 	// --- REMOVED: Individual permission overrides ---
@@ -59,6 +63,8 @@ public class User {
 	
 	// --- START: NEW RELATIONSHIP ---
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private List<IssueReport> issueReports = new ArrayList<>();
 	// --- END: NEW RELATIONSHIP ---
 

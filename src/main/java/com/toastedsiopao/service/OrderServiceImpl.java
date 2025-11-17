@@ -212,10 +212,23 @@ public class OrderServiceImpl implements OrderService {
 		return orderRepository.findById(id);
 	}
 
+	// --- START: MODIFIED FOR 2-STEP FETCH ---
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findOrdersByUser(User user, Pageable pageable) { 
-		return orderRepository.findByUserOrderByOrderDateDesc(user, pageable); 
+		Page<Long> orderIdPage = orderRepository.findIdsByUserOrderByOrderDateDesc(user, pageable);
+		List<Long> orderIds = orderIdPage.getContent();
+		
+		if (orderIds.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
+		}
+		
+		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
+		
+		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
+		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
+
+		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
 	}
 	
 	@Override
@@ -223,11 +236,25 @@ public class OrderServiceImpl implements OrderService {
 	public Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable) {
 		if (!StringUtils.hasText(status)) {
 			log.debug("Fetching all orders for user: {}", user.getUsername());
-			return orderRepository.findByUserOrderByOrderDateDesc(user, pageable);
+			return findOrdersByUser(user, pageable); // --- MODIFIED: Use the 2-step method ---
 		}
 		log.debug("Fetching orders for user: {} with status: {}", user.getUsername(), status);
-		return orderRepository.findByUserAndStatusOrderByOrderDateDesc(user, status.toUpperCase(), pageable);
+		
+		Page<Long> orderIdPage = orderRepository.findIdsByUserAndStatusOrderByOrderDateDesc(user, status.toUpperCase(), pageable);
+		List<Long> orderIds = orderIdPage.getContent();
+		
+		if (orderIds.isEmpty()) {
+			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
+		}
+		
+		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
+		
+		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
+		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
+
+		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
 	}
+	// --- END: MODIFIED FOR 2-STEP FETCH ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -671,7 +698,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getTotalPotentialRevenue() {
-		BigDecimal total = orderRepository.findTotalPotentialRevenue();
+		BigDecimal total = orderRepository.getTotalPotentialRevenue();
 		return total != null ? total : BigDecimal.ZERO;
 	}
 

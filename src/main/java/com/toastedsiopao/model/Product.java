@@ -7,7 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -43,9 +45,13 @@ public class Product {
 	@NotNull(message = "Product must belong to a category")
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private Category category;
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private List<RecipeIngredient> ingredients = new ArrayList<>();
 
 	@NotNull(message = "Current stock cannot be null")

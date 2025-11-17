@@ -18,24 +18,26 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-	// --- REMOVED: ADMIN_ORDER_JOINS ---
+	// --- START: MODIFIED CUSTOMER QUERIES (2-STEP FETCH) ---
 
-	@Query(value = "SELECT DISTINCT o FROM Order o "
-			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
-			+ "LEFT JOIN FETCH o.issueReports "
-			+ "WHERE o.user = :user ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
-	Page<Order> findByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
+	// 1. Find paginated IDs for a user
+	@Query(value = "SELECT o.id FROM Order o "
+			+ "WHERE o.user = :user ORDER BY o.orderDate DESC",
+			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
+	Page<Long> findIdsByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
 
-	@Query(value = "SELECT DISTINCT o FROM Order o "
-			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
-			+ "LEFT JOIN FETCH o.issueReports "
+	// 2. Find paginated IDs for a user AND status
+	@Query(value = "SELECT o.id FROM Order o "
 			+ "WHERE o.user = :user AND o.status = :status ORDER BY o.orderDate DESC",
 			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user AND o.status = :status")
-	Page<Order> findByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);
+	Page<Long> findIdsByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);
 
-	// --- START: MODIFIED METHODS FOR EFFICIENT PAGINATION ---
+	// --- END: MODIFIED CUSTOMER QUERIES ---
+
+
+	// --- START: MODIFIED METHODS FOR EFFICIENT PAGINATION (Admin) ---
 	
-	// 1. Find paginated IDs
+	// 1. Find paginated IDs (Admin)
 
 	@Query(value = "SELECT o.id FROM Order o WHERE "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
@@ -88,10 +90,14 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable);
 	
-	// 2. Find full details for the paginated IDs
+	// 2. Find full details for the paginated IDs (Used by ALL 2-step fetches)
 	
-	@Query("SELECT o FROM Order o LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p WHERE o.id IN :ids ORDER BY o.orderDate DESC")
-	@EntityGraph(attributePaths = {"items", "items.product"})
+	@Query("SELECT o FROM Order o "
+			+ "LEFT JOIN FETCH o.items oi "
+			+ "LEFT JOIN FETCH oi.product p "
+			+ "LEFT JOIN FETCH o.issueReports " // --- THIS IS THE FIX ---
+			+ "WHERE o.id IN :ids ORDER BY o.orderDate DESC")
+	@EntityGraph(attributePaths = {"items", "items.product", "issueReports"})
 	List<Order> findWithDetailsByIds(@Param("ids") List<Long> ids);
 
 	// --- END: MODIFIED METHODS ---
@@ -115,7 +121,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	long countTotalTransactionsAllTime();
 
 	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status IN ('PENDING', 'PENDING_VERIFICATION', 'PROCESSING', 'OUT_FOR_DELIVERY')")
-	BigDecimal findTotalPotentialRevenue();
+	BigDecimal getTotalPotentialRevenue();
 	
 	// --- START: MODIFIED COGS FETCH METHOD ---
 	@Query("SELECT DISTINCT o FROM Order o "

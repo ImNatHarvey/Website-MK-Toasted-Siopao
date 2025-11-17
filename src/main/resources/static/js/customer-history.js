@@ -86,13 +86,16 @@ document.addEventListener('DOMContentLoaded', function() {
 		let resolutionHtml = '';
 		if (!report.open) {
 			const resolvedAt = report.resolvedAt; 
+			const adminNotes = report.adminNotes ? report.adminNotes : 'No notes provided by admin.';
+			const resolvedBy = report.resolvedByAdmin ? `Resolved by ${report.resolvedByAdmin} on ${resolvedAt}` : `Resolved on ${resolvedAt}`;
+			
 			resolutionHtml = `
 				<hr>
 				<h6 class="mb-2">Admin Resolution</h6>
 				<div class="p-3 bg-light rounded" style="font-size: 0.9rem;">
-					<p class="mb-1 text-muted">${report.adminNotes || 'No notes provided by admin.'}</p>
+					<p class="mb-1 text-muted">${adminNotes}</p>
 					<p class="small text-muted mb-0">
-						Resolved by ${report.resolvedByAdmin || 'Admin'} on ${resolvedAt}
+						${resolvedBy}
 					</p>
 				</div>
 			`;

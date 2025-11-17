@@ -5,7 +5,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -21,11 +24,15 @@ public class IssueReport {
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id", nullable = false)
+    @EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+    @ToString.Exclude // --- THIS IS THE FIX ---
     private Order order;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+    @ToString.Exclude // --- THIS IS THE FIX ---
     private User user;
 
     @NotBlank(message = "Summary cannot be blank")
@@ -45,7 +52,6 @@ public class IssueReport {
     @Column(nullable = false, updatable = false)
     private LocalDateTime reportedAt;
     
-    // --- START: NEW FIELDS ---
     @Column(nullable = true)
     private LocalDateTime resolvedAt;
     
@@ -54,8 +60,7 @@ public class IssueReport {
     
     @Column(length = 1000)
     private String adminNotes; // Optional notes from the admin
-    // --- END: NEW FIELDS ---
-
+    
     @PrePersist
     protected void onCreate() {
         reportedAt = LocalDateTime.now();

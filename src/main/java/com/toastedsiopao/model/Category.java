@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ public class Category {
 
 	@OneToMany(mappedBy = "category", fetch = FetchType.LAZY) // --- REMOVED: cascade = CascadeType.ALL, orphanRemoval =
 																// true ---
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private List<Product> products = new ArrayList<>();
 
 	public Category(String name) {

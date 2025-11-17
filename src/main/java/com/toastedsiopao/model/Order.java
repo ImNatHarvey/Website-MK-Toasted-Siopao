@@ -2,14 +2,16 @@ package com.toastedsiopao.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet; // --- IMPORT ADDED ---
+import java.util.HashSet; 
 import java.util.List;
-import java.util.Set; // --- IMPORT ADDED ---
+import java.util.Set; 
 
 @Entity
 @Table(name = "orders") 
@@ -41,6 +43,8 @@ public class Order {
 
 	@ManyToOne(fetch = FetchType.LAZY) 
 	@JoinColumn(name = "user_id", nullable = false)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private User user;
 
 	@Column(nullable = false, updatable = false)
@@ -61,11 +65,9 @@ public class Order {
 	@Column(length = 20)
 	private String shippingPhone;
 	
-	// --- THIS IS THE FIX ---
 	@Column(length = 100)
 	private String shippingEmail;
-	// --- END FIX ---
-
+	
 	@Column(length = 255)
 	private String shippingAddress;
 
@@ -76,37 +78,35 @@ public class Order {
 	private String paymentStatus; 
 	
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private List<OrderItem> items = new ArrayList<>();
 	
-	// --- START: MODIFICATION (List -> Set) ---
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private Set<IssueReport> issueReports = new HashSet<>();
-	// --- END: MODIFICATION ---
-
+	
 	private LocalDateTime lastUpdated;
 	
 	@Column(length = 255)
 	private String paymentReceiptImageUrl;
 	
-	// --- ADDED: Notes field from DTO ---
 	@Column(length = 500)
 	private String notes;
-	// --- END ADDED ---
 	
-	// --- ADDED: GCash Transaction ID field ---
 	@Column(length = 255)
 	private String transactionId;
-	// --- END ADDED ---
-
+	
 	@PrePersist
 	protected void onCreate() {
 		orderDate = LocalDateTime.now();
 		lastUpdated = LocalDateTime.now();
 		if (status == null) {
-			status = STATUS_PENDING; // --- MODIFIED ---
+			status = STATUS_PENDING; 
 		}
 		if (paymentStatus == null) {
-			paymentStatus = PAYMENT_PENDING; // --- MODIFIED ---
+			paymentStatus = PAYMENT_PENDING; 
 		}
 	}
 

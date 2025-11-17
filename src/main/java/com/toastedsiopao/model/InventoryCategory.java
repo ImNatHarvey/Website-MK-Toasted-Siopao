@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // IMPORT ADDED
 import lombok.NoArgsConstructor;
+import lombok.ToString; // IMPORT ADDED
+
 import java.util.List;
 
 @Entity
@@ -23,6 +26,8 @@ public class InventoryCategory {
 	private String name;
 
 	@OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
+	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
+	@ToString.Exclude // --- THIS IS THE FIX ---
 	private List<InventoryItem> items;
 
 	public InventoryCategory(String name) {

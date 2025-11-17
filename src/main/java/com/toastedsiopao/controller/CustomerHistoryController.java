@@ -195,10 +195,10 @@ public class CustomerHistoryController {
 			ByteArrayInputStream bis = reportService.generateInvoicePdf(orderOpt.get());
 
 			HttpHeaders headers = new HttpHeaders();
-			String fileName = "Invoice_ORD-" + orderId + ".pdf";
-			
-			// inline = view in browser, attachment = download directly
-			headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + fileName);
+			// --- MODIFIED: Standardized filename and disposition ---
+			String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
+			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+			// --- END MODIFICATION ---
 
 			return ResponseEntity
 					.ok()

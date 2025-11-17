@@ -53,7 +53,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Financial_Report_" + timestamp + ".xlsx";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Financial-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
@@ -87,7 +88,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Financial_Report_" + timestamp + ".pdf";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Financial-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName); // Download directly
 
@@ -119,7 +121,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Inventory_Report_" + timestamp + ".xlsx";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Inventory-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
@@ -151,7 +154,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Inventory_Report_" + timestamp + ".pdf";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Inventory-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
@@ -183,7 +187,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Product_Report_" + timestamp + ".xlsx";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Product-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
@@ -215,7 +220,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Product_Report_" + timestamp + ".pdf";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Product-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
@@ -251,9 +257,10 @@ public class AdminReportController {
 			// --- END: MODIFIED CODE ---
 
             HttpHeaders headers = new HttpHeaders();
-            String fileName = "Invoice_ORD-" + orderId + ".pdf";
-            
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=" + fileName);
+            // --- MODIFIED: Standardized filename and disposition ---
+            String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+            // --- END MODIFICATION ---
 
             return ResponseEntity
                     .ok()
@@ -287,7 +294,8 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String fileName = "Activity_Log_Page-" + (page + 1) + "_" + timestamp + ".pdf";
+            // --- MODIFIED: Standardized filename ---
+            String fileName = "MK-Toasted-Siopao_Activity-Log_Page-" + (page + 1) + "_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 

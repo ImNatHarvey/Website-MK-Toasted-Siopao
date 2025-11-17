@@ -14,6 +14,8 @@ import java.util.Map;
 public interface IssueReportRepository extends JpaRepository<IssueReport, Long> {
 
     List<IssueReport> findByOrder(Order order);
+    
+    boolean existsByOrder(Order order); // --- ADDED ---
 
     List<IssueReport> findByOrderAndIsOpenTrue(Order order);
 

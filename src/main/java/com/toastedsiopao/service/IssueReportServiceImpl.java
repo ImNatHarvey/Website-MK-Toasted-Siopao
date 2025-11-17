@@ -10,6 +10,7 @@ import com.toastedsiopao.repository.OrderRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException; 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils; 
@@ -57,6 +58,22 @@ public class IssueReportServiceImpl implements IssueReportService {
                     user.getUsername(), order.getId());
             throw new IllegalArgumentException("You can only report issues for your own orders.");
         }
+        
+        // --- START: MODIFICATION ---
+        // NEW CHECK 1: Order Status
+        if (!Order.STATUS_DELIVERED.equals(order.getStatus())) {
+            log.warn("User {} attempted to report issue for order #{} which is not DELIVERED. Status: {}",
+                    user.getUsername(), order.getId(), order.getStatus());
+            throw new IllegalArgumentException("You can only report issues for delivered orders.");
+        }
+
+        // NEW CHECK 2: One report per order
+        if (issueReportRepository.existsByOrder(order)) {
+            log.warn("User {} attempted to file a second issue report for order #{}. Blocked.",
+                    user.getUsername(), order.getId());
+            throw new IllegalArgumentException("An issue report has already been submitted for this order.");
+        }
+        // --- END: MODIFICATION ---
 
         String attachmentImagePath = null;
         if (attachmentFile != null && !attachmentFile.isEmpty()) {
@@ -77,6 +94,10 @@ public class IssueReportServiceImpl implements IssueReportService {
                 reportDto.getDetails(),
                 attachmentImagePath
         );
+        
+        // --- FIX: Manually update the collection on the parent side ---
+        order.getIssueReports().add(newReport);
+        // --- END FIX ---
 
         IssueReport savedReport = issueReportRepository.save(newReport);
         log.info("User {} filed new issue report #{} for Order #{}", user.getUsername(), savedReport.getId(), order.getId());
@@ -110,6 +131,14 @@ public class IssueReportServiceImpl implements IssueReportService {
     }
     
     @Override
+    @Transactional(readOnly = true)
+    public boolean doesReportExistForOrder(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found."));
+        return issueReportRepository.existsByOrder(order);
+    }
+    
+    @Override
     public IssueReportResponseDto resolveIssueReport(Long issueId, User admin, String adminNotes) { // --- MODIFIED ---
         IssueReport report = issueReportRepository.findById(issueId)
                 .orElseThrow(() -> new IllegalArgumentException("Issue report #" + issueId + " not found."));
@@ -136,7 +165,26 @@ public class IssueReportServiceImpl implements IssueReportService {
         return convertToDto(savedReport); // --- MODIFIED ---
     }
     
-    // --- START: NEW HELPER METHOD ---
+    // --- START: NEW METHOD ---
+    @Override
+    @Transactional(readOnly = true)
+	public IssueReportResponseDto getCustomerReportForOrder(User user, Long orderId) {
+		List<IssueReport> reports = issueReportRepository.findByOrderId(orderId);
+		if (reports.isEmpty()) {
+			throw new IllegalArgumentException("No issue report found for this order.");
+		}
+		
+		IssueReport report = reports.get(0); // We assume one report per order
+		
+		// Security Check
+		if (!report.getUser().getId().equals(user.getId())) {
+			throw new AccessDeniedException("You do not have permission to view this report.");
+		}
+		
+		return convertToDto(report);
+	}
+    // --- END: NEW METHOD ---
+    
     /**
      * Converts an IssueReport entity to a safe DTO for JSON serialization.
      * This prevents lazy-loading exceptions.
@@ -166,5 +214,4 @@ public class IssueReportServiceImpl implements IssueReportService {
 
         return dto;
     }
-    // --- END: NEW HELPER METHOD ---
 }

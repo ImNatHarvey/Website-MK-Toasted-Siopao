@@ -7,7 +7,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet; // --- IMPORT ADDED ---
 import java.util.List;
+import java.util.Set; // --- IMPORT ADDED ---
 
 @Entity
 @Table(name = "orders") 
@@ -76,10 +78,10 @@ public class Order {
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
 	private List<OrderItem> items = new ArrayList<>();
 	
-	// --- START: NEW RELATIONSHIP ---
+	// --- START: MODIFICATION (List -> Set) ---
 	@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	private List<IssueReport> issueReports = new ArrayList<>();
-	// --- END: NEW RELATIONSHIP ---
+	private Set<IssueReport> issueReports = new HashSet<>();
+	// --- END: MODIFICATION ---
 
 	private LocalDateTime lastUpdated;
 	

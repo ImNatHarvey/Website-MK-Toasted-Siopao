@@ -22,11 +22,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
 	@Query(value = "SELECT DISTINCT o FROM Order o "
 			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
+			+ "LEFT JOIN FETCH o.issueReports "
 			+ "WHERE o.user = :user ORDER BY o.orderDate DESC", countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
 	Page<Order> findByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
 
 	@Query(value = "SELECT DISTINCT o FROM Order o "
 			+ "LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p "
+			+ "LEFT JOIN FETCH o.issueReports "
 			+ "WHERE o.user = :user AND o.status = :status ORDER BY o.orderDate DESC",
 			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user AND o.status = :status")
 	Page<Order> findByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);

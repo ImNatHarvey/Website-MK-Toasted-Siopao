@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException; 
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -66,4 +67,32 @@ public class IssueReportController {
             return ResponseEntity.internalServerError().body(Map.of("error", "An unexpected error occurred."));
         }
     }
+    
+    // --- START: NEW ENDPOINT ---
+    @GetMapping("/my-report/order/{orderId}")
+    @PreAuthorize("hasRole('CUSTOMER')")
+    public ResponseEntity<?> getMyIssueReportForOrder(@PathVariable Long orderId, Principal principal) {
+        
+        User user = customerService.findByUsername(principal.getName());
+        if (user == null) {
+            return ResponseEntity.status(401).build(); // Unauthorized
+        }
+
+        log.info("Customer {} fetching their issue report for Order ID: {}", user.getUsername(), orderId);
+        
+        try {
+            IssueReportResponseDto reportDto = issueReportService.getCustomerReportForOrder(user, orderId);
+            return ResponseEntity.ok(reportDto);
+        } catch (IllegalArgumentException e) {
+            log.warn("Failed to fetch issue report for order #{} by {}: {}", orderId, user.getUsername(), e.getMessage());
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        } catch (AccessDeniedException e) {
+			log.warn("SECURITY: User {} tried to access report for order #{} which is not theirs.", user.getUsername(), orderId);
+			return ResponseEntity.status(403).body(Map.of("error", "Access Denied."));
+		} catch (Exception e) {
+            log.error("Error fetching issue report for order #{}: {}", orderId, e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "An unexpected error occurred."));
+        }
+    }
+    // --- END: NEW ENDPOINT ---
 }

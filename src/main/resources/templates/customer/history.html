@@ -85,10 +85,18 @@
 								<i class="fa-solid fa-print me-1"></i> View Receipt
 							</a>
 							
-							<button type="button" class="btn btn-sm btn-action-edit"
-								data-bs-toggle="modal" data-bs-target="#reportIssueModal"
-								th:data-order-id="${order.id}">
+							<button th:if="${order.status == 'DELIVERED' AND #lists.isEmpty(order.issueReports)}"
+									type="button" class="btn btn-sm btn-action-edit"
+									data-bs-toggle="modal" data-bs-target="#reportIssueModal"
+									th:data-order-id="${order.id}">
 								<i class="fa-solid fa-flag me-1"></i> Report an Issue
+							</button>
+							
+							<button th:if="${order.status == 'DELIVERED' AND !#lists.isEmpty(order.issueReports)}"
+									type="button" class="btn btn-sm btn-outline-info view-issue-report-btn"
+									data-bs-toggle="modal" data-bs-target="#viewIssueReportModal"
+									th:data-order-id="${order.id}">
+								<i class="fa-solid fa-eye me-1"></i> View Issue Report
 							</button>
 							<form
 								th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
@@ -129,7 +137,8 @@
 									th:text="${#strings.toUpperCase(order.paymentMethod)}">GCASH</p>
 							</div>
 						</div>
-					</div>
+						
+						</div>
 				</div>
 
 			</div>
@@ -192,7 +201,9 @@
 					}
 				});
 			</script>
-		</th:block>
+			
+			<script th:src="@{/js/customer-history.js}"></script>
+			</th:block>
 		</main>
 </body>
 </html>

@@ -48,4 +48,25 @@ public interface IssueReportService {
      * @throws IllegalArgumentException if the issue is already resolved or not found.
      */
     IssueReportResponseDto resolveIssueReport(Long issueId, User admin, String adminNotes); // --- MODIFIED ---
+
+    /**
+     * Checks if an issue report already exists for a given order.
+     *
+     * @param orderId The ID of the order.
+     * @return true if a report exists, false otherwise.
+     */
+    boolean doesReportExistForOrder(Long orderId);
+    
+    // --- START: NEW METHOD ---
+    /**
+     * Gets a single issue report for an order, but only if it belongs to the specified user.
+     *
+     * @param user The customer requesting the report.
+     * @param orderId The ID of the order the report is for.
+     * @return The IssueReportResponseDto.
+     * @throws IllegalArgumentException if no report is found.
+     * @throws AccessDeniedException if the report does not belong to the user.
+     */
+    IssueReportResponseDto getCustomerReportForOrder(User user, Long orderId);
+    // --- END: NEW METHOD ---
 }

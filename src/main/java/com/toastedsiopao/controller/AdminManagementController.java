@@ -10,7 +10,7 @@ import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.CustomerService;
-import jakarta.servlet.http.HttpServletRequest; // IMPORT ADDED
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,11 +19,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken; // IMPORT ADDED
-import org.springframework.security.core.context.SecurityContextHolder; // IMPORT ADDED
-import org.springframework.security.core.userdetails.UserDetails; // IMPORT ADDED
-import org.springframework.security.core.userdetails.UserDetailsService; // IMPORT ADDED
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource; // IMPORT ADDED
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService; 
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -35,7 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors; // IMPORTED
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/admins")
@@ -52,7 +52,6 @@ public class AdminManagementController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	// IMPORT ADDED
 	@Autowired
 	private UserDetailsService userDetailsService;
 
@@ -80,7 +79,7 @@ public class AdminManagementController {
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("totalItems", adminPage.getTotalElements());
 		model.addAttribute("activeAdminCount", adminService.countActiveAdmins());
-		model.addAttribute("inactiveAdminCount", adminService.countInactiveAdmins()); // --- ADDED ---
+		model.addAttribute("inactiveAdminCount", adminService.countInactiveAdmins());
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", adminPage.getTotalPages());
@@ -96,14 +95,12 @@ public class AdminManagementController {
 			model.addAttribute("adminUpdateDto", new AdminUpdateDto());
 		}
 
-		// --- ADDED FOR NEW ROLE MODALS ---
 		if (!model.containsAttribute("roleDto")) {
 			model.addAttribute("roleDto", new RoleDto());
 		}
 		if (!model.containsAttribute("roleUpdateDto")) {
 			model.addAttribute("roleUpdateDto", new RoleDto());
 		}
-		// --- END ADDED ---
 
 		if (!model.containsAttribute("adminProfileDto")) {
 			User currentUser = customerService.findByUsername(principal.getName());
@@ -118,17 +115,15 @@ public class AdminManagementController {
 			model.addAttribute("adminProfileDto", profileDto);
 		}
 
-		// --- ADDED FOR PASSWORD MODAL ---
 		if (!model.containsAttribute("adminPasswordDto")) {
 			model.addAttribute("adminPasswordDto", new AdminPasswordUpdateDto());
 		}
-		// --- END ADDED ---
 
 		return "admin/admins";
 	}
 
 	@PostMapping("/add")
-	@PreAuthorize("hasAuthority('ADD_ADMINS')") // --- UPDATED ---
+	@PreAuthorize("hasAuthority('ADD_ADMINS')")
 	public String addAdmin(@Valid @ModelAttribute("adminAccountCreateDto") AdminAccountCreateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
@@ -139,7 +134,6 @@ public class AdminManagementController {
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Admin creation validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
 					result);
@@ -160,7 +154,6 @@ public class AdminManagementController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating admin user: {}", e.getMessage());
 
-			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "adminAccountCreateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists")) {
@@ -171,7 +164,6 @@ public class AdminManagementController {
 				result.rejectValue("roleName", "adminAccountCreateDto.roleName", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error creating admin: " + e.getMessage());
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminAccountCreateDto",
 					result);
@@ -185,17 +177,15 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/update")
-	@PreAuthorize("hasAuthority('EDIT_ADMINS')") // --- UPDATED ---
+	@PreAuthorize("hasAuthority('EDIT_ADMINS')")
 	public String updateAdmin(@Valid @ModelAttribute("adminUpdateDto") AdminUpdateDto adminDto, BindingResult result,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Admin update validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", adminDto);
@@ -215,18 +205,16 @@ public class AdminManagementController {
 		} catch (RuntimeException e) {
 			log.warn("Validation error updating admin: {}", e.getMessage());
 
-			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminUpdateDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
-			} else if (e.getMessage().contains("status")) { // --- ADDED ---
+			} else if (e.getMessage().contains("status")) { 
 				result.rejectValue("status", "adminUpdateDto.status", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating admin: " + e.getMessage());
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminUpdateDto", result);
 			redirectAttributes.addFlashAttribute("adminUpdateDto", adminDto);
@@ -242,15 +230,13 @@ public class AdminManagementController {
 	@PreAuthorize("isAuthenticated()")
 	public String updateAdminProfile(@Valid @ModelAttribute("adminProfileDto") AdminProfileUpdateDto adminDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder, HttpServletRequest request) { // MODIFIED SIGNATURE
+			UriComponentsBuilder uriBuilder, HttpServletRequest request) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Admin profile update validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
 					result);
@@ -270,19 +256,12 @@ public class AdminManagementController {
 		try {
 			User updatedUser = adminService.updateAdminProfile(adminDto);
 
-			// --- CODE BLOCK TO REFRESH SESSION ---
-			// Manually update the security principal so the navbar reflects the change
 			UserDetails userDetails = userDetailsService.loadUserByUsername(updatedUser.getUsername());
-			UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null, // Credentials
-																														// are
-																														// not
-																														// needed
-																														// post-auth
+			UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
 					userDetails.getAuthorities());
 			newAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 			SecurityContextHolder.getContext().setAuthentication(newAuth);
 			log.info("Updated security context for user: {}", updatedUser.getUsername());
-			// --- END OF BLOCK ---
 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE",
 					"Updated own profile: " + updatedUser.getUsername());
@@ -291,14 +270,12 @@ public class AdminManagementController {
 		} catch (RuntimeException e) {
 			log.warn("Validation error updating own profile: {}", e.getMessage());
 
-			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "adminProfileDto.username", e.getMessage());
 			} else if (e.getMessage().contains("Email already exists") || e.getMessage().contains("Email '")) {
 				result.rejectValue("email", "adminProfileDto.email", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating profile: " + e.getMessage());
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.adminProfileDto",
 					result);
@@ -311,7 +288,6 @@ public class AdminManagementController {
 		return "redirect:/admin/admins";
 	}
 
-	// --- ADDED ---
 	@PostMapping("/profile/update-password")
 	@PreAuthorize("isAuthenticated()")
 	public String updateAdminPassword(@Valid @ModelAttribute("adminPasswordDto") AdminPasswordUpdateDto passwordDto,
@@ -334,8 +310,7 @@ public class AdminManagementController {
 					"Updated own admin password.");
 			redirectAttributes.addFlashAttribute("adminSuccess", "Your password has been changed successfully!");
 		} catch (IllegalArgumentException e) {
-			redirectAttributes.addFlashAttribute("adminPasswordDto", new AdminPasswordUpdateDto()); // Clear fields on
-																									// error
+			redirectAttributes.addFlashAttribute("adminPasswordDto", new AdminPasswordUpdateDto());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/admins").queryParam("showModal", "changePasswordModal").build()
 					.toUriString();
@@ -344,20 +319,17 @@ public class AdminManagementController {
 
 		return "redirect:/admin/admins";
 	}
-	// --- END ADDED ---
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_ADMINS')") // --- UPDATED ---
+	@PreAuthorize("hasAuthority('DELETE_ADMINS')") 
 	public String deleteAdmin(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			@RequestParam(value = "password", required = false) String password, 
 			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- MODIFICATION: Added password validation ---
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
 			return "redirect:/admin/admins";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<User> userOpt = adminService.findUserById(id);
 		if (userOpt.isEmpty()) {
@@ -370,8 +342,6 @@ public class AdminManagementController {
 			return "redirect:/admin/admins";
 		}
 
-		// Let the service throw an exception if deletion fails
-		// The GlobalExceptionHandler will catch it.
 		adminService.deleteAdminById(id);
 
 		activityLogService.logAdminAction(principal.getName(), "DELETE_ADMIN",

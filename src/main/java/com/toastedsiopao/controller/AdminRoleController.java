@@ -15,13 +15,13 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
+import org.springframework.web.bind.annotation.RequestParam; 
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.Optional;
-import java.util.stream.Collectors; // IMPORTED
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/admins/roles")
@@ -41,12 +41,10 @@ public class AdminRoleController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Role creation validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleDto", result);
 			redirectAttributes.addFlashAttribute("roleDto", roleDto);
@@ -65,12 +63,10 @@ public class AdminRoleController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating role: {}", e.getMessage());
 
-			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Role name")) {
 				result.rejectValue("name", "roleDto.name", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error creating role: " + e.getMessage());
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleDto", result);
 			redirectAttributes.addFlashAttribute("roleDto", roleDto);
@@ -86,12 +82,10 @@ public class AdminRoleController {
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Role update validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleUpdateDto", result);
 			redirectAttributes.addFlashAttribute("roleUpdateDto", roleDto);
@@ -110,12 +104,10 @@ public class AdminRoleController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating role: {}", e.getMessage());
 
-			// --- MODIFIED: Re-added rejectValue AND kept globalError ---
 			if (e.getMessage().contains("Role name")) {
 				result.rejectValue("name", "roleUpdateDto.name", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating role: " + e.getMessage());
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.roleUpdateDto", result);
 			redirectAttributes.addFlashAttribute("roleUpdateDto", roleDto);
@@ -128,15 +120,13 @@ public class AdminRoleController {
 
 	@PostMapping("/delete/{id}")
 	public String deleteRole(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			@RequestParam(value = "password", required = false) String password, 
 			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- MODIFICATION: Added password validation ---
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
 			return "redirect:/admin/admins";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<Role> roleOpt = adminService.findRoleById(id);
 		if (roleOpt.isEmpty()) {
@@ -145,8 +135,6 @@ public class AdminRoleController {
 		}
 		String roleName = roleOpt.get().getName();
 
-		// Let the service throw an exception if deletion fails
-		// The GlobalExceptionHandler will catch it.
 		adminService.deleteRole(id);
 
 		activityLogService.logAdminAction(principal.getName(), "DELETE_ROLE",

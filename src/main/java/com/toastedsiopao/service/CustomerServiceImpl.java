@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
-import java.util.Map; // --- ADDED ---
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -19,22 +19,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference; // --- ADDED ---
-import com.fasterxml.jackson.databind.ObjectMapper; // --- ADDED ---
+import com.fasterxml.jackson.core.type.TypeReference; 
+import com.fasterxml.jackson.databind.ObjectMapper; 
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerPasswordDto;
 import com.toastedsiopao.dto.CustomerProfileDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.dto.PasswordResetDto;
-import com.toastedsiopao.model.CartItem; // --- ADDED ---
+import com.toastedsiopao.model.CartItem;
 import com.toastedsiopao.model.Order;
-import com.toastedsiopao.model.Product; // --- ADDED ---
+import com.toastedsiopao.model.Product; 
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.CartItemRepository; // --- ADDED ---
+import com.toastedsiopao.repository.CartItemRepository; 
 import com.toastedsiopao.repository.OrderRepository;
-import com.toastedsiopao.repository.ProductRepository; // --- ADDED ---
+import com.toastedsiopao.repository.ProductRepository; 
 import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
 
@@ -78,23 +78,19 @@ public class CustomerServiceImpl implements CustomerService {
 	@Autowired
 	private CartItemRepository cartItemRepository;
 	
-	// Copied from OrderServiceImpl/CartServiceImpl to parse cart JSON
 	private static class CartItemDto {
 		public String name;
 		public double price;
 		public String image;
 		public int quantity;
 	}
-	// --- END ADDED ---
 
 	private void validatePasswordConfirmation(String password, String confirmPassword) {
 		if (!password.equals(confirmPassword)) {
 			throw new IllegalArgumentException("Passwords do not match");
 		}
 	}
-	// ... (existing methods saveCustomer, createCustomerFromAdmin, etc. are
-	// unchanged) ...
-
+	
 	@Override
 	public User saveCustomer(CustomerSignUpDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
@@ -121,9 +117,8 @@ public class CustomerServiceImpl implements CustomerService {
 		newUser.setMunicipality(userDto.getMunicipality());
 		newUser.setProvince(userDto.getProvince());
 
-		User savedUser = userRepository.save(newUser); // --- MODIFIED: Save first ---
+		User savedUser = userRepository.save(newUser);
 
-		// --- ADDED: Guest Cart Migration Logic ---
 		if (StringUtils.hasText(userDto.getCartDataJson())) {
 			log.info("Migrating guest cart for new user: {}", savedUser.getUsername());
 			try {
@@ -139,7 +134,6 @@ public class CustomerServiceImpl implements CustomerService {
 						if (productOpt.isPresent() && quantity > 0) {
 							Product product = productOpt.get();
 							if ("ACTIVE".equals(product.getProductStatus()) && product.getCurrentStock() >= quantity) {
-								// Check if this item already exists (shouldn't for a new user, but good practice)
 								Optional<CartItem> existingItemOpt = cartItemRepository.findByUserAndProduct(savedUser, product);
 								if (existingItemOpt.isEmpty()) {
 									CartItem newCartItem = new CartItem(savedUser, product, quantity);
@@ -154,12 +148,10 @@ public class CustomerServiceImpl implements CustomerService {
 				}
 			} catch (Exception e) {
 				log.error("Failed to migrate guest cart for user {}: {}", savedUser.getUsername(), e.getMessage(), e);
-				// Do not throw an exception here, signup should still succeed.
 			}
 		}
-		// --- END ADDED ---
 		
-		return savedUser; // --- MODIFIED: Return the saved user ---
+		return savedUser; 
 	}
 
 	@Override
@@ -248,7 +240,6 @@ public class CustomerServiceImpl implements CustomerService {
 	@Override
 	public void deleteCustomerById(Long id) {
 
-		// --- MODIFIED: Removed manual pre-check ---
 		User user = userRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
@@ -256,8 +247,6 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new RuntimeException("Cannot delete non-customer user with this method.");
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist
-		// (e.g., in Order)
 		userRepository.deleteById(id);
 	}
 
@@ -353,22 +342,19 @@ public class CustomerServiceImpl implements CustomerService {
 		Optional<User> userOpt = userRepository.findByEmail(email);
 
 		if (userOpt.isEmpty()) {
-			// DO NOT throw an error. This prevents attackers from "enumerating" valid
-			// emails.
 			log.warn("Password reset request for non-existent email: {}", email);
-			return; // Silently return
+			return;
 		}
 
 		User user = userOpt.get();
 		String token = UUID.randomUUID().toString();
 
 		user.setResetPasswordToken(token);
-		user.setResetPasswordTokenExpiry(LocalDateTime.now(clock).plusHours(1)); // 1 hour expiry
+		user.setResetPasswordTokenExpiry(LocalDateTime.now(clock).plusHours(1)); 
 		userRepository.save(user);
 
 		String resetUrl = resetUrlBase + "/reset-password?token=" + token;
 
-		// This method is @Async and can throw MessagingException
 		emailService.sendPasswordResetEmail(user, token, resetUrl);
 	}
 
@@ -408,7 +394,6 @@ public class CustomerServiceImpl implements CustomerService {
 
 		user.setPassword(passwordEncoder.encode(resetDto.getPassword()));
 
-		// Invalidate the token
 		user.setResetPasswordToken(null);
 		user.setResetPasswordTokenExpiry(null);
 
@@ -416,7 +401,6 @@ public class CustomerServiceImpl implements CustomerService {
 		log.info("Password successfully reset for user {}", user.getUsername());
 	}
 
-	// --- ADDED IMPLEMENTATIONS ---
 	@Override
 	public void updateCustomerProfile(String currentUsername, CustomerProfileDto profileDto) {
 		User userToUpdate = userRepository.findByUsername(currentUsername)
@@ -447,18 +431,14 @@ public class CustomerServiceImpl implements CustomerService {
 		User userToUpdate = userRepository.findByUsername(currentUsername)
 				.orElseThrow(() -> new RuntimeException("Current user not found."));
 
-		// 1. Check if current password matches
 		if (!passwordEncoder.matches(passwordDto.getCurrentPassword(), userToUpdate.getPassword())) {
 			throw new IllegalArgumentException("Current password does not match.");
 		}
 
-		// 2. Check if new passwords match
 		validatePasswordConfirmation(passwordDto.getNewPassword(), passwordDto.getConfirmPassword());
 
-		// 3. Update password
 		userToUpdate.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
 		userRepository.save(userToUpdate);
 		log.info("User password updated for: {}", currentUsername);
 	}
-	// --- END ADDED IMPLEMENTATIONS ---
 }

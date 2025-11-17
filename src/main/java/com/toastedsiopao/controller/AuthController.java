@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.util.StringUtils; // --- THIS IS THE FIX ---
+import org.springframework.util.StringUtils; 
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.PasswordResetDto; 
@@ -78,7 +78,6 @@ public class AuthController {
 			
 			String redirectUrl = "/login";
 			if ("checkout".equals(source)) {
-				// Add a parameter to the login redirect, so the success handler knows where to send them.
 				redirectUrl = "/login?source=checkout"; 
 				log.info("Signup from checkout successful. Redirecting to login with source=checkout.");
 			}
@@ -116,19 +115,14 @@ public class AuthController {
 			RedirectAttributes redirectAttributes) {
 
 		try {
-			// 1. Get the base URL (e.g., "http://localhost:8080")
 			String baseUrl = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
 
-			// 2. Call service to find user, generate token, and send email
 			customerService.processPasswordForgotRequest(email, baseUrl);
 
-			// 3. Set a generic success message (for security, don't confirm if email
-			// exists)
 			redirectAttributes.addFlashAttribute("successMessage",
 					"If an account with that email exists, a password reset link has been sent.");
 
 		} catch (Exception e) {
-			// This is likely a mail server error (e.g., bad credentials, server down)
 			log.error("Error processing password reset for email {}: {}", email, e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("errorMessage",
 					"Error sending reset email. Please try again later or contact support.");
@@ -159,10 +153,9 @@ public class AuthController {
 	public String processResetPassword(@Valid @ModelAttribute("passwordResetDto") PasswordResetDto passwordResetDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Model model) {
 
-		// DTO-level validation (e.g., blank fields)
 		if (result.hasErrors()) {
 			model.addAttribute("passwordResetDto", passwordResetDto);
-			return "reset-password"; // Return to page to show @NotBlank errors
+			return "reset-password"; 
 		}
 
 		try {
@@ -173,22 +166,16 @@ public class AuthController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Password reset failed: {}", e.getMessage());
-			// Service-level validation (e.g., passwords don't match, token invalid)
-
-			// --- MODIFIED: Pass DTO back to model to show errors ---
 			result.reject("global", e.getMessage());
 			model.addAttribute("passwordResetDto", passwordResetDto);
 			model.addAttribute("errorMessage", e.getMessage()); // Also add as a general error
 			return "reset-password";
-			// --- END MODIFIED ---
 
 		} catch (Exception e) {
 			log.error("Unexpected error during password reset: {}", e.getMessage(), e);
-			// --- MODIFIED: Pass DTO back to model to show errors ---
 			model.addAttribute("passwordResetDto", passwordResetDto);
 			model.addAttribute("errorMessage", "An unexpected error occurred. Please try again.");
 			return "reset-password";
-			// --- END MODIFIED ---
 		}
 	}
 }

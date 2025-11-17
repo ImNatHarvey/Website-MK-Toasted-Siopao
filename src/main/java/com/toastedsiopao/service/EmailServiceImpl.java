@@ -27,32 +27,26 @@ public class EmailServiceImpl implements EmailService {
 	private JavaMailSender mailSender;
 
 	@Autowired
-	@Qualifier("emailTemplateEngine") // Use the specific template engine we'll create
+	@Qualifier("emailTemplateEngine") 
 	private TemplateEngine templateEngine;
 	
-	// --- ADDED ---
 	@Autowired
 	private SiteSettingsService siteSettingsService;
-	// --- END ADDED ---
 
 	@Value("${spring.mail.username}")
 	private String fromEmail;
 
-	// --- PRIVATE HELPER TO GET BASE URL ---
 	private String getBaseUrl() {
 		try {
-			// Try to get URL from the current web request
 			return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 		} catch (Exception e) {
-			// Fallback for async tasks with no request context
 			log.warn("Could not determine base URL from web request for email template. Defaulting to http://localhost:8080");
 			return "http://localhost:8080"; 
 		}
 	}
-	// --- END HELPER ---
 
 	@Override
-	@Async // Make email sending asynchronous so the user doesn't have to wait
+	@Async 
 	public void sendPasswordResetEmail(User user, String token, String resetUrl) throws MessagingException {
 		if (user.getEmail() == null) {
 			log.warn("Cannot send password reset email: User {} (ID: {}) has no email address.", user.getUsername(),
@@ -62,28 +56,20 @@ public class EmailServiceImpl implements EmailService {
 
 		log.info("Attempting to send password reset email to {}", user.getEmail());
 
-		// 1. Create Thymeleaf context
 		Context context = new Context();
-		// --- ADDED siteSettings and baseUrl ---
 		context.setVariable("siteSettings", siteSettingsService.getSiteSettings());
 		context.setVariable("baseUrl", getBaseUrl());
-		// --- END ADDED ---
 		context.setVariable("name", user.getFirstName());
 		context.setVariable("resetUrl", resetUrl);
-		// You could also add the token if you want to display it (e.g., as an OTP)
-		// context.setVariable("token", token);
-
-		// 2. Process the HTML template
 		String htmlBody = templateEngine.process("mail/password-reset", context);
 
-		// 3. Create and send the email
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 		helper.setFrom(fromEmail);
 		helper.setTo(user.getEmail());
 		helper.setSubject("Your Password Reset Request - MK Toasted Siopao");
-		helper.setText(htmlBody, true); // true = HTML email
+		helper.setText(htmlBody, true); 
 
 		mailSender.send(message);
 		log.info("Password reset email sent successfully to {}", user.getEmail());
@@ -100,12 +86,9 @@ public class EmailServiceImpl implements EmailService {
 
 		log.info("Attempting to send order status update email to {} for Order #{}", toEmail, order.getId());
 
-		// 1. Create Thymeleaf context
 		Context context = new Context();
-		// --- ADDED siteSettings and baseUrl ---
 		context.setVariable("siteSettings", siteSettingsService.getSiteSettings());
 		context.setVariable("baseUrl", getBaseUrl());
-		// --- END ADDED ---
 		context.setVariable("name", order.getShippingFirstName());
 		context.setVariable("orderId", order.getId());
 		context.setVariable("subject", subject);
@@ -113,17 +96,15 @@ public class EmailServiceImpl implements EmailService {
 		context.setVariable("totalAmount", order.getTotalAmount());
 		context.setVariable("status", order.getStatus().replace("_", " "));
 
-		// 2. Process the HTML template
 		String htmlBody = templateEngine.process("mail/order-status-update", context);
 
-		// 3. Create and send the email
 		MimeMessage message = mailSender.createMimeMessage();
 		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
 		helper.setFrom(fromEmail);
 		helper.setTo(toEmail);
 		helper.setSubject(subject + " (Order #ORD-" + order.getId() + ")");
-		helper.setText(htmlBody, true); // true = HTML email
+		helper.setText(htmlBody, true);
 
 		mailSender.send(message);
 		log.info("Order status update email sent successfully to {}", toEmail);

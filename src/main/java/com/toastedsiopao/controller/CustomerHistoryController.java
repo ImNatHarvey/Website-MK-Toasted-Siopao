@@ -67,11 +67,6 @@ public class CustomerHistoryController {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);
 		
-		// --- START: REMOVED ---
-		// if (!model.containsAttribute("issueReportDto")) {
-		// 	model.addAttribute("issueReportDto", new IssueReportDto());
-		// }
-		// --- END: REMOVED ---
 	}
 
 	@GetMapping("/history")
@@ -112,7 +107,6 @@ public class CustomerHistoryController {
 			orderService.cancelOrder(orderId, user);
 			redirectAttributes.addFlashAttribute("orderSuccess", "Order #ORD-" + orderId + " has been cancelled.");
 			
-			// --- Admin Notification ---
 			String notifMessage = "Customer " + user.getUsername() + " cancelled order #" + orderId + ". Stock has been reversed.";
 			String notifLink = "/admin/orders?status=CANCELLED";
 			notificationService.createAdminNotification(notifMessage, notifLink);
@@ -135,7 +129,7 @@ public class CustomerHistoryController {
 
 		User user = customerService.findByUsername(principal.getName());
 		if (user == null) {
-			return "redirect:/logout"; // Should not happen, but good practice
+			return "redirect:/logout"; 
 		}
 
 		if (bindingResult.hasErrors()) {
@@ -143,9 +137,6 @@ public class CustomerHistoryController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.issueReportDto", bindingResult);
 			redirectAttributes.addFlashAttribute("issueReportDto", reportDto);
 			redirectAttributes.addFlashAttribute("issueError", "Validation failed. Please check the fields below.");
-			// --- This is a bit of a hack to re-open the modal on failure ---
-			// We can't use the standard ?showModal= URL param because we're on a different page
-			// We'll rely on the modal's JS to check for this attribute
 			redirectAttributes.addFlashAttribute("reOpenIssueModal", reportDto.getOrderId());
 			return "redirect:/u/history";
 		}
@@ -176,29 +167,24 @@ public class CustomerHistoryController {
 		User user = customerService.findByUsername(principal.getName());
 		if (user == null) {
 			log.warn("Attempt to download invoice by unauthenticated user.");
-			return ResponseEntity.status(401).build(); // Unauthorized
+			return ResponseEntity.status(401).build(); 
 		}
 
 		log.info("User {} attempting to download invoice for Order ID: {}", user.getUsername(), orderId);
 
 		try {
-			// 1. Fetch the order
 			Optional<Order> orderOpt = orderService.findOrderForInvoice(orderId);
 
-			// 2. Security Check: Ensure order exists AND belongs to the logged-in user
 			if (orderOpt.isEmpty() || !orderOpt.get().getUser().getId().equals(user.getId())) {
 				log.warn("SECURITY: User {} attempted to access invoice for Order ID {} which does not belong to them.", user.getUsername(), orderId);
 				return ResponseEntity.notFound().build(); // 404
 			}
 			
-			// 3. Generate the PDF
 			ByteArrayInputStream bis = reportService.generateInvoicePdf(orderOpt.get());
 
 			HttpHeaders headers = new HttpHeaders();
-			// --- MODIFIED: Standardized filename and disposition ---
 			String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
 			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-			// --- END MODIFICATION ---
 
 			return ResponseEntity
 					.ok()
@@ -208,7 +194,7 @@ public class CustomerHistoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage());
-			return ResponseEntity.notFound().build(); // 404 if order not found
+			return ResponseEntity.notFound().build(); 
 		} catch (IOException e) {
 			log.error("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage(), e);
 			return ResponseEntity.internalServerError().build();

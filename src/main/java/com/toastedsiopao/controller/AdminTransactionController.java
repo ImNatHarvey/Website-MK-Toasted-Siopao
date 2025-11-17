@@ -1,7 +1,7 @@
 package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.Order;
-import com.toastedsiopao.service.IssueReportService; // --- ADDED ---
+import com.toastedsiopao.service.IssueReportService;
 import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List; // --- ADDED ---
-import java.util.Map; // --- ADDED ---
-import java.util.stream.Collectors; // --- ADDED ---
+import java.util.List; 
+import java.util.Map;
+import java.util.stream.Collectors; 
 
 @Controller
 @RequestMapping("/admin")
@@ -31,16 +31,14 @@ public class AdminTransactionController {
 	@Autowired
 	private OrderService orderService;
 	
-	// --- START: ADDED ---
 	@Autowired
 	private IssueReportService issueReportService;
-	// --- END: ADDED ---
 
 	@GetMapping("/transactions")
 	@PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
 	public String viewTransactions(Model model, @RequestParam(value = "keyword", required = false) String keyword,
-			@RequestParam(value = "startDate", required = false) String startDate, // NEW
-			@RequestParam(value = "endDate", required = false) String endDate, // NEW
+			@RequestParam(value = "startDate", required = false) String startDate, 
+			@RequestParam(value = "endDate", required = false) String endDate,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size) {
 
@@ -70,15 +68,12 @@ public class AdminTransactionController {
 		model.addAttribute("totalItems", transactionPage.getTotalElements());
 		model.addAttribute("size", size);
 		
-		// --- START: ADDED ---
-		// Fetch open issue counts for the orders on the current page
 		List<Long> orderIdsOnPage = transactionPage.getContent().stream()
 				.map(Order::getId)
 				.collect(Collectors.toList());
 		
 		Map<Long, Long> openIssueCounts = issueReportService.getOpenIssueCountsForOrders(orderIdsOnPage);
 		model.addAttribute("openIssueCounts", openIssueCounts);
-		// --- END: ADDED ---
 
 		return "admin/transactions";
 	}

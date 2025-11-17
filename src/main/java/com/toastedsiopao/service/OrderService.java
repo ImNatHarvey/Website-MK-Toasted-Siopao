@@ -1,6 +1,6 @@
 package com.toastedsiopao.service;
 
-import com.toastedsiopao.dto.OrderSubmitDto; // --- ADDED ---
+import com.toastedsiopao.dto.OrderSubmitDto; 
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
@@ -14,9 +14,7 @@ import java.util.Optional;
 
 public interface OrderService {
 
-	// --- ADDED ---
 	Order createOrder(User user, OrderSubmitDto orderDto, String receiptImagePath);
-	// --- END ADDED ---
 
 	Optional<Order> findOrderById(Long id);
 
@@ -26,22 +24,16 @@ public interface OrderService {
 	
 	Page<Order> findOrdersByStatus(String status, Pageable pageable); 
 	
-	Page<Order> searchOrders(String keyword, String status, String startDate, String endDate, Pageable pageable); // Updated
+	Page<Order> searchOrders(String keyword, String status, String startDate, String endDate, Pageable pageable); 
 
-	Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable); // --- ADDED ---
+	Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable); 
 
-	// --- ADDED: New methods for order management ---
 	Order cancelOrder(Long orderId, User customer);
 	Order acceptOrder(Long orderId);
 	Order rejectOrder(Long orderId);
-	
-	// --- NEW METHODS FOR OUR FLOW ---
 	Order shipOrder(Long orderId);
 	Order completeCodOrder(Long orderId);
-	Order completeDeliveredOrder(Long orderId); // --- THIS IS THE NEW METHOD ---
-	// --- END NEW METHODS ---
-	
-	// --- END ADDED ---
+	Order completeDeliveredOrder(Long orderId);
 
 	BigDecimal getSalesToday();
 
@@ -61,7 +53,6 @@ public interface OrderService {
 
 	BigDecimal getTotalPotentialRevenue();
 
-	// --- START: ADDED COGS METHODS ---
 	BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end);
 	
 	BigDecimal getCogsToday();
@@ -69,34 +60,10 @@ public interface OrderService {
 	BigDecimal getCogsThisWeek();
 
 	BigDecimal getCogsThisMonth();
-	// --- END: ADDED COGS METHODS ---
-
-	// === NEW METHODS FOR REPORTING (START) ===
-	/**
-	 * Finds all delivered orders within a date range, fully populated with
-	 * items, products, and ingredients for COGS calculation.
-	 * @param keyword The search term for customer name/order ID (can be null).
-	 * @param start Start time (inclusive)
-	 * @param end   End time (inclusive)
-	 * @return A List of fully populated Order objects.
-	 */
+	
 	List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end);
 
-	/**
-	 * Calculates the Cost of Goods Sold (COGS) for a single, given order.
-	 * * @param order The Order object (must have items, products, and ingredients
-	 * eagerly loaded).
-	 * @return The total COGS for that order as a BigDecimal.
-	 */
 	BigDecimal calculateCogsForOrder(Order order);
-	// === NEW METHODS FOR REPORTING (END) ===
 
-	/**
-	 * Finds a single order by its ID, fully populated with items, products,
-	 * and user details for generating an invoice.
-	 *
-	 * @param orderId The ID of the order to find.
-	 * @return An Optional containing the fully populated Order, or empty if not found.
-	 */
 	Optional<Order> findOrderForInvoice(Long orderId);
 }

@@ -6,12 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph; 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock; // --- ADDED ---
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jakarta.persistence.LockModeType; // --- ADDED ---
+import jakarta.persistence.LockModeType; 
 import java.util.List;
 import java.util.Optional; 
 
@@ -26,10 +26,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	String CUSTOM_SORT = "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC";
 
 	Optional<Product> findByNameIgnoreCase(String name);
-
-	// --- START: MODIFIED 2-STEP PAGINATION QUERIES ---
-
-	// 1. Find Paginated IDs
 
 	@Query(value = "SELECT p.id FROM Product p " + CUSTOM_SORT, 
 		   countQuery = COUNT_PRODUCT)
@@ -83,29 +79,20 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	Page<Long> findIdsActiveByNameContainingIgnoreCaseAndCategory(@Param("keyword") String keyword,
 			@Param("category") Category category, Pageable pageable);
 
-	// 2. Find Details for those IDs
-	
 	@Query("SELECT p FROM Product p WHERE p.id IN :ids " + CUSTOM_SORT)
 	@EntityGraph(attributePaths = {"category", "ingredients.inventoryItem.unit"})
 	List<Product> findWithDetailsByIds(@Param("ids") List<Long> ids);
 
-	// --- THIS IS THE FIX ---
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT p FROM Product p WHERE p.id = :id")
 	Optional<Product> findByIdForUpdate(@Param("id") Long id);
-	// --- END FIX ---
-
-	// --- END: MODIFIED 2-STEP PAGINATION QUERIES ---
-
+	
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
 	long countLowStockProducts();
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= 0")
 	long countOutOfStockProducts();
 
-	// --- REMOVED: Old paginated queries that caused the warning ---
-
-	// === NEW QUERIES FOR PRODUCT REPORT ===
 	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u ORDER BY p.name ASC")
 	List<Product> findAllFullProducts();
 
@@ -117,5 +104,4 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) AND p.category = :category ORDER BY p.name ASC")
 	List<Product> findFullProductsByNameAndCategory(@Param("keyword") String keyword, @Param("category") Category category);
-	// =======================================
 }

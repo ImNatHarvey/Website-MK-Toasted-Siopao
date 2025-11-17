@@ -55,10 +55,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query("SELECT COUNT(u) FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND u.status = 'ACTIVE'")
 	long countActiveAdmins();
 
-	// --- ADDED ---
 	@Query("SELECT COUNT(u) FROM User u WHERE u.role.name != 'ROLE_CUSTOMER' AND u.status = 'INACTIVE'")
 	long countInactiveAdmins();
-	// --- END ADDED ---
 
 	long countByRole_NameAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
 			@Param("end") LocalDateTime end);
@@ -66,7 +64,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	long countByRole_NameNotAndCreatedAtBetween(String roleName, @Param("start") LocalDateTime start,
 			@Param("end") LocalDateTime end);
 
-	// --- ADDED: For password reset ---
 	Optional<User> findByResetPasswordToken(String token);
 
 }

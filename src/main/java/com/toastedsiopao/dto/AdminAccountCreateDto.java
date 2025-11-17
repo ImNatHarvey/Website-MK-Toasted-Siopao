@@ -41,5 +41,4 @@ public class AdminAccountCreateDto {
 	@NotBlank(message = "A role must be selected")
 	private String roleName;
 
-	// --- PERMISSIONS REMOVED ---
 }

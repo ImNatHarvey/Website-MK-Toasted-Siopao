@@ -80,22 +80,18 @@ public class ReportServiceImpl implements ReportService {
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 
-            // === Create Cell Styles ===
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
             CellStyle totalRowStyle = createTotalRowStyle(workbook);
             CellStyle totalCurrencyStyle = createTotalCurrencyStyle(workbook, totalRowStyle);
 
-            // === Summary Sheet ===
             Sheet summarySheet = workbook.createSheet("Summary");
             createSummarySheet(summarySheet, orders, settings, headerStyle, boldStyle, currencyStyle, totalCurrencyStyle, startDateTime, endDateTime);
 
-            // === Detailed Breakdown Sheet ===
             Sheet detailSheet = workbook.createSheet("Detailed Breakdown");
             createDetailedBreakdownSheet(detailSheet, orders, headerStyle, currencyStyle, totalRowStyle, totalCurrencyStyle);
 
-            // Auto-size columns for both sheets
             autoSizeColumns(summarySheet, 3);
             autoSizeColumns(detailSheet, 7);
 
@@ -112,13 +108,11 @@ public class ReportServiceImpl implements ReportService {
         AtomicInteger rowIdx = new AtomicInteger(0);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
-        // --- Title Row ---
         Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
         Cell titleCell = titleRow.createCell(0);
         titleCell.setCellValue(settings.getWebsiteName() + " - Financial Report");
         titleCell.setCellStyle(headerStyle);
 
-        // --- Date Range Row ---
         String dateRange = "For all completed orders";
         if (start != null && end != null) {
             dateRange = "For orders from " + start.format(dtf) + " to " + end.format(dtf);
@@ -131,10 +125,8 @@ public class ReportServiceImpl implements ReportService {
         dateRow.createCell(0).setCellValue(dateRange);
         dateRow.getCell(0).setCellStyle(boldStyle);
 
-        // --- Spacer Row ---
         rowIdx.getAndIncrement();
 
-        // --- Summary Data ---
         BigDecimal totalSales = BigDecimal.ZERO;
         BigDecimal totalCogs = BigDecimal.ZERO;
 
@@ -144,7 +136,6 @@ public class ReportServiceImpl implements ReportService {
         }
         BigDecimal grossProfit = totalSales.subtract(totalCogs);
 
-        // --- Totals Table ---
         Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
         headerRow.createCell(0).setCellValue("Metric");
         headerRow.createCell(1).setCellValue("Amount");
@@ -164,7 +155,7 @@ public class ReportServiceImpl implements ReportService {
         profitRow.getCell(0).setCellStyle(boldStyle);
         createCurrencyCell(profitRow, 1, grossProfit, totalCurrencyStyle);
 
-        rowIdx.getAndIncrement(); // Spacer
+        rowIdx.getAndIncrement(); 
 
         Row countRow = sheet.createRow(rowIdx.getAndIncrement());
         countRow.createCell(0).setCellValue("Total Orders Included");
@@ -176,7 +167,6 @@ public class ReportServiceImpl implements ReportService {
 
         AtomicInteger rowIdx = new AtomicInteger(0);
 
-        // --- Header Row ---
         String[] headers = { "Order ID", "Date", "Customer", "Items", "Total Sales", "Est. COGS", "Est. Gross Profit" };
         Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
         for (int i = 0; i < headers.length; i++) {
@@ -185,7 +175,6 @@ public class ReportServiceImpl implements ReportService {
             cell.setCellStyle(headerStyle);
         }
 
-        // --- Data Rows ---
         BigDecimal grandTotalSales = BigDecimal.ZERO;
         BigDecimal grandTotalCogs = BigDecimal.ZERO;
         BigDecimal grandTotalProfit = BigDecimal.ZERO;
@@ -215,7 +204,6 @@ public class ReportServiceImpl implements ReportService {
             grandTotalProfit = grandTotalProfit.add(orderProfit);
         }
 
-        // --- Total Row ---
         Row totalRow = sheet.createRow(rowIdx.getAndIncrement());
         for (int i = 0; i < headers.length; i++) {
             totalRow.createCell(i).setCellStyle(totalRowStyle);
@@ -236,8 +224,6 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
 
-    // === INVENTORY REPORT METHODS ===
-
     private List<InventoryItem> getFilteredInventoryItems(String keyword, Long categoryId) {
         return inventoryItemService.searchItems(keyword, categoryId, Pageable.unpaged()).getContent();
     }
@@ -249,7 +235,6 @@ public class ReportServiceImpl implements ReportService {
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
             
-            // --- Create Styles ---
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
@@ -258,17 +243,14 @@ public class ReportServiceImpl implements ReportService {
             CellStyle numericStyle = workbook.createCellStyle();
             numericStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
 
-            // --- Create Sheet ---
             Sheet sheet = workbook.createSheet("Inventory Report");
             AtomicInteger rowIdx = new AtomicInteger(0);
 
-            // --- Title ---
             Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue(settings.getWebsiteName() + " - Inventory Stock Report");
             titleCell.setCellStyle(headerStyle);
 
-            // --- Filters Used ---
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Keyword='" + keyword + "' ";
@@ -284,9 +266,8 @@ public class ReportServiceImpl implements ReportService {
             dateRow.createCell(0).setCellValue(filterDesc);
             dateRow.getCell(0).setCellStyle(boldStyle);
 
-            rowIdx.getAndIncrement(); // Spacer
+            rowIdx.getAndIncrement(); 
 
-            // --- Header Row ---
             String[] headers = { "Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Total Cost Value", "Item Status", "Stock Status" };
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
@@ -295,7 +276,6 @@ public class ReportServiceImpl implements ReportService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- Data Rows ---
             BigDecimal grandTotalValue = BigDecimal.ZERO;
             for (InventoryItem item : items) {
                 Row row = sheet.createRow(rowIdx.getAndIncrement());
@@ -321,7 +301,6 @@ public class ReportServiceImpl implements ReportService {
                 grandTotalValue = grandTotalValue.add(totalCostValue);
             }
 
-            // --- Total Row ---
             Row totalRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
                 totalRow.createCell(i).setCellStyle(totalRowStyle);
@@ -342,10 +321,7 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateInventoryReportPdf(items, keyword, categoryId);
     }
 
-    // === PRODUCT REPORT METHODS ===
-
     private List<Product> getFilteredProducts(String keyword, Long categoryId) {
-        // This new service method fetches all products with their recipes
         return productService.findAllForReport(keyword, categoryId);
     }
 
@@ -356,29 +332,23 @@ public class ReportServiceImpl implements ReportService {
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 
-            // --- Create Styles ---
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
 
-            // --- Create Sheet ---
             Sheet sheet = workbook.createSheet("Product Report");
             AtomicInteger rowIdx = new AtomicInteger(0);
 
-            // --- Title ---
             Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
             Cell titleCell = titleRow.createCell(0);
             titleCell.setCellValue(settings.getWebsiteName() + " - Product & Recipe Report");
             titleCell.setCellStyle(headerStyle);
 
-            // --- Filters Used ---
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Keyword='" + keyword + "' ";
             }
             if (categoryId != null) {
-                // We need to fetch the category name, but ProductService doesn't do that.
-                // For now, just use ID. We can improve this later if needed.
                 filterDesc += "Category ID='" + categoryId + "'";
             }
             if (!StringUtils.hasText(keyword) && categoryId == null) {
@@ -388,9 +358,8 @@ public class ReportServiceImpl implements ReportService {
             dateRow.createCell(0).setCellValue(filterDesc);
             dateRow.getCell(0).setCellStyle(boldStyle);
 
-            rowIdx.getAndIncrement(); // Spacer
-
-            // --- Header Row ---
+            rowIdx.getAndIncrement(); 
+            
             String[] headers = { "Product ID", "Product Name", "Category", "Price", "Current Stock", "Product Status", "Stock Status", "Recipe Ingredients" };
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
@@ -399,16 +368,14 @@ public class ReportServiceImpl implements ReportService {
                 cell.setCellStyle(headerStyle);
             }
 
-            // --- Data Rows ---
             for (Product product : products) {
                 Row row = sheet.createRow(rowIdx.getAndIncrement());
 
-                // Format the recipe
                 String recipe = product.getIngredients().stream()
                         .map(ing -> ing.getQuantityNeeded() + " " +
                                 (ing.getInventoryItem().getUnit() != null ? ing.getInventoryItem().getUnit().getAbbreviation() : "units") +
                                 " of " + ing.getInventoryItem().getName())
-                        .collect(Collectors.joining("\n")); // Newline for each ingredient in the cell
+                        .collect(Collectors.joining("\n")); 
 
                 row.createCell(0).setCellValue(product.getId());
                 row.createCell(1).setCellValue(product.getName());
@@ -420,7 +387,6 @@ public class ReportServiceImpl implements ReportService {
                 
                 Cell recipeCell = row.createCell(7);
                 recipeCell.setCellValue(recipe);
-                // Apply wrap text style to recipe cell
                 CellStyle wrapStyle = workbook.createCellStyle();
                 wrapStyle.setWrapText(true);
                 recipeCell.setCellStyle(wrapStyle);
@@ -439,25 +405,17 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
 
-    // === INVOICE PDF METHOD ===
-	// --- START: MODIFIED METHOD ---
     @Override
     public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException, IllegalArgumentException {
-        // The check for the order's existence is now done in the controller.
-        // We just receive the valid order object.
+    	
         return pdfService.generateInvoicePdf(order);
     }
-	// --- END: MODIFIED METHOD ---
-
-    // === ACTIVITY LOG PDF METHOD ===
+    
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {
         Page<ActivityLogEntry> logPage = activityLogService.getAllLogs(pageable);
         return pdfService.generateActivityLogPdf(logPage);
     }
-
-
-    // === Styling Helpers ===
 
     private CellStyle createHeaderStyle(Workbook workbook) {
         CellStyle style = workbook.createCellStyle();

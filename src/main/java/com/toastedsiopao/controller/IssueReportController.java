@@ -1,6 +1,6 @@
 package com.toastedsiopao.controller;
 
-import com.toastedsiopao.dto.IssueReportResponseDto; // --- ADDED ---
+import com.toastedsiopao.dto.IssueReportResponseDto; 
 import com.toastedsiopao.model.IssueReport;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.CustomerService;
@@ -31,10 +31,10 @@ public class IssueReportController {
 
     @GetMapping("/order/{orderId}")
     @PreAuthorize("hasAuthority('VIEW_ISSUE_REPORTS')")
-    public ResponseEntity<List<IssueReportResponseDto>> getIssuesForOrder(@PathVariable Long orderId, Principal principal) { // --- MODIFIED ---
+    public ResponseEntity<List<IssueReportResponseDto>> getIssuesForOrder(@PathVariable Long orderId, Principal principal) { 
         log.info("Admin {} fetching issue reports for Order ID: {}", principal.getName(), orderId);
         try {
-            List<IssueReportResponseDto> reports = issueReportService.findReportsByOrderId(orderId); // --- MODIFIED ---
+            List<IssueReportResponseDto> reports = issueReportService.findReportsByOrderId(orderId); 
             return ResponseEntity.ok(reports);
         } catch (Exception e) {
             log.error("Could not fetch issue reports for Order ID {}: {}", orderId, e.getMessage(), e);
@@ -50,15 +50,15 @@ public class IssueReportController {
         
         User admin = customerService.findByUsername(principal.getName());
         if (admin == null) {
-            return ResponseEntity.status(401).build(); // Unauthorized
+            return ResponseEntity.status(401).build(); 
         }
 
         String adminNotes = payload.get("adminNotes");
         log.info("Admin {} attempting to resolve issue report #{} with notes: {}", admin.getUsername(), issueId, adminNotes);
 
         try {
-            IssueReportResponseDto resolvedReport = issueReportService.resolveIssueReport(issueId, admin, adminNotes); // --- MODIFIED ---
-            return ResponseEntity.ok(resolvedReport); // --- MODIFIED ---
+            IssueReportResponseDto resolvedReport = issueReportService.resolveIssueReport(issueId, admin, adminNotes); 
+            return ResponseEntity.ok(resolvedReport); 
         } catch (IllegalArgumentException e) {
             log.warn("Failed to resolve issue #{}: {}", issueId, e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -68,14 +68,13 @@ public class IssueReportController {
         }
     }
     
-    // --- START: NEW ENDPOINT ---
     @GetMapping("/my-report/order/{orderId}")
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<?> getMyIssueReportForOrder(@PathVariable Long orderId, Principal principal) {
         
         User user = customerService.findByUsername(principal.getName());
         if (user == null) {
-            return ResponseEntity.status(401).build(); // Unauthorized
+            return ResponseEntity.status(401).build(); 
         }
 
         log.info("Customer {} fetching their issue report for Order ID: {}", user.getUsername(), orderId);
@@ -94,5 +93,4 @@ public class IssueReportController {
             return ResponseEntity.internalServerError().body(Map.of("error", "An unexpected error occurred."));
         }
     }
-    // --- END: NEW ENDPOINT ---
 }

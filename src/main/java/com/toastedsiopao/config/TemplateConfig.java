@@ -11,11 +11,6 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
 @Configuration
 public class TemplateConfig {
 
-	/**
-	 * Configures a dedicated Thymeleaf template engine for processing email
-	 * templates. This uses a ClassLoaderTemplateResolver to find templates in
-	 * 'resources/templates/'.
-	 */
 	@Bean(name = "emailTemplateEngine")
 	public TemplateEngine emailTemplateEngine() {
 		SpringTemplateEngine templateEngine = new SpringTemplateEngine();
@@ -25,11 +20,11 @@ public class TemplateConfig {
 
 	private ITemplateResolver emailTemplateResolver() {
 		ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-		templateResolver.setPrefix("templates/"); // Looks in 'resources/templates/'
+		templateResolver.setPrefix("templates/");
 		templateResolver.setSuffix(".html");
 		templateResolver.setTemplateMode(TemplateMode.HTML);
 		templateResolver.setCharacterEncoding("UTF-8");
-		templateResolver.setCacheable(false); // Good for development, can be true in production
+		templateResolver.setCacheable(false);
 		return templateResolver;
 	}
 }

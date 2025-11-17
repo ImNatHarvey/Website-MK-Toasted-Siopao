@@ -90,7 +90,6 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 
 	@Override
 	public UnitOfMeasure save(UnitOfMeasure unit) {
-		// Basic validation before saving directly
 		if (unit == null || !StringUtils.hasText(unit.getName()) || !StringUtils.hasText(unit.getAbbreviation())) {
 			throw new IllegalArgumentException("Cannot save unit with null or blank name/abbreviation.");
 		}
@@ -143,12 +142,10 @@ public class UnitOfMeasureServiceImpl implements UnitOfMeasureService {
 
 	@Override
 	public void deleteById(Long id) {
-		// --- MODIFIED: Removed manual pre-check ---
 		if (!repository.existsById(id)) {
 			throw new RuntimeException("Unit not found with id: " + id);
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist
 		repository.deleteById(id);
 
 		log.info("Deleted unit with ID: {}", id);

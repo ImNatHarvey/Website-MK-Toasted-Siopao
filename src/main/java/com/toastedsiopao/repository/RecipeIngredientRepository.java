@@ -4,8 +4,8 @@ import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.RecipeIngredient;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // --- ADDED ---
-import org.springframework.data.repository.query.Param; // --- ADDED ---
+import org.springframework.data.jpa.repository.Query; 
+import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,8 +17,6 @@ public interface RecipeIngredientRepository extends JpaRepository<RecipeIngredie
 
 	List<RecipeIngredient> findByInventoryItem(InventoryItem inventoryItem);
 	
-	// --- ADDED ---
 	@Query("SELECT COUNT(ri) FROM RecipeIngredient ri WHERE ri.inventoryItem = :item")
 	long countByInventoryItem(@Param("item") InventoryItem item);
-	// --- END ADDED ---
 }

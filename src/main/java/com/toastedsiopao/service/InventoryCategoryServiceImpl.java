@@ -119,12 +119,10 @@ public class InventoryCategoryServiceImpl implements InventoryCategoryService {
 	@Override
 	public void deleteById(Long id) {
 
-		// --- MODIFIED: Removed manual pre-check ---
 		if (!repository.existsById(id)) {
 			throw new RuntimeException("Category not found with id: " + id);
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist
 		repository.deleteById(id);
 
 		log.info("Deleted inventory category with ID: {}", id);

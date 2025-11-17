@@ -14,7 +14,7 @@ public interface InventoryItemService {
 
 	List<InventoryItem> findAll(); 
 	
-	List<InventoryItem> findAllActive(); // --- THIS IS THE FIX ---
+	List<InventoryItem> findAllActive();
 
 	Page<InventoryItem> findAll(Pageable pageable); 
 
@@ -22,13 +22,11 @@ public interface InventoryItemService {
 
 	InventoryItem save(InventoryItemDto itemDto); 
 
-	// --- MODIFIED ---
 	void deactivateItem(Long id);
 	
 	void activateItem(Long id);
 	
-	void deleteItem(Long id); // --- ADDED ---
-	// --- END MODIFIED ---
+	void deleteItem(Long id);
 
 	Optional<InventoryItem> findByName(String name);
 

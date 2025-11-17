@@ -38,26 +38,14 @@ public class AdminSiteController {
 	private FileStorageService fileStorageService;
 
 	@GetMapping("/settings")
-	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')") // **** ADDED ****
+	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')")
 	public String siteSettings(Model model) {
 		log.info("Accessing site settings page");
-		// Load the settings (or create defaults if not exist)
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);
-		return "admin/settings"; // Renders settings.html
+		return "admin/settings";
 	}
 
-	/**
-	 * Handles the logic for a single image upload field. It decides whether to
-	 * store a new image, delete an existing one, or keep the current one.
-	 *
-	 * @param file        The new MultipartFile from the form.
-	 * @param removeImage The boolean flag from the 'removeImage' hidden input.
-	 * @param currentPath The existing image path stored in the database.
-	 * @param defaultPath The default placeholder path for this image.
-	 * @return The final path (new, default, or current) to be saved to the
-	 * database.
-	 */
 	private String handleImageUpload(MultipartFile file, boolean removeImage, String currentPath, String defaultPath) {
 		String oldPathToDelete = null;
 		String finalPath;
@@ -67,7 +55,7 @@ public class AdminSiteController {
 			finalPath = defaultPath;
 			if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 					&& !currentPath.startsWith("/img/")) {
-				oldPathToDelete = currentPath; // Mark old custom file for deletion
+				oldPathToDelete = currentPath;
 			}
 		} else if (file != null && !file.isEmpty()) {
 			log.info("New file detected. Validating...");
@@ -80,11 +68,11 @@ public class AdminSiteController {
 
 			log.info("File type OK. Storing...");
 			try {
-				finalPath = fileStorageService.store(file); // Store new file
+				finalPath = fileStorageService.store(file);
 				log.info("Set new path to: {}", finalPath);
 				if (StringUtils.hasText(currentPath) && !currentPath.equals(defaultPath)
 						&& !currentPath.startsWith("/img/")) {
-					oldPathToDelete = currentPath; // Mark old custom file for deletion
+					oldPathToDelete = currentPath;
 				}
 			} catch (Exception e) {
 				log.error("Failed to store new image file: {}. Reverting to default path.", e.getMessage(), e);
@@ -92,10 +80,9 @@ public class AdminSiteController {
 			}
 		} else {
 			log.debug("No image change. Keeping path: {}", currentPath);
-			finalPath = currentPath; // Keep the existing path
+			finalPath = currentPath;
 		}
 
-		// Perform deletion if an old file was marked
 		if (oldPathToDelete != null) {
 			log.info("Deleting old custom file: {}", oldPathToDelete);
 			fileStorageService.delete(oldPathToDelete);
@@ -107,7 +94,6 @@ public class AdminSiteController {
 	@PostMapping("/settings/update")
 	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')")
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
-			// --- MODIFIED: Added required = false to all MultipartFile params ---
 			@RequestParam(value = "carouselImage1File", required = false) MultipartFile carouselImage1File,
 			@RequestParam(value = "carouselImage2File", required = false) MultipartFile carouselImage2File,
 			@RequestParam(value = "carouselImage3File", required = false) MultipartFile carouselImage3File,
@@ -118,18 +104,13 @@ public class AdminSiteController {
 			@RequestParam(value = "whyUsImageFile", required = false) MultipartFile whyUsImageFile,
 			@RequestParam(value = "aboutImageFile", required = false) MultipartFile aboutImageFile,
 			@RequestParam(value = "gcashQrCodeFile", required = false) MultipartFile gcashQrCodeFile,
-			// --- END MODIFIED ---
-
-			// --- Carousel Remove Flags ---
 			@RequestParam(value = "removeCarouselImage1", defaultValue = "false") boolean removeCarouselImage1,
 			@RequestParam(value = "removeCarouselImage2", defaultValue = "false") boolean removeCarouselImage2,
 			@RequestParam(value = "removeCarouselImage3", defaultValue = "false") boolean removeCarouselImage3,
-			// --- Feature Card Remove Flags ---
 			@RequestParam(value = "removeFeatureCard1Image", defaultValue = "false") boolean removeFeatureCard1Image,
 			@RequestParam(value = "removeFeatureCard2Image", defaultValue = "false") boolean removeFeatureCard2Image,
 			@RequestParam(value = "removeFeatureCard3Image", defaultValue = "false") boolean removeFeatureCard3Image,
 			@RequestParam(value = "removeFeatureCard4Image", defaultValue = "false") boolean removeFeatureCard4Image,
-			// --- Other Page Remove Flags ---
 			@RequestParam(value = "removeWhyUsImage", defaultValue = "false") boolean removeWhyUsImage,
 			@RequestParam(value = "removeAboutImage", defaultValue = "false") boolean removeAboutImage,
 			@RequestParam(value = "removeGcashQrCode", defaultValue = "false") boolean removeGcashQrCode,
@@ -138,17 +119,12 @@ public class AdminSiteController {
 		log.info("Updating site settings...");
 
 		SiteSettings settingsToUpdate = siteSettingsService.getSiteSettings();
-		SiteSettings defaultSettings = new SiteSettings(); // For default paths
+		SiteSettings defaultSettings = new SiteSettings();
 
 		try {
-			// --- 1. Update Text Fields ---
 			settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
-			
-			// --- ADDED: Save new GCash fields ---
 			settingsToUpdate.setGcashName(formSettings.getGcashName());
 			settingsToUpdate.setGcashNumber(formSettings.getGcashNumber());
-			// --- END ADDED ---
-			
 			settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());
 			settingsToUpdate.setFeatureCard1Title(formSettings.getFeatureCard1Title());
 			settingsToUpdate.setFeatureCard1Text(formSettings.getFeatureCard1Text());
@@ -170,39 +146,27 @@ public class AdminSiteController {
 			settingsToUpdate.setContactPhoneName(formSettings.getContactPhoneName());
 			settingsToUpdate.setContactPhoneUrl(formSettings.getContactPhoneUrl());
 			settingsToUpdate.setFooterText(formSettings.getFooterText());
-
-			// --- 2. Handle Image Uploads ---
 			settingsToUpdate.setGcashQrCodeImage(handleImageUpload(gcashQrCodeFile, removeGcashQrCode,
 					settingsToUpdate.getGcashQrCodeImage(), defaultSettings.getGcashQrCodeImage()));
-
 			settingsToUpdate.setCarouselImage1(handleImageUpload(carouselImage1File, removeCarouselImage1,
 					settingsToUpdate.getCarouselImage1(), defaultSettings.getCarouselImage1()));
-
 			settingsToUpdate.setCarouselImage2(handleImageUpload(carouselImage2File, removeCarouselImage2,
 					settingsToUpdate.getCarouselImage2(), defaultSettings.getCarouselImage2()));
-
 			settingsToUpdate.setCarouselImage3(handleImageUpload(carouselImage3File, removeCarouselImage3,
 					settingsToUpdate.getCarouselImage3(), defaultSettings.getCarouselImage3()));
-
 			settingsToUpdate.setFeatureCard1Image(handleImageUpload(featureCard1ImageFile, removeFeatureCard1Image,
 					settingsToUpdate.getFeatureCard1Image(), defaultSettings.getFeatureCard1Image()));
-
 			settingsToUpdate.setFeatureCard2Image(handleImageUpload(featureCard2ImageFile, removeFeatureCard2Image,
 					settingsToUpdate.getFeatureCard2Image(), defaultSettings.getFeatureCard2Image()));
-
 			settingsToUpdate.setFeatureCard3Image(handleImageUpload(featureCard3ImageFile, removeFeatureCard3Image,
 					settingsToUpdate.getFeatureCard3Image(), defaultSettings.getFeatureCard3Image()));
-
 			settingsToUpdate.setFeatureCard4Image(handleImageUpload(featureCard4ImageFile, removeFeatureCard4Image,
 					settingsToUpdate.getFeatureCard4Image(), defaultSettings.getFeatureCard4Image()));
-
 			settingsToUpdate.setWhyUsImage(handleImageUpload(whyUsImageFile, removeWhyUsImage,
 					settingsToUpdate.getWhyUsImage(), defaultSettings.getWhyUsImage()));
-
 			settingsToUpdate.setAboutImage(handleImageUpload(aboutImageFile, removeAboutImage,
 					settingsToUpdate.getAboutImage(), defaultSettings.getAboutImage()));
 
-			// --- 3. Save and Report Success ---
 			siteSettingsService.save(settingsToUpdate);
 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_SITE_SETTINGS",

@@ -113,12 +113,10 @@ public class CategoryServiceImpl implements CategoryService {
 	@Override
 	public void deleteById(Long id) {
 
-		// --- MODIFIED: Removed manual pre-check ---
 		if (!categoryRepository.existsById(id)) {
 			throw new RuntimeException("Category not found with id: " + id);
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist
 		categoryRepository.deleteById(id);
 
 		log.info("Deleted product category with ID: {}", id);

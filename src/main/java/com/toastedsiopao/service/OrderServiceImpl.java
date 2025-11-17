@@ -3,7 +3,7 @@ package com.toastedsiopao.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.OrderSubmitDto;
-import com.toastedsiopao.model.CartItem; // --- ADDED ---
+import com.toastedsiopao.model.CartItem; 
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -81,26 +81,21 @@ public class OrderServiceImpl implements OrderService {
 		public int quantity;
 	}
 
-	// --- MODIFICATION: This method is now rewritten ---
 	@Override
 	public Order createOrder(User user, OrderSubmitDto orderDto, String receiptImagePath) {
 		log.info("Attempting to create order for user: {}", user.getUsername());
 		
-		// --- FIX: Get cart from the database via CartService ---
 		List<CartItem> dbCart = cartService.getCartForUser(user);
 		if (dbCart.isEmpty()) {
 			throw new IllegalArgumentException("Cannot create order with an empty cart.");
 		}
-		// --- END FIX ---
 
 		BigDecimal calculatedTotal = BigDecimal.ZERO;
 		List<OrderItem> orderItems = new ArrayList<>();
 		
-		// --- FIX: Iterate over the DB cart items ---
 		for (CartItem cartItem : dbCart) {
 			int quantityToOrder = cartItem.getQuantity();
-			Product product = cartItem.getProduct(); // Product is already loaded from CartService
-
+			Product product = cartItem.getProduct(); 
 			if (quantityToOrder <= 0) {
 				throw new IllegalArgumentException("Cart contains item with invalid quantity: " + product.getName());
 			}
@@ -116,7 +111,6 @@ public class OrderServiceImpl implements OrderService {
 			
 			orderItems.add(new OrderItem(product, quantityToOrder, itemPrice));
 		}
-		// --- END FIX ---
 		
 		log.info("Stock validated for {} items. Total: ₱{}", orderItems.size(), calculatedTotal);
 		
@@ -191,20 +185,15 @@ public class OrderServiceImpl implements OrderService {
 
 		log.info("Successfully created Order #{} for user {}", savedOrder.getId(), user.getUsername());
 		
-		// --- ADDED: Admin Notification ---
 		String notifMessage = "New " + savedOrder.getPaymentMethod().toUpperCase() + " order (#" + savedOrder.getId() + ") placed by " + user.getUsername() + ".";
 		String notifLink = "/admin/orders?status=" + savedOrder.getStatus();
 		notificationService.createAdminNotification(notifMessage, notifLink);
-		// --- END ADDED ---
-
-		// --- ADDED: Clear cart directly from service ---
+		
 		cartService.clearCart(user);
 		log.info("Cleared cart for user {}.", user.getUsername());
-		// --- END ADDED ---
 		
 		return savedOrder;
 	}
-	// --- END MODIFICATION ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -212,7 +201,6 @@ public class OrderServiceImpl implements OrderService {
 		return orderRepository.findById(id);
 	}
 
-	// --- START: MODIFIED FOR 2-STEP FETCH ---
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findOrdersByUser(User user, Pageable pageable) { 
@@ -236,7 +224,7 @@ public class OrderServiceImpl implements OrderService {
 	public Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable) {
 		if (!StringUtils.hasText(status)) {
 			log.debug("Fetching all orders for user: {}", user.getUsername());
-			return findOrdersByUser(user, pageable); // --- MODIFIED: Use the 2-step method ---
+			return findOrdersByUser(user, pageable); 
 		}
 		log.debug("Fetching orders for user: {} with status: {}", user.getUsername(), status);
 		
@@ -254,21 +242,20 @@ public class OrderServiceImpl implements OrderService {
 
 		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
 	}
-	// --- END: MODIFIED FOR 2-STEP FETCH ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findAllOrders(Pageable pageable) { 
-		return orderRepository.findAll(pageable); // --- MODIFIED: Was findAllByDate(null, null, pageable) ---
+		return orderRepository.findAll(pageable); 
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findOrdersByStatus(String status, Pageable pageable) { 
 		if (!StringUtils.hasText(status)) {
-			return searchOrders(null, null, null, null, pageable); // --- MODIFIED: Use new search ---
+			return searchOrders(null, null, null, null, pageable); 
 		}
-		return searchOrders(null, status.toUpperCase(), null, null, pageable); // --- MODIFIED: Use new search ---
+		return searchOrders(null, status.toUpperCase(), null, null, pageable);
 	}
 	
 	@Override
@@ -301,8 +288,6 @@ public class OrderServiceImpl implements OrderService {
 
 		String upperStatus = hasStatus ? status.toUpperCase() : null;
 		
-		// --- START: MODIFIED 2-STEP FETCH ---
-		
 		Page<Long> orderIdPage;
 
 		if (hasKeyword && hasStatus) {
@@ -324,12 +309,10 @@ public class OrderServiceImpl implements OrderService {
 		
 		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
 		
-		// Re-sort the fetched orders to match the ID page's order (since IN clause doesn't guarantee order)
 		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
 		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
 
 		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
-		// --- END: MODIFIED 2-STEP FETCH ---
 	}
 
 	private void reverseStockForOrder(Order order, String reason) {
@@ -367,11 +350,9 @@ public class OrderServiceImpl implements OrderService {
 		
 		reverseStockForOrder(order, "Order #" + order.getId() + " Cancelled by Customer");
 		
-		// --- ADDED: Admin Notification ---
 		String notifMessage = "Customer " + customer.getUsername() + " cancelled order #" + order.getId() + ".";
 		String notifLink = "/admin/orders?status=CANCELLED";
 		notificationService.createAdminNotification(notifMessage, notifLink);
-		// --- END ADDED ---
 		
 		return orderRepository.save(order);
 	}
@@ -386,9 +367,9 @@ public class OrderServiceImpl implements OrderService {
 			throw new IllegalArgumentException("Order cannot be accepted. Current status: " + currentStatus);
 		}
 
-		if (currentStatus.equals(Order.STATUS_PENDING)) { // COD
+		if (currentStatus.equals(Order.STATUS_PENDING)) { 
 			order.setStatus(Order.STATUS_PROCESSING);
-		} else { // PENDING_VERIFICATION (GCash)
+		} else { 
 			order.setStatus(Order.STATUS_PROCESSING);
 			order.setPaymentStatus(Order.PAYMENT_PAID);
 		}
@@ -399,17 +380,13 @@ public class OrderServiceImpl implements OrderService {
 		String subject = "Your Order has been Accepted!";
 		String message = "We're happy to let you know that your order (#" + savedOrder.getId() + ") has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
 		
-		// --- Send Email ---
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Accepted' email for Order #{}", savedOrder.getId(), e);
 		}
-		// --- End Email ---
 		
-		// --- ADDED: User Notification ---
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		// --- END ADDED ---
 
 		return savedOrder;
 	}
@@ -432,10 +409,8 @@ public class OrderServiceImpl implements OrderService {
 		log.info("Order #{} rejected. Status set to REJECTED.", orderId);
 		Order savedOrder = orderRepository.save(order);
 		
-		// --- ADDED: User Notification ---
 		String message = "Unfortunately, your order (#" + savedOrder.getId() + ") has been rejected. Stock has been reversed. If this was a GCash order, please contact us for a refund.";
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		// --- END ADDED ---
 		
 		return savedOrder;
 	}
@@ -458,17 +433,13 @@ public class OrderServiceImpl implements OrderService {
 		String message = "Get ready! Your order (#" + savedOrder.getId() + ") is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of " +
 						 "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
 
-		// --- Send Email ---
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Out for Delivery' email for Order #{}", savedOrder.getId(), e);
 		}
-		// --- End Email ---
-		
-		// --- ADDED: User Notification ---
+
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		// --- END ADDED ---
 		
 		return savedOrder;
 	}
@@ -487,7 +458,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		
 		order.setStatus(Order.STATUS_DELIVERED);
-		order.setPaymentStatus(Order.PAYMENT_PAID); // Mark as paid
+		order.setPaymentStatus(Order.PAYMENT_PAID); 
 		
 		log.info("COD Order #{} status set to DELIVERED and PAID.", orderId);
 		Order savedOrder = orderRepository.save(order);
@@ -495,17 +466,13 @@ public class OrderServiceImpl implements OrderService {
 		String subject = "Your Order is Complete!";
 		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
 
-		// --- Send Email ---
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Completed' email for Order #{}", savedOrder.getId(), e);
 		}
-		// --- End Email ---
-		
-		// --- ADDED: User Notification ---
+
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		// --- END ADDED ---
 		
 		return savedOrder;
 	}
@@ -535,22 +502,16 @@ public class OrderServiceImpl implements OrderService {
 		String subject = "Your Order has been Delivered!";
 		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
 
-		// --- Send Email ---
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Delivered' email for Order #{}", savedOrder.getId(), e);
 		}
-		// --- End Email ---
-		
-		// --- ADDED: User Notification ---
+
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		// --- END ADDED ---
 		
 		return savedOrder;
 	}
-	
-	// --- COGS CALCULATION HELPERS AND IMPLEMENTATION (START) ---
 	
 	private BigDecimal calculateOrderCogs(Order order) {
 		BigDecimal totalCogs = BigDecimal.ZERO;
@@ -559,7 +520,6 @@ public class OrderServiceImpl implements OrderService {
 			Product product = orderItem.getProduct();
 			int orderedQuantity = orderItem.getQuantity();
 
-			// Accessing ingredients should not cause an N+1 if the query was set up correctly (JOIN FETCH)
 			if (product.getIngredients() == null || product.getIngredients().isEmpty()) {
 				log.warn("Product '{}' in order #{} has no ingredients defined. Skipping COGS.", product.getName(), order.getId());
 				continue;
@@ -574,7 +534,6 @@ public class OrderServiceImpl implements OrderService {
 					continue;
 				}
 				
-				// Total Cogs for this ingredient = Ordered Qty * Qty per unit * Cost per unit
 				BigDecimal itemCogs = quantityNeeded
 						.multiply(item.getCostPerUnit())
 						.multiply(new BigDecimal(orderedQuantity));
@@ -589,8 +548,6 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end) {
-		// This uses the custom repository query to fetch all required entities in one go
-		// --- BUG FIX: Pass null for keyword as this is a general dashboard metric ---
 		List<Order> deliveredOrders = orderRepository.findDeliveredOrdersWithCogsDetails(null, start, end);
 		
 		BigDecimal totalCogs = BigDecimal.ZERO;
@@ -624,8 +581,6 @@ public class OrderServiceImpl implements OrderService {
 		LocalDateTime startOfMonth = now.with(TemporalAdjusters.firstDayOfMonth()).with(LocalTime.MIN);
 		return getEstimatedCogsBetweenDates(startOfMonth, now);
 	}
-	
-	// --- COGS CALCULATION HELPERS AND IMPLEMENTATION (END) ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -702,7 +657,6 @@ public class OrderServiceImpl implements OrderService {
 		return total != null ? total : BigDecimal.ZERO;
 	}
 
-	// === NEW METHODS FOR REPORTING (START) ===
 	@Override
 	@Transactional(readOnly = true)
 	public List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end) { // --- MODIFIED ---
@@ -715,7 +669,6 @@ public class OrderServiceImpl implements OrderService {
 		// This public method just wraps the private one
 		return calculateOrderCogs(order);
 	}
-	// === NEW METHODS FOR REPORTING (END) ===
 
 	@Override
 	@Transactional(readOnly = true)

@@ -31,7 +31,7 @@ public class InventoryItemDto {
 	private BigDecimal currentStock = BigDecimal.ZERO;
 
 	@NotNull(message = "Low stock threshold cannot be null")
-	@DecimalMin(value = "1.0", message = "Low threshold must be at least 1") // Use DecimalMin for BigDecimal
+	@DecimalMin(value = "1.0", message = "Low threshold must be at least 1")
 	private BigDecimal lowStockThreshold;
 	
 	@NotNull(message = "Critical stock threshold cannot be null")

@@ -3,7 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.service.ActivityLogService;
-import com.toastedsiopao.service.AdminService; // --- ADDED ---
+import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.InventoryCategoryService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam; // --- ADDED ---
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -36,7 +36,7 @@ public class AdminInventoryCategoryController {
 	@Autowired
 	private ActivityLogService activityLogService;
 
-	@Autowired // --- ADDED ---
+	@Autowired
 	private AdminService adminService;
 
 	@ModelAttribute("inventoryCategoryDto")
@@ -54,9 +54,7 @@ public class AdminInventoryCategoryController {
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 		if (result.hasErrors()) {
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryCategoryDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
@@ -72,12 +70,10 @@ public class AdminInventoryCategoryController {
 					"Inventory Category '" + newCategory.getName() + "' added successfully!");
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error adding inventory category: {}", e.getMessage());
-			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error adding category: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryCategoryDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryCategoryDto", categoryDto);
@@ -85,7 +81,6 @@ public class AdminInventoryCategoryController {
 					.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/inventory";
 	}
@@ -97,9 +92,7 @@ public class AdminInventoryCategoryController {
 
 		if (result.hasErrors()) {
 			log.warn("Inventory category update DTO validation failed. Errors: {}", result.getAllErrors());
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute(
 					"org.springframework.validation.BindingResult.inventoryCategoryUpdateDto", result);
 			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
@@ -118,12 +111,10 @@ public class AdminInventoryCategoryController {
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating inventory category: {}", e.getMessage());
-			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.rejectValue("name", "duplicate", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating category: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute(
 					"org.springframework.validation.BindingResult.inventoryCategoryUpdateDto", result);
 			redirectAttributes.addFlashAttribute("inventoryCategoryUpdateDto", categoryDto);
@@ -132,23 +123,19 @@ public class AdminInventoryCategoryController {
 			return "redirect:" + redirectUrl;
 
 		}
-		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/inventory";
 	}
 
 	@PostMapping("/delete/{id}")
 	public String deleteInventoryCategory(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- MODIFIED ---
-			RedirectAttributes redirectAttributes,
+			@RequestParam(value = "password", required = false) String password, RedirectAttributes redirectAttributes,
 			Principal principal) {
 
-		// --- MODIFICATION: Added password validation ---
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
 			return "redirect:/admin/inventory";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<InventoryCategory> categoryOpt = inventoryCategoryService.findById(id);
 		if (categoryOpt.isEmpty()) {
@@ -156,9 +143,6 @@ public class AdminInventoryCategoryController {
 			return "redirect:/admin/inventory";
 		}
 		String categoryName = categoryOpt.get().getName();
-
-		// Let the service throw an exception if deletion fails
-		// The GlobalExceptionHandler will catch it.
 		inventoryCategoryService.deleteById(id);
 
 		activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_CATEGORY",

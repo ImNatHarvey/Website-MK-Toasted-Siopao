@@ -4,7 +4,7 @@ import com.toastedsiopao.dto.AdminAccountCreateDto;
 import com.toastedsiopao.dto.AdminPasswordUpdateDto;
 import com.toastedsiopao.dto.AdminProfileUpdateDto;
 import com.toastedsiopao.dto.AdminUpdateDto;
-import com.toastedsiopao.dto.RoleDto; // ADDED
+import com.toastedsiopao.dto.RoleDto;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
 import org.springframework.data.domain.Page;
@@ -37,9 +37,7 @@ public interface AdminService {
 
 	long countActiveAdmins();
 
-	// --- ADDED ---
 	long countInactiveAdmins();
-	// --- END ADDED ---
 
 	long countNewAdminsThisMonth();
 
@@ -51,9 +49,7 @@ public interface AdminService {
 
 	void deleteRole(Long id);
 
-	// --- ADDED ---
 	void updateAdminPassword(String currentUsername, AdminPasswordUpdateDto passwordDto);
 
 	boolean validateOwnerPassword(String password);
-	// --- END ADDED ---
 }

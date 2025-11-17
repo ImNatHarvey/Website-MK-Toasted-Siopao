@@ -15,10 +15,9 @@ import java.util.Optional;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    // Eagerly fetch product and its category for cart display
     @Query("SELECT ci FROM CartItem ci " +
            "JOIN FETCH ci.product p " +
-           "LEFT JOIN FETCH p.category " + // --- THIS IS THE FIX ---
+           "LEFT JOIN FETCH p.category " + 
            "WHERE ci.user = :user " +
            "ORDER BY ci.lastUpdated DESC")
     List<CartItem> findByUserWithProduct(@Param("user") User user);

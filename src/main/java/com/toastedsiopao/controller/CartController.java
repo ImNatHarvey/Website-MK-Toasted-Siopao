@@ -42,9 +42,6 @@ public class CartController {
         return user;
     }
 
-    /**
-     * Helper to convert a list of CartItems to a simplified Map for JSON response.
-     */
     private Map<String, Object> buildCartResponse(User user) {
         List<CartItem> cartItems = cartService.getCartForUser(user);
         BigDecimal total = cartService.getCartTotal(cartItems);
@@ -67,9 +64,6 @@ public class CartController {
         );
     }
 
-    /**
-     * Get the current user's full cart.
-     */
     @GetMapping("/items")
     public ResponseEntity<?> getCartItems(Principal principal) {
         try {
@@ -81,9 +75,6 @@ public class CartController {
         }
     }
 
-    /**
-     * Add an item to the cart, or increment its quantity.
-     */
     @PostMapping("/add")
     public ResponseEntity<?> addItemToCart(@RequestBody Map<String, String> payload, Principal principal) {
         try {
@@ -103,9 +94,6 @@ public class CartController {
         }
     }
 
-    /**
-     * Update an item's quantity in the cart.
-     */
     @PostMapping("/update")
     public ResponseEntity<?> updateItemQuantity(@RequestBody Map<String, String> payload, Principal principal) {
         try {
@@ -125,9 +113,6 @@ public class CartController {
         }
     }
 
-    /**
-     * Remove an item from the cart.
-     */
     @PostMapping("/remove")
     public ResponseEntity<?> removeItemFromCart(@RequestBody Map<String, String> payload, Principal principal) {
          try {
@@ -146,9 +131,6 @@ public class CartController {
         }
     }
 
-    /**
-     * Clear the entire cart.
-     */
     @PostMapping("/clear")
     public ResponseEntity<?> clearCart(Principal principal) {
          try {

@@ -9,7 +9,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value; // IMPORTED
+import org.springframework.beans.factory.annotation.Value; 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -57,21 +57,19 @@ public class MKToastedSiopaoWebsiteApplication {
 	CommandLineRunner initDatabase() {
 		return args -> {
 			
-			// --- START: NEW REFACTOR FOR OWNER ROLE ---
-			final Role ownerRole; // Make it final from the start
+			final Role ownerRole;
 			
 			Optional<Role> ownerRoleOpt = roleRepository.findByName("ROLE_OWNER");
 			boolean needsSave = false;
-			Role roleToSave; // Use a temp variable for modification
+			Role roleToSave; 
 
 			if (ownerRoleOpt.isEmpty()) {
-				// --- Path 1: Role does not exist, create it ---
 				log.info(">>> Creating 'ROLE_OWNER' role...");
 				roleToSave = new Role("ROLE_OWNER");
 				Arrays.stream(Permission.values()).forEach(permission -> roleToSave.addPermission(permission.name()));
 				needsSave = true;
+				
 			} else {
-				// --- Path 2: Role exists, check for missing permissions ---
 				roleToSave = ownerRoleOpt.get();
 				long missingPerms = Arrays.stream(Permission.values())
 					.filter(permission -> !roleToSave.getPermissions().contains(permission.name()))
@@ -86,11 +84,10 @@ public class MKToastedSiopaoWebsiteApplication {
 
 			if (needsSave) {
 				log.info(">>> Saving updates to ROLE_OWNER...");
-				ownerRole = roleRepository.save(roleToSave); // Assign to final variable
+				ownerRole = roleRepository.save(roleToSave); 
 			} else {
-				ownerRole = roleToSave; // Assign existing to final variable
+				ownerRole = roleToSave; 
 			}
-			// --- END: NEW REFACTOR ---
 
 			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER").orElseGet(() -> {
 				log.info(">>> Creating 'ROLE_CUSTOMER' role...");
@@ -98,14 +95,13 @@ public class MKToastedSiopaoWebsiteApplication {
 				return roleRepository.save(newCustomerRole);
 			});
 
-			// Admin logic
 			Optional<User> existingAdminOptional = userRepository.findByUsername(adminUsername);
 			if (existingAdminOptional.isEmpty()) {
 				log.info(">>> Creating admin user '{}'", adminUsername);
 				User adminUser = new User();
 				adminUser.setUsername(adminUsername);
 				adminUser.setPassword(passwordEncoder.encode(adminPassword));
-				adminUser.setRole(ownerRole); // Use final variable
+				adminUser.setRole(ownerRole); 
 				adminUser.setFirstName("Admin");
 				adminUser.setLastName("User");
 				userRepository.save(adminUser);
@@ -115,7 +111,7 @@ public class MKToastedSiopaoWebsiteApplication {
 				boolean needsUpdate = false;
 				
 				if (adminUser.getRole() == null || !adminUser.getRole().getName().equals("ROLE_OWNER")) {
-					adminUser.setRole(ownerRole); // Use final variable
+					adminUser.setRole(ownerRole); 
 					needsUpdate = true;
 				}
 				
@@ -140,7 +136,6 @@ public class MKToastedSiopaoWebsiteApplication {
 				}
 			}
 
-			// Customer logic
 			String customerUsername = "testcustomer";
 			String customerPassword = "password123";
 			Optional<User> existingCustomerOptional = userRepository.findByUsername(customerUsername);

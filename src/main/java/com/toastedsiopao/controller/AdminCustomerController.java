@@ -25,7 +25,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.security.Principal;
 import java.util.Optional;
-import java.util.stream.Collectors; // IMPORTED
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/customers")
@@ -66,7 +66,7 @@ public class AdminCustomerController {
 		model.addAttribute("customers", customerPage.getContent());
 		model.addAttribute("currentUsername", principal.getName());
 		model.addAttribute("activeCustomerCount", customerService.countActiveCustomers());
-		model.addAttribute("inactiveCustomerCount", customerService.countInactiveCustomers()); // == ADDED ==
+		model.addAttribute("inactiveCustomerCount", customerService.countInactiveCustomers());
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", customerPage.getTotalPages());
@@ -97,12 +97,10 @@ public class AdminCustomerController {
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Customer creation validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
@@ -124,7 +122,6 @@ public class AdminCustomerController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error creating customer user: {}", e.getMessage());
 
-			// --- MODIFIED: Send errors to globalError for toast notification ---
 			if (e.getMessage().contains("Username already exists")) {
 				result.rejectValue("username", "customerCreateDto.username", e.getMessage());
 				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
@@ -137,7 +134,6 @@ public class AdminCustomerController {
 			} else {
 				redirectAttributes.addFlashAttribute("globalError", "Error creating customer: " + e.getMessage());
 			}
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerCreateDto",
 					result);
@@ -148,7 +144,6 @@ public class AdminCustomerController {
 			return "redirect:" + redirectUrl;
 
 		}
-		// --- REMOVED: generic catch (Exception e) block ---
 
 		return "redirect:/admin/customers";
 	}
@@ -160,12 +155,10 @@ public class AdminCustomerController {
 			UriComponentsBuilder uriBuilder) {
 
 		if (result.hasErrors()) {
-			// --- MODIFIED: Simplified toast notification message ---
 			String allErrors = result.getFieldErrors().stream()
 					.map(err -> err.getField() + ": " + err.getDefaultMessage()).collect(Collectors.joining(", "));
 			log.warn("Customer update validation failed: {}", allErrors);
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
@@ -186,7 +179,6 @@ public class AdminCustomerController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Validation error updating customer: {}", e.getMessage());
 
-			// --- MODIFIED: Send errors to globalError for toast notification ---
 			if (e.getMessage().contains("Username already exists") || e.getMessage().contains("Username '")) {
 				result.rejectValue("username", "customerUpdateDto.username", e.getMessage());
 				redirectAttributes.addFlashAttribute("globalError", e.getMessage());
@@ -196,7 +188,6 @@ public class AdminCustomerController {
 			} else {
 				redirectAttributes.addFlashAttribute("globalError", "Error updating customer: " + e.getMessage());
 			}
-			// --- END MODIFICATION ---
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerUpdateDto",
 					result);
@@ -207,7 +198,6 @@ public class AdminCustomerController {
 			return "redirect:" + redirectUrl;
 
 		}
-		// --- REMOVED: generic catch (Exception e) block ---
 
 		return "redirect:/admin/customers";
 	}
@@ -215,15 +205,13 @@ public class AdminCustomerController {
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_CUSTOMERS')")
 	public String deleteCustomer(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, // --- ADDED ---
+			@RequestParam(value = "password", required = false) String password,
 			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// --- MODIFICATION: Added password validation ---
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");
 			return "redirect:/admin/customers";
 		}
-		// --- END MODIFICATION ---
 
 		Optional<User> userOpt = customerService.findUserById(id);
 		if (userOpt.isEmpty() || userOpt.get().getRole() == null
@@ -233,8 +221,6 @@ public class AdminCustomerController {
 		}
 		String username = userOpt.get().getUsername();
 
-		// Let the service throw an exception (e.g., if customer has orders)
-		// The GlobalExceptionHandler will catch it.
 		customerService.deleteCustomerById(id);
 
 		activityLogService.logAdminAction(principal.getName(), "DELETE_USER (CUSTOMER)",

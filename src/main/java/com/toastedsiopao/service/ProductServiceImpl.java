@@ -57,7 +57,6 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 
-	// --- ADDED ---
 	private void validateNameUniqueness(String name, Long currentProductId) {
 		Optional<Product> existingProductOpt = productRepository.findByNameIgnoreCase(name.trim());
 		if (existingProductOpt.isPresent()) {
@@ -67,15 +66,7 @@ public class ProductServiceImpl implements ProductService {
 			}
 		}
 	}
-	// --- END ADDED ---
 	
-	// --- START: NEW HELPER METHOD ---
-	/**
-	 * Helper method to perform the 2-step paginated fetch.
-	 * 1. Fetches a page of IDs.
-	 * 2. Fetches the full details for those IDs.
-	 * 3. Reconstructs a Page<Product> object.
-	 */
 	private Page<Product> getPaginatedProducts(Page<Long> idPage, Pageable pageable) {
 		List<Long> ids = idPage.getContent();
 		if (ids.isEmpty()) {
@@ -84,24 +75,20 @@ public class ProductServiceImpl implements ProductService {
 		
 		List<Product> products = productRepository.findWithDetailsByIds(ids);
 		
-		// Re-sort the fetched products to match the ID page's order
 		Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
 		List<Product> sortedProducts = ids.stream()
 				.map(id -> productMap.get(id))
-				.filter(p -> p != null) // Filter out potential nulls if an ID wasn't found (shouldn't happen in-transaction)
+				.filter(p -> p != null) 
 				.collect(Collectors.toList());
 		
 		return new PageImpl<>(sortedProducts, pageable, idPage.getTotalElements());
 	}
-	// --- END: NEW HELPER METHOD ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findAll(Pageable pageable) {
-		// --- MODIFIED ---
 		Page<Long> idPage = productRepository.findIdsAll(pageable);
 		return getPaginatedProducts(idPage, pageable);
-		// --- END MODIFIED ---
 	}
 
 	@Override
@@ -126,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 
 		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
-		validateNameUniqueness(productDto.getName(), productDto.getId()); // --- ADDED THIS CALL ---
+		validateNameUniqueness(productDto.getName(), productDto.getId()); 
 
 		Category category = categoryRepository.findById(productDto.getCategoryId())
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + productDto.getCategoryId()));
@@ -147,12 +134,9 @@ public class ProductServiceImpl implements ProductService {
 			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
 		}
 		
-		// --- ADDED: Ensure status is set on save ---
-		// (productDto doesn't have status, so we only set it on creation)
 		if (isNew) {
 			product.setProductStatus("ACTIVE");
 		}
-		// --- END ADDED ---
 
 		if (product.isRecipeLocked()) {
 			if (!isNew) {
@@ -211,7 +195,6 @@ public class ProductServiceImpl implements ProductService {
 		} catch (Exception e) {
 			log.error("Database error {} product '{}': {}", logAction.toLowerCase(), productDto.getName(),
 					e.getMessage(), e);
-			// --- MODIFIED: Check for constraint violation ---
 			if (e.getMessage().contains("ConstraintViolationException")) {
 				throw new IllegalArgumentException("Product name '" + productDto.getName() + "' already exists.");
 			}
@@ -219,7 +202,6 @@ public class ProductServiceImpl implements ProductService {
 		}
 	}
 
-	// --- MODIFIED: Replaced deleteById ---
 	@Override
 	public void deactivateProduct(Long id) {
 		Product product = productRepository.findById(id)
@@ -229,9 +211,7 @@ public class ProductServiceImpl implements ProductService {
 			throw new IllegalArgumentException("Product '" + product.getName() + "' still has " + product.getCurrentStock() + " stock. Cannot deactivate.");
 		}
 		
-		// Check for orders
 		if (orderItemRepository.countByProduct(product) > 0) {
-			// This is fine, we just deactivate, not delete
 			log.info("Product '{}' is in old orders. Deactivating instead of deleting.", product.getName());
 		}
 
@@ -249,7 +229,6 @@ public class ProductServiceImpl implements ProductService {
 		log.info("Activated product: ID={}, Name='{}'", id, product.getName());
 	}
 	
-	// --- ADDED ---
 	@Override
 	public void deleteProduct(Long id) {
 		Product product = productRepository.findById(id)
@@ -263,34 +242,28 @@ public class ProductServiceImpl implements ProductService {
 			throw new DataIntegrityViolationException("Product '" + product.getName() + "' has order history and cannot be deleted.");
 		}
 		
-		// This will also delete related recipe ingredients thanks to orphanRemoval=true
 		productRepository.delete(product);
 		log.info("Permanently deleted product: ID={}, Name='{}'", id, product.getName());
 	}
-	// --- END ADDED ---
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findByCategory(Long categoryId, Pageable pageable) {
 		Category category = categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-		// --- MODIFIED ---
 		Page<Long> idPage = productRepository.findIdsByCategory(category, pageable);
 		return getPaginatedProducts(idPage, pageable);
-		// --- END MODIFIED ---
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> searchProducts(String keyword, Pageable pageable) {
-		// --- MODIFIED ---
 		if (keyword == null || keyword.trim().isEmpty()) {
 			Page<Long> idPage = productRepository.findIdsAllActive(pageable);
 			return getPaginatedProducts(idPage, pageable);
 		}
 		Page<Long> idPage = productRepository.findIdsActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
 		return getPaginatedProducts(idPage, pageable);
-		// --- END MODIFIED ---
 	}
 
 	@Override
@@ -299,7 +272,6 @@ public class ProductServiceImpl implements ProductService {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
-		// --- MODIFIED: This method is used by public pages, so it MUST filter by ACTIVE status ---
 		Page<Long> idPage;
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
@@ -315,17 +287,14 @@ public class ProductServiceImpl implements ProductService {
 			idPage = productRepository.findIdsAllActive(pageable);
 		}
 		return getPaginatedProducts(idPage, pageable);
-		// --- END MODIFIED ---
 	}
 	
-	// --- ADDED: New method for Admin panel ---
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable) {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
-		// --- MODIFIED: This version calls the NON-ACTIVE queries ---
 		Page<Long> idPage;
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
@@ -338,21 +307,15 @@ public class ProductServiceImpl implements ProductService {
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
 			idPage = productRepository.findIdsByCategory(category, pageable);
 		} else {
-			idPage = productRepository.findIdsAll(pageable); // Admin sees all
+			idPage = productRepository.findIdsAll(pageable); 
 		}
 		return getPaginatedProducts(idPage, pageable);
-		// --- END MODIFIED ---
 	}
-	// --- END ADDED ---
 
 	@Override
 	public Product adjustStock(Long productId, int quantityChange, String reason) {
-		// --- THIS IS THE FIX ---
 		Product product = productRepository.findByIdForUpdate(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
-		// --- END FIX ---
-
-		// --- MODIFIED: This logic now only runs if it's "Production" ---
 		if (quantityChange > 0 && "Production".equals(reason)) {
 			log.info("Adjusting stock for production. Deducting ingredients for {} units of {}.", quantityChange, product.getName());
 			List<RecipeIngredient> ingredients = product.getIngredients();
@@ -363,8 +326,6 @@ public class ProductServiceImpl implements ProductService {
 			} else {
 				BigDecimal productionAmount = new BigDecimal(quantityChange);
 
-				// --- RACE CONDITION FIX: START ---
-				// This loop now CHECKS and LOCKS inventory items.
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					if (item == null) {
@@ -379,15 +340,11 @@ public class ProductServiceImpl implements ProductService {
 					}
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 
-					// Find and lock the inventory item row for this transaction.
-					// This call will block if another transaction has locked the same row.
 					InventoryItem currentItemState = inventoryItemRepository.findByIdForUpdate(item.getId())
 							.orElseThrow(() -> new RuntimeException(
 									"Inventory item '" + item.getName() + "' not found and could not be locked."));
 
 					if (currentItemState.getCurrentStock().compareTo(amountToDecrease) < 0) {
-						// Because we have a lock, this check is definitive for this transaction.
-						// The transaction will roll back, releasing the lock.
 						throw new IllegalArgumentException(
 								"Insufficient inventory for '" + item.getName() + "'. Need " + amountToDecrease + " "
 										+ item.getUnit().getAbbreviation() + " to produce " + quantityChange + " '"
@@ -395,11 +352,6 @@ public class ProductServiceImpl implements ProductService {
 										+ item.getUnit().getAbbreviation() + " available.");
 					}
 				}
-				// --- RACE CONDITION FIX: END ---
-
-				// This second loop performs the deduction.
-				// It will re-use the entities already locked and loaded into the
-				// persistence context by the loop above.
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
@@ -411,7 +363,6 @@ public class ProductServiceImpl implements ProductService {
 					String deductionReason = "Production of " + quantityChange + "x " + product.getName() + " (ID: "
 							+ productId + ")";
 
-					// This service call will find the already-locked item and update it.
 					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
 
 					log.info("Deducted {} {} of '{}' from inventory for production.", amountToDecrease,
@@ -421,8 +372,6 @@ public class ProductServiceImpl implements ProductService {
 		} else if (quantityChange > 0) {
 			log.info("Stock increase for Product ID {} is not production (Reason: '{}'). Skipping ingredient deduction.", productId, reason);
 		}
-		// --- END MODIFICATION ---
-
 
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;
@@ -510,15 +459,12 @@ public class ProductServiceImpl implements ProductService {
 		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
 	}
 
-	// === NEW METHOD FOR REPORTING ===
 	@Override
 	@Transactional(readOnly = true)
 	public List<Product> findAllForReport(String keyword, Long categoryId) {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasCategory = categoryId != null;
 
-		// This query fetches all products with their recipes, which is what we need
-		// for the report. It's not paginated.
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId)
 					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
@@ -533,5 +479,4 @@ public class ProductServiceImpl implements ProductService {
 			return productRepository.findAllFullProducts();
 		}
 	}
-	// ================================
 }

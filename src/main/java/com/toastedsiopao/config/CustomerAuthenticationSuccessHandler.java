@@ -32,15 +32,13 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 		Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 		String username = authentication.getName();
 		
-		// --- ADDED ---
 		String source = request.getParameter("source");
-		// --- END ADDED ---
 
 		if (roles.contains("VIEW_DASHBOARD")) {
 			log.info("Admin user {} logged in. Redirecting to /admin/dashboard", username);
 			response.sendRedirect("/admin/dashboard");
 		} else if (roles.contains("ROLE_CUSTOMER")) {
-			log.info("Customer user {} successfully logged in.", username); // --- MODIFIED ---
+			log.info("Customer user {} successfully logged in.", username); 
 
 			try {
 				customerService.updateLastActivity(username); 
@@ -48,15 +46,13 @@ public class CustomerAuthenticationSuccessHandler implements AuthenticationSucce
 				log.error("Failed to update last activity for user {} on login: {}", username, e.getMessage());
 			}
 			
-			// --- MODIFIED ---
 			if ("checkout".equals(source)) {
 				log.info("Redirecting user {} to /u/order after checkout-signup.", username);
-				response.sendRedirect("/u/order"); // Redirect to the authenticated order page
+				response.sendRedirect("/u/order"); 
 			} else {
 				log.info("Redirecting user {} to /u/dashboard.", username);
-				response.sendRedirect("/u/dashboard"); // Standard redirect
+				response.sendRedirect("/u/dashboard"); 
 			}
-			// --- END MODIFIED ---
 			
 		} else {
 			log.warn(

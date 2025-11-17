@@ -14,7 +14,6 @@ import java.util.List;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-    // --- Admin Notifications ---
     List<Notification> findByIsForAdminTrueAndIsReadFalseOrderByCreatedAtDesc(Pageable pageable);
 
     long countByIsForAdminTrueAndIsReadFalse();
@@ -27,7 +26,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.isForAdmin = true AND n.isRead = false")
     void markAllAdminNotificationsAsRead();
 
-    // --- User Notifications ---
     List<Notification> findByUserAndIsReadFalseOrderByCreatedAtDesc(User user, Pageable pageable);
 
     long countByUserAndIsReadFalse(User user);

@@ -51,7 +51,6 @@ public class CartServiceImpl implements CartService {
 
         CartItem cartItem;
         if (existingItemOpt.isPresent()) {
-            // Item already in cart, update quantity
             cartItem = existingItemOpt.get();
             int newQuantity = cartItem.getQuantity() + quantity;
             
@@ -62,7 +61,6 @@ public class CartServiceImpl implements CartService {
             cartItem.setQuantity(newQuantity);
             log.info("Incremented quantity for product {} in user {}'s cart to {}", productId, user.getUsername(), newQuantity);
         } else {
-            // New item, check stock
             if (product.getCurrentStock() < quantity) {
                 throw new IllegalArgumentException("Insufficient stock for: " + product.getName() + 
                                                    ". Requested: " + quantity + ", Available: " + product.getCurrentStock());
@@ -77,7 +75,6 @@ public class CartServiceImpl implements CartService {
     @Override
     public CartItem updateItemQuantity(User user, Long productId, int newQuantity) {
         if (newQuantity <= 0) {
-            // If new quantity is 0 or less, remove the item
             removeItemFromCart(user, productId);
             return null;
         }

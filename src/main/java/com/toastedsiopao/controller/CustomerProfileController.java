@@ -6,18 +6,18 @@ import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.SiteSettingsService;
-import jakarta.validation.Valid; // ADDED
+import jakarta.validation.Valid; 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication; // ADDED
-import org.springframework.security.core.context.SecurityContextHolder; // ADDED
+import org.springframework.security.core.Authentication; 
+import org.springframework.security.core.context.SecurityContextHolder; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult; // ADDED
+import org.springframework.validation.BindingResult; 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping; // ADDED
+import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // ADDED
+import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
 import java.security.Principal;
 
@@ -70,7 +70,6 @@ public class CustomerProfileController {
 		return "customer/profile";
 	}
 
-	// --- ADDED ---
 	@PostMapping("/profile/update-details")
 	public String updateProfileDetails(@Valid @ModelAttribute("profileDto") CustomerProfileDto profileDto,
 			BindingResult result, Principal principal, RedirectAttributes redirectAttributes) {
@@ -85,7 +84,6 @@ public class CustomerProfileController {
 		try {
 			customerService.updateCustomerProfile(principal.getName(), profileDto);
 
-			// --- Update the username in the security context if it changed ---
 			if (!principal.getName().equals(profileDto.getUsername())) {
 				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 				User user = (User) auth.getPrincipal();
@@ -94,7 +92,7 @@ public class CustomerProfileController {
 
 			redirectAttributes.addFlashAttribute("profileSuccess", "Your profile has been updated successfully!");
 		} catch (IllegalArgumentException e) {
-			redirectAttributes.addFlashAttribute("profileDto", profileDto); // Send back the attempted changes
+			redirectAttributes.addFlashAttribute("profileDto", profileDto); 
 			redirectAttributes.addFlashAttribute("profileError", e.getMessage());
 		}
 
@@ -116,11 +114,10 @@ public class CustomerProfileController {
 			customerService.updateCustomerPassword(principal.getName(), passwordDto);
 			redirectAttributes.addFlashAttribute("passwordSuccess", "Your password has been changed successfully!");
 		} catch (IllegalArgumentException e) {
-			redirectAttributes.addFlashAttribute("passwordDto", new CustomerPasswordDto()); // Clear fields on error
+			redirectAttributes.addFlashAttribute("passwordDto", new CustomerPasswordDto()); 
 			redirectAttributes.addFlashAttribute("passwordError", e.getMessage());
 		}
 
 		return "redirect:/u/profile";
 	}
-	// --- END ADDED ---
 }

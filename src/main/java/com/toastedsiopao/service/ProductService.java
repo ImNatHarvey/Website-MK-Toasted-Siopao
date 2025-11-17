@@ -16,13 +16,11 @@ public interface ProductService {
 
 	Product save(ProductDto productDto);
 
-	// --- MODIFIED ---
 	void deactivateProduct(Long id);
 
 	void activateProduct(Long id);
 	
-	void deleteProduct(Long id); // --- ADDED THIS LINE ---
-	// --- END MODIFIED ---
+	void deleteProduct(Long id); 
 
 	Page<Product> findByCategory(Long categoryId, Pageable pageable);
 
@@ -30,9 +28,7 @@ public interface ProductService {
 
 	Page<Product> searchProducts(String keyword, Long categoryId, Pageable pageable);
 	
-	// --- ADDED ---
 	Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable);
-	// --- END ADDED ---
 
 	Product adjustStock(Long productId, int quantityChange, String reason);
 
@@ -44,8 +40,5 @@ public interface ProductService {
 
 	int calculateMaxProducible(Long productId);
 
-	// === NEW METHOD FOR REPORTING ===
 	List<Product> findAllForReport(String keyword, Long categoryId);
-	// ================================
-
 }

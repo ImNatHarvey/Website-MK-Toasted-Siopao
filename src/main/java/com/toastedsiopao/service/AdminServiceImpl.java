@@ -117,7 +117,6 @@ public class AdminServiceImpl implements AdminService {
 	private void mapPermissionsToRole(Role role, RoleDto dto) {
 		role.getPermissions().clear();
 
-		// All admin roles get dashboard access by default
 		role.addPermission(Permission.VIEW_DASHBOARD.name());
 
 		if (dto.isManageCustomers()) {
@@ -190,8 +189,6 @@ public class AdminServiceImpl implements AdminService {
 		newUser.setPassword(passwordEncoder.encode(userDto.getPassword()));
 		newUser.setRole(roleToAssign);
 
-		// --- REMOVED: All logic for setting individual permissions ---
-
 		return userRepository.save(newUser);
 	}
 
@@ -214,7 +211,6 @@ public class AdminServiceImpl implements AdminService {
 					"User " + userToUpdate.getUsername() + " has a null role and cannot be updated.");
 		}
 
-		// --- RE-ADDED: Security check to ensure only Owner can manage other admins ---
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isOwner = authentication.getAuthorities().stream()
 				.anyMatch(a -> a.getAuthority().equals(OWNER_ROLE_NAME));
@@ -238,16 +234,11 @@ public class AdminServiceImpl implements AdminService {
 				roleToUpdate = newRole;
 			}
 		} else {
-			// Non-owners cannot change roles
 			if (!userDto.getRoleName().equals(roleToUpdate.getName())) {
 				log.warn("Non-Owner user {} tried to change role for {}. Blocked.", authentication.getName(),
 						userToUpdate.getUsername());
-				// We don't throw an error, just log and ignore the change.
 			}
 		}
-		// --- END RE-ADDED ---
-
-		// --- REMOVED: All logic for setting individual permissions ---
 
 		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
@@ -257,7 +248,6 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
 
-		// --- ADDED: Status update logic ---
 		if (isOwner) {
 			if (StringUtils.hasText(userDto.getStatus())
 					&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE"))) {
@@ -271,7 +261,6 @@ public class AdminServiceImpl implements AdminService {
 						userToUpdate.getUsername());
 			}
 		}
-		// --- END ADDED ---
 
 		return userRepository.save(userToUpdate);
 	}
@@ -328,13 +317,11 @@ public class AdminServiceImpl implements AdminService {
 		return userRepository.countActiveAdmins();
 	}
 
-	// --- ADDED ---
 	@Override
 	@Transactional(readOnly = true)
 	public long countInactiveAdmins() {
 		return userRepository.countInactiveAdmins();
 	}
-	// --- END ADDED ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -344,8 +331,6 @@ public class AdminServiceImpl implements AdminService {
 
 		return userRepository.countByRole_NameNotAndCreatedAtBetween(CUSTOMER_ROLE_NAME, startOfMonth, now);
 	}
-
-	// --- ROLE MANAGEMENT METHODS ---
 
 	@Override
 	public Role createRole(RoleDto roleDto) {
@@ -390,7 +375,6 @@ public class AdminServiceImpl implements AdminService {
 
 	@Override
 	public void deleteRole(Long id) {
-		// --- MODIFIED: Removed manual pre-check ---
 		Role roleToDelete = roleRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Role not found with id: " + id));
 
@@ -398,27 +382,21 @@ public class AdminServiceImpl implements AdminService {
 			throw new RuntimeException("Cannot delete a default system role: " + roleToDelete.getName());
 		}
 
-		// Let the database throw DataIntegrityViolationException if relations exist
-		// (e.g., in User)
 		log.info("Deleting role: {}", roleToDelete.getName());
 		roleRepository.delete(roleToDelete);
 	}
 
-	// --- ADDED ---
 	@Override
 	public void updateAdminPassword(String currentUsername, AdminPasswordUpdateDto passwordDto) {
 		User userToUpdate = userRepository.findByUsername(currentUsername)
 				.orElseThrow(() -> new RuntimeException("Current user not found."));
 
-		// 1. Check if current password matches
 		if (!passwordEncoder.matches(passwordDto.getCurrentPassword(), userToUpdate.getPassword())) {
 			throw new IllegalArgumentException("Current password does not match.");
 		}
 
-		// 2. Check if new passwords match
 		validatePasswordConfirmation(passwordDto.getNewPassword(), passwordDto.getConfirmPassword());
 
-		// 3. Update password
 		userToUpdate.setPassword(passwordEncoder.encode(passwordDto.getNewPassword()));
 		userRepository.save(userToUpdate);
 		log.info("User password updated for: {}", currentUsername);
@@ -445,5 +423,4 @@ public class AdminServiceImpl implements AdminService {
 		
 		return false;
 	}
-	// --- END ADDED ---
 }

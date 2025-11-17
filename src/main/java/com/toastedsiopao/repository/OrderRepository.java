@@ -18,26 +18,15 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-	// --- START: MODIFIED CUSTOMER QUERIES (2-STEP FETCH) ---
-
-	// 1. Find paginated IDs for a user
 	@Query(value = "SELECT o.id FROM Order o "
 			+ "WHERE o.user = :user ORDER BY o.orderDate DESC",
 			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user")
 	Page<Long> findIdsByUserOrderByOrderDateDesc(@Param("user") User user, Pageable pageable);
 
-	// 2. Find paginated IDs for a user AND status
 	@Query(value = "SELECT o.id FROM Order o "
 			+ "WHERE o.user = :user AND o.status = :status ORDER BY o.orderDate DESC",
 			countQuery = "SELECT COUNT(o) FROM Order o WHERE o.user = :user AND o.status = :status")
 	Page<Long> findIdsByUserAndStatusOrderByOrderDateDesc(@Param("user") User user, @Param("status") String status, Pageable pageable);
-
-	// --- END: MODIFIED CUSTOMER QUERIES ---
-
-
-	// --- START: MODIFIED METHODS FOR EFFICIENT PAGINATION (Admin) ---
-	
-	// 1. Find paginated IDs (Admin)
 
 	@Query(value = "SELECT o.id FROM Order o WHERE "
 			+ "(:startDateTime IS NULL OR o.orderDate >= :startDateTime) AND "
@@ -90,17 +79,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 			@Param("startDateTime") LocalDateTime startDateTime, @Param("endDateTime") LocalDateTime endDateTime,
 			Pageable pageable);
 	
-	// 2. Find full details for the paginated IDs (Used by ALL 2-step fetches)
-	
 	@Query("SELECT o FROM Order o "
 			+ "LEFT JOIN FETCH o.items oi "
 			+ "LEFT JOIN FETCH oi.product p "
-			+ "LEFT JOIN FETCH o.issueReports " // --- THIS IS THE FIX ---
+			+ "LEFT JOIN FETCH o.issueReports "
 			+ "WHERE o.id IN :ids ORDER BY o.orderDate DESC")
 	@EntityGraph(attributePaths = {"items", "items.product", "issueReports"})
 	List<Order> findWithDetailsByIds(@Param("ids") List<Long> ids);
-
-	// --- END: MODIFIED METHODS ---
 
 	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.orderDate BETWEEN :start AND :end AND o.status = 'DELIVERED'")
 	BigDecimal findTotalSalesBetweenDates(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
@@ -123,25 +108,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 	@Query("SELECT COALESCE(SUM(o.totalAmount), 0) FROM Order o WHERE o.status IN ('PENDING', 'PENDING_VERIFICATION', 'PROCESSING', 'OUT_FOR_DELIVERY')")
 	BigDecimal getTotalPotentialRevenue();
 	
-	// --- START: MODIFIED COGS FETCH METHOD ---
 	@Query("SELECT DISTINCT o FROM Order o "
 			+ "JOIN FETCH o.items oi "
 			+ "JOIN oi.product p "
 			+ "LEFT JOIN FETCH p.ingredients ri "
 			+ "LEFT JOIN FETCH ri.inventoryItem ii "
 			+ "WHERE o.status = 'DELIVERED' "
-			+ "AND (:start IS NULL OR o.orderDate >= :start) " // --- FIX: Handle null start date ---
-			+ "AND (:end IS NULL OR o.orderDate <= :end) "     // --- FIX: Handle null end date ---
-			+ "AND (:keyword IS NULL OR "                     // --- FIX: Handle null keyword ---
+			+ "AND (:start IS NULL OR o.orderDate >= :start) " 
+			+ "AND (:end IS NULL OR o.orderDate <= :end) "     
+			+ "AND (:keyword IS NULL OR "                     
 			+ "    CAST(o.id AS string) LIKE CONCAT('%', :keyword, '%') OR "
 			+ "    LOWER(o.shippingFirstName) LIKE LOWER(CONCAT('%', :keyword, '%')) OR "
 			+ "    LOWER(o.shippingLastName) LIKE LOWER(CONCAT('%', :keyword, '%'))"
 			+ ") "
 			+ "ORDER BY o.orderDate DESC")
 	List<Order> findDeliveredOrdersWithCogsDetails(@Param("keyword") String keyword, @Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
-	// --- END: MODIFIED COGS FETCH METHOD ---
-
-	// === NEW QUERY FOR INVOICE PDF ===
+	
 	@Query("SELECT o FROM Order o LEFT JOIN FETCH o.user u LEFT JOIN FETCH o.items oi LEFT JOIN FETCH oi.product p WHERE o.id = :orderId")
 	Optional<Order> findOrderForInvoiceById(@Param("orderId") Long orderId);
 }

@@ -7,7 +7,7 @@ import com.toastedsiopao.dto.ProductDto;
 import com.toastedsiopao.model.Category;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Product;
-import com.toastedsiopao.repository.OrderItemRepository; // --- ADDED ---
+import com.toastedsiopao.repository.OrderItemRepository;
 import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService; 
@@ -60,7 +60,7 @@ public class AdminProductController {
 	@Autowired
 	private ProductRepository productRepository;
 	
-	@Autowired // --- ADDED ---
+	@Autowired 
 	private OrderItemRepository orderItemRepository;
 
 	@Autowired
@@ -71,9 +71,7 @@ public class AdminProductController {
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("categories", categoryService.findAll());
-		// --- THIS IS THE FIX ---
 		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAllActive());
-		// --- END FIX ---
 	}
 
 	@GetMapping
@@ -87,16 +85,11 @@ public class AdminProductController {
 		Page<Product> productPage;
 
 		List<Category> categoryList = categoryService.findAll();
-		// --- THIS IS THE FIX ---
-		// Only show ACTIVE items in the dropdowns for creating/editing recipes
 		List<InventoryItem> inventoryItems = inventoryItemService.findAllActive();
-		// --- END FIX ---
 
 		log.info("Fetching products with keyword: '{}', categoryId: {}, page: {}, size: {}", keyword, categoryId, page,
 				size);
-		// --- THIS IS THE FIX ---
 		productPage = productService.searchAdminProducts(keyword, categoryId, pageable);
-		// --- END FIX ---
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
 
@@ -113,11 +106,7 @@ public class AdminProductController {
 		model.addAttribute("categories", categoryList);
 		model.addAttribute("inventoryItems", inventoryItems);
 
-		// --- THIS IS THE FIX ---
-		// This now only fetches ACTIVE products, but still gets their ingredients
-		// for the "Max" button's th:if
 		Page<Product> allProductsPage = productService.searchProducts(null, null, Pageable.unpaged());
-		// --- END FIX ---
 		model.addAttribute("allProductsForStockModal", allProductsPage.getContent());
 
 		model.addAttribute("currentPage", page);
@@ -148,9 +137,7 @@ public class AdminProductController {
 
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for add. Errors: {}", result.getAllErrors());
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -167,9 +154,7 @@ public class AdminProductController {
 				} catch (Exception e) {
 					log.error("Error storing image file during add: {}", e.getMessage());
 					result.reject("global", "Could not save image: " + e.getMessage());
-					// --- MODIFIED: Add globalError for toast ---
 					redirectAttributes.addFlashAttribute("globalError", "Error adding product: " + e.getMessage());
-					// --- END MODIFICATION ---
 					redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto",
 							result);
 					redirectAttributes.addFlashAttribute("productDto", productDto);
@@ -188,14 +173,12 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error adding product: {}", e.getMessage(), e);
-			// --- MODIFIED: Add specific check for product name ---
 			if (e.getMessage().contains("Product name")) {
 				result.rejectValue("name", "productDto.name", e.getMessage());
 			} else if (e.getMessage().contains("threshold")) {
 				result.reject("global", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error adding product: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -215,9 +198,7 @@ public class AdminProductController {
 
 		if (result.hasErrors()) {
 			log.warn("Product DTO validation failed for update. Errors: {}", result.getAllErrors());
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
@@ -250,9 +231,7 @@ public class AdminProductController {
 				} catch (Exception e) {
 					log.error("Error storing new image file during update: {}", e.getMessage());
 					result.reject("global", "Could not save new image: " + e.getMessage());
-					// --- MODIFIED: Add globalError for toast ---
 					redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
-					// --- END MODIFICATION ---
 					redirectAttributes
 							.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto", result);
 					redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
@@ -273,14 +252,12 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error updating product: {}", e.getMessage(), e);
-			// --- MODIFIED: Add specific check for product name ---
 			if (e.getMessage().contains("Product name")) {
 				result.rejectValue("name", "productUpdateDto.name", e.getMessage());
 			} else if (e.getMessage().contains("threshold")) {
 				result.reject("global", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);
@@ -317,7 +294,7 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " units of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
-		} catch (RuntimeException e) { // Keep this for stock-specific errors
+		} catch (RuntimeException e) { 
 			log.warn("Stock adjustment failed: {}", e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
@@ -326,15 +303,13 @@ public class AdminProductController {
 		}
 		return "redirect:/admin/products";
 	}
-
-	// --- MODIFIED: This is now the "Smart Delete" endpoint ---
+	
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
 	public String deleteOrDeactivateProduct(@PathVariable("id") Long id,
 			@RequestParam(value = "password", required = false) String password,
 			RedirectAttributes redirectAttributes, Principal principal) {
 
-		// 1. Validate Password
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Action cancelled.");
 			return "redirect:/admin/products";
@@ -349,7 +324,6 @@ public class AdminProductController {
 		Product product = productOpt.get();
 		String productName = product.getName();
 		
-		// 2. Check Stock
 		if (product.getCurrentStock() > 0) {
 			log.warn("Admin {} attempted to delete/deactivate product '{}' (ID: {}) with stock > 0. Blocked.", principal.getName(), productName, id);
 			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + productName + "'. Product still has " + product.getCurrentStock() + " items in stock. Please adjust stock to 0 first.");
@@ -357,22 +331,17 @@ public class AdminProductController {
 		}
 
 		try {
-			// 3. Check Order History
 			if (orderItemRepository.countByProduct(product) > 0) {
-				// HISTORY EXISTS: Deactivate
 				productService.deactivateProduct(id);
 				activityLogService.logAdminAction(principal.getName(), "DEACTIVATE_PRODUCT",
 						"Deactivated product with order history: " + productName + " (ID: " + id + ")");
 				redirectAttributes.addFlashAttribute("productSuccess",
 						"Product '" + productName + "' has order history. It has been DEACTIVATED instead of deleted.");
 			} else {
-				// NO HISTORY: Delete Permanently
-				// First delete image
 				String imagePath = product.getImageUrl();
 				if (StringUtils.hasText(imagePath)) {
 					fileStorageService.delete(imagePath);
 				}
-				// Then delete product (which cascades to recipe)
 				productService.deleteProduct(id);
 				activityLogService.logAdminAction(principal.getName(), "DELETE_PRODUCT",
 						"Permanently deleted product: " + productName + " (ID: " + id + ")");
@@ -380,7 +349,6 @@ public class AdminProductController {
 						"Product '" + productName + "' had no order history and was PERMANENTLY deleted.");
 			}
 		} catch (DataIntegrityViolationException e) {
-			// This will catch if we try to delete a product that has order history (failsafe)
 			log.warn("Data integrity violation on delete/deactivate for product {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", "Operation failed. Product has order history and cannot be deleted.");
 		} catch (IllegalArgumentException e) { // Catches stock > 0
@@ -392,7 +360,7 @@ public class AdminProductController {
 	}
 	
 	@PostMapping("/activate/{id}")
-	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')") // Use same perm
+	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')") 
 	public String activateProduct(@PathVariable("id") Long id,
 			RedirectAttributes redirectAttributes, Principal principal) {
 
@@ -418,7 +386,6 @@ public class AdminProductController {
 		
 		return "redirect:/admin/products";
 	}
-	// --- END MODIFICATION ---
 
 	@GetMapping("/calculate-max/{id}")
 	@ResponseBody

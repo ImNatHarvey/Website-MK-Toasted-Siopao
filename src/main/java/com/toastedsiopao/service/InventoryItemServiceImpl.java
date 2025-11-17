@@ -69,13 +69,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		return itemRepository.findAllByOrderByNameAsc();
 	}
 
-	// --- THIS IS THE FIX (IMPLEMENTATION) ---
 	@Override
 	@Transactional(readOnly = true)
 	public List<InventoryItem> findAllActive() {
 		return itemRepository.findAllActiveByOrderByNameAsc();
 	}
-	// --- END FIX ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -97,7 +95,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem save(InventoryItemDto itemDto) {
-		// --- Input Validation ---
+		
 		if (itemDto == null) {
 			throw new IllegalArgumentException("Inventory item data cannot be null.");
 		}
@@ -136,7 +134,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (isNew) {
 			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
-			item.setItemStatus("ACTIVE"); // --- ADDED ---
+			item.setItemStatus("ACTIVE");
 		}
 
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
@@ -155,7 +153,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 	}
 
-	// --- MODIFIED: Replaced deleteById ---
 	@Override
 	public void deactivateItem(Long id) {
 		InventoryItem item = itemRepository.findById(id)
@@ -166,7 +163,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 					"Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
 		}
 
-		// Check if this item is used in any product recipes
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
 			log.info("Item '{}' is in use by recipes. Deactivating instead of deleting.", item.getName());
 		}
@@ -203,7 +199,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		itemRepository.delete(item);
 		log.info("Permanently deleted inventory item: ID={}, Name='{}'", id, item.getName());
 	}
-	// --- END MODIFICATION ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -247,15 +242,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
-		// --- THIS IS THE FIX ---
 		InventoryItem item = itemRepository.findByIdForUpdate(itemId) // Use locking find
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
 
-		// Check status before adjusting stock
 		if (!"ACTIVE".equals(item.getItemStatus())) {
 			throw new IllegalArgumentException("Cannot adjust stock for an INACTIVE item: " + item.getName());
 		}
-		// --- END FIX ---
 
 		BigDecimal newStock = item.getCurrentStock().add(quantityChange);
 		if (newStock.compareTo(BigDecimal.ZERO) < 0) {

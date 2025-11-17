@@ -11,7 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping; // --- ADDED ---
+import org.springframework.web.bind.annotation.PostMapping; 
 
 import java.math.BigDecimal; 
 import java.security.Principal; 
@@ -23,7 +23,6 @@ public class PublicPageController {
 	@Autowired
 	private SiteSettingsService siteSettingsService;
 
-	// --- REMOVED: CustomerService and CartService (now in GlobalModelAttributes) ---
 
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
@@ -33,9 +32,7 @@ public class PublicPageController {
 
 	@GetMapping("/")
 	public String home(Model model, Principal principal) { 
-		
-		// --- REMOVED: All cart-loading logic is now in GlobalModelAttributes ---
-
+	
 		return "index";
 	}
 
@@ -49,10 +46,8 @@ public class PublicPageController {
 		return "access-denied";
 	}
 	
-	// --- THIS IS THE FIX ---
 	@PostMapping("/access-denied")
 	public String accessDeniedPost() {
 		return "access-denied";
 	}
-	// --- END FIX ---
 }

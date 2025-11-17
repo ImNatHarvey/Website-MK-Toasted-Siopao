@@ -2,7 +2,7 @@ package com.toastedsiopao.controller;
 
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.service.ActivityLogService; 
-import com.toastedsiopao.service.IssueReportService; // --- ADDED ---
+import com.toastedsiopao.service.IssueReportService;
 import com.toastedsiopao.service.OrderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,9 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
 import java.security.Principal; 
-import java.util.List; // --- ADDED ---
+import java.util.List;
 import java.util.Map; 
-import java.util.stream.Collectors; // --- ADDED ---
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/orders") 
@@ -37,10 +37,8 @@ public class AdminOrderController {
 	@Autowired
 	private ActivityLogService activityLogService;
 	
-	// --- START: ADDED ---
 	@Autowired
 	private IssueReportService issueReportService;
-	// --- END: ADDED ---
 
 	@GetMapping
 	@PreAuthorize("hasAuthority('VIEW_ORDERS')") 
@@ -75,15 +73,12 @@ public class AdminOrderController {
 		model.addAttribute("totalItems", orderPage.getTotalElements()); 
 		model.addAttribute("size", size);
 		
-		// --- START: ADDED ---
-		// Fetch open issue counts for the orders on the current page
 		List<Long> orderIdsOnPage = orderPage.getContent().stream()
 				.map(Order::getId)
 				.collect(Collectors.toList());
 		
 		Map<Long, Long> openIssueCounts = issueReportService.getOpenIssueCountsForOrders(orderIdsOnPage);
 		model.addAttribute("openIssueCounts", openIssueCounts);
-		// --- END: ADDED ---
 
 		return "admin/orders"; 
 	}

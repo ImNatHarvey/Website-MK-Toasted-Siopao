@@ -11,11 +11,9 @@ public class IssueReportResponseDto {
     private String details;
     private String attachmentImageUrl;
     private boolean isOpen;
-    private String reportedAt; // Formatted as String
-    private String username;   // Flattened from user.username
-
-    // Resolution fields
-    private String resolvedAt; // Formatted as String
+    private String reportedAt; 
+    private String username;   
+    private String resolvedAt; 
     private String resolvedByAdmin;
     private String adminNotes;
 }

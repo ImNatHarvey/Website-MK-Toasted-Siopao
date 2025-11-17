@@ -6,9 +6,9 @@ import com.toastedsiopao.dto.UnitOfMeasureDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.UnitOfMeasure;
-import com.toastedsiopao.repository.RecipeIngredientRepository; // --- ADDED ---
+import com.toastedsiopao.repository.RecipeIngredientRepository;
 import com.toastedsiopao.service.ActivityLogService;
-import com.toastedsiopao.service.AdminService; 
+import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.InventoryCategoryService;
 import com.toastedsiopao.service.InventoryItemService;
 import com.toastedsiopao.service.UnitOfMeasureService;
@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException; 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -50,20 +50,18 @@ public class AdminInventoryController {
 	private UnitOfMeasureService unitOfMeasureService;
 	@Autowired
 	private ActivityLogService activityLogService;
-	
-	@Autowired // --- ADDED ---
+
+	@Autowired
 	private RecipeIngredientRepository recipeIngredientRepository;
-	
-	@Autowired 
+
+	@Autowired
 	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
 		redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
-		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll()); // Keeps edit/add modal populated
-		// --- THIS IS THE FIX ---
-		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAllActive()); // For stock modal
-		// --- END FIX ---
+		redirectAttributes.addFlashAttribute("inventoryItems", inventoryItemService.findAll());
+		redirectAttributes.addFlashAttribute("allInventoryItems", inventoryItemService.findAllActive());
 	}
 
 	@GetMapping
@@ -75,19 +73,12 @@ public class AdminInventoryController {
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<InventoryItem> inventoryPage = inventoryItemService.searchItems(keyword, categoryId, pageable);
-
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
-		
-		// --- THIS IS THE FIX ---
-		// Only show ACTIVE items in the "Manage Stock" modal
 		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAllActive();
-		// --- END FIX ---
-
-		List<InventoryItem> allItems = inventoryItemService.findAll(); // Keep this for total value calculation
+		List<InventoryItem> allItems = inventoryItemService.findAll();
 		BigDecimal totalInventoryValue = allItems.stream().map(InventoryItem::getTotalCostValue).reduce(BigDecimal.ZERO,
 				BigDecimal::add);
-
 		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
 
@@ -133,9 +124,7 @@ public class AdminInventoryController {
 			UriComponentsBuilder uriBuilder) {
 		if (result.hasErrors()) {
 			log.warn("Inventory item DTO validation failed. Errors: {}", result.getAllErrors());
-			// --- MODIFIED: Add globalError for toast ---
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
@@ -152,9 +141,8 @@ public class AdminInventoryController {
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
-		} catch (IllegalArgumentException e) { // Keep specific validation catch
+		} catch (IllegalArgumentException e) { 
 			log.warn("Error saving inventory item: {}", e.getMessage());
-			// --- MODIFIED: Add globalError for toast AND keep rejectValue ---
 			if (e.getMessage().contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
 						e.getMessage()));
@@ -162,7 +150,6 @@ public class AdminInventoryController {
 				result.reject("global", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error saving item: " + e.getMessage());
-			// --- END MODIFICATION ---
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
@@ -171,7 +158,6 @@ public class AdminInventoryController {
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
-		// --- REMOVED: generic catch (RuntimeException e) block ---
 
 		return "redirect:/admin/inventory";
 	}
@@ -203,7 +189,7 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
-		} catch (RuntimeException e) { // Keep this for stock-specific errors like "cannot go below zero"
+		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
@@ -213,14 +199,12 @@ public class AdminInventoryController {
 		return "redirect:/admin/inventory";
 	}
 
-	// --- MODIFIED: Renamed endpoint to /delete/{id} ---
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
 	public String deleteOrDeactivateInventoryItem(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, 
-			RedirectAttributes redirectAttributes, Principal principal) {
-		
-		// 1. Validate Password
+			@RequestParam(value = "password", required = false) String password, RedirectAttributes redirectAttributes,
+			Principal principal) {
+
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Action cancelled.");
 			return "redirect:/admin/inventory";
@@ -231,28 +215,26 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("inventoryError", "Inventory item not found.");
 			return "redirect:/admin/inventory";
 		}
-		
+
 		InventoryItem item = itemOpt.get();
 		String itemName = item.getName();
-		
-		// 2. Check Stock
+
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
-			log.warn("Admin {} attempted to delete/deactivate inventory item '{}' (ID: {}) with stock > 0. Blocked.", principal.getName(), itemName, id);
-			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + itemName + "'. Item still has " + item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
+			log.warn("Admin {} attempted to delete/deactivate inventory item '{}' (ID: {}) with stock > 0. Blocked.",
+					principal.getName(), itemName, id);
+			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + itemName
+					+ "'. Item still has " + item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
 			return "redirect:/admin/inventory";
 		}
 
 		try {
-			// 3. Check if item is used in any recipes
 			if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-				// HISTORY EXISTS: Deactivate
 				inventoryItemService.deactivateItem(id);
 				activityLogService.logAdminAction(principal.getName(), "DEACTIVATE_INVENTORY_ITEM",
 						"Deactivated inventory item with recipe usage: " + itemName + " (ID: " + id + ")");
 				redirectAttributes.addFlashAttribute("inventorySuccess",
 						"Item '" + itemName + "' is used in recipes. It has been DEACTIVATED instead of deleted.");
 			} else {
-				// NO HISTORY: Delete Permanently
 				inventoryItemService.deleteItem(id);
 				activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
 						"Permanently deleted inventory item: " + itemName + " (ID: " + id + ")");
@@ -266,14 +248,14 @@ public class AdminInventoryController {
 			log.warn("Failed to delete/deactivate inventory item {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 		}
-		
+
 		return "redirect:/admin/inventory";
 	}
-	
+
 	@PostMapping("/activate/{id}")
 	@PreAuthorize("hasAuthority('DELETE_INVENTORY_ITEMS')")
-	public String activateInventoryItem(@PathVariable("id") Long id,
-			RedirectAttributes redirectAttributes, Principal principal) {
+	public String activateInventoryItem(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
+			Principal principal) {
 
 		try {
 			Optional<InventoryItem> itemOpt = inventoryItemService.findById(id);
@@ -293,8 +275,7 @@ public class AdminInventoryController {
 			log.warn("Failed to activate inventory item {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 		}
-		
+
 		return "redirect:/admin/inventory";
 	}
-	// --- END MODIFICATION ---
 }

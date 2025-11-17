@@ -66,7 +66,5 @@ public class CustomerSignUpDto {
 	@AssertTrue(message = "You must agree to the terms of service")
 	private boolean terms;
 
-	// --- ADDED ---
 	private String cartDataJson;
-	// --- END ADDED ---
 }

@@ -2,17 +2,6 @@
 	url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css")
 	;
 
-/* == PAGINATION STYLING == */
-/* ... REMOVED ... */
-/* == END PAGINATION STYLING == */
-
-/* == UPDATED: Filter Button Styling == */
-/* ... REMOVED ... */
-/* == END Filter Button Styling == */
-
-/* == START: REMOVED ALL .btn-custom AND .btn-action-* STYLES == */
-/* ... Styles were here ... */
-/* == END: REMOVED BUTTON STYLES == */
 .table .btn-sm {
 	border-radius: 0.2rem;
 	padding: 0.25rem 0.5rem;
@@ -30,11 +19,6 @@
 	margin-left: 0;
 }
 
-/* == STATUS BADGE STYLES == */
-/* ... REMOVED ... */
-/* == END STATUS BADGE STYLES == */
-
-/* == START: NEW PASSWORD TOGGLE STYLES == */
 .password-toggle-wrapper {
 	position: relative;
 }
@@ -49,13 +33,11 @@
 	z-index: 5;
 }
 
-/* Make password inputs have space for the icon */
 .password-toggle-wrapper input[type="password"],
-.password-toggle-wrapper input[type="text"] {
+	.password-toggle-wrapper input[type="text"] {
 	padding-right: 2.5rem;
 }
 
-/* Handle inputs inside an input-group */
 .input-group .password-toggle-icon {
 	position: absolute;
 	right: 12px;
@@ -66,11 +48,9 @@
 	z-index: 5;
 }
 
-.input-group input[type="password"],
-.input-group input[type="text"] {
+.input-group input[type="password"], .input-group input[type="text"] {
 	padding-right: 2.5rem;
 }
-/* == END: NEW PASSWORD TOGGLE STYLES == */
 
 .section-title {
 	color: var(--primary);
@@ -192,7 +172,6 @@
 #addCategoryForm .input-group:hover .form-control, #manageStockModal .input-group:hover .form-control,
 	#addProductForm #addProductPrice:hover, #itemForm #itemCost input:hover,
 	#editProductForm #editProductPriceModal:hover {
-	/* Keep default styles on hover */
 	background-color: #fff !important;
 	color: #212529 !important;
 }
@@ -201,9 +180,8 @@
 	display: flex;
 }
 
-/* == SIDEBAR LOGIC (Desktop-first) == */
 .admin-sidebar {
-	width: var(--sidebar-width); /* Full width by default */
+	width: var(--sidebar-width);
 	height: 100vh;
 	position: fixed;
 	top: 0;
@@ -211,22 +189,19 @@
 	background-color: var(--primary);
 	padding: 0;
 	overflow-y: auto;
-	transition: width 0.3s ease-in-out; /* Animate width */
+	transition: width 0.3s ease-in-out;
 	z-index: 1000;
-	overflow-x: hidden; /* Hide text when shrinking */
+	overflow-x: hidden;
 }
 
-/* == HEADER RE-ADDED AND ALIGNED LEFT == */
 .sidebar-header {
 	height: var(--top-nav-height);
-	padding: 0 0.75rem; /* Adjusted padding */
+	padding: 0 0.75rem;
 	background-color: var(--primary);
 	border-bottom: 1px solid #4A6D8C;
 	display: flex;
 	align-items: center;
-	justify-content: flex-start; /* Aligns button to the left */
-	/* transition: justify-content 0.3s ease-in-out; */ /* <-- THIS WAS THE BUG. REMOVED. */
-	/* == ADDED: Ensure header shrinks with sidebar == */
+	justify-content: flex-start;
 	width: 100%;
 	overflow: hidden;
 }
@@ -236,12 +211,11 @@
 	font-size: 1.25rem;
 	font-weight: bold;
 	text-decoration: none;
-	white-space: nowrap; /* Keep brand on one line */
+	white-space: nowrap;
 }
 
 .admin-sidebar .nav {
 	padding: 1rem 0;
-	/* Removed padding-top: 80px */
 }
 
 .admin-sidebar .nav-link {
@@ -252,7 +226,7 @@
 	font-size: 1rem;
 	white-space: nowrap;
 	transition: background-color 0.2s ease, color 0.2s ease;
-	text-align: left; /* Default text alignment */
+	text-align: left;
 }
 
 .admin-sidebar .nav-link:hover {
@@ -270,11 +244,10 @@
 
 .admin-sidebar .nav-link i.fa-fw {
 	margin-right: 8px;
-	/* transition: margin 0.3s ease-in-out; */ /* <-- THIS WAS THE BUG. REMOVED. */
 }
 
 .admin-content {
-	margin-left: var(--sidebar-width); /* Default margin for full sidebar */
+	margin-left: var(--sidebar-width);
 	width: calc(100% - var(--sidebar-width));
 	padding: 0;
 	display: flex;
@@ -283,52 +256,45 @@
 	transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
 }
 
-/* Toggled (Mini-Sidebar) State for Desktop */
 body.sidebar-toggled .admin-sidebar {
-	width: var(--sidebar-width-mini); /* Mini-sidebar width */
+	width: var(--sidebar-width-mini);
 }
 
 body.sidebar-toggled .admin-content {
 	margin-left: var(--sidebar-width-mini);
 	width: calc(100% - var(--sidebar-width-mini));
-	/* == FIX: Correct width when toggled == */
 }
 
 body.sidebar-toggled .sidebar-header {
-	justify-content: flex-start; /* <-- THIS IS THE FIX: Was 'center' */
-	padding: 0 0.75rem; /* <-- THIS IS THE FIX: Match untoggled header */
+	justify-content: flex-start;
+	padding: 0 0.75rem;
 }
 
-/* == ADDED: Default style for the button in the header == */
 .sidebar-header .sidebar-toggle-btn {
 	font-size: 1.25rem;
 	padding: 0.5rem 0.75rem;
 	margin-right: 0.5rem;
 }
 
-/* == ADDED: Centering for the button when toggled == */
-/* --- THIS ENTIRE BLOCK IS THE FIX --- */
-/* Remove all the old centering styles for the toggled button */
 body.sidebar-toggled .sidebar-header .sidebar-toggle-btn {
 	margin-right: 0;
-	padding: 0.5rem 0.75rem; /* Match the default button padding */
-	width: auto; /* Reset width */
-	text-align: left; /* Reset text-align */
-	font-size: 1.25rem; /* Reset font-size */
+	padding: 0.5rem 0.75rem;
+	width: auto;
+	text-align: left;
+	font-size: 1.25rem;
 }
-/* --- END FIX --- */
 
 body.sidebar-toggled .sidebar-brand-text {
-	display: none; /* Hide brand text */
+	display: none;
 }
 
 body.sidebar-toggled .nav-link-text {
-	display: none; /* Hide nav link text */
+	display: none;
 }
 
 body.sidebar-toggled .admin-sidebar .nav-link {
-	text-align: left; /* <-- THIS IS THE FIX: Was 'center' */
-	padding: 0.75rem 1.5rem; /* <-- THIS IS THE FIX: Match untoggled left padding */
+	text-align: left;
+	padding: 0.75rem 1.5rem;
 }
 
 body.sidebar-toggled .admin-sidebar .nav-link i.fa-fw {
@@ -339,7 +305,6 @@ body.sidebar-toggled .admin-sidebar .nav-link.active {
 	margin-right: 0;
 }
 
-/* == END SIDEBAR LOGIC == */
 .admin-content-navbar {
 	height: var(--top-nav-height);
 	background-color: var(--primary);
@@ -354,7 +319,6 @@ body.sidebar-toggled .admin-sidebar .nav-link.active {
 	z-index: 1010;
 }
 
-/* == Style for new brand in top nav == */
 .navbar-brand-top {
 	color: var(--secondary);
 	font-size: 1.25rem;
@@ -367,7 +331,7 @@ body.sidebar-toggled .admin-sidebar .nav-link.active {
 
 .admin-content-navbar .navbar-nav {
 	flex-direction: row;
-	margin-left: auto; /* == ADDED: Pushes user menu to right == */
+	margin-left: auto;
 }
 
 .admin-content-navbar .nav-item {
@@ -388,7 +352,6 @@ body.sidebar-toggled .admin-sidebar .nav-link.active {
 	color: var(--secondary) !important;
 }
 
-/* --- ADDED: Ensure dropdown button in navbar uses correct margin --- */
 .admin-content-navbar .btn-custom {
 	margin-left: 0;
 }
@@ -414,9 +377,6 @@ footer.admin-footer {
 	color: var(--light);
 }
 
-/* == START: REMOVED TOAST STYLES == */
-/* ... Styles were here ... */
-/* == END: REMOVED TOAST STYLES == */
 .threshold-group .threshold-input {
 	flex: 0 0 100px;
 	min-width: 100px;
@@ -459,16 +419,8 @@ footer.admin-footer {
 	padding: 1.5rem;
 	display: flex;
 	align-items: center;
-	/* transition: all 0.3s ease; */ /* <-- REMOVED */
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
-
-/*
-.stats-card-v2:hover {
-	transform: translateY(-5px);
-	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-}
-*/ /* <-- REMOVED HOVER EFFECT */
 
 .stats-card-v2 .stats-icon {
 	font-size: 2.5rem;
@@ -766,39 +718,38 @@ select.form-control-readonly {
 	z-index: 1025;
 }
 
-/* == MOBILE OVERRIDES == */
+/* ======================================================================== */
+/* == START: MOBILE VIEW INTERFACE == */
+/* ======================================================================== */
+
 @media ( max-width : 991.98px) {
-	/* 1. Show the mobile nav, hide desktop nav */
 	.admin-mobile-nav {
 		display: flex;
 	}
 	.admin-content-navbar {
 		display: none;
 	}
-
-	/* 2. Override sidebar to be off-canvas */
 	.admin-sidebar {
-		width: var(--sidebar-width); /* Full width */
-		left: calc(var(--sidebar-width)* -1); /* Off-screen by default */
+		width: var(--sidebar-width); 
+		left: calc(var(--sidebar-width)* -1); 
 		z-index: 1040;
-		transition: left 0.3s ease-in-out; /* Animate left property */
+		transition: left 0.3s ease-in-out; 
 		box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 	}
 	.admin-sidebar .nav {
-		padding-top: 1rem; /* == Reset padding for mobile == */
+		padding-top: 1rem; 
 	}
 	.sidebar-header {
-		display: none; /* == Hide sidebar header on mobile == */
+		display: none; 
 	}
 
-	/* 3. Content is always full width */
 	.admin-content {
-		margin-left: 0 !important; /* !important to override desktop */
+		margin-left: 0 !important; 
 		width: 100%;
-		transition: none; /* No margin animation */
+		transition: none; 
 	}
 	.admin-content-page {
-		padding-top: calc(var(--top-nav-height)+ 15px); /* 70px + 15px */
+		padding-top: calc(var(--top-nav-height)+ 15px);
 		padding-left: 1rem;
 		padding-right: 1rem;
 	}
@@ -806,19 +757,17 @@ select.form-control-readonly {
 		margin-left: 0;
 	}
 
-	/* 4. Toggled state on mobile means OPEN */
 	body.sidebar-toggled .admin-sidebar {
-		width: var(--sidebar-width); /* Explicitly set full width */
-		left: 0; /* Slide in */
+		width: var(--sidebar-width);
+		left: 0; 
 	}
 	body.sidebar-toggled .sidebar-overlay {
-		display: block; /* Show overlay */
+		display: block; 
 	}
 	body.sidebar-toggled .admin-content {
-		margin-left: 0 !important; /* !important to override desktop */
+		margin-left: 0 !important; 
 	}
 
-	/* 5. Override mini-sidebar text hiding */
 	body.sidebar-toggled .sidebar-brand-text {
 		display: inline;
 	}
@@ -836,42 +785,34 @@ select.form-control-readonly {
 	}
 }
 
-/* Specific styling for Site Settings uploaders */
-
-/* Carousel: Make them wide */
 #carousel1Uploader .image-preview, #carousel1Uploader .image-drop-zone,
 	#carousel2Uploader .image-preview, #carousel2Uploader .image-drop-zone,
 	#carousel3Uploader .image-preview, #carousel3Uploader .image-drop-zone
 	{
 	height: 150px;
-	min-height: 150px; /* Override drop-zone min-height */
+	min-height: 150px; 
 }
 
-/* Feature Cards: Default 200px height is fine from .image-preview */
-/* Why Us: Default 200px height is fine */
-
-/* About Us: Make it look more portrait */
 #aboutUploader .image-preview, #aboutUploader .image-drop-zone {
-	height: 400px; /* Make preview taller */
+	height: 400px; 
 	min-height: 400px;
 }
 
-/* GCash QR Uploader: Keep it square */
 #gcashQrUploader {
-	width: 250px; /* Set a fixed width */
-	height: 250px; /* Set a fixed height */
-	margin: 0; /* Removed auto margin */
+	width: 250px; 
+	height: 250px; 
+	margin: 0; 
 }
 
 #gcashQrUploader .image-drop-zone {
-	min-height: 0; /* Reset min-height */
-	height: 100%; /* Fill the container height */
-	padding: 1rem; /* Adjust padding */
+	min-height: 0; 
+	height: 100%; 
+	padding: 1rem;
 }
 
 #gcashQrUploader .image-preview {
-	height: 100%; /* Fill the container height */
-	width: 100%; /* Fill the container width */
-	object-fit: contain; /* 'contain' is better for QR codes */
-	background-color: #f0f0f0; /* Background for non-square QR codes */
+	height: 100%;
+	width: 100%; 
+	object-fit: contain;
+	background-color: #f0f0f0; 
 }

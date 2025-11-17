@@ -17,9 +17,7 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
 	List<OrderItem> findByProduct(Product product);
 	
-	// --- THIS IS THE FIX ---
 	@Query("SELECT COUNT(oi) FROM OrderItem oi WHERE oi.product = :product")
 	long countByProduct(@Param("product") Product product);
-	// --- END FIX ---
 
 }

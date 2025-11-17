@@ -7,7 +7,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-// This DTO captures the form submission from the customer's order page
 @Data
 @NoArgsConstructor
 public class OrderSubmitDto {
@@ -27,7 +26,6 @@ public class OrderSubmitDto {
 	@Email(message = "Invalid email format.")
 	private String email;
 
-	// Location Details
 	@Size(max = 50, message = "House No. cannot exceed 50 characters")
 	private String houseNo;
 
@@ -53,19 +51,13 @@ public class OrderSubmitDto {
 	@Size(max = 100, message = "Province cannot exceed 100 characters")
 	private String province;
 
-	// Order Details
 	@NotBlank(message = "Payment method is required.")
-	private String paymentMethod; // "gcash" or "cod" (values from form)
+	private String paymentMethod; 
 
 	@Size(max = 500, message = "Notes cannot exceed 500 characters")
 	private String notes;
 
-	// --- MODIFIED: Removed @NotBlank validation ---
-	private String cartDataJson; // A JSON string of the cart from sessionStorage
-	// --- END MODIFICATION ---
+	private String cartDataJson; 
 	
-	// --- THIS IS THE FIX ---
-	// Removed @Size(max = 255)
 	private String transactionId;
-	// --- END FIX ---
 }

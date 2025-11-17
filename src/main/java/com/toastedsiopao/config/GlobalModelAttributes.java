@@ -1,6 +1,6 @@
 package com.toastedsiopao.config;
 
-import com.toastedsiopao.dto.IssueReportDto; // --- ADDED ---
+import com.toastedsiopao.dto.IssueReportDto;
 import com.toastedsiopao.model.CartItem; 
 import com.toastedsiopao.model.Notification;
 import com.toastedsiopao.model.SiteSettings;
@@ -35,12 +35,10 @@ public class GlobalModelAttributes {
 	@Autowired
 	private CartService cartService;
 
-	// --- START: NEW METHOD ---
 	@ModelAttribute("issueReportDto")
 	public IssueReportDto issueReportDto() {
 		return new IssueReportDto();
 	}
-	// --- END: NEW METHOD ---
 
 	@ModelAttribute("siteSettings")
 	public SiteSettings addSiteSettingsToModel() {
@@ -51,7 +49,6 @@ public class GlobalModelAttributes {
 	public void addGlobalNotificationAttributes(Model model, Principal principal) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication == null || !authentication.isAuthenticated() || principal == null) {
-			// No user logged in, add empty/zero values to prevent Thymeleaf errors
 			model.addAttribute("unreadAdminNotificationCount", 0L);
 			model.addAttribute("unreadUserNotificationCount", 0L);
 			model.addAttribute("adminNotifications", List.of());
@@ -70,7 +67,6 @@ public class GlobalModelAttributes {
 				.anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"));
 
 		if (isAdmin) {
-			// Admin is logged in
 			List<Notification> adminNotifications = notificationService.getUnreadAdminNotifications(5);
 			long adminCount = notificationService.countUnreadAdminNotifications();
 			model.addAttribute("adminNotifications", adminNotifications);
@@ -84,7 +80,6 @@ public class GlobalModelAttributes {
 			model.addAttribute("cartItemCount", 0);
 
 		} else if (isCustomer) {
-			// Customer is logged in
 			User user = customerService.findByUsername(principal.getName());
 			if (user != null) {
 				List<Notification> userNotifications = notificationService.getUnreadUserNotifications(user, 5);

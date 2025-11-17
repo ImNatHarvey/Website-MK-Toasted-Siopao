@@ -68,15 +68,6 @@ public class CustomerOrderController {
 		if (!model.containsAttribute("orderDto")) {
 			model.addAttribute("orderDto", new OrderSubmitDto());
 		}
-		
-		// --- MODIFICATION: Commented out the empty cart check ---
-		// List<CartItem> cartItems = cartService.getCartForUser(user);
-		// if (cartItems.isEmpty()) {
-		// 	log.warn("User {} accessed /u/order with an empty cart. Redirecting to menu.", user.getUsername());
-		// 	return "redirect:/u/menu";
-		// }
-		// --- END MODIFICATION ---
-		
 		return "customer/order";
 	}
 	
@@ -107,16 +98,14 @@ public class CustomerOrderController {
 			if (!StringUtils.hasText(txId)) {
 				log.warn("GCash order submitted without Transaction ID by user: {}", user.getUsername());
 				bindingResult.rejectValue("transactionId", "orderDto.transactionId", "Transaction ID is required for GCash payments.");
-				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); // Pass back the error
+				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); 
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
 				redirectAttributes.addFlashAttribute("orderError", "Transaction ID is required for GCash payments.");
 				return "redirect:/u/order";
-			// --- THIS IS THE FIX ---
-			} else if (!txId.matches("^\\d{13}$")) { // Check for exactly 13 digits
+			} else if (!txId.matches("^\\d{13}$")) { 
 				log.warn("GCash order submitted with invalid Transaction ID '{}' by user: {}", txId, user.getUsername());
 				bindingResult.rejectValue("transactionId", "orderDto.transactionId", "Invalid Transaction ID. It must be 13 digits.");
-			// --- END FIX ---
-				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); // Pass back the error
+				redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.orderDto", bindingResult); 
 				redirectAttributes.addFlashAttribute("orderDto", orderDto);
 				redirectAttributes.addFlashAttribute("orderError", "Invalid Transaction ID. It must be 13 digits.");
 				return "redirect:/u/order";
@@ -154,9 +143,6 @@ public class CustomerOrderController {
 			orderService.createOrder(user, orderDto, receiptImagePath);
 			
 			redirectAttributes.addFlashAttribute("orderSuccess", "Your order has been placed successfully!");
-			// --- REMOVED: The service now clears the cart ---
-			// redirectAttributes.addFlashAttribute("clearCart", true);
-			// --- END REMOVED ---
 			
 			return "redirect:/u/history"; 
 

@@ -15,7 +15,7 @@ public interface IssueReportRepository extends JpaRepository<IssueReport, Long> 
 
     List<IssueReport> findByOrder(Order order);
     
-    boolean existsByOrder(Order order); // --- ADDED ---
+    boolean existsByOrder(Order order); 
 
     List<IssueReport> findByOrderAndIsOpenTrue(Order order);
 

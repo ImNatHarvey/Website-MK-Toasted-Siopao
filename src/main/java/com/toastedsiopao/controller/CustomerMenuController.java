@@ -38,8 +38,6 @@ public class CustomerMenuController {
 	@Autowired
 	private CategoryService categoryService;
 
-	// --- REMOVED: CustomerService and CartService (now in GlobalModelAttributes) ---
-
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -67,8 +65,6 @@ public class CustomerMenuController {
 		model.addAttribute("totalPages", productPage.getTotalPages());
 		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
-
-		// --- REMOVED: All cart-loading logic is now in GlobalModelAttributes ---
 
 		return "customer/menu";
 	}

@@ -50,9 +50,7 @@ public class AdminDashboardController {
 	@Autowired
 	private ProductService productService;
 
-	// --- ADDED: Helper to format chart data ---
 	private Map<String, List<?>> getFormattedOrderStatusData(Map<String, Long> statusCounts) {
-		// Define the exact order and labels for the chart
 		Map<String, String> orderedLabels = new LinkedHashMap<>();
 		orderedLabels.put(Order.STATUS_PENDING_VERIFICATION, "PENDING (GCASH)");
 		orderedLabels.put(Order.STATUS_PENDING, "PENDING (COD)");
@@ -65,7 +63,6 @@ public class AdminDashboardController {
 		List<String> chartLabels = new ArrayList<>();
 		List<Long> chartData = new ArrayList<>();
 
-		// Iterate in the defined order to ensure colors match the JS file
 		for (Map.Entry<String, String> entry : orderedLabels.entrySet()) {
 			String statusKey = entry.getKey();
 			String statusLabel = entry.getValue();
@@ -77,14 +74,12 @@ public class AdminDashboardController {
 		
 		return Map.of("labels", chartLabels, "data", chartData);
 	}
-	// --- END HELPER ---
 
 	@GetMapping("/dashboard")
 	@PreAuthorize("hasAuthority('VIEW_DASHBOARD')") 
 	public String adminDashboard(Model model) {
 		log.info("Loading admin dashboard...");
 
-		// --- Sales Summary ---
 		BigDecimal salesToday = orderService.getSalesToday();
 		BigDecimal salesThisWeek = orderService.getSalesThisWeek();
 		BigDecimal salesThisMonth = orderService.getSalesThisMonth();
@@ -93,7 +88,6 @@ public class AdminDashboardController {
 		model.addAttribute("salesThisWeek", salesThisWeek);
 		model.addAttribute("salesThisMonth", salesThisMonth);
 
-		// --- COGS & GP Summary (ADDED) ---
 		BigDecimal cogsToday = orderService.getCogsToday();
 		BigDecimal cogsThisWeek = orderService.getCogsThisWeek();
 		BigDecimal cogsThisMonth = orderService.getCogsThisMonth();
@@ -105,9 +99,7 @@ public class AdminDashboardController {
 		model.addAttribute("grossProfitToday", salesToday.subtract(cogsToday));
 		model.addAttribute("grossProfitThisWeek", salesThisWeek.subtract(cogsThisWeek));
 		model.addAttribute("grossProfitThisMonth", salesThisMonth.subtract(cogsThisMonth));
-		// --- END COGS/GP Summary ---
-
-		// --- AOV & Potential Revenue ---
+		
 		BigDecimal totalRevenue = orderService.getTotalRevenueAllTime();
 		long totalTransactions = orderService.getTotalTransactionsAllTime();
 		BigDecimal avgOrderValue = BigDecimal.ZERO;
@@ -116,9 +108,7 @@ public class AdminDashboardController {
 		}
 		model.addAttribute("avgOrderValue", avgOrderValue);
 		model.addAttribute("potentialRevenue", orderService.getTotalPotentialRevenue());
-		// --- End AOV & Potential Revenue ---
 
-		// --- Order Summary ---
 		Map<String, Long> orderStatusCounts = orderService.getOrderStatusCounts();
 		model.addAttribute("totalOrders", orderStatusCounts.values().stream().mapToLong(Long::longValue).sum());
 		model.addAttribute("pendingVerificationOrders", orderStatusCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
@@ -129,7 +119,6 @@ public class AdminDashboardController {
 		model.addAttribute("cancelledOrders", orderStatusCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
 		model.addAttribute("rejectedOrders", orderStatusCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
 
-		// --- Inventory Summary ---
 		model.addAttribute("totalInventoryItems", inventoryItemService.findAll().size()); 
 		model.addAttribute("totalStockQuantity", inventoryItemService.getTotalStockQuantity()); 
 		model.addAttribute("totalStockValue", inventoryItemService.getTotalStockValue());
@@ -137,19 +126,15 @@ public class AdminDashboardController {
 		model.addAttribute("criticalStockItems", inventoryItemService.countCriticalStockItems());
 		model.addAttribute("outOfStockItems", inventoryItemService.countOutOfStockItems());
 		
-		// --- PRODUCT SUMMARY (NEW) ---
 		model.addAttribute("totalProducts", productService.countAllProducts());
 		model.addAttribute("lowStockProducts", productService.countLowStockProducts());
 		model.addAttribute("outOfStockProducts", productService.countOutOfStockProducts());
-		// --- END PRODUCT SUMMARY ---
 
-		// --- User Summary ---
 		model.addAttribute("totalCustomers", customerService.findAllCustomers(null).getTotalElements());
 		model.addAttribute("activeCustomers", customerService.countActiveCustomers());
 		model.addAttribute("newCustomersThisMonth", customerService.countNewCustomersThisMonth());
 		model.addAttribute("totalAdmins", adminService.countAllAdmins());
 
-		// --- Charts ---
 		try {
 			LocalDateTime now = LocalDateTime.now(clock);
 			LocalDateTime thirtyDaysAgo = now.minusDays(30).with(LocalTime.MIN);
@@ -165,11 +150,9 @@ public class AdminDashboardController {
 			model.addAttribute("topProductsChartLabels", objectMapper.writeValueAsString(topProductLabels));
 			model.addAttribute("topProductsChartData", objectMapper.writeValueAsString(topProductData));
 
-			// --- MODIFIED: Use helper to get formatted chart data ---
 			Map<String, List<?>> orderStatusChartData = getFormattedOrderStatusData(orderStatusCounts);
 			model.addAttribute("orderStatusChartLabels", objectMapper.writeValueAsString(orderStatusChartData.get("labels")));
 			model.addAttribute("orderStatusChartData", objectMapper.writeValueAsString(orderStatusChartData.get("data")));
-			// --- END MODIFIED ---
 
 		} catch (JsonProcessingException e) {
 			log.error("Error serializing chart data to JSON", e);

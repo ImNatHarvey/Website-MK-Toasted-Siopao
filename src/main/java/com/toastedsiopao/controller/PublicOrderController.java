@@ -29,7 +29,6 @@ public class PublicOrderController {
 
 	@GetMapping("/order")
 	public String order(Model model) {
-		// Fetch all products for the order summary (can be optimized later)
 		Page<Product> productPage = productService.findAll(Pageable.unpaged());
 		model.addAttribute("products", productPage.getContent());
 		return "order";

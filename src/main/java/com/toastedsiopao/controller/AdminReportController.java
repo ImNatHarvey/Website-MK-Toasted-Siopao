@@ -1,7 +1,7 @@
 package com.toastedsiopao.controller;
 
-import com.toastedsiopao.model.Order; // --- ADDED ---
-import com.toastedsiopao.service.OrderService; // --- ADDED ---
+import com.toastedsiopao.model.Order; 
+import com.toastedsiopao.service.OrderService;
 import com.toastedsiopao.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Optional; // --- ADDED ---
+import java.util.Optional; 
 
 @Controller
 @RequestMapping("/admin/reports")
@@ -34,10 +34,8 @@ public class AdminReportController {
     @Autowired
     private ReportService reportService;
     
-    // --- ADDED ---
     @Autowired
     private OrderService orderService;
-    // --- END ADDED ---
 
     @GetMapping("/financial")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
@@ -53,7 +51,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Financial-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -66,7 +63,6 @@ public class AdminReportController {
 
         } catch (IOException e) {
             log.error("Failed to generate financial report: {}", e.getMessage(), e);
-            // In a real app, you might redirect to an error page
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
             log.error("Unexpected error generating financial report: {}", e.getMessage(), e);
@@ -88,7 +84,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Financial-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName); // Download directly
@@ -121,7 +116,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Inventory-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -154,7 +148,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Inventory-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -187,7 +180,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Product-Report_" + timestamp + ".xlsx";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -220,7 +212,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Product-Report_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
@@ -247,20 +238,14 @@ public class AdminReportController {
         log.info("Generating invoice PDF for Order ID: {}", orderId);
 
         try {
-			// --- START: MODIFIED CODE ---
-			// 1. Fetch the order first
             Order order = orderService.findOrderForInvoice(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
 			
-			// 2. Pass the Order object
             ByteArrayInputStream bis = reportService.generateInvoicePdf(order);
-			// --- END: MODIFIED CODE ---
 
             HttpHeaders headers = new HttpHeaders();
-            // --- MODIFIED: Standardized filename and disposition ---
             String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
-            // --- END MODIFICATION ---
 
             return ResponseEntity
                     .ok()
@@ -270,7 +255,7 @@ public class AdminReportController {
 
         } catch (IllegalArgumentException e) {
             log.warn("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage());
-            return ResponseEntity.notFound().build(); // 404 if order not found
+            return ResponseEntity.notFound().build(); 
         } catch (IOException e) {
             log.error("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
@@ -294,7 +279,6 @@ public class AdminReportController {
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            // --- MODIFIED: Standardized filename ---
             String fileName = "MK-Toasted-Siopao_Activity-Log_Page-" + (page + 1) + "_" + timestamp + ".pdf";
 
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);

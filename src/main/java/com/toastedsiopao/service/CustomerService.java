@@ -1,8 +1,8 @@
 package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.CustomerCreateDto;
-import com.toastedsiopao.dto.CustomerPasswordDto; // ADDED
-import com.toastedsiopao.dto.CustomerProfileDto; // ADDED
+import com.toastedsiopao.dto.CustomerPasswordDto; 
+import com.toastedsiopao.dto.CustomerProfileDto; 
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.dto.PasswordResetDto;
@@ -48,9 +48,7 @@ public interface CustomerService {
 
 	void resetPassword(PasswordResetDto resetDto);
 
-	// --- ADDED METHODS ---
 	void updateCustomerProfile(String currentUsername, CustomerProfileDto profileDto);
 
 	void updateCustomerPassword(String currentUsername, CustomerPasswordDto passwordDto);
-	// --- END ADDED METHODS ---
 }

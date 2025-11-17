@@ -10,14 +10,13 @@
 	--danger: #dc3545; /* Red */
 	--info: #17a2b8; /* Teal */
 	--muted-text: #6c757d; /* Standard muted color */
-	/* Admin Layout Variables */
+
 	--sidebar-width: 260px;
 	--sidebar-width-mini: 80px;
 	--top-nav-height: 70px;
 }
 
 body {
-	/* Modern System Font Stack */
 	font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
 		Roboto, "Helvetica Neue", Arial, sans-serif;
 	color: var(--dark);
@@ -34,9 +33,8 @@ body {
 	border-radius: 30px;
 	padding: 8px 20px;
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	/* transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; */ /* <-- REMOVED */
 	border: 1px solid var(--accent);
-	text-align: center; /* <--- THIS IS THE FIX for button text */
+	text-align: center; /
 }
 
 .btn-custom:hover {
@@ -52,7 +50,6 @@ body {
 	border-radius: 30px;
 	padding: 8px 20px;
 	box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-	/* transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; */ /* <-- REMOVED */
 	border: 1px solid var(--muted-text);
 }
 
@@ -68,7 +65,6 @@ body {
 	font-weight: bold;
 	border-radius: 30px;
 	padding: 8px 20px;
-	/* transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; */ /* <-- REMOVED */
 	border: 1px solid var(--primary);
 }
 
@@ -78,7 +74,6 @@ body {
 	border-color: var(--primary);
 }
 
-/* --- Action Buttons --- */
 .btn-action-add {
 	background-color: var(--primary);
 	color: var(--light);
@@ -134,15 +129,13 @@ body {
 	border-color: #1e7e34;
 }
 
-/* --- ADDED: Button Sizing Overrides --- */
 .btn-custom.btn-sm,
 .btn-custom-secondary.btn-sm,
 .btn-custom-outline.btn-sm {
-	padding: 0.25rem 0.75rem; /* A bit more padding than default btn-sm */
+	padding: 0.25rem 0.75rem; 
 	font-size: 0.875rem;
 }
 
-/* --- Disabled States --- */
 .btn-action-edit:disabled, .btn-action-edit.disabled {
 	background-color: var(--warning);
 	border-color: var(--warning);
@@ -223,7 +216,6 @@ body {
 	box-shadow: none !important;
 }
 
-/* --- Primary --- */
 .btn-outline-primary {
 	color: var(--primary);
 	border-color: var(--primary);
@@ -236,7 +228,6 @@ body {
 	font-weight: bold;
 }
 
-/* --- Success (Delivered) --- */
 .btn-outline-success {
 	color: var(--success);
 	border-color: var(--success);
@@ -249,7 +240,6 @@ body {
 	font-weight: bold;
 }
 
-/* --- Danger (Cancelled) --- */
 .btn-outline-danger {
 	color: var(--danger);
 	border-color: var(--danger);
@@ -262,7 +252,6 @@ body {
 	font-weight: bold;
 }
 
-/* --- Warning (Pending) --- */
 .btn-outline-warning {
 	color: var(--warning);
 	border-color: var(--warning);
@@ -275,7 +264,6 @@ body {
 	font-weight: bold;
 }
 
-/* --- Info (Processing) --- */
 .btn-outline-info {
 	color: var(--info);
 	border-color: var(--info);
@@ -288,7 +276,6 @@ body {
 	font-weight: bold;
 }
 
-/* --- Custom style for Out for Delivery button --- */
 .btn-outline-delivery {
 	color: #13c2c2;
 	border-color: #13c2c2;

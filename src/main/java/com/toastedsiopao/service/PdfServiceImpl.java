@@ -40,7 +40,7 @@ public class PdfServiceImpl implements PdfService {
     private SiteSettingsService siteSettingsService;
 
     @Autowired
-    private OrderService orderService; // To calculate COGS for each order
+    private OrderService orderService; 
 
     @Autowired
     private InventoryItemService inventoryItemService;
@@ -59,16 +59,14 @@ public class PdfServiceImpl implements PdfService {
     private static final Font FONT_BOLD_CELL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, Color.BLACK);
     private static final Font FONT_TOTAL_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
     private static final Font FONT_TOTAL_CELL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.BLACK);
-
-    // --- NEW Fonts for Invoice ---
     private static final Font FONT_INVOICE_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, Color.BLACK);
     private static final Font FONT_INVOICE_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
     private static final Font FONT_INVOICE_BODY = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
     private static final Font FONT_INVOICE_TOTAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
 
 
-    private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); // --primary
-    private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230); // Light gray
+    private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); 
+    private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230);
 
     @Override
     public ByteArrayInputStream generateFinancialReportPdf(List<Order> orders, LocalDateTime start, LocalDateTime end) throws IOException {
@@ -76,16 +74,14 @@ public class PdfServiceImpl implements PdfService {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM dd, yyyy");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try (Document document = new Document(PageSize.A4.rotate())) { // Use landscape
+        try (Document document = new Document(PageSize.A4.rotate())) { 
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // === 1. Add Title ===
             Paragraph title = new Paragraph(settings.getWebsiteName() + " - Financial Report", FONT_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
-            // === 2. Add Date Range ===
             String dateRange = "For all completed orders";
             if (start != null && end != null) {
                 dateRange = "For orders from " + start.format(dtf) + " to " + end.format(dtf);
@@ -99,7 +95,6 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            // === 3. Add Summary Table ===
             log.debug("Calculating summary totals for PDF...");
             BigDecimal totalSales = BigDecimal.ZERO;
             BigDecimal totalCogs = BigDecimal.ZERO;
@@ -110,7 +105,7 @@ public class PdfServiceImpl implements PdfService {
             }
             BigDecimal grossProfit = totalSales.subtract(totalCogs);
 
-            PdfPTable summaryTable = new PdfPTable(4); // 4 columns
+            PdfPTable summaryTable = new PdfPTable(4); 
             summaryTable.setWidthPercentage(100);
             summaryTable.setWidths(new float[] { 2f, 1.5f, 2f, 1.5f });
             summaryTable.setSpacingAfter(20f);
@@ -127,14 +122,11 @@ public class PdfServiceImpl implements PdfService {
             
             document.add(summaryTable);
 
-
-            // === 4. Add Detailed Breakdown Table ===
             log.debug("Building detailed breakdown table for PDF...");
-            PdfPTable detailTable = new PdfPTable(7); // 7 columns
+            PdfPTable detailTable = new PdfPTable(7); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 1f, 1.5f, 2f, 3f, 1.2f, 1.2f, 1.2f }); // Relative widths
+            detailTable.setWidths(new float[] { 1f, 1.5f, 2f, 3f, 1.2f, 1.2f, 1.2f });
 
-            // --- Table Header ---
             addTableHeader(detailTable, "Order ID");
             addTableHeader(detailTable, "Date");
             addTableHeader(detailTable, "Customer");
@@ -143,7 +135,6 @@ public class PdfServiceImpl implements PdfService {
             addTableHeader(detailTable, "Est. COGS");
             addTableHeader(detailTable, "Est. Profit");
 
-            // --- Table Body ---
             DateTimeFormatter orderDtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
             for (Order order : orders) {
                 BigDecimal orderCogs = orderService.calculateCogsForOrder(order);
@@ -162,7 +153,6 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, formatCurrency(orderProfit), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
             }
             
-            // --- Table Footer (Grand Totals) ---
             addTableFooterCell(detailTable, "Grand Totals:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 4);
             addTableFooterCell(detailTable, formatCurrency(totalSales), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
             addTableFooterCell(detailTable, formatCurrency(totalCogs), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
@@ -184,16 +174,14 @@ public class PdfServiceImpl implements PdfService {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try (Document document = new Document(PageSize.A4)) { // Portrait for this report
+        try (Document document = new Document(PageSize.A4)) { 
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // === 1. Add Title ===
             Paragraph title = new Paragraph(settings.getWebsiteName() + " - Inventory Stock Report", FONT_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
-            // === 2. Add Filter Info ===
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Keyword='" + keyword + "' ";
@@ -210,12 +198,11 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            // === 3. Add Summary ===
             BigDecimal grandTotalValue = items.stream()
                     .map(InventoryItem::getTotalCostValue)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-            PdfPTable summaryTable = new PdfPTable(4); // 4 columns
+            PdfPTable summaryTable = new PdfPTable(4); 
             summaryTable.setWidthPercentage(100);
             summaryTable.setWidths(new float[] { 2f, 1f, 2.5f, 2f });
             summaryTable.setSpacingAfter(20f);
@@ -227,12 +214,10 @@ public class PdfServiceImpl implements PdfService {
             
             document.add(summaryTable);
             
-            // === 4. Add Detailed Inventory Table ===
-            PdfPTable detailTable = new PdfPTable(8); // 8 columns
+            PdfPTable detailTable = new PdfPTable(8); 
             detailTable.setWidthPercentage(100);
             detailTable.setWidths(new float[] { 0.8f, 2.5f, 1.8f, 1f, 0.8f, 1.2f, 1.5f, 1f });
 
-            // --- Table Header ---
             addTableHeader(detailTable, "ID");
             addTableHeader(detailTable, "Item Name");
             addTableHeader(detailTable, "Category");
@@ -242,7 +227,6 @@ public class PdfServiceImpl implements PdfService {
             addTableHeader(detailTable, "Total Value");
             addTableHeader(detailTable, "Status");
             
-            // --- Table Body ---
             for (InventoryItem item : items) {
                 addTableCell(detailTable, item.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, item.getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -254,7 +238,6 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, item.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
             }
             
-            // --- Table Footer (Grand Total) ---
             addTableFooterCell(detailTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 6);
             addTableFooterCell(detailTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 2);
 
@@ -268,22 +251,19 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    
     @Override
     public ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try (Document document = new Document(PageSize.A4.rotate())) { // Landscape
+        try (Document document = new Document(PageSize.A4.rotate())) {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // === 1. Add Title ===
             Paragraph title = new Paragraph(settings.getWebsiteName() + " - Product & Recipe Report", FONT_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
-            // === 2. Add Filter Info ===
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Keyword='" + keyword + "' ";
@@ -300,12 +280,10 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            // === 3. Add Detailed Product Table ===
-            PdfPTable detailTable = new PdfPTable(8); // 8 columns
+            PdfPTable detailTable = new PdfPTable(8); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 0.8f, 2f, 1.5f, 1f, 1f, 1f, 1.2f, 3.5f }); // Relative widths
+            detailTable.setWidths(new float[] { 0.8f, 2f, 1.5f, 1f, 1f, 1f, 1.2f, 3.5f });
 
-            // --- Table Header ---
             addTableHeader(detailTable, "ID");
             addTableHeader(detailTable, "Product Name");
             addTableHeader(detailTable, "Category");
@@ -315,13 +293,12 @@ public class PdfServiceImpl implements PdfService {
             addTableHeader(detailTable, "Stock Status");
             addTableHeader(detailTable, "Recipe Ingredients");
             
-            // --- Table Body ---
             for (Product product : products) {
                 String recipe = product.getIngredients().stream()
                         .map(ing -> ing.getQuantityNeeded() + " " +
                                 (ing.getInventoryItem().getUnit() != null ? ing.getInventoryItem().getUnit().getAbbreviation() : "units") +
                                 " of " + ing.getInventoryItem().getName())
-                        .collect(Collectors.joining("\n")); // Newline for each ingredient
+                        .collect(Collectors.joining("\n")); 
 
                 addTableCell(detailTable, product.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, product.getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -348,11 +325,10 @@ public class PdfServiceImpl implements PdfService {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try (Document document = new Document(PageSize.A4)) { // Portrait
+        try (Document document = new Document(PageSize.A4)) { 
             PdfWriter.getInstance(document, out);
             document.open();
             
-            // === 1. Title ===
             Paragraph title = new Paragraph("INVOICE / ORDER RECEIPT", FONT_INVOICE_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
@@ -362,12 +338,10 @@ public class PdfServiceImpl implements PdfService {
             storeName.setSpacingAfter(20f);
             document.add(storeName);
 
-            // === 2. Order & Customer Details (2-column layout) ===
             PdfPTable infoTable = new PdfPTable(2);
             infoTable.setWidthPercentage(100);
             infoTable.setWidths(new float[] { 1f, 1f });
 
-            // --- Column 1: Order Details ---
             PdfPCell orderCell = new PdfPCell();
             orderCell.setBorder(Rectangle.NO_BORDER);
             orderCell.setPadding(5);
@@ -386,7 +360,6 @@ public class PdfServiceImpl implements PdfService {
             orderCell.addElement(new Phrase("PAYMENT STATUS:", FONT_INVOICE_HEADER));
             orderCell.addElement(new Phrase(order.getPaymentStatus().replace("_", " "), FONT_INVOICE_BODY));
 
-            // --- MODIFICATION: Add Transaction ID and QR Code ---
             if ("gcash".equalsIgnoreCase(order.getPaymentMethod())) {
                 if (StringUtils.hasText(order.getTransactionId())) {
                     orderCell.addElement(Chunk.NEWLINE);
@@ -400,7 +373,7 @@ public class PdfServiceImpl implements PdfService {
                         Resource qrCodeResource = fileStorageService.loadAsResource(order.getPaymentReceiptImageUrl());
                         if (qrCodeResource != null && qrCodeResource.exists()) {
                             Image qrImage = Image.getInstance(qrCodeResource.getURL());
-                            qrImage.scaleToFit(100, 100); // Scale image to fit
+                            qrImage.scaleToFit(100, 100); 
                             orderCell.addElement(qrImage);
                         } else {
                             log.warn("Could not load QR code image for invoice: {}", order.getPaymentReceiptImageUrl());
@@ -412,9 +385,7 @@ public class PdfServiceImpl implements PdfService {
                     }
                 }
             }
-            // --- END MODIFICATION ---
-
-            // --- Column 2: Customer Details ---
+            
             PdfPCell customerCell = new PdfPCell();
             customerCell.setBorder(Rectangle.NO_BORDER);
             customerCell.setPadding(5);
@@ -431,19 +402,16 @@ public class PdfServiceImpl implements PdfService {
             infoTable.addCell(customerCell);
             document.add(infoTable);
 
-            // === 3. Line Items Table ===
             PdfPTable itemsTable = new PdfPTable(4);
             itemsTable.setWidthPercentage(100);
             itemsTable.setWidths(new float[] { 4f, 1f, 1.5f, 1.5f });
             itemsTable.setSpacingBefore(20f);
             
-            // --- Items Header ---
             addTableHeader(itemsTable, "Item Description");
             addTableHeader(itemsTable, "Qty");
             addTableHeader(itemsTable, "Unit Price");
             addTableHeader(itemsTable, "Total");
             
-            // --- Items Body ---
             for (OrderItem item : order.getItems()) {
                 addTableCell(itemsTable, item.getProduct().getName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(itemsTable, item.getQuantity().toString(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
@@ -451,7 +419,6 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(itemsTable, formatCurrency(item.getTotalPrice()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
             }
             
-            // --- Items Footer (Total) ---
             PdfPCell totalLabelCell = new PdfPCell(new Phrase("TOTAL AMOUNT", FONT_INVOICE_TOTAL));
             totalLabelCell.setColspan(3);
             totalLabelCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
@@ -469,7 +436,6 @@ public class PdfServiceImpl implements PdfService {
             
             document.add(itemsTable);
             
-            // === 4. Notes ===
             if (StringUtils.hasText(order.getNotes())) {
                 Paragraph notesHeader = new Paragraph("NOTES:", FONT_INVOICE_HEADER);
                 notesHeader.setSpacingBefore(15f);
@@ -487,22 +453,19 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    // === NEW ACTIVITY LOG PDF IMPLEMENTATION ===
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        try (Document document = new Document(PageSize.A4.rotate())) { // Landscape
+        try (Document document = new Document(PageSize.A4.rotate())) { 
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // === 1. Add Title ===
             Paragraph title = new Paragraph(settings.getWebsiteName() + " - Admin Activity Log", FONT_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
-            // === 2. Add Page Info ===
             String pageInfo = String.format("Page %d of %d (Entries %d-%d of %d)",
                     logPage.getNumber() + 1,
                     logPage.getTotalPages(),
@@ -515,18 +478,15 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            // === 3. Add Detailed Log Table ===
-            PdfPTable detailTable = new PdfPTable(4); // 4 columns
+            PdfPTable detailTable = new PdfPTable(4);
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f }); // Relative widths
+            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f }); 
 
-            // --- Table Header ---
             addTableHeader(detailTable, "Timestamp");
             addTableHeader(detailTable, "Admin User");
             addTableHeader(detailTable, "Action");
             addTableHeader(detailTable, "Details");
 
-            // --- Table Body ---
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             for (ActivityLogEntry logEntry : logPage.getContent()) {
                 addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -544,9 +504,6 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
-
-    // === PDF Cell Helpers ===
 
     private void addTableHeader(PdfPTable table, String headerTitle) {
         PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));

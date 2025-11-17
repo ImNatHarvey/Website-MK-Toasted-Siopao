@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
-// --- IMPORT REMOVED ---
-// import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -57,47 +55,35 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 			log.warn("--- User {} has a NULL role! ---", user.getUsername());
 		}
 		
-		// --- START: MODIFICATION FOR INACTIVE ADMINS ---
 		boolean enabled = true;
 		String roleName = (user.getRole() != null) ? user.getRole().getName() : "";
 
-		// Check if the user is an admin (not a customer) AND their status is INACTIVE
 		if (!CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
 			enabled = false;
 			log.warn("--- User {} is an admin and is set to INACTIVE. Marking as disabled. ---", user.getUsername());
 		} else if (CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
 			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---", user.getUsername());
-			// We still allow them to log in, so 'enabled' remains true.
 		}
 		
 		Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
 
-		// Use the full constructor to pass the 'enabled' status
-		// This allows DaoAuthenticationProvider to throw the DisabledException itself.
 		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
 				enabled, true, true, true, authorities);
-		// --- END: MODIFICATION FOR INACTIVE ADMINS ---
 	}
 
 	private Collection<? extends GrantedAuthority> getAuthorities(User user) {
-		// --- UPDATED FOR ROLE-BASED ONLY PERMISSIONS ---
 		Set<GrantedAuthority> authorities = new HashSet<>();
 
-		// 1. Add the Role name itself (e.g., "ROLE_STAFF")
 		if (user.getRole() != null) {
 			authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
 
-			// 2. Add all permissions from the Role
 			authorities.addAll(user.getRole().getPermissions().stream()
 					.map(permissionString -> new SimpleGrantedAuthority(permissionString)).collect(Collectors.toSet()));
 		} else {
 			log.error("User {} has no role! Assigning no authorities.", user.getUsername());
 		}
 
-		// 3. REMOVED: Individual permission overrides
-
 		log.debug("--- Assigning role-based authorities for {}: {} ---", user.getUsername(), authorities);
 		return authorities;
-		// --- END UPDATE ---
 	}
 }

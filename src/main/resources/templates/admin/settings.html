@@ -36,6 +36,63 @@
 						<div class="form-text">This appears in the browser tab and
 							navbar.</div>
 					</div>
+
+					<div class="row">
+						<div class="col-md-6 mb-3">
+							<label class="form-label">Website Logo</label>
+							<div class="image-uploader-container" id="websiteLogoUploader">
+								<input type="hidden" th:field="*{websiteLogo}" /> <input
+									type="hidden" name="removeWebsiteLogo" value="false"
+									class="image-remove-flag" /> <input type="file"
+									name="websiteLogoFile" class="image-uploader-input"
+									accept="image/png, image/jpeg, image/gif">
+								<div class="image-drop-zone">
+									<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+									<p class="mb-0 small">
+										<strong>Choose file</strong> or drag here. (Recommended:
+										.png)
+									</p>
+								</div>
+								<div class="image-preview-container">
+									<img src="" alt="Image Preview" class="image-preview">
+									<button type="button"
+										class="btn btn-sm btn-danger image-remove-btn"
+										title="Remove Image">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</div>
+							</div>
+							<div class="form-text">Shown in the navbar. Recommended:
+								Square, transparent .png (e.g., 100x100px).</div>
+						</div>
+						<div class="col-md-6 mb-3">
+							<label class="form-label">Website Favicon</label>
+							<div class="image-uploader-container" id="websiteFaviconUploader">
+								<input type="hidden" th:field="*{websiteFavicon}" /> <input
+									type="hidden" name="removeWebsiteFavicon" value="false"
+									class="image-remove-flag" /> <input type="file"
+									name="websiteFaviconFile" class="image-uploader-input"
+									accept="image/x-icon, image/vnd.microsoft.icon, image/png">
+								<div class="image-drop-zone">
+									<i class="fa-solid fa-cloud-arrow-up text-muted"></i>
+									<p class="mb-0 small">
+										<strong>Choose file</strong> or drag here. (Recommended:
+										.ico)
+									</p>
+								</div>
+								<div class="image-preview-container">
+									<img src="" alt="Image Preview" class="image-preview">
+									<button type="button"
+										class="btn btn-sm btn-danger image-remove-btn"
+										title="Remove Image">
+										<i class="fa-solid fa-trash"></i>
+									</button>
+								</div>
+							</div>
+							<div class="form-text">Browser tab icon. Recommended: .ico
+								file (e.g., 32x32px).</div>
+						</div>
+					</div>
 				</div>
 			</section>
 

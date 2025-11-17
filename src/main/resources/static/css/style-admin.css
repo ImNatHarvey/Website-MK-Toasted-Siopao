@@ -804,15 +804,38 @@ select.form-control-readonly {
 	margin: 0; 
 }
 
-#gcashQrUploader .image-drop-zone {
-	min-height: 0; 
-	height: 100%; 
-	padding: 1rem;
-}
-
-#gcashQrUploader .image-preview {
+#gcashQrUploader .image-preview, #gcashQrUploader .image-drop-zone {
 	height: 100%;
 	width: 100%; 
 	object-fit: contain;
 	background-color: #f0f0f0; 
+}
+
+#websiteLogoUploader {
+	width: 250px;
+	height: 250px; 
+}
+#websiteLogoUploader .image-preview, #websiteLogoUploader .image-drop-zone {
+    height: 100%;
+    min-height: 0;
+    width: 100%;
+    padding: 0.5rem;
+}
+#websiteLogoUploader .image-preview {
+	object-fit: contain;
+	background-color: #f0f0f0;
+}
+
+#websiteFaviconUploader {
+	width: 150px;
+	height: 150px;
+}
+#websiteFaviconUploader .image-preview, #websiteFaviconUploader .image-drop-zone {
+	height: 100%;
+	min-height: 0;
+	padding: 0.5rem;
+}
+ #websiteFaviconUploader .image-preview {
+	object-fit: contain;
+    background-color: #f0f0f0;
 }

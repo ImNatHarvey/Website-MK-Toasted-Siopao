@@ -16,6 +16,14 @@
 	color: var(--light); 
 }
 
+/* --- NEW STYLE --- */
+.navbar-logo {
+	height: 30px; /* Adjust height as needed */
+	width: auto;
+	object-fit: contain;
+}
+/* --- END NEW STYLE --- */
+
 .nav-link {
 	color: var(--light); 
 	margin: 0 10px;

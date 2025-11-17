@@ -26,7 +26,7 @@ public class AdminSiteController {
 
 	private static final Logger log = LoggerFactory.getLogger(AdminSiteController.class);
 
-	private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
+	private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif", "image/x-icon", "image/vnd.microsoft.icon");
 
 	@Autowired
 	private ActivityLogService activityLogService;
@@ -63,7 +63,7 @@ public class AdminSiteController {
 			String contentType = file.getContentType();
 			if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType.toLowerCase())) {
 				log.warn("Invalid file type uploaded: {}", contentType);
-				throw new IllegalArgumentException("Invalid file type. Only JPG, PNG, or GIF are allowed.");
+				throw new IllegalArgumentException("Invalid file type. Only JPG, PNG, GIF, or ICO are allowed.");
 			}
 
 			log.info("File type OK. Storing...");
@@ -94,6 +94,8 @@ public class AdminSiteController {
 	@PostMapping("/settings/update")
 	@PreAuthorize("hasAuthority('EDIT_SITE_SETTINGS')")
 	public String updateSiteSettings(@ModelAttribute("siteSettings") SiteSettings formSettings,
+			@RequestParam(value = "websiteLogoFile", required = false) MultipartFile websiteLogoFile,
+			@RequestParam(value = "websiteFaviconFile", required = false) MultipartFile websiteFaviconFile,
 			@RequestParam(value = "carouselImage1File", required = false) MultipartFile carouselImage1File,
 			@RequestParam(value = "carouselImage2File", required = false) MultipartFile carouselImage2File,
 			@RequestParam(value = "carouselImage3File", required = false) MultipartFile carouselImage3File,
@@ -104,6 +106,8 @@ public class AdminSiteController {
 			@RequestParam(value = "whyUsImageFile", required = false) MultipartFile whyUsImageFile,
 			@RequestParam(value = "aboutImageFile", required = false) MultipartFile aboutImageFile,
 			@RequestParam(value = "gcashQrCodeFile", required = false) MultipartFile gcashQrCodeFile,
+			@RequestParam(value = "removeWebsiteLogo", defaultValue = "false") boolean removeWebsiteLogo,
+			@RequestParam(value = "removeWebsiteFavicon", defaultValue = "false") boolean removeWebsiteFavicon,
 			@RequestParam(value = "removeCarouselImage1", defaultValue = "false") boolean removeCarouselImage1,
 			@RequestParam(value = "removeCarouselImage2", defaultValue = "false") boolean removeCarouselImage2,
 			@RequestParam(value = "removeCarouselImage3", defaultValue = "false") boolean removeCarouselImage3,
@@ -123,6 +127,12 @@ public class AdminSiteController {
 
 		try {
 			settingsToUpdate.setWebsiteName(formSettings.getWebsiteName());
+			
+			settingsToUpdate.setWebsiteLogo(handleImageUpload(websiteLogoFile, removeWebsiteLogo,
+					settingsToUpdate.getWebsiteLogo(), defaultSettings.getWebsiteLogo()));
+			settingsToUpdate.setWebsiteFavicon(handleImageUpload(websiteFaviconFile, removeWebsiteFavicon,
+					settingsToUpdate.getWebsiteFavicon(), defaultSettings.getWebsiteFavicon()));
+			
 			settingsToUpdate.setGcashName(formSettings.getGcashName());
 			settingsToUpdate.setGcashNumber(formSettings.getGcashNumber());
 			settingsToUpdate.setFeaturedProductsTitle(formSettings.getFeaturedProductsTitle());

@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	console.log("admin-settings.js loaded");
 
 	const uploaderIds = [
+		'websiteLogoUploader', 'websiteFaviconUploader',
 		'carousel1Uploader', 'carousel2Uploader', 'carousel3Uploader',
 		'feature1Uploader', 'feature2Uploader', 'feature3Uploader', 'feature4Uploader',
 		'whyUsUploader', 'aboutUploader', 'gcashQrUploader'

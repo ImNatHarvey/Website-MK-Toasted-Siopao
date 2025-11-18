@@ -127,7 +127,7 @@
 							<li th:each="notif : ${userNotifications}">
 								<a class="dropdown-item notification-item" th:href="@{${notif.link}}" th:data-notification-id="${notif.id}">
 									<span class="d-block small" th:text="${notif.message}">...</span>
-									<span class_block text-muted" style="font-size: 0.75rem;" 
+									<span class="block text-muted" style="font-size: 0.75rem;" 
 										th:text="${#temporals.format(notif.createdAt, 'MMM dd, h:mm a')}"></span>
 								</a>
 							</li>

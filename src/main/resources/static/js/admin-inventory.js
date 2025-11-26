@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		return;
 	}
 
-	// --- addItemModal (Complex) - Refactored 'show.bs.modal' listener for Bug 2 ---
+	// --- addItemModal (Complex) ---
 	const addItemModal = document.getElementById('addItemModal');
 	if (addItemModal) {
 		const itemForm = addItemModal.querySelector('#itemForm');
@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemNameInput = addItemModal.querySelector('#itemName');
 		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
+		const itemStatusSelect = addItemModal.querySelector('#itemStatus'); 
+		// Removed itemStatusWarning element reference
 
 		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer');
 
@@ -26,79 +28,88 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
 		const itemCostInput = addItemModal.querySelector('#itemCost');
 
+		// Removed helper to toggle status warning text
+		
+		// Removed itemStatusSelect.addEventListener('change', ...)
+		
+
+
 		addItemModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
 			const isEdit = button && button.classList.contains('edit-item-btn');
-
-			// This is the flag set by Thymeleaf on validation error
+			
 			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
-			console.log("Add/Edit Item Modal 'show.bs.modal' event. IsEdit:", isEdit, "IsValidationReopen:", isValidationReopen);
+            const dataset = isEdit ? button.dataset : {};
 
-			// --- BUG FIX 2 (ENHANCED) START ---
-			// We must explicitly clear validation and reset the form on ANY fresh open
-			// (i.e., any open that is NOT a validation reopen)
+			// --- Step 1: Handle Validation Reopen vs. Fresh Open (Resetting all fields if new session) ---
 			if (!isValidationReopen) {
-				console.log("Fresh open (Not validation reopen). Forcing form reset and clearing validation.");
+                // This is a fresh open (Add or Edit button click)
 				if (itemForm) {
 					itemForm.reset();
-					// 1. Remove invalid classes
-					itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-
-					// 2. Erase old error message text
-					// This prevents script.js from re-adding 'is-invalid' on 'shown.bs.modal'
-					itemForm.querySelectorAll('.invalid-feedback').forEach(el => {
-						if (el.getAttribute('th:if') === null) { // Don't clear Thymeleaf-generated errors
-							el.textContent = '';
-							el.classList.remove('d-block');
-						}
-					});
+					// Clear validation classes, etc.
+                    itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                    itemForm.querySelectorAll('.invalid-feedback').forEach(el => {
+                        if (el.getAttribute('th:if') === null) {
+                            el.textContent = '';
+                            el.classList.remove('d-block');
+                        }
+                    });
 				}
-				// 3. Also clear any global error alerts that might be lingering
-				const globalError = itemForm ? itemForm.querySelector('.alert.alert-danger') : null;
-				if (globalError && globalError.getAttribute('th:if') === null) {
-					globalError.remove();
-				}
+				// Explicitly clear non-standard fields for a guaranteed clean slate
+                itemIdInput.value = '';
+                itemStockInfoContainer.style.display = 'none';
+				
+				// --- FIX: Explicitly clear main input/select fields for ADD mode clean slate ---
+				itemNameInput.value = '';
+				itemCategorySelect.value = '';
+				itemUnitSelect.value = '';
+				itemCostInput.value = '';
+				itemLowThresholdInput.value = '';
+				itemCriticalThresholdInput.value = '';
+				if (itemStatusSelect) itemStatusSelect.value = 'ACTIVE';
+				// --- END FIX ---
 			}
-			// --- BUG FIX 2 (ENHANCED) END ---
+            
+            // --- Step 2: Determine Add vs. Edit/Reopen State and Set UI ---
+			let isExistingItem = isEdit || (isValidationReopen && itemIdInput.value);
 
-			if (isEdit && button.dataset) {
-				// This is a fresh Edit, or a validation reopen of an Edit
-				console.log("Populating modal for EDIT with data:", button.dataset);
-				modalTitle.textContent = 'Edit Inventory Item';
-
-				if (!isValidationReopen) {
-					// Populate form only if it's a fresh edit
-					// (if validation reopen, Thymeleaf already populated it)
-					itemIdInput.value = button.dataset.id || '';
-					itemNameInput.value = button.dataset.name || '';
-					itemCategorySelect.value = button.dataset.categoryId || '';
-					itemUnitSelect.value = button.dataset.unitId || '';
-					if (itemStockHiddenInput) itemStockHiddenInput.value = button.dataset.currentStock || '0.00';
-					itemLowThresholdInput.value = parseFloat(button.dataset.lowThreshold || '0').toFixed(0);
-					itemCriticalThresholdInput.value = parseFloat(button.dataset.criticalThreshold || '0').toFixed(0);
-					itemCostInput.value = button.dataset.cost || '';
-				}
-
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'block';
+			if (itemStatusSelect) itemStatusSelect.disabled = false;
+            
+			if (isExistingItem) {
+                // Case A: Fresh Edit or Validation Reopen of an Edit
+                
+                // For a FRESH EDIT, populate fields now (overwriting the reset defaults/explicit clears)
+                if (isEdit && !isValidationReopen) {
+					console.log("Fresh Edit: Populating fields from button dataset.");
+                    itemIdInput.value = dataset.id || '';
+                    itemNameInput.value = dataset.name || '';
+                    itemCategorySelect.value = dataset.categoryId || '';
+                    itemUnitSelect.value = dataset.unitId || '';
+                    itemStatusSelect.value = dataset.itemStatus || 'ACTIVE';
+                    if (itemStockHiddenInput) itemStockHiddenInput.value = dataset.currentStock || '0.00';
+                    itemLowThresholdInput.value = parseFloat(dataset.lowThreshold || '0').toFixed(0);
+                    itemCriticalThresholdInput.value = parseFloat(dataset.criticalThreshold || '0').toFixed(0);
+                    itemCostInput.value = dataset.cost || '';
+                } 
+				
+				// Set title based on current value (for reopen) or fresh value (for click)
+				modalTitle.textContent = 'Edit Inventory Item: ' + (itemNameInput.value || 'N/A');
+                itemStockInfoContainer.style.display = 'block';
 
 			} else {
-				// This is a fresh Add, or a validation reopen of an Add
-				console.log("Populating modal for ADD.");
-				modalTitle.textContent = 'Add New Inventory Item';
-				itemIdInput.value = ''; // Ensure ID is clear
-
-				if (itemStockInfoContainer) itemStockInfoContainer.style.display = 'none';
-
-				if (isValidationReopen) {
-					console.log("Modal is reopening from ADD validation.");
-					// Values are already set by Thymeleaf
-				} else {
-					// Fresh Add, form was already reset
-					itemLowThresholdInput.value = '';
-					itemCriticalThresholdInput.value = '';
+                // Case B: Fresh Add (guaranteed clean slate) or Validation Reopen (Add)
+				
+				// Set default title 
+                modalTitle.textContent = 'Add New Inventory Item';
+                itemStockInfoContainer.style.display = 'none';
+				
+				if (!isValidationReopen) {
+					if (itemStatusSelect) itemStatusSelect.value = 'ACTIVE';
 				}
 			}
-
+            
+            // --- Step 3: Final UI Adjustments ---
+			// Removed status warning toggle call
 			initThresholdSliders(addItemModal);
 		});
 
@@ -106,12 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
 
 			if (isValidationReopen) {
-				console.log("Resetting showAddItemModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-item-modal');
 			}
-
-			// We no longer need to reset the form here,
-			// the 'show.bs.modal' listener does it robustly before showing.
+			if (itemStatusSelect) itemStatusSelect.disabled = false; 
+			// Removed status warning reset call
 		});
 	}
 
@@ -122,17 +131,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
-				console.log("Clearing Manage Categories modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showManageCategoriesModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-categories-modal');
 			}
 		});
 	}
 
-	// --- editInvCategoryModal (Simple) - REFACTORED ---
+	// --- editInvCategoryModal (Simple) - REFACTORED (Still simple form) ---
 	initializeModalForm({
 		modalId: 'editInvCategoryModal',
 		formId: 'editInvCategoryForm',
@@ -148,19 +155,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		manageUnitsModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageUnitsModal !== 'true') {
-				console.log("Clearing Manage Units modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const globalError = form ? form.querySelector('.invalid-feedback.d-block') : null;
 				if (globalError) globalError.textContent = '';
 			} else {
-				console.log("Resetting showManageUnitsModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-units-modal');
 			}
 		});
 	}
 
-	// --- editUnitModal (Simple) - REFACTORED ---
+	// --- editUnitModal (Simple) - REFACTORED (Still simple form) ---
 	initializeModalForm({
 		modalId: 'editUnitModal',
 		formId: 'editUnitForm',
@@ -173,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
 		manageStockModal.addEventListener('hidden.bs.modal', function() {
-			console.log("Clearing Manage Stock (Inventory) modal inputs on hide.")
 			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
 				input.value = '';
 			});
@@ -181,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- viewItemModal (Custom) - Left as-is ---
+	// --- viewItemModal (Custom) - MODIFIED to include Item Status ---
 	const viewItemModal = document.getElementById('viewItemModal');
 	if (viewItemModal) {
 		viewItemModal.addEventListener('show.bs.modal', function(event) {
@@ -192,7 +196,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			const dataset = button.dataset;
-			console.log("Populating View Item Modal with data:", dataset);
 
 			const setText = (id, value) => {
 				const el = viewItemModal.querySelector(id);
@@ -212,6 +215,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			setText('#viewItemLowThreshold', dataset.lowThreshold);
 			setText('#viewItemCriticalThreshold', dataset.criticalThreshold);
 			setText('#viewItemLastUpdated', 'Last Updated: ' + (dataset.lastUpdated || 'N/A'));
+			
+			// ADDED: Item Active Status
+			setText('#viewItemActiveStatus', dataset.itemStatus || 'N/A');
 
 			const statusBadge = viewItemModal.querySelector('#viewItemStatusBadge');
 			if (statusBadge) {

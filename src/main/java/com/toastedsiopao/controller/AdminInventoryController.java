@@ -122,6 +122,9 @@ public class AdminInventoryController {
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
+		
+		boolean isNew = itemDto.getId() == null;
+		
 		if (result.hasErrors()) {
 			log.warn("Inventory item DTO validation failed. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
@@ -129,33 +132,67 @@ public class AdminInventoryController {
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "addItemModal").build()
-					.toUriString();
+			
+			String modal = "addItemModal";
+			UriComponentsBuilder builder = uriBuilder.path("/admin/inventory").queryParam("showModal", modal);
+			
+			if (!isNew && itemDto.getId() != null) {
+				builder = builder.queryParam("editId", itemDto.getId());
+			}
+			String redirectUrl = builder.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 		try {
 			InventoryItem savedItem = inventoryItemService.save(itemDto);
-			String action = itemDto.getId() == null ? "ADD_INVENTORY_ITEM" : "EDIT_INVENTORY_ITEM";
-			String message = itemDto.getId() == null ? "Added" : "Updated";
+			String action = isNew ? "ADD_INVENTORY_ITEM" : "EDIT_INVENTORY_ITEM";
+			String message = isNew ? "Added" : "Updated";
 			activityLogService.logAdminAction(principal.getName(), action,
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
 		} catch (IllegalArgumentException e) { 
 			log.warn("Error saving inventory item: {}", e.getMessage());
-			if (e.getMessage().contains("already exists")) {
+			
+			String errorMessage = e.getMessage();
+			String toastMessage = null;
+
+			// --- MODIFIED: Handle specific status error messages and bind to itemStatus field ---
+			if (errorMessage.startsWith("status.hasStock:") || errorMessage.startsWith("status.inRecipe:")) {
+				// The full message includes "• " for the modal display
+				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
+				
+				// Add FieldError for modal display
+				result.addError(new FieldError("inventoryItemDto", "itemStatus", itemDto.getItemStatus(), false, null, null, fieldSpecificError));
+				
+				// Toast message should NOT have the bullet
+				toastMessage = fieldSpecificError.replaceFirst("• ", "");
+			} else if (errorMessage.contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
-						e.getMessage()));
-			} else if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage());
+						errorMessage));
+				toastMessage = errorMessage;
+			} else if (errorMessage.contains("threshold")) {
+				result.reject("global", errorMessage); 
+				toastMessage = errorMessage;
+			} else {
+				result.reject("global", errorMessage);
+				toastMessage = "Error saving item: " + errorMessage;
 			}
-			redirectAttributes.addFlashAttribute("globalError", "Error saving item: " + e.getMessage());
+			// --- END MODIFIED ---
+			
+			redirectAttributes.addFlashAttribute("globalError", toastMessage);
+
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "addItemModal").build()
-					.toUriString();
+			
+			String modal = "addItemModal";
+			UriComponentsBuilder builder = uriBuilder.path("/admin/inventory").queryParam("showModal", modal);
+			
+			if (!isNew && itemDto.getId() != null) {
+				builder = builder.queryParam("editId", itemDto.getId());
+			}
+			String redirectUrl = builder.build().toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
@@ -228,25 +265,24 @@ public class AdminInventoryController {
 		}
 
 		try {
-			if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-				inventoryItemService.deactivateItem(id);
-				activityLogService.logAdminAction(principal.getName(), "DEACTIVATE_INVENTORY_ITEM",
-						"Deactivated inventory item with recipe usage: " + itemName + " (ID: " + id + ")");
-				redirectAttributes.addFlashAttribute("inventorySuccess",
-						"Item '" + itemName + "' is used in recipes. It has been DEACTIVATED instead of deleted.");
-			} else {
-				inventoryItemService.deleteItem(id);
-				activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
-						"Permanently deleted inventory item: " + itemName + " (ID: " + id + ")");
-				redirectAttributes.addFlashAttribute("inventorySuccess",
-						"Item '" + itemName + "' had no recipe usage and was PERMANENTLY deleted.");
-			}
-		} catch (DataIntegrityViolationException e) {
-			log.warn("Data integrity violation on delete/deactivate for inventory item {}: {}", id, e.getMessage());
-			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+			inventoryItemService.deleteItem(id);
+			
+			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
+					"Permanently deleted inventory item: " + itemName + " (ID: " + id + ")");
+			redirectAttributes.addFlashAttribute("inventorySuccess",
+					"Item '" + itemName + "' deleted successfully!");
+
 		} catch (IllegalArgumentException e) {
-			log.warn("Failed to delete/deactivate inventory item {}: {}", id, e.getMessage());
-			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
+			log.warn("Failed to delete inventory item {}: {}", id, e.getMessage());
+			
+			// --- MODIFIED: Strip bullet for toast display ---
+			String toastMessage = e.getMessage().replaceFirst("• ", "");
+			redirectAttributes.addFlashAttribute("globalError", toastMessage);
+			// --- END MODIFIED ---
+
+		} catch (DataIntegrityViolationException e) {
+			log.warn("Data integrity violation on delete for inventory item {}: {}", id, e.getMessage());
+			redirectAttributes.addFlashAttribute("globalError", "Data integrity violation: Item is protected and cannot be deleted.");
 		}
 
 		return "redirect:/admin/inventory";

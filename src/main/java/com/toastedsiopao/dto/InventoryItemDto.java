@@ -3,6 +3,7 @@ package com.toastedsiopao.dto;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -41,4 +42,8 @@ public class InventoryItemDto {
 	@NotNull(message = "• Cost per unit cannot be null")
 	@DecimalMin(value = "0.0", message = "• Cost must be zero or positive")
 	private BigDecimal costPerUnit;
+	
+	@NotBlank(message = "• Status must be selected")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
+	private String itemStatus;
 }

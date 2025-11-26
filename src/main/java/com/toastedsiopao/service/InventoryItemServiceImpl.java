@@ -3,7 +3,6 @@ package com.toastedsiopao.service;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
-import com.toastedsiopao.model.RecipeIngredient;
 import com.toastedsiopao.model.UnitOfMeasure;
 import com.toastedsiopao.repository.InventoryCategoryRepository;
 import com.toastedsiopao.repository.InventoryItemRepository;
@@ -12,7 +11,6 @@ import com.toastedsiopao.repository.UnitOfMeasureRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +20,6 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -124,18 +121,25 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		if (!isNew) {
 			item = itemRepository.findById(itemDto.getId())
 					.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemDto.getId()));
+					
+			if ("INACTIVE".equals(itemDto.getItemStatus()) && "ACTIVE".equals(item.getItemStatus())) {
+				if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
+					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + item.getName() + "'. Item still has " + item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
+				}
+				if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
+					throw new IllegalArgumentException("status.inRecipe:• Cannot deactivate '" + item.getName() + "'. Item is currently used in one or more product recipes.");
+				}
+			}
 		} else {
 			item = new InventoryItem();
+			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
 		}
-
+		
 		item.setName(itemDto.getName().trim());
 		item.setCategory(category);
 		item.setUnit(unit);
 
-		if (isNew) {
-			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
-			item.setItemStatus("ACTIVE");
-		}
+		item.setItemStatus(Optional.ofNullable(itemDto.getItemStatus()).orElse("ACTIVE"));
 
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
@@ -143,8 +147,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
-			log.info("{} inventory item: ID={}, Name='{}'", isNew ? "Created" : "Updated", savedItem.getId(),
-					savedItem.getName());
+			log.info("{} inventory item: ID={}, Name='{}', Status='{}'", isNew ? "Created" : "Updated", savedItem.getId(),
+					savedItem.getName(), savedItem.getItemStatus());
 			return savedItem;
 		} catch (Exception e) {
 			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
@@ -160,11 +164,11 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
 			throw new IllegalArgumentException(
-					"Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
+					"status.hasStock:• Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
 		}
-
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-			log.info("Item '{}' is in use by recipes. Deactivating instead of deleting.", item.getName());
+			throw new IllegalArgumentException(
+					"status.inRecipe:• Cannot deactivate '" + item.getName() + "'. Item is currently used in one or more product recipes.");
 		}
 
 		item.setItemStatus("INACTIVE");
@@ -180,7 +184,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		itemRepository.save(item);
 		log.info("Activated inventory item: ID={}, Name='{}'", id, item.getName());
 	}
-
+	
 	@Override
 	public void deleteItem(Long id) {
 		InventoryItem item = itemRepository.findById(id)
@@ -188,12 +192,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
 			throw new IllegalArgumentException(
-					"Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot delete.");
+					"• Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot delete.");
 		}
 
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-			throw new DataIntegrityViolationException(
-					"Item '" + item.getName() + "' is used in a recipe and cannot be deleted.");
+			throw new IllegalArgumentException(
+					"• Item '" + item.getName() + "' is used in one or more product recipes and cannot be permanently deleted. Please deactivate it via the Edit menu.");
 		}
 
 		itemRepository.delete(item);
@@ -295,7 +299,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	}
 
 	@Override
-	@Transactional(readOnly = true)
 	public long countByUnit(UnitOfMeasure unit) {
 		return itemRepository.countByUnit(unit);
 	}

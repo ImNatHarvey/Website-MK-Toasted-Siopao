@@ -256,12 +256,16 @@ public class AdminManagementController {
 		try {
 			User updatedUser = adminService.updateAdminProfile(adminDto);
 
-			UserDetails userDetails = userDetailsService.loadUserByUsername(updatedUser.getUsername());
-			UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
-					userDetails.getAuthorities());
-			newAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			SecurityContextHolder.getContext().setAuthentication(newAuth);
-			log.info("Updated security context for user: {}", updatedUser.getUsername());
+			// --- ADDED FIX: Reload user details and update SecurityContext if username changed ---
+			if (!principal.getName().equals(updatedUser.getUsername())) {
+				UserDetails userDetails = userDetailsService.loadUserByUsername(updatedUser.getUsername());
+				UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
+						userDetails.getAuthorities());
+				newAuth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(newAuth);
+				log.info("Updated security context for user: {}", updatedUser.getUsername());
+			}
+			// --- END ADDED FIX ---
 
 			activityLogService.logAdminAction(principal.getName(), "EDIT_PROFILE",
 					"Updated own profile: " + updatedUser.getUsername());

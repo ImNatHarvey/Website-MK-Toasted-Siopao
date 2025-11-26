@@ -8,8 +8,11 @@ import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.SiteSettingsService;
 import jakarta.validation.Valid; 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication; 
 import org.springframework.security.core.context.SecurityContextHolder; 
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult; 
@@ -30,6 +33,9 @@ public class CustomerProfileController {
 
 	@Autowired
 	private CustomerService customerService;
+	
+	@Autowired
+	private UserDetailsService userDetailsService;
 
 	@ModelAttribute
 	public void addCommonAttributes(Model model) {
@@ -84,11 +90,14 @@ public class CustomerProfileController {
 		try {
 			customerService.updateCustomerProfile(principal.getName(), profileDto);
 
+			// --- FIX: Re-authenticate user if username or email changes to update security context ---
 			if (!principal.getName().equals(profileDto.getUsername())) {
-				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-				User user = (User) auth.getPrincipal();
-				user.setUsername(profileDto.getUsername());
+				UserDetails userDetails = userDetailsService.loadUserByUsername(profileDto.getUsername());
+				UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
+						userDetails.getAuthorities());
+				SecurityContextHolder.getContext().setAuthentication(newAuth);
 			}
+			// --- END FIX ---
 
 			redirectAttributes.addFlashAttribute("profileSuccess", "Your profile has been updated successfully!");
 		} catch (IllegalArgumentException e) {

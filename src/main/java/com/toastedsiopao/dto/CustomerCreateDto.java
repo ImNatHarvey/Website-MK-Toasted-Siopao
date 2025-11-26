@@ -13,10 +13,12 @@ public class CustomerCreateDto {
 
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "First name must contain only letters and single spaces, and cannot start or end with a space")
 	private String firstName;
 
 	@NotBlank(message = "Last name cannot be blank")
 	@Size(min = 2, max = 50, message = "Last name length must be 2-50 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "Last name must contain only letters and single spaces, and cannot start or end with a space")
 	private String lastName;
 
 	@NotBlank(message = "Username cannot be blank")
@@ -36,4 +38,13 @@ public class CustomerCreateDto {
 
 	@NotBlank(message = "Confirm password cannot be blank")
 	private String confirmPassword;
+	
+	// --- Custom Setters for trimming and normalizing internal whitespace ---
+	public void setFirstName(String firstName) {
+		this.firstName = (firstName == null) ? null : firstName.trim().replaceAll("\\s+", " ");
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = (lastName == null) ? null : lastName.trim().replaceAll("\\s+", " ");
+	}
 }

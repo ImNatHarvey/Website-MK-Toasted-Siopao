@@ -13,11 +13,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const GUEST_DATA_KEY = 'guestCheckoutData';
 
+        // --- Helper to normalize whitespace (internal spaces to single space) ---
+        const normalizeWhitespace = (value) => {
+			if (!value) return '';
+			// Trim leading/trailing and replace multiple internal spaces with one
+			return value.trim().replace(/\s+/g, ' ');
+		}
+		// --- End Helper ---
+
         // --- Field Validation Function ---
         const validateField = (field, regex = null, feedbackEl = null, emptyMsg = "This field is required.", invalidMsg = "Invalid format.") => {
             let isValid = true;
-            const value = field.value.trim();
+            // Use normalizeWhitespace on value for validation, but DO NOT modify the input field value here.
+            const value = normalizeWhitespace(field.value);
             const isRequired = field.hasAttribute('required');
+            
+            // Check for leading/trailing spaces (now covered by the normalizeWhitespace in value, check if trimmed value starts/ends with a space is not needed)
 
             if (!value) {
                 if (isRequired) {
@@ -27,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     field.classList.remove('is-invalid');
                 }
-            } else if (regex && !regex.test(value)) {
+            } else if (regex && !regex.test(field.value.trim())) { // Use original input value for phone/email regex check
                 if (feedbackEl) feedbackEl.textContent = invalidMsg;
                 field.classList.add('is-invalid');
                 isValid = false;
@@ -64,20 +75,20 @@ document.addEventListener('DOMContentLoaded', function() {
             return isFormValid;
         };
         
-        // --- Form Data Collection ---
+        // --- Form Data Collection (UPDATED TO USE normalizeWhitespace) ---
         const getGuestData = () => {
             return {
-                firstName: document.getElementById('first-name').value,
-                lastName: document.getElementById('last-name').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                houseNo: document.getElementById('houseNo').value,
-                lotNo: document.getElementById('lotNo').value,
-                blockNo: document.getElementById('blockNo').value,
-                street: document.getElementById('street').value,
-                barangay: document.getElementById('barangay').value,
-                municipality: document.getElementById('municipality').value,
-                province: document.getElementById('province').value
+                firstName: normalizeWhitespace(document.getElementById('first-name').value),
+                lastName: normalizeWhitespace(document.getElementById('last-name').value),
+                phone: document.getElementById('phone').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                houseNo: document.getElementById('houseNo').value.trim(),
+                lotNo: document.getElementById('lotNo').value.trim(),
+                blockNo: document.getElementById('blockNo').value.trim(),
+                street: normalizeWhitespace(document.getElementById('street').value),
+                barangay: normalizeWhitespace(document.getElementById('barangay').value),
+                municipality: normalizeWhitespace(document.getElementById('municipality').value),
+                province: normalizeWhitespace(document.getElementById('province').value)
             };
         };
         

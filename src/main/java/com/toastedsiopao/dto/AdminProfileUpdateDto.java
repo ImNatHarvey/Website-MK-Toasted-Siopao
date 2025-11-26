@@ -15,10 +15,12 @@ public class AdminProfileUpdateDto {
 
 	@NotBlank(message = "First name cannot be blank")
 	@Size(min = 2, max = 50, message = "First name length must be 2-50 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "First name must contain only letters and single spaces, and cannot start or end with a space")
 	private String firstName;
 
 	@NotBlank(message = "Last name cannot be blank")
 	@Size(min = 2, max = 50, message = "Last name length must be 2-50 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "Last name must contain only letters and single spaces, and cannot start or end with a space")
 	private String lastName;
 
 	@NotBlank(message = "Username cannot be blank")
@@ -30,4 +32,13 @@ public class AdminProfileUpdateDto {
 	@Email(message = "Invalid email format")
 	@Size(max = 100, message = "Email cannot exceed 100 characters")
 	private String email;
+
+	// --- Custom Setters for trimming and normalizing internal whitespace ---
+	public void setFirstName(String firstName) {
+		this.firstName = (firstName == null) ? null : firstName.trim().replaceAll("\\s+", " ");
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = (lastName == null) ? null : lastName.trim().replaceAll("\\s+", " ");
+	}
 }

@@ -80,9 +80,17 @@
 								Status </span>
 
 							<a th:if="${order.status != 'PENDING' and order.status != 'PENDING_VERIFICATION'}"
-							   th:href="@{/u/history/invoice/{id}(id=${order.id})}"
-							   class="btn btn-sm btn-action-view" target="_blank">
-								<i class="fa-solid fa-print me-1"></i> View Receipt
+							   th:href="@{/u/history/download/invoice/{id}(id=${order.id})}"
+							   class="btn btn-sm btn-action-view" target="_blank"
+							   title="Download Invoice">
+								<i class="fa-solid fa-file-invoice me-1"></i> Invoice
+							</a>
+							
+							<a th:if="${order.status == 'DELIVERED'}"
+							   th:href="@{/u/history/download/receipt/{id}(id=${order.id})}"
+							   class="btn btn-sm btn-action-view" target="_blank"
+							   title="Download Receipt">
+								<i class="fa-solid fa-receipt me-1"></i> Receipt
 							</a>
 							
 							<button th:if="${order.status == 'DELIVERED' AND #lists.isEmpty(order.issueReports)}"

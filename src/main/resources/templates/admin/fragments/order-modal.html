@@ -105,13 +105,50 @@
 
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-custom-secondary"
-							data-bs-dismiss="modal">Close</button>
+						<div class="d-flex gap-2 me-auto" id="orderDocumentButtons">
+							</div>
+						<button type="button" class="btn btn-custom-secondary" data-bs-dismiss="modal">Close</button>
 					</div>
 				</div>
 			</div>
 		</div>
 
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const viewOrderModal = document.getElementById('viewOrderModal');
+				if (viewOrderModal) {
+					viewOrderModal.addEventListener('show.bs.modal', function(event) {
+						const button = event.relatedTarget;
+						const row = button.closest('tr');
+						const orderId = row ? row.dataset.orderId : null;
+						const orderStatus = row ? row.dataset.orderStatus : null;
+
+						const container = viewOrderModal.querySelector('#orderDocumentButtons');
+						container.innerHTML = '';
+						
+						if (orderId && orderStatus && orderStatus !== 'CANCELLED' && orderStatus !== 'REJECTED') {
+							// 1. Invoice button (visible if order status is anything but PENDING/CANCELLED/REJECTED)
+							const invoiceButton = document.createElement('a');
+							invoiceButton.href = '/admin/reports/download/invoice/' + orderId;
+							invoiceButton.target = '_blank';
+							invoiceButton.className = 'btn btn-action-view';
+							invoiceButton.innerHTML = '<i class="fa-solid fa-file-invoice me-1"></i> Invoice';
+							container.appendChild(invoiceButton);
+
+							// 2. Receipt button (only visible if DELIVERED)
+							if (orderStatus === 'DELIVERED') {
+								const receiptButton = document.createElement('a');
+								receiptButton.href = '/admin/reports/download/receipt/' + orderId;
+								receiptButton.target = '_blank';
+								receiptButton.className = 'btn btn-action-view';
+								receiptButton.innerHTML = '<i class="fa-solid fa-receipt me-1"></i> Receipt';
+								container.appendChild(receiptButton);
+							}
+						}
+					});
+				}
+			});
+		</script>
 	</div>
 </body>
 </html>

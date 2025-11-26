@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PathVariable; 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -231,20 +231,23 @@ public class AdminReportController {
         }
     }
 
-    @GetMapping("/invoice/{id}")
+    // --- MODIFIED: Added documentType parameter ---
+    @GetMapping("/download/{documentType}/{id}")
     @PreAuthorize("hasAuthority('VIEW_ORDERS')")
-    public ResponseEntity<InputStreamResource> downloadInvoicePdf(@PathVariable("id") Long orderId) {
+    public ResponseEntity<InputStreamResource> downloadOrderDocumentPdf(
+    		@PathVariable("documentType") String documentType,
+            @PathVariable("id") Long orderId) {
 
-        log.info("Generating invoice PDF for Order ID: {}", orderId);
+        log.info("Generating {} PDF for Order ID: {}", documentType, orderId);
 
         try {
             Order order = orderService.findOrderForInvoice(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with ID: " + orderId));
 			
-            ByteArrayInputStream bis = reportService.generateInvoicePdf(order);
+            ByteArrayInputStream bis = reportService.generateOrderDocumentPdf(order, documentType);
 
             HttpHeaders headers = new HttpHeaders();
-            String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
+            String fileName = String.format("MK-Toasted-Siopao_%s_ORD-%d.pdf", documentType.toUpperCase(), orderId);
             headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
             return ResponseEntity
@@ -254,13 +257,13 @@ public class AdminReportController {
                     .body(new InputStreamResource(bis));
 
         } catch (IllegalArgumentException e) {
-            log.warn("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage());
+            log.warn("Failed to generate {} PDF for order {}: {}", documentType, orderId, e.getMessage());
             return ResponseEntity.notFound().build(); 
         } catch (IOException e) {
-            log.error("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+            log.error("Failed to generate {} PDF for order {}: {}", documentType, orderId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
-            log.error("Unexpected error generating invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+            log.error("Unexpected error generating {} PDF for order {}: {}", documentType, orderId, e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
         }
     }

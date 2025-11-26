@@ -161,29 +161,31 @@ public class CustomerHistoryController {
 		return "redirect:/u/history";
 	}
 	
-	@GetMapping("/history/invoice/{id}")
-	public ResponseEntity<InputStreamResource> downloadMyInvoice(@PathVariable("id") Long orderId, Principal principal) {
-
-		User user = customerService.findByUsername(principal.getName());
-		if (user == null) {
-			log.warn("Attempt to download invoice by unauthenticated user.");
-			return ResponseEntity.status(401).build(); 
-		}
-
-		log.info("User {} attempting to download invoice for Order ID: {}", user.getUsername(), orderId);
+	// --- MODIFIED: Split from old invoice endpoint ---
+	private ResponseEntity<InputStreamResource> downloadOrderDocument(Long orderId, String documentType, User user) {
+		log.info("User {} attempting to download {} for Order ID: {}", user.getUsername(), documentType, orderId);
 
 		try {
 			Optional<Order> orderOpt = orderService.findOrderForInvoice(orderId);
 
 			if (orderOpt.isEmpty() || !orderOpt.get().getUser().getId().equals(user.getId())) {
-				log.warn("SECURITY: User {} attempted to access invoice for Order ID {} which does not belong to them.", user.getUsername(), orderId);
-				return ResponseEntity.notFound().build(); // 404
+				log.warn("SECURITY: User {} attempted to access {} for Order ID {} which does not belong to them.", user.getUsername(), documentType, orderId);
+				return ResponseEntity.notFound().build();
 			}
 			
-			ByteArrayInputStream bis = reportService.generateInvoicePdf(orderOpt.get());
+			Order order = orderOpt.get();
+			
+			if (order.getStatus().equals(Order.STATUS_PENDING) || order.getStatus().equals(Order.STATUS_PENDING_VERIFICATION)) {
+				if ("RECEIPT".equalsIgnoreCase(documentType)) {
+					log.warn("Attempt to download RECEIPT for non-processed order ID {}. Rejecting.", orderId);
+					return ResponseEntity.status(403).build(); // Forbidden
+				}
+			}
+			
+			ByteArrayInputStream bis = reportService.generateOrderDocumentPdf(order, documentType);
 
 			HttpHeaders headers = new HttpHeaders();
-			String fileName = "MK-Toasted-Siopao_Invoice_ORD-" + orderId + ".pdf";
+			String fileName = String.format("MK-Toasted-Siopao_%s_ORD-%d.pdf", documentType, orderId);
 			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
 			return ResponseEntity
@@ -193,14 +195,29 @@ public class CustomerHistoryController {
 					.body(new InputStreamResource(bis));
 
 		} catch (IllegalArgumentException e) {
-			log.warn("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage());
+			log.warn("Failed to generate {} PDF for order {}: {}", documentType, orderId, e.getMessage());
 			return ResponseEntity.notFound().build(); 
 		} catch (IOException e) {
-			log.error("Failed to generate invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+			log.error("Failed to generate {} PDF for order {}: {}", documentType, orderId, e.getMessage(), e);
 			return ResponseEntity.internalServerError().build();
 		} catch (Exception e) {
-			log.error("Unexpected error generating invoice PDF for order {}: {}", orderId, e.getMessage(), e);
+			log.error("Unexpected error generating {} PDF for order {}: {}", documentType, orderId, e.getMessage(), e);
 			return ResponseEntity.internalServerError().build();
 		}
 	}
+	
+	@GetMapping("/history/download/invoice/{id}")
+	public ResponseEntity<InputStreamResource> downloadMyInvoice(@PathVariable("id") Long orderId, Principal principal) {
+		User user = customerService.findByUsername(principal.getName());
+		if (user == null) return ResponseEntity.status(401).build(); 
+		return downloadOrderDocument(orderId, "INVOICE", user);
+	}
+	
+	@GetMapping("/history/download/receipt/{id}")
+	public ResponseEntity<InputStreamResource> downloadMyReceipt(@PathVariable("id") Long orderId, Principal principal) {
+		User user = customerService.findByUsername(principal.getName());
+		if (user == null) return ResponseEntity.status(401).build(); 
+		return downloadOrderDocument(orderId, "RECEIPT", user);
+	}
+	// --- END MODIFIED ---
 }

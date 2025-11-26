@@ -19,7 +19,8 @@ public interface PdfService {
 
     ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException;
 
-    ByteArrayInputStream generateInvoicePdf(Order order) throws IOException;
+    // --- MODIFIED: Added documentType parameter ---
+    ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException;
 
     ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException;
 

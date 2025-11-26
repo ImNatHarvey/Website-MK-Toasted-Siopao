@@ -321,7 +321,7 @@ public class PdfServiceImpl implements PdfService {
     }
 
     @Override
-    public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException {
+    public ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -329,9 +329,16 @@ public class PdfServiceImpl implements PdfService {
             PdfWriter.getInstance(document, out);
             document.open();
             
-            Paragraph title = new Paragraph("INVOICE / ORDER RECEIPT", FONT_INVOICE_TITLE);
+            // --- MODIFIED: Dynamic Title ---
+            String titleText = "INVOICE";
+            if ("RECEIPT".equalsIgnoreCase(documentType)) {
+                titleText = "ORDER RECEIPT";
+            }
+            
+            Paragraph title = new Paragraph(titleText, FONT_INVOICE_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
+            // --- END MODIFIED ---
             
             Paragraph storeName = new Paragraph(settings.getWebsiteName(), FONT_INVOICE_BODY);
             storeName.setAlignment(Element.ALIGN_CENTER);
@@ -360,31 +367,37 @@ public class PdfServiceImpl implements PdfService {
             orderCell.addElement(new Phrase("PAYMENT STATUS:", FONT_INVOICE_HEADER));
             orderCell.addElement(new Phrase(order.getPaymentStatus().replace("_", " "), FONT_INVOICE_BODY));
 
+            // --- Condition for GCash Receipt/Transaction ID ---
             if ("gcash".equalsIgnoreCase(order.getPaymentMethod())) {
                 if (StringUtils.hasText(order.getTransactionId())) {
                     orderCell.addElement(Chunk.NEWLINE);
                     orderCell.addElement(new Phrase("GCASH TRANSACTION ID:", FONT_INVOICE_HEADER));
                     orderCell.addElement(new Phrase(order.getTransactionId(), FONT_INVOICE_BODY));
                 }
-                if (StringUtils.hasText(order.getPaymentReceiptImageUrl())) {
-                    orderCell.addElement(Chunk.NEWLINE);
-                    orderCell.addElement(new Phrase("GCASH RECEIPT QR:", FONT_INVOICE_HEADER));
-                    try {
-                        Resource qrCodeResource = fileStorageService.loadAsResource(order.getPaymentReceiptImageUrl());
-                        if (qrCodeResource != null && qrCodeResource.exists()) {
-                            Image qrImage = Image.getInstance(qrCodeResource.getURL());
-                            qrImage.scaleToFit(100, 100); 
-                            orderCell.addElement(qrImage);
-                        } else {
-                            log.warn("Could not load QR code image for invoice: {}", order.getPaymentReceiptImageUrl());
-                            orderCell.addElement(new Phrase("[Image not found]", FONT_INVOICE_BODY));
+                
+                // Only show QR if we are generating a RECEIPT, or if it is PAID/FOR_VERIFICATION
+                if ("RECEIPT".equalsIgnoreCase(documentType) || order.getPaymentStatus().equals(Order.PAYMENT_FOR_VERIFICATION) || order.getPaymentStatus().equals(Order.PAYMENT_PAID)) {
+                    if (StringUtils.hasText(order.getPaymentReceiptImageUrl())) {
+                        orderCell.addElement(Chunk.NEWLINE);
+                        orderCell.addElement(new Phrase("GCASH RECEIPT QR:", FONT_INVOICE_HEADER));
+                        try {
+                            Resource qrCodeResource = fileStorageService.loadAsResource(order.getPaymentReceiptImageUrl());
+                            if (qrCodeResource != null && qrCodeResource.exists()) {
+                                Image qrImage = Image.getInstance(qrCodeResource.getURL());
+                                qrImage.scaleToFit(100, 100); 
+                                orderCell.addElement(qrImage);
+                            } else {
+                                log.warn("Could not load QR code image for invoice: {}", order.getPaymentReceiptImageUrl());
+                                orderCell.addElement(new Phrase("[Image not found]", FONT_INVOICE_BODY));
+                            }
+                        } catch (Exception e) {
+                            log.error("Error loading QR code image for PDF: {}", e.getMessage());
+                            orderCell.addElement(new Phrase("[Error loading image]", FONT_INVOICE_BODY));
                         }
-                    } catch (Exception e) {
-                        log.error("Error loading QR code image for PDF: {}", e.getMessage());
-                        orderCell.addElement(new Phrase("[Error loading image]", FONT_INVOICE_BODY));
                     }
                 }
             }
+            // --- END Condition for GCash Receipt/Transaction ID ---
             
             PdfPCell customerCell = new PdfPCell();
             customerCell.setBorder(Rectangle.NO_BORDER);

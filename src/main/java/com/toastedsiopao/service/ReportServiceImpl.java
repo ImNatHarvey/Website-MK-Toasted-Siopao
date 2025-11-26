@@ -12,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page; 
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -405,11 +406,13 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
 
+    // --- MODIFIED METHOD SIGNATURE AND BODY ---
     @Override
-    public ByteArrayInputStream generateInvoicePdf(Order order) throws IOException, IllegalArgumentException {
+    public ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException {
     	
-        return pdfService.generateInvoicePdf(order);
+        return pdfService.generateOrderDocumentPdf(order, documentType);
     }
+    // --- END MODIFIED ---
     
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {

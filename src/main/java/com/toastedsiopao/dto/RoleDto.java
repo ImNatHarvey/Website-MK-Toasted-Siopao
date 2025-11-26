@@ -12,9 +12,9 @@ public class RoleDto {
 
 	private Long id;
 
-	@NotBlank(message = "Role name cannot be blank")
-	@Size(min = 2, max = 50, message = "Role name length must be 2-50 characters")
-	@Pattern(regexp = "^[a-zA-Z_]+$", message = "Role name can only contain letters and underscores (e.g., 'SUPERVISOR')")
+	@NotBlank(message = "• Role name cannot be blank")
+	@Size(min = 2, max = 50, message = "• Role name length must be 2-50 characters")
+	@Pattern(regexp = "^[a-zA-Z_]+$", message = "• Role name can only contain letters and underscores (e.g., 'SUPERVISOR')")
 	private String name;
 
 	private boolean manageCustomers;

@@ -16,29 +16,29 @@ public class InventoryItemDto {
 
 	private Long id; 
 
-	@NotBlank(message = "Item name cannot be blank")
-	@Size(max = 100, message = "Item name cannot exceed 100 characters")
+	@NotBlank(message = "• Item name cannot be blank")
+	@Size(max = 100, message = "• Item name cannot exceed 100 characters")
 	private String name;
 
-	@NotNull(message = "Category must be selected")
+	@NotNull(message = "• Category must be selected")
 	private Long categoryId;
 
-	@NotNull(message = "Unit must be selected")
+	@NotNull(message = "• Unit must be selected")
 	private Long unitId;
 
-	@NotNull(message = "Current stock cannot be null")
-	@PositiveOrZero(message = "Stock must be zero or positive")
+	@NotNull(message = "• Current stock cannot be null")
+	@PositiveOrZero(message = "• Stock must be zero or positive")
 	private BigDecimal currentStock = BigDecimal.ZERO;
 
-	@NotNull(message = "Low stock threshold cannot be null")
-	@DecimalMin(value = "1.0", message = "Low threshold must be at least 1")
+	@NotNull(message = "• Low stock threshold cannot be null")
+	@DecimalMin(value = "1.0", message = "• Low threshold must be at least 1")
 	private BigDecimal lowStockThreshold;
 	
-	@NotNull(message = "Critical stock threshold cannot be null")
-	@DecimalMin(value = "1.0", message = "Critical threshold must be at least 1")
+	@NotNull(message = "• Critical stock threshold cannot be null")
+	@DecimalMin(value = "1.0", message = "• Critical threshold must be at least 1")
 	private BigDecimal criticalStockThreshold;
 
-	@NotNull(message = "Cost per unit cannot be null")
-	@DecimalMin(value = "0.0", message = "Cost must be zero or positive")
+	@NotNull(message = "• Cost per unit cannot be null")
+	@DecimalMin(value = "0.0", message = "• Cost must be zero or positive")
 	private BigDecimal costPerUnit;
 }

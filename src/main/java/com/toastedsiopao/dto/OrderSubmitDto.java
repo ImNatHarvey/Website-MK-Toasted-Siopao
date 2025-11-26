@@ -12,56 +12,56 @@ import lombok.NoArgsConstructor;
 public class OrderSubmitDto {
 
 	// Personal Details
-	@NotBlank(message = "First name is required.")
-	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "First name must contain only letters and single spaces, and cannot start or end with a space")
+	@NotBlank(message = "• First name is required.")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "• First name must contain only letters and single spaces, and cannot start or end with a space")
 	private String firstName;
 
-	@NotBlank(message = "Last name is required.")
-	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "Last name must contain only letters and single spaces, and cannot start or end with a space")
+	@NotBlank(message = "• Last name is required.")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "• Last name must contain only letters and single spaces, and cannot start or end with a space")
 	private String lastName;
 
-	@NotBlank(message = "Phone number is required.")
-	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "Invalid Philippine phone number format.")
+	@NotBlank(message = "• Phone number is required.")
+	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "• Invalid Philippine phone number format.")
 	private String phone;
 
-	@NotBlank(message = "Email is required.")
-	@Email(message = "Invalid email format.")
-	@Size(max = 100, message = "Email cannot exceed 100 characters")
+	@NotBlank(message = "• Email is required.")
+	@Email(message = "• Invalid email format.")
+	@Size(max = 100, message = "• Email cannot exceed 100 characters")
 	private String email;
 
-	@Size(max = 50, message = "House No. cannot exceed 50 characters")
+	@Size(max = 50, message = "• House No. cannot exceed 50 characters")
 	private String houseNo;
 
-	@Size(max = 50, message = "Lot No. cannot exceed 50 characters")
+	@Size(max = 50, message = "• Lot No. cannot exceed 50 characters")
 	private String lotNo;
 
-	@Size(max = 50, message = "Block No. cannot exceed 50 characters")
+	@Size(max = 50, message = "• Block No. cannot exceed 50 characters")
 	private String blockNo;
 
-	@NotBlank(message = "Street / Subdivision is required.")
-	@Size(max = 100, message = "Street cannot exceed 100 characters")
-	@Pattern(regexp = "^(?! )[A-Za-z0-9\\s,.-]+(?<! )$", message = "Invalid street format.")
+	@NotBlank(message = "• Street / Subdivision is required.")
+	@Size(max = 100, message = "• Street cannot exceed 100 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z0-9\\s,.-]+(?<! )$", message = "• Invalid street format.")
 	private String street;
 
-	@NotBlank(message = "Barangay is required.")
-	@Size(max = 100, message = "Barangay cannot exceed 100 characters")
-	@Pattern(regexp = "^(?! )[A-Za-z0-9\\s,.-]+(?<! )$", message = "Invalid barangay format.")
+	@NotBlank(message = "• Barangay is required.")
+	@Size(max = 100, message = "• Barangay cannot exceed 100 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z0-9\\s,.-]+(?<! )$", message = "• Invalid barangay format.")
 	private String barangay;
 
-	@NotBlank(message = "Municipality is required.")
-	@Size(max = 100, message = "Municipality cannot exceed 100 characters")
-	@Pattern(regexp = "^(?! )[A-Za-z\\s,.-]+(?<! )$", message = "Invalid municipality format.")
+	@NotBlank(message = "• Municipality is required.")
+	@Size(max = 100, message = "• Municipality cannot exceed 100 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s,.-]+(?<! )$", message = "• Invalid municipality format.")
 	private String municipality;
 
-	@NotBlank(message = "Province is required.")
-	@Size(max = 100, message = "Province cannot exceed 100 characters")
-	@Pattern(regexp = "^(?! )[A-Za-z\\s,.-]+(?<! )$", message = "Invalid province format.")
+	@NotBlank(message = "• Province is required.")
+	@Size(max = 100, message = "• Province cannot exceed 100 characters")
+	@Pattern(regexp = "^(?! )[A-Za-z\\s,.-]+(?<! )$", message = "• Invalid province format.")
 	private String province;
 
-	@NotBlank(message = "Payment method is required.")
+	@NotBlank(message = "• Payment method is required.")
 	private String paymentMethod; 
 
-	@Size(max = 500, message = "Notes cannot exceed 500 characters")
+	@Size(max = 500, message = "• Notes cannot exceed 500 characters")
 	private String notes;
 
 	private String cartDataJson; 

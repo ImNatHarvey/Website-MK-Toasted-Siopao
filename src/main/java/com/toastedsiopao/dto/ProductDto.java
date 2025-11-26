@@ -20,33 +20,33 @@ public class ProductDto {
 
 	private Long id;
 
-	@NotBlank(message = "Product name cannot be blank")
-	@Size(max = 100, message = "Product name cannot exceed 100 characters")
+	@NotBlank(message = "• Product name cannot be blank")
+	@Size(max = 100, message = "• Product name cannot exceed 100 characters")
 	private String name;
 
-	@Size(max = 500, message = "Description cannot exceed 500 characters")
+	@Size(max = 500, message = "• Description cannot exceed 500 characters")
 	private String description;
 
-	@NotNull(message = "Price cannot be null")
-	@PositiveOrZero(message = "Price must be zero or positive") 
+	@NotNull(message = "• Price cannot be null")
+	@PositiveOrZero(message = "• Price must be zero or positive") 
 	private BigDecimal price;
 
-	@NotNull(message = "Category must be selected")
+	@NotNull(message = "• Category must be selected")
 	private Long categoryId;
 
 	private String imageUrl;
 
 	@Valid
-	@NotEmpty(message = "A product must have at least one ingredient")
+	@NotEmpty(message = "• A product must have at least one ingredient")
 	// --- END UPDATE ---
 	private List<RecipeIngredientDto> ingredients = new ArrayList<>();
 
-	@NotNull(message = "Low stock threshold cannot be null")
-	@Min(value = 1, message = "Low threshold must be at least 1")
+	@NotNull(message = "• Low stock threshold cannot be null")
+	@Min(value = 1, message = "• Low threshold must be at least 1")
 	private Integer lowStockThreshold;
 	
-	@NotNull(message = "Critical stock threshold cannot be null")
-	@Min(value = 1, message = "Critical threshold must be at least 1")
+	@NotNull(message = "• Critical stock threshold cannot be null")
+	@Min(value = 1, message = "• Critical threshold must be at least 1")
 	private Integer criticalStockThreshold;
 	
 	private boolean removeImage = false;

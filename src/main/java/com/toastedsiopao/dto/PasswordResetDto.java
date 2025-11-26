@@ -8,14 +8,14 @@ import lombok.Data;
 @Data
 public class PasswordResetDto {
 
-	@NotBlank(message = "Token cannot be blank")
+	@NotBlank(message = "• Token cannot be blank")
 	private String token;
 
-	@NotBlank(message = "Password cannot be blank")
-	@Size(min = 8, message = "Password must be at least 8 characters")
-	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
+	@NotBlank(message = "• Password cannot be blank")
+	@Size(min = 8, message = "• Password must be at least 8 characters")
+	@Pattern(regexp = "^\\S+$", message = "• Password cannot contain any spaces")
 	private String password;
 
-	@NotBlank(message = "Confirm password cannot be blank")
+	@NotBlank(message = "• Confirm password cannot be blank")
 	private String confirmPassword;
 }

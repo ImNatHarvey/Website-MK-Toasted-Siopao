@@ -10,13 +10,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class IssueReportDto {
 
-    @NotNull
+    @NotNull(message = "• Order ID must be present")
     private Long orderId;
 
-    @NotBlank(message = "Summary cannot be blank")
-    @Size(max = 255, message = "Summary cannot exceed 255 characters")
+    @NotBlank(message = "• Summary cannot be blank")
+    @Size(max = 255, message = "• Summary cannot exceed 255 characters")
     private String summary;
 
-    @Size(max = 2000, message = "Details cannot exceed 2000 characters")
+    @Size(max = 2000, message = "• Details cannot exceed 2000 characters")
     private String details;
 }

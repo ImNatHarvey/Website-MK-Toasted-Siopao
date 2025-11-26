@@ -10,14 +10,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AdminPasswordUpdateDto {
 
-	@NotBlank(message = "Current password cannot be blank")
+	@NotBlank(message = "• Current password cannot be blank")
 	private String currentPassword;
 
-	@NotBlank(message = "New password cannot be blank")
-	@Size(min = 8, message = "Password must be at least 8 characters")
-	@Pattern(regexp = "^\\S+$", message = "Password cannot contain any spaces")
+	@NotBlank(message = "• New password cannot be blank")
+	@Size(min = 8, message = "• Password must be at least 8 characters")
+	@Pattern(regexp = "^\\S+$", message = "• Password cannot contain any spaces")
 	private String newPassword;
 
-	@NotBlank(message = "Confirm password cannot be blank")
+	@NotBlank(message = "• Confirm password cannot be blank")
 	private String confirmPassword;
 }

@@ -11,11 +11,11 @@ public class UnitOfMeasureDto {
 
 	private Long id; 
 
-	@NotBlank(message = "Unit name cannot be blank")
-	@Size(max = 20, message = "Unit name cannot exceed 20 characters")
+	@NotBlank(message = "• Unit name cannot be blank")
+	@Size(max = 20, message = "• Unit name cannot exceed 20 characters")
 	private String name;
 
-	@NotBlank(message = "Abbreviation cannot be blank")
-	@Size(max = 10, message = "Abbreviation cannot exceed 10 characters")
+	@NotBlank(message = "• Abbreviation cannot be blank")
+	@Size(max = 10, message = "• Abbreviation cannot exceed 10 characters")
 	private String abbreviation;
 }

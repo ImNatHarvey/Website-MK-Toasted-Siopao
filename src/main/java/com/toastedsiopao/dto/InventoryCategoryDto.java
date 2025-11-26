@@ -11,7 +11,7 @@ public class InventoryCategoryDto {
 
 	private Long id; 
 
-	@NotBlank(message = "Category name cannot be blank")
-	@Size(max = 50, message = "Category name cannot exceed 50 characters")
+	@NotBlank(message = "• Category name cannot be blank")
+	@Size(max = 50, message = "• Category name cannot exceed 50 characters")
 	private String name;
 }

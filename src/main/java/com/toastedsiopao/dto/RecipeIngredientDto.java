@@ -13,7 +13,7 @@ public class RecipeIngredientDto {
 
 	private Long inventoryItemId;
 
-	@NotNull(message = "Quantity needed cannot be null")
-	@Positive(message = "Quantity needed must be positive")
+	@NotNull(message = "• Quantity needed cannot be null")
+	@Positive(message = "• Quantity needed must be positive")
 	private BigDecimal quantityNeeded;
 }

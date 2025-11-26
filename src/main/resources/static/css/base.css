@@ -11,6 +11,10 @@
 	--info: #17a2b8; /* Teal */
 	--muted-text: #6c757d; /* Standard muted color */
 
+	/* NEW: Delivery Color for Out_For_Delivery */
+	--delivery-color: #00bcd4; /* Brighter Cyan/Teal for contrast with info */
+	--delivery-color-light: #4dd0e1; /* Lighter shade */
+
 	--sidebar-width: 260px;
 	--sidebar-width-mini: 80px;
 	--top-nav-height: 70px;
@@ -128,6 +132,20 @@ body {
 	background-color: #218838;
 	border-color: #1e7e34;
 }
+
+/* --- ADDED: Action button style for the 'Ship' button in Order Management --- */
+.btn-action-delivery {
+	background-color: var(--delivery-color-light); 
+	color: var(--light);
+	border-color: var(--delivery-color-light);
+}
+
+.btn-action-delivery:hover {
+	background-color: var(--delivery-color);
+	border-color: var(--delivery-color);
+	color: var(--light);
+}
+/* --- END ADDED --- */
 
 .btn-custom.btn-sm,
 .btn-custom-secondary.btn-sm,
@@ -277,14 +295,14 @@ body {
 }
 
 .btn-outline-delivery {
-	color: #13c2c2;
-	border-color: #13c2c2;
+	color: var(--delivery-color); /* MODIFIED: Use new variable */
+	border-color: var(--delivery-color); /* MODIFIED: Use new variable */
 }
 
 .btn-outline-delivery.active, .btn-outline-delivery:hover {
-	background-color: #13c2c2 !important;
+	background-color: var(--delivery-color) !important; /* MODIFIED: Use new variable */
 	color: var(--light) !important;
-	border-color: #13c2c2 !important;
+	border-color: var(--delivery-color) !important; /* MODIFIED: Use new variable */
 	font-weight: bold;
 }
 /* ======================================================================== */
@@ -335,8 +353,8 @@ body {
 }
 
 .status-badge.status-out-for-delivery {
-	background-color: #13c2c2;
-	color: var(--light);
+	background-color: var(--delivery-color-light); /* Lighter shade */
+	color: var(--light); /* White text */
 }
 
 .status-badge.status-no_stock {

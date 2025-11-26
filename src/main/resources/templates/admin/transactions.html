@@ -155,7 +155,10 @@
 								<td
 									th:text="${order.paymentMethod != null ? #strings.toUpperCase(order.paymentMethod) : 'N/A'}">GCash</td>
 								<td><span class="status-badge" th:text="${#strings.replace(order.status, '_', ' ')}"
-									th:classappend="'status-' + ${#strings.toLowerCase(order.status)}">
+									th:classappend="${
+										order.status == 'PENDING_VERIFICATION' ? 'status-pending-verification' : 
+										(order.status == 'OUT_FOR_DELIVERY' ? 'status-out-for-delivery' : 
+										'status-' + #strings.toLowerCase(order.status))}">
 										Status </span></td>
 								
 								<td>
@@ -225,7 +228,7 @@
 		</div>
 		
 		<div th:replace="~{admin/fragments/order-modal :: order-view-modal}"></div>
-		
+		<div th:replace="~{admin/fragments/admin-issue-modal :: admin-issue-modal}"></div>
 	</div>
 	
 	<th:block th:fragment="script">

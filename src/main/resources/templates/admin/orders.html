@@ -97,12 +97,8 @@
 				class="btn btn-outline-info"
 				th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}">Processing</a>
 			<a th:href="@{/admin/orders(status='OUT_FOR_DELIVERY')}"
-				class="btn btn-outline-info"
-				style="--bs-btn-color: #13c2c2; --bs-btn-border-color: #13c2c2; color: #13c2c2;"
-				onmouseover="this.style.backgroundColor='#13c2c2'; this.style.color='var(--light)';"
-				onmouseout="if (!this.classList.contains('active')) { this.style.backgroundColor='transparent'; this.style.color='#13c2c2'; }"
-				th:classappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'active' : ''}"
-				th:styleappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'background-color: #13c2c2; color: var(--light); border-color: #13c2c2;' : ''}">
+				class="btn btn-outline-delivery"
+				th:classappend="${currentStatus == 'OUT_FOR_DELIVERY' ? 'active' : ''}">
 				Out for Delivery </a>
 			<a th:href="@{/admin/orders(status='DELIVERED')}"
 				class="btn btn-outline-success"
@@ -154,7 +150,7 @@
 								<th>Total</th>
 								<th>Payment</th>
 								<th>Status</th>
-								<th style="width: 200px;">Actions</th>
+								<th style="width: 250px;">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -215,9 +211,7 @@
 										Status </span></td>
 								
 								<td>
-									<div class="d-flex justify-content-center gap-1">
-								
-										<button
+									<div class="d-flex gap-1 justify-content-start flex-wrap"> <button
 											class="btn btn-sm btn-action-view view-order-btn"
 											data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
 										
@@ -266,7 +260,7 @@
 												
 												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 												<input type="hidden" name="action" value="ship" />
-												<button type="submit" class="btn btn-sm btn-action-view" style="background-color: #13c2c2; border-color: #13c2c2;">Ship</button>
+												<button type="submit" class="btn btn-sm btn-action-delivery">Ship</button>
 											</form>
 										</th:block>
 										
@@ -346,6 +340,7 @@
 		</div>
 
 		<div th:replace="~{admin/fragments/order-modal :: order-view-modal}"></div>
+		<div th:replace="~{admin/fragments/admin-issue-modal :: admin-issue-modal}"></div>
 
 	</div>
 	<th:block th:fragment="script">

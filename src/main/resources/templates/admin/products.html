@@ -192,7 +192,8 @@
 								th:data-low-stock-threshold="${product.lowStockThreshold}"
 								th:data-critical-stock-threshold="${product.criticalStockThreshold}"
 								th:attr="data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
-											 data-recipe-locked=${product.recipeLocked}">
+											 data-recipe-locked=${product.recipeLocked},
+											 data-product-status=${product.productStatus}">
 								Edit</button>
 								
 							<form th:if="${product.productStatus == 'ACTIVE' or product.productStatus == null}"

@@ -126,6 +126,17 @@ public class ProductServiceImpl implements ProductService {
 			product = productRepository.findById(productDto.getId())
 					.orElseThrow(() -> new RuntimeException("Product not found with id: " + productDto.getId()));
 			log.info("{} product: ID={}, Name='{}'", logAction, product.getId(), productDto.getName());
+			
+			// --- MODIFIED: Check for deactivation constraint (from ACTIVE to INACTIVE) ---
+			if ("INACTIVE".equals(productDto.getProductStatus()) && "ACTIVE".equals(product.getProductStatus())) {
+				if (product.getCurrentStock() > 0) {
+					// NOTE: Changed to match inventory service for frontend split
+					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + product.getName() + "'. Product still has " + product.getCurrentStock() + " items in stock. Please adjust stock to 0 first.");
+				}
+				// Note: Deletion check (if in order) is handled in deleteProduct/controller logic.
+			}
+			// --- END MODIFIED ---
+			
 		} else {
 			product = new Product();
 			product.setCurrentStock(0);
@@ -134,9 +145,10 @@ public class ProductServiceImpl implements ProductService {
 			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
 		}
 		
-		if (isNew) {
-			product.setProductStatus("ACTIVE");
-		}
+		// OLD: if (isNew) { product.setProductStatus("ACTIVE"); }
+		// --- MODIFIED: Set status from DTO ---
+		product.setProductStatus(productDto.getProductStatus());
+		// --- END MODIFIED ---
 
 		if (product.isRecipeLocked()) {
 			if (!isNew) {
@@ -224,9 +236,15 @@ public class ProductServiceImpl implements ProductService {
 	public void activateProduct(Long id) {
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-		product.setProductStatus("ACTIVE");
-		productRepository.save(product);
-		log.info("Activated product: ID={}, Name='{}'", id, product.getName());
+		// --- ADDED: Check status before setting to active (optional but safe) ---
+		if (!"ACTIVE".equals(product.getProductStatus())) {
+			product.setProductStatus("ACTIVE");
+			productRepository.save(product);
+			log.info("Activated product: ID={}, Name='{}'", id, product.getName());
+		} else {
+			log.warn("Attempted to activate already active product: ID={}, Name='{}'", id, product.getName());
+		}
+		// --- END ADDED ---
 	}
 	
 	@Override

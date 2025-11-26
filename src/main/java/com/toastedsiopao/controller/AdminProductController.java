@@ -28,6 +28,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError; 
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -173,12 +174,22 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error adding product: {}", e.getMessage(), e);
-			if (e.getMessage().contains("Product name")) {
-				result.rejectValue("name", "productDto.name", e.getMessage());
-			} else if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage());
+			
+			String errorMessage = e.getMessage();
+			String toastMessage = null;
+
+			if (errorMessage.contains("Product name")) {
+				result.rejectValue("name", "productDto.name", "• " + errorMessage); 
+				toastMessage = errorMessage;
+			} else if (errorMessage.contains("threshold")) {
+				result.reject("global", "• " + errorMessage); 
+				toastMessage = errorMessage;
+			} else {
+				result.reject("global", "• Error adding product: " + errorMessage);
+				toastMessage = "Error adding product: " + errorMessage;
 			}
-			redirectAttributes.addFlashAttribute("globalError", "Error adding product: " + e.getMessage());
+			
+			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
 			addCommonAttributesForRedirect(redirectAttributes);
@@ -230,7 +241,7 @@ public class AdminProductController {
 					}
 				} catch (Exception e) {
 					log.error("Error storing new image file during update: {}", e.getMessage());
-					result.reject("global", "Could not save new image: " + e.getMessage());
+					result.reject("global", "• Could not save new image: " + e.getMessage()); // Added bullet
 					redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
 					redirectAttributes
 							.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto", result);
@@ -252,12 +263,33 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error updating product: {}", e.getMessage(), e);
-			if (e.getMessage().contains("Product name")) {
-				result.rejectValue("name", "productUpdateDto.name", e.getMessage());
-			} else if (e.getMessage().contains("threshold")) {
-				result.reject("global", e.getMessage());
+			
+			String errorMessage = e.getMessage();
+			String toastMessage = null;
+
+			// --- ADDED: Handle specific status error messages and bind to itemStatus field ---
+			if (errorMessage.startsWith("status.hasStock:")) {
+				// The full message for inline display uses "• Cannot deactivate..."
+				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
+				
+				// Add FieldError using the message that starts with '• '
+				result.addError(new FieldError("productUpdateDto", "productStatus", productDto.getProductStatus(), false, null, null, fieldSpecificError));
+				
+				// Toast message should NOT have the bullet
+				toastMessage = fieldSpecificError.replaceFirst("• ", "");
+			} else if (errorMessage.contains("Product name")) {
+				result.rejectValue("name", "productUpdateDto.name", "• " + errorMessage); 
+				toastMessage = errorMessage;
+			} else if (errorMessage.contains("threshold")) {
+				result.reject("global", "• " + errorMessage);
+				toastMessage = errorMessage;
+			} else {
+				result.reject("global", "• Error updating product: " + errorMessage);
+				toastMessage = "Error updating product: " + errorMessage;
 			}
-			redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
+			// --- END ADDED ---
+			
+			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
 			redirectAttributes.addFlashAttribute("productUpdateDto", productDto);

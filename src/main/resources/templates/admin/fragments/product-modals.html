@@ -30,7 +30,7 @@
 									th:if="${#fields.hasErrors('name')}" th:errors="*{name}">...</div>
 							</div>
 							<div class="row">
-								<div class="col-md-6 mb-3">
+								<div class="col-md-4 mb-3">
 									<label for="addProductCategory" class="form-label">Category</label>
 									<select class="form-select" th:field="*{categoryId}"
 										id="addProductCategory" th:errorclass="is-invalid">
@@ -42,7 +42,7 @@
 										th:if="${#fields.hasErrors('categoryId')}"
 										th:errors="*{categoryId}">...</div>
 								</div>
-								<div class="col-md-6 mb-3">
+								<div class="col-md-4 mb-3">
 									<label for="addProductPrice" class="form-label">Price</label>
 									<div class="input-group">
 										<span class="input-group-text">₱</span> <input type="number"
@@ -52,7 +52,15 @@
 											th:if="${#fields.hasErrors('price')}" th:errors="*{price}">...</div>
 									</div>
 								</div>
-							</div>
+								<div class="col-md-4 mb-3">
+									<label for="addProductStatus" class="form-label">Product Status</label> 
+									<select class="form-select" th:field="*{productStatus}" id="addProductStatus" th:errorclass="is-invalid">
+										<option value="ACTIVE">ACTIVE</option>
+										<option value="INACTIVE">INACTIVE</option>
+									</select>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('productStatus')}" th:errors="*{productStatus}">...</div>
+								</div>
+								</div>
 							<div class="mb-3">
 								<label for="addProductDescription" class="form-label">Description
 									(Optional)</label>
@@ -210,7 +218,7 @@
 									th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
 							</div>
 							<div class="row">
-								<div class="col-md-6 mb-3">
+								<div class="col-md-4 mb-3">
 									<label for="editProductCategoryModal" class="form-label">Category</label>
 									<select class="form-select" th:field="*{categoryId}"
 										id="editProductCategoryModal" th:errorclass="is-invalid">
@@ -222,7 +230,7 @@
 										th:if="${#fields.hasErrors('categoryId')}"
 										th:errors="*{categoryId}"></div>
 								</div>
-								<div class="col-md-6 mb-3">
+								<div class="col-md-4 mb-3">
 									<label for="editProductPriceModal" class="form-label">Price</label>
 									<div class="input-group">
 										<span class="input-group-text">₱</span> <input type="number"
@@ -232,7 +240,18 @@
 											th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
 									</div>
 								</div>
-							</div>
+								<div class="col-md-4 mb-3">
+									<label for="editProductStatus" class="form-label">Product Status</label> 
+									<select class="form-select" th:field="*{productStatus}" id="editProductStatus"
+										th:classappend="${#fields.hasErrors('productStatus')} ? 'is-invalid' : ''">
+										<option value="ACTIVE">ACTIVE</option>
+										<option value="INACTIVE">INACTIVE</option>
+									</select>
+									<div class="invalid-feedback"
+										th:if="${#fields.hasErrors('productStatus')}"
+										th:errors="*{productStatus}">Error</div>
+								</div>
+								</div>
 							<div class="mb-3">
 								<label for="editProductDescriptionModal" class="form-label">Description
 									(Optional)</label>

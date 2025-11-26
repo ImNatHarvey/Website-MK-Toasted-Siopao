@@ -70,6 +70,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
 				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0';
 				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0';
+				
+				// --- ADDED ---
+				const productStatusSelect = form.querySelector('#editProductStatus');
+				if (productStatusSelect) {
+					productStatusSelect.value = dataset.productStatus || 'ACTIVE';
+				}
+				// --- END ADDED ---
 
 				const imageUrl = dataset.imageUrl;
 
@@ -244,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
 			if (isRecipeLocked && ingredientsHeading) {
 				const lockBadge = document.createElement('span');
-				lockBadge.className = 'badge bg-warning text-dark ms-2';
+				lockBadge.className = 'badge bg-secondary ms-2';
 				lockBadge.textContent = 'Recipe Locked';
 				ingredientsHeading.appendChild(lockBadge);
 			}

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty; 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -50,4 +51,10 @@ public class ProductDto {
 	private Integer criticalStockThreshold;
 	
 	private boolean removeImage = false;
+	
+	// --- ADDED ---
+	@NotBlank(message = "• Status must be selected")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
+	private String productStatus = "ACTIVE";
+	// --- END ADDED ---
 }

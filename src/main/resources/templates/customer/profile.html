@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
-	th:replace="~{customer/base :: layout(~{::main}, ~{})}">
+	th:replace="~{customer/base :: layout(~{::main}, ~{::script})}">
 <head>
 <title>My Profile - MK Toasted Siopao</title>
 </head>
@@ -134,7 +134,8 @@
 						<div class="col-md-6">
 							<label for="currentPassword" class="form-label">Current
 								Password</label> <input type="password" class="form-control"
-								th:field="*{currentPassword}" th:errorclass="is-invalid">
+								th:field="*{currentPassword}" th:errorclass="is-invalid"
+								placeholder="Your current password">
 							<div class="invalid-feedback"
 								th:if="${#fields.hasErrors('currentPassword')}"
 								th:errors="*{currentPassword}"></div>
@@ -144,15 +145,19 @@
 						<div class="col-md-6">
 							<label for="newPassword" class="form-label">New Password</label>
 							<input type="password" class="form-control"
-								th:field="*{newPassword}" th:errorclass="is-invalid">
+								th:field="*{newPassword}" th:errorclass="is-invalid"
+								placeholder="At least 8 characters">
 							<div class="invalid-feedback"
 								th:if="${#fields.hasErrors('newPassword')}"
 								th:errors="*{newPassword}"></div>
+							<div class="form-text">Must be at least 8 characters and
+								contain no spaces.</div>
 						</div>
 						<div class="col-md-6">
 							<label for="confirmPassword" class="form-label">Confirm
 								New Password</label> <input type="password" class="form-control"
-								th:field="*{confirmPassword}" th:errorclass="is-invalid">
+								th:field="*{confirmPassword}" th:errorclass="is-invalid"
+								placeholder="Re-type your password">
 							<div class="invalid-feedback"
 								th:if="${#fields.hasErrors('confirmPassword')}"
 								th:errors="*{confirmPassword}"></div>
@@ -164,5 +169,8 @@
 			</div>
 		</div>
 	</main>
+	<th:block th:fragment="script">
+		<script th:src="@{/js/customer-profile-stub.js}"></script>
+	</th:block>
 </body>
 </html>

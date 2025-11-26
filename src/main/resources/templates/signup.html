@@ -176,6 +176,8 @@
 										<div class="invalid-feedback"
 											th:if="${#fields.hasErrors('password')}"
 											th:errors="*{password}">Password Error</div>
+										<div class="form-text">Must be at least 8 characters and
+											contain no spaces.</div>
 									</div>
 								</div>
 								<div class="col-lg-6">
@@ -238,7 +240,6 @@
 										const guestDataString = sessionStorage
 												.getItem('guestCheckoutData');
 												
-										// --- MODIFIED ---
 										const cartDataString = sessionStorage
 												.getItem('mkSiopaoCart');
 										const cartInput = document.getElementById('cartDataJsonInput');
@@ -247,7 +248,6 @@
 											console.log("Found guest cart data. Attaching to form.");
 											cartInput.value = cartDataString;
 										}
-										// --- END MODIFIED ---
 												
 										if (guestDataString) {
 											console
@@ -303,7 +303,6 @@
 													.log("Loaded from checkout, but no guest data found in session storage.");
 										}
 										
-										// --- ADDED ---
 										// Clear the cart from session storage AFTER submitting the form
 										const signupForm = document.getElementById('signupForm');
 										if (signupForm) {
@@ -312,7 +311,6 @@
 												sessionStorage.removeItem('mkSiopaoCart');
 											});
 										}
-										// --- END ADDED ---
 									}
 								});
 			</script>

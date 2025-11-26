@@ -96,6 +96,55 @@ document.addEventListener('DOMContentLoaded', function() {
 	// == END: NEW PASSWORD TOGGLE LOGIC ==
 	// ========================================================================
 
+	// ========================================================================
+	// == START: POST-REDIRECT VALIDATION DISPLAY LOGIC (MOVED FROM PROFILE.JS) ==
+	// ========================================================================
+	/**
+	 * Manually makes Thymeleaf-rendered invalid-feedback messages visible
+	 * after a redirect-based validation failure on a non-modal form.
+	 * Target forms: #passwordForm (profile), #signupForm, #resetPasswordForm.
+	 */
+	function initPostRedirectValidation() {
+		// Forms that rely on flash attributes and redirects for validation errors
+		const formsWithErrors = ['passwordForm', 'signupForm', 'resetPasswordForm'];
+
+		formsWithErrors.forEach(formId => {
+			const form = document.getElementById(formId);
+			if (form) {
+				console.log(`Checking form #${formId} for existing errors...`);
+				const invalidFeedbacks = form.querySelectorAll('.invalid-feedback');
+				
+				invalidFeedbacks.forEach(feedback => {
+					// Check if the feedback element has content (meaning Thymeleaf wrote an error)
+					if (feedback.textContent && feedback.textContent.trim() !== '') {
+						console.log(`Found error content in #${formId}. Activating display.`);
+						
+						// 1. Show the error message
+						feedback.classList.add('d-block');
+						
+						// 2. Ensure the associated input field is marked as invalid (for red border)
+						// Find the correct element to apply 'is-invalid' to
+						let input = feedback.previousElementSibling;
+						
+						// Handle password toggle wrapper, as the invalid class needs to be on the input
+						if (input && input.classList.contains('password-toggle-wrapper')) {
+							input = input.querySelector('input[type="password"], input[type="text"]');
+						}
+						
+						if (input && !input.classList.contains('is-invalid')) {
+							input.classList.add('is-invalid');
+						}
+					}
+				});
+			}
+		});
+	}
+	// Call the new validation re-display logic on page load
+	initPostRedirectValidation();
+	// ========================================================================
+	// == END: POST-REDIRECT VALIDATION DISPLAY LOGIC ==
+	// ========================================================================
+
 
 	if (modalToShow) {
 		console.log(`URL parameter 'showModal' found: ${modalToShow}`);

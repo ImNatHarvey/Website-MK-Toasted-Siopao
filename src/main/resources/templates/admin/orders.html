@@ -143,14 +143,14 @@
 					<table class="table table-hover align-middle">
 						<thead class="table-light">
 							<tr>
-								<th>Order ID</th>
-								<th>Date</th>
-								<th>Customer</th>
-								<th>Items</th>
-								<th>Total</th>
-								<th>Payment</th>
-								<th>Status</th>
-								<th style="width: 250px;">Actions</th>
+								<th class="text-center">Order ID</th>
+								<th class="text-center">Date</th>
+								<th class="text-center">Customer</th>
+								<th class="text-center">Items</th>
+								<th class="text-center">Total</th>
+								<th class="text-center">Payment</th>
+								<th class="text-center">Status</th>
+								<th class="text-center" style="width: 250px;">Actions</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -181,24 +181,24 @@
 									],
 									','
 								)} + ']'">
-								<td th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
-								<td
+								<td class="text-center" th:text="'#ORD-' + ${order.id}">#ORD-XXXX</td>
+								<td class="text-center"
 									th:text="${#temporals.format(order.orderDate, 'MMM dd, yyyy HH:mm')}">Date</td>
-								<td
+								<td class="text-center"
 									th:text="${order.shippingFirstName + ' ' + order.shippingLastName}">Customer
 									Name</td>
-								<td class="text-start">
-									<ul class="list-unstyled mb-0 small">
+								<td class="text-center">
+									<ul class="list-unstyled mb-0 small" style="display: inline-block; text-align: center; padding-left: 0;">
 										<li th:each="item : ${order.items}"
 											th:text="${item.quantity + 'x ' + item.product.name}">
 											Item Summary</li>
 									</ul>
 								</td>
-								<td
+								<td class="text-center"
 									th:text="'₱' + ${#numbers.formatDecimal(order.totalAmount, 1, 'COMMA', 2, 'POINT')}">₱0.00</td>
-								<td
+								<td class="text-center"
 									th:text="${#strings.toUpperCase(order.paymentMethod)}">PAYMENT</td>
-								<td><span class="status-badge"
+								<td class="text-center"><span class="status-badge"
 									th:text="${
 										order.status == 'PENDING' ? 'PENDING (COD)' : 
 										(order.status == 'PENDING_VERIFICATION' ? 'PENDING (GCASH)' : 
@@ -210,85 +210,84 @@
 										'status-' + #strings.toLowerCase(order.status))}">
 										Status </span></td>
 								
-								<td>
-									<div class="d-flex gap-1 justify-content-start flex-wrap"> <button
-											class="btn btn-sm btn-action-view view-order-btn"
-											data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+								<td class="d-flex gap-1 justify-content-center flex-wrap"> <button
+										class="btn btn-sm btn-action-view view-order-btn"
+										data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
 										
-										<button type="button"
-											class="btn btn-sm btn-custom-outline"
-											th:classappend="${openIssueCounts.get(order.id) != null ? 'btn-outline-danger' : ''}"
-											th:if="${#authorization.expression('hasAuthority(''VIEW_ISSUE_REPORTS'')')}"
-											data-bs-toggle="modal" data-bs-target="#viewIssuesModal"
-											th:data-order-id="${order.id}"
-											th:title="${openIssueCounts.get(order.id) != null ? 'View ' + openIssueCounts.get(order.id) + ' Open Issue(s)' : 'View Issues'}">
-											<i class="fa-solid fa-flag"></i>
-											<span th:if="${openIssueCounts.get(order.id) != null}"
-												  class="badge bg-danger rounded-pill"
-												  style="font-size: 0.6rem; vertical-align: top; margin-left: -5px;"
-												  th:text="${openIssueCounts.get(order.id)}"></span>
-										</button>
-										<th:block
-											th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
-											sec:authorize="hasAuthority('EDIT_ORDERS')">
-											<form
-												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
-												method="post" class="d-inline"
-												th:data-confirm-save-message="'Are you sure you want to ACCEPT Order ' + ${order.id} + '?'">
-												
-												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-												<input type="hidden" name="action" value="accept" />
-												<button type="submit" class="btn btn-sm btn-action-success">Accept</button>
-											</form>
-											<form
-												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
-												method="post" class="d-inline"
-												th:data-confirm-message="'Are you sure you want to REJECT Order ' + ${order.id} + '? This will reverse the stock.'">
-												
-												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-												<input type="hidden" name="action" value="reject" />
-												<button type="submit" class="btn btn-sm btn-action-delete">Reject</button>
-											</form>
-										</th:block>
-										
-										<th:block th:if="${order.status == 'PROCESSING'}"
-											sec:authorize="hasAuthority('EDIT_ORDERS')">
-											<form
-												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
-												method="post" class="d-inline"
-												th:data-confirm-save-message="'Are you sure you want to SHIP Order ' + ${order.id} + '?'">
-												
-												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-												<input type="hidden" name="action" value="ship" />
-												<button type="submit" class="btn btn-sm btn-action-delivery">Ship</button>
-											</form>
-										</th:block>
-										
-										<th:block
-											th:if="${order.status == 'OUT_FOR_DELIVERY'}"
-											sec:authorize="hasAuthority('EDIT_ORDERS')">
-											<form
-												th:if="${#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
-												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
-												method="post" class="d-inline"
-												th:data-confirm-save-message="'Confirm payment received for COD Order ' + ${order.id} + '?'">
-												
-												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-												<input type="hidden" name="action" value="complete_cod" />
-												<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
-											</form>
-											<form
-												th:if="${!#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
-												th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
-												method="post" class="d-inline"
-												th:data-confirm-save-message="'Confirm Order ' + ${order.id} + ' has been delivered?'">
-												
-												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-												<input type="hidden" name="action" value="complete_delivered" />
-												<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
-											</form>
-										</th:block>
-									</div>
+									<button type="button"
+										class="btn btn-sm btn-custom-outline"
+										th:classappend="${openIssueCounts.get(order.id) != null ? 'btn-outline-danger' : ''}"
+										th:if="${#authorization.expression('hasAuthority(''VIEW_ISSUE_REPORTS'')')}"
+										data-bs-toggle="modal" data-bs-target="#viewIssuesModal"
+										th:data-order-id="${order.id}"
+										th:title="${openIssueCounts.get(order.id) != null ? 'View ' + openIssueCounts.get(order.id) + ' Open Issue(s)' : 'View Issues'}">
+										<i class="fa-solid fa-flag"></i>
+										<span th:if="${openIssueCounts.get(order.id) != null}"
+											  class="badge bg-danger rounded-pill"
+											  style="font-size: 0.6rem; vertical-align: top; margin-left: -5px;"
+											  th:text="${openIssueCounts.get(order.id)}"></span>
+									</button>
+									<th:block
+										th:if="${order.status == 'PENDING' or order.status == 'PENDING_VERIFICATION'}"
+										sec:authorize="hasAuthority('EDIT_ORDERS')">
+										<form
+											th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+											method="post" class="d-inline"
+											th:data-confirm-save-message="'Are you sure you want to ACCEPT Order ' + ${order.id} + '?'">
+											
+											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+											<input type="hidden" name="action" value="accept" />
+											<button type="submit" class="btn btn-sm btn-action-success">Accept</button>
+										</form>
+										<form
+											th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+											method="post" class="d-inline"
+											th:data-confirm-message="'Are you sure you want to REJECT Order ' + ${order.id} + '? This will reverse the stock.'">
+											
+											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+											<input type="hidden" name="action" value="reject" />
+											<button type="submit" class="btn btn-sm btn-action-delete">Reject</button>
+										</form>
+									</th:block>
+									
+									<th:block th:if="${order.status == 'PROCESSING'}"
+										sec:authorize="hasAuthority('EDIT_ORDERS')">
+										<form
+											th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+											method="post" class="d-inline"
+											th:data-confirm-save-message="'Are you sure you want to SHIP Order ' + ${order.id} + '?'">
+											
+											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+											<input type="hidden" name="action" value="ship" />
+											<button type="submit" class="btn btn-sm btn-action-delivery">Ship</button>
+										</form>
+									</th:block>
+									
+									<th:block
+										th:if="${order.status == 'OUT_FOR_DELIVERY'}"
+										sec:authorize="hasAuthority('EDIT_ORDERS')">
+										<form
+											th:if="${#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
+											th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+											method="post" class="d-inline"
+											th:data-confirm-save-message="'Confirm payment received for COD Order ' + ${order.id} + '?'">
+											
+											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+											<input type="hidden" name="action" value="complete_cod" />
+											<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
+										</form>
+										<form
+											th:if="${!#strings.equalsIgnoreCase(order.paymentMethod, 'cod')}"
+											th:action="@{/admin/orders/update-status/{id}(id=${order.id})}"
+											method="post" class="d-inline"
+											th:data-confirm-save-message="'Confirm Order ' + ${order.id} + ' has been delivered?'">
+											
+											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+											<input type="hidden" name="action" value="complete_delivered" />
+											<button type="submit" class="btn btn-sm btn-action-success">Complete</button>
+										</form>
+									</th:block>
+								</div>
 								</td>
 							</tr>
 							<tr th:if="${#lists.isEmpty(orders)}">

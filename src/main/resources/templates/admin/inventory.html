@@ -355,12 +355,21 @@
 								placeholder="Enter item name..." th:value="${wasteKeyword}">
 						</div>
 						<div class="flex-grow-1">
+							<label for="wasteType" class="form-label">Filter by Type</label>
+							<select class="form-select" id="wasteType" name="wasteType">
+								<option value="">-- All Types --</option>
+								<option value="INVENTORY" th:selected="${wasteTypeFilter == 'INVENTORY'}">Raw Inventory</option>
+								<option value="PRODUCT" th:selected="${wasteTypeFilter == 'PRODUCT'}">Finished Products</option>
+							</select>
+						</div>
+						<div class="flex-grow-1">
 							<label for="wasteCategory" class="form-label">Filter by Reason</label>
 							<select class="form-select" id="wasteCategory" name="wasteCategory">
 								<option value="">-- All Reasons --</option>
 								<option value="EXPIRED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'EXPIRED'}">Expired</option>
 								<option value="DAMAGED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'DAMAGED'}">Damaged</option>
 								<option value="WASTE" th:selected="${wasteCategoryId != null && wasteCategoryId == 'WASTE'}">Other Waste</option>
+								<option value="ADJUSTMENT" th:selected="${wasteCategoryId != null && wasteCategoryId == 'ADJUSTMENT'}">Adjustment (Manual Deduct)</option>
 							</select>
 						</div>
 						<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
@@ -381,13 +390,13 @@
 								<ul class="dropdown-menu dropdown-menu-end">
 									<li><button class="dropdown-item" type="submit"
 											formaction="/admin/reports/waste" formmethod="get"
-											th:formaction="@{/admin/reports/waste(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
+											th:formaction="@{/admin/reports/waste(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId}, wasteType=${wasteTypeFilter})}"
 											th:formmethod="get">
 											<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
 										</button></li>
 									<li><button class="dropdown-item" type="submit"
 											formaction="/admin/reports/waste/pdf" formmethod="get"
-											th:formaction="@{/admin/reports/waste/pdf(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
+											th:formaction="@{/admin/reports/waste/pdf(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId}, wasteType=${wasteTypeFilter})}"
 											th:formmethod="get">
 											<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
 										</button></li>
@@ -409,6 +418,7 @@
 									<tr>
 										<th>Timestamp</th>
 										<th>Admin User</th>
+										<th>Type</th>
 										<th>Reason</th>
 										<th>Item Name</th>
 										<th>Cost/Unit</th>
@@ -423,8 +433,14 @@
 											<span th:text="${logEntry.username}">User</span>
 										</td>
 										<td>
+											<span class="badge"
+												th:text="${#strings.startsWith(logEntry.action, 'PRODUCT_') ? 'Product' : 'Inventory'}"
+												th:classappend="${#strings.startsWith(logEntry.action, 'PRODUCT_') ? 'bg-primary' : 'bg-warning text-dark'}">TYPE</span>
+										</td>
+										<td>
 											<span class="badge bg-danger"
-												th:text="${#strings.replace(#strings.replace(logEntry.action, 'STOCK_WASTE_', ''), '_', ' ')}">REASON</span>
+												th:text="${#strings.replace(#strings.replace(logEntry.action, 'STOCK_WASTE_', ''), 'PRODUCT_WASTE_', '')}"
+												th:classappend="${#strings.startsWith(logEntry.action, 'PRODUCT_') ? 'bg-danger' : 'bg-danger'}">REASON</span>
 										</td>
 										
 										<td th:text="${logEntry.itemName != null ? logEntry.itemName : 'N/A'}">Item</td>
@@ -435,7 +451,7 @@
 										<td th:text="${logEntry.details}">Details</td>
 									</tr>
 									<tr th:if="${#lists.isEmpty(wasteLogs)}">
-										<td colspan="7" class="text-center text-muted"
+										<td colspan="8" class="text-center text-muted"
 											th:text="${(wasteKeyword != null or wasteCategoryId != null) ? 'No waste records found matching your criteria.' : 'No waste records found.'}">No waste records found.</td>
 									</tr>
 								</tbody>
@@ -450,7 +466,7 @@
 									<li class="page-item"
 										th:classappend="${wasteLogPage.first} ? 'disabled'"><a
 										class="page-link"
-										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number - 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}">Previous</a>
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number - 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId}, wasteType=${wasteTypeFilter})}">Previous</a>
 									</li>
 
 									<th:block
@@ -465,14 +481,14 @@
 										<li class="page-item"
 											th:classappend="${i == wasteLogPage.number} ? 'active'"><a
 											class="page-link"
-											th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${i}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
+											th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${i}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId}, wasteType=${wasteTypeFilter})}"
 											th:text="${i + 1}"></a></li>
 									</th:block>
 
 									<li class="page-item"
 										th:classappend="${wasteLogPage.last} ? 'disabled'"><a
 										class="page-link"
-										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number + 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}">Next</a>
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number + 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId}, wasteType=${wasteTypeFilter})}">Next</a>
 									</li>
 								</ul>
 							</nav>

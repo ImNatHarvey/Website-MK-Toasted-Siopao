@@ -47,7 +47,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 		}
 	}
 	
-	// --- ADDED ---
 	@Override
 	@Transactional
 	public void logWasteAction(String username, String action, String details, 
@@ -66,7 +65,6 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 			log.error("Failed to save waste log entry: {}", e.getMessage());
 		}
 	}
-	// --- END ADDED ---
 
 	@Override
 	public Page<ActivityLogEntry> getAllLogs(Pageable pageable) {
@@ -75,31 +73,19 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
 	@Override
 	public Page<ActivityLogEntry> getWasteLogs(Pageable pageable) {
-		return activityLogRepository.findByActionStartingWithOrderByTimestampDesc("STOCK_WASTE_", pageable);
+		// Default view showing all waste types
+		return activityLogRepository.searchWasteLogs(null, null, null, pageable);
 	}
 	
 	@Override
-	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable) {
-		String actionPrefix = "STOCK_WASTE_";
-		
-		boolean hasCategory = StringUtils.hasText(reasonCategory);
-
-		String fullActionFilter = actionPrefix;
-		if (hasCategory) {
-			fullActionFilter += reasonCategory.trim().toUpperCase();
-		}
-		
-		// Use the new repository method that searches explicitly on itemName if provided, 
-		// falling back to standard behavior if needed.
-		// Note: The repository method expects the prefix to match LIKE 'STOCK_WASTE_%'
-		
-		String repoActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
+	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, Pageable pageable) {
 		String itemKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+		String reasonSuffix = StringUtils.hasText(reasonCategory) ? reasonCategory.trim().toUpperCase() : null;
+		String typeFilter = StringUtils.hasText(wasteType) ? wasteType.trim().toUpperCase() : null;
 		
-		return activityLogRepository.searchWasteLogs(repoActionPrefix, itemKeyword, pageable);
+		return activityLogRepository.searchWasteLogs(typeFilter, reasonSuffix, itemKeyword, pageable);
 	}
 	
-	// --- ADDED ---
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> getWasteMetrics() {
@@ -107,9 +93,10 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 		
 		long totalItems = activityLogRepository.countTotalWasteEntries();
 		BigDecimal totalWasteValue = activityLogRepository.sumTotalWasteValue();
-		BigDecimal expiredValue = activityLogRepository.sumValueByAction("STOCK_WASTE_EXPIRED");
-		BigDecimal damagedValue = activityLogRepository.sumValueByAction("STOCK_WASTE_DAMAGED");
-		BigDecimal otherWasteValue = activityLogRepository.sumValueByAction("STOCK_WASTE_WASTE");
+		// Summing values by reason suffix (works for both STOCK_WASTE_... and PRODUCT_WASTE_...)
+		BigDecimal expiredValue = activityLogRepository.sumValueByReason("EXPIRED");
+		BigDecimal damagedValue = activityLogRepository.sumValueByReason("DAMAGED");
+		BigDecimal otherWasteValue = activityLogRepository.sumValueByReason("WASTE");
 		
 		metrics.put("totalItems", totalItems);
 		metrics.put("totalWasteValue", totalWasteValue);

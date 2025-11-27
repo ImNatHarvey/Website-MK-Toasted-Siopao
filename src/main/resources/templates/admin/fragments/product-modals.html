@@ -70,6 +70,26 @@
 									th:if="${#fields.hasErrors('description')}"
 									th:errors="*{description}">...</div>
 							</div>
+							
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="addCreatedDate" class="form-label">Production/Created Date</label>
+									<input type="date" class="form-control" th:field="*{createdDate}" id="addCreatedDate"
+										th:errorclass="is-invalid">
+									<div class="form-text">Defaults to today if blank.</div>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('createdDate')}" th:errors="*{createdDate}">...</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="addExpirationDays" class="form-label">Shelf Life (Days)</label>
+									<div class="input-group">
+										<input type="number" class="form-control" th:field="*{expirationDays}" id="addExpirationDays" min="0" placeholder="0"
+											th:errorclass="is-invalid">
+										<span class="input-group-text">days</span>
+									</div>
+									<div class="form-text">0 = No expiration.</div>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('expirationDays')}" th:errors="*{expirationDays}">...</div>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="form-label">Product Image (Optional)</label>
@@ -262,6 +282,26 @@
 									th:if="${#fields.hasErrors('description')}"
 									th:errors="*{description}"></div>
 							</div>
+							
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="editCreatedDate" class="form-label">Production/Created Date</label>
+									<input type="date" class="form-control" th:field="*{createdDate}" id="editCreatedDate"
+										th:errorclass="is-invalid">
+									<div class="form-text">Updates based on last production unless manually set.</div>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('createdDate')}" th:errors="*{createdDate}">...</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="editExpirationDays" class="form-label">Shelf Life (Days)</label>
+									<div class="input-group">
+										<input type="number" class="form-control" th:field="*{expirationDays}" id="editExpirationDays" min="0" placeholder="0"
+											th:errorclass="is-invalid">
+										<span class="input-group-text">days</span>
+									</div>
+									<div class="form-text">0 = No expiration.</div>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('expirationDays')}" th:errors="*{expirationDays}">...</div>
+								</div>
+							</div>
 
 							<div class="mb-3">
 								<label class="form-label">Product Image</label>
@@ -392,7 +432,7 @@
 
 		<div class="modal fade" id="manageStockModal" tabindex="-1"
 			aria-labelledby="manageStockModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+			<div class="modal-dialog modal-xl modal-dialog-scrollable">
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="manageStockModalLabel">Manage
@@ -401,34 +441,68 @@
 							aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
+						
+						<div th:if="${stockError}"
+							class="alert alert-danger alert-dismissible fade show"
+							role="alert">
+							<i class="fa-solid fa-triangle-exclamation me-2"></i> <span
+								th:text="${stockError}"></span>
+							<button type="button" class="btn-close" data-bs-dismiss="alert"
+								aria-label="Close"></button>
+						</div>
+						
 						<p class="small text-muted">Record production (increase stock)
-							or wastage/adjustments (decrease stock). Use 'Max' to calculate
+							or manual/wastage adjustments (decrease stock). Use 'Max' to calculate
 							the maximum producable quantity based on inventory.</p>
+							
 						<div class="table-responsive">
 							<table class="table table-sm align-middle">
 								<thead>
 									<tr>
 										<th>Product</th>
 										<th>Current Stock</th>
-										<th>Quantity</th>
-										<th>Action</th>
+										<th style="width: 120px;">Quantity</th>
+										<th style="width: 150px;">Reason</th>
+										<th>Note</th>
+										<th style="width: 140px;">Actions</th>
 									</tr>
 								</thead>
 								<tbody>
 									<tr th:each="prod : ${allProductsForStockModal}"
-										th:data-product-id="${prod.id}">
+										th:data-product-id="${prod.id}" 
+										th:data-product-name="${prod.name}">
 										<form th:action="@{/admin/products/stock/adjust}"
 											method="post" class="stock-adjust-form">
 											
 											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 											
 											<input type="hidden" name="productId" th:value="${prod.id}" />
+											
+											<input type="hidden" name="receivedDate" th:value="${prod.createdDate}" />
+											<input type="hidden" name="expirationDays" th:value="${prod.getExpirationDays()}" />
+											
 											<td th:text="${prod.name}">...</td>
 											<td th:text="${prod.currentStock}">...</td>
 											<td><input type="number" name="quantity"
 												class="form-control form-control-sm quantity-change-input"
 												style="width: 100px;" placeholder="Qty" required step="1"
 												min="1" /></td>
+											
+											<td>
+												<select name="reasonCategory" class="form-select form-select-sm reason-category-select">
+													<option value="Manual">Manual Adjust</option>
+													<option value="Production">Production</option>
+													<option value="Restock">Restock</option>
+													<option value="Expired" class="text-danger">Expired</option>
+													<option value="Damaged" class="text-danger">Damaged</option>
+													<option value="Waste" class="text-danger">Waste/Spoilage</option>
+												</select>
+											</td>
+											
+											<td>
+												<input type="text" name="reasonNote" class="form-control form-control-sm" placeholder="Optional details...">
+											</td>
+											
 											<td>
 												<div class="d-flex gap-1">
 													<button type="button"
@@ -436,15 +510,17 @@
 														th:if="${prod.ingredients != null and !#lists.isEmpty(prod.ingredients)}"
 														title="Calculate maximum producable quantity based on inventory">Max</button>
 													<button type="submit" name="action" value="add"
-														class="btn btn-sm btn-action-success">Add</button>
+														class="btn btn-sm btn-action-success add-stock-btn"
+														title="Add stock">Add</button>
 													<button type="submit" name="action" value="deduct"
-														class="btn btn-sm btn-action-delete">Deduct</button>
+														class="btn btn-sm btn-action-delete deduct-stock-btn"
+														title="Deduct stock">Deduct</button>
 												</div>
 											</td>
 										</form>
 									</tr>
 									<tr th:if="${#lists.isEmpty(allProductsForStockModal)}">
-										<td colspan="4" class="text-center text-muted">No
+										<td colspan="6" class="text-center text-muted">No
 											products found.</td>
 									</tr>
 								</tbody>
@@ -507,6 +583,15 @@
 									<strong>Critical Stock Threshold:</strong> <span
 										id="viewProductCriticalThreshold">0</span> units
 								</p>
+								
+								<p class="mb-1">
+									<strong>Created/Production Date:</strong> <span id="viewProductCreatedDate">N/A</span>
+								</p>
+								<p class="mb-1">
+									<strong>Expiration Date:</strong> <span id="viewProductExpirationDate">N/A</span> 
+									<span id="viewProductExpirationDays" class="small text-muted ms-1"></span>
+								</p>
+								
 								<p class="small text-muted" id="viewProductStockLastUpdated">Stock
 									last updated: ...</p>
 							</div>

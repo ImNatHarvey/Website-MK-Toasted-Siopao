@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +40,6 @@ public class ProductDto {
 
 	@Valid
 	@NotEmpty(message = "• A product must have at least one ingredient")
-	// --- END UPDATE ---
 	private List<RecipeIngredientDto> ingredients = new ArrayList<>();
 
 	@NotNull(message = "• Low stock threshold cannot be null")
@@ -52,9 +52,14 @@ public class ProductDto {
 	
 	private boolean removeImage = false;
 	
-	// --- ADDED ---
 	@NotBlank(message = "• Status must be selected")
 	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
 	private String productStatus = "ACTIVE";
+	
+	// --- ADDED ---
+	private LocalDate createdDate; // Defaults to today if null
+	
+	@Min(value = 0, message = "• Expiration days cannot be negative")
+	private Integer expirationDays; // 0 or null means no expiration
 	// --- END ADDED ---
 }

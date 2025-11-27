@@ -23,7 +23,7 @@ public interface PdfService {
 
     ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException;
     
-    // --- MODIFIED: Added reasonCategory parameter ---
-    ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory) throws IOException;
+    // --- MODIFIED: Added wasteType parameter ---
+    ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory, String wasteType) throws IOException;
     // --- END MODIFIED ---
 }

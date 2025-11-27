@@ -1,6 +1,5 @@
 package com.toastedsiopao.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.CategoryDto;
 import com.toastedsiopao.dto.ProductDto;
@@ -36,11 +35,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.security.Principal;
-import java.util.HashMap;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors; 
 
 @Controller
 @RequestMapping("/admin/products")
@@ -97,15 +95,12 @@ public class AdminProductController {
 		long totalProducts = productService.countAllProducts();
 		long lowStockProducts = productService.countLowStockProducts();
 		long outOfStockProducts = productService.countOutOfStockProducts();
-		
-		// --- ADDED: Critical Stock Count ---
 		long criticalStockProducts = productService.countCriticalStockProducts();
-		model.addAttribute("criticalStockProducts", criticalStockProducts);
-		// --- END ADDED ---
-
+		
 		model.addAttribute("totalProducts", totalProducts);
 		model.addAttribute("lowStockProducts", lowStockProducts);
 		model.addAttribute("outOfStockProducts", outOfStockProducts);
+		model.addAttribute("criticalStockProducts", criticalStockProducts);
 
 		model.addAttribute("productPage", productPage);
 		model.addAttribute("products", productPage.getContent());
@@ -272,15 +267,9 @@ public class AdminProductController {
 			String errorMessage = e.getMessage();
 			String toastMessage = null;
 
-			// --- ADDED: Handle specific status error messages and bind to itemStatus field ---
 			if (errorMessage.startsWith("status.hasStock:")) {
-				// The full message for inline display uses "• Cannot deactivate..."
 				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
-				
-				// Add FieldError using the message that starts with '• '
 				result.addError(new FieldError("productUpdateDto", "productStatus", productDto.getProductStatus(), false, null, null, fieldSpecificError));
-				
-				// Toast message should NOT have the bullet
 				toastMessage = fieldSpecificError.replaceFirst("• ", "");
 			} else if (errorMessage.contains("Product name")) {
 				result.rejectValue("name", "productUpdateDto.name", "• " + errorMessage); 
@@ -292,7 +281,6 @@ public class AdminProductController {
 				result.reject("global", "• Error updating product: " + errorMessage);
 				toastMessage = "Error updating product: " + errorMessage;
 			}
-			// --- END ADDED ---
 			
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
@@ -309,8 +297,15 @@ public class AdminProductController {
 
 	@PostMapping("/stock/adjust")
 	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')")
-	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
-			@RequestParam("action") String action, RedirectAttributes redirectAttributes, Principal principal,
+	public String adjustProductStock(
+			@RequestParam("productId") Long productId, 
+			@RequestParam("quantity") int quantity,
+			@RequestParam("action") String action, 
+			@RequestParam(value = "reasonCategory", required = false) String reasonCategory, 
+			@RequestParam(value = "reasonNote", required = false) String reasonNote,
+			@RequestParam(value = "receivedDate", required = false) LocalDate receivedDate,
+			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
+			RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
 
 		if (quantity <= 0) {
@@ -322,15 +317,56 @@ public class AdminProductController {
 
 		int quantityChange = action.equals("deduct") ? -quantity : quantity;
 		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
+		
+		// --- MODIFIED: "Manual" deductions should NOT go to waste log anymore ---
+		boolean isWasteAction = action.equals("deduct") && 
+			List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
+		
+		String finalReason = derivedReason;
+		if (StringUtils.hasText(reasonCategory)) {
+			finalReason = reasonCategory;
+		}
+		if (StringUtils.hasText(reasonNote)) {
+			finalReason += ": " + reasonNote;
+		}
 
 		try {
-			Product updatedProduct = productService.adjustStock(productId, quantityChange, derivedReason);
-			String actionText = action.equals("add") ? "Produced" : "Adjusted";
-			String details = actionText + " " + quantity + " units of " + updatedProduct.getName() + " (ID: "
-					+ productId + "). Reason: " + derivedReason;
-			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " units of '"
+			// Step 1: Adjust stock (consume raw materials, update dates if provided)
+			// Pass dates only if action is Add
+			LocalDate dateToSet = action.equals("add") ? receivedDate : null;
+			Integer expDaysToSet = action.equals("add") ? expirationDays : null;
+
+			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, dateToSet, expDaysToSet);
+			
+			String actionText = action.equals("add") ? "Added" : "Deducted";
+			if ("Production".equals(reasonCategory)) actionText = "Produced";
+			else if (isWasteAction) actionText = "Wasted"; // Only true waste reasons
+			
+			String details = actionText + " " + quantity + " unit(s) of " + updatedProduct.getName() + " (ID: "
+					+ productId + "). Reason: " + finalReason;
+
+			// Step 2: Log the action
+			if (isWasteAction) {
+				BigDecimal unitValue = updatedProduct.getPrice();
+				BigDecimal quantityDecimal = BigDecimal.valueOf(quantity);
+				
+				String logAction = "PRODUCT_WASTE_" + reasonCategory.toUpperCase();
+				activityLogService.logWasteAction(
+						principal.getName(), 
+						logAction, 
+						details,
+						updatedProduct.getName(),
+						quantityDecimal,
+						unitValue
+				);
+			} else {
+				// "Manual" adjustments (deductions or additions) go here
+				activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
+			}
+
+			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " unit(s) of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
-			activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
+			
 		} catch (RuntimeException e) { 
 			log.warn("Stock adjustment failed: {}", e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
@@ -388,7 +424,7 @@ public class AdminProductController {
 		} catch (DataIntegrityViolationException e) {
 			log.warn("Data integrity violation on delete/deactivate for product {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", "Operation failed. Product has order history and cannot be deleted.");
-		} catch (IllegalArgumentException e) { // Catches stock > 0
+		} catch (IllegalArgumentException e) { 
 			log.warn("Failed to delete/deactivate product {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 		}

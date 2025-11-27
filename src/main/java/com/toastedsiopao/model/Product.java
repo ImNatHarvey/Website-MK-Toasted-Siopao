@@ -1,18 +1,19 @@
 package com.toastedsiopao.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.EqualsAndHashCode; // IMPORT ADDED
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString; // IMPORT ADDED
+import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class Product {
 
 	@NotBlank(message = "Product name cannot be blank")
 	@Size(max = 100, message = "Product name cannot exceed 100 characters")
-	@Column(nullable = false, length = 100, unique = true) // --- ADDED unique = true ---
+	@Column(nullable = false, length = 100, unique = true)
 	private String name;
 
 	@Column(length = 500)
@@ -45,13 +46,13 @@ public class Product {
 	@NotNull(message = "Product must belong to a category")
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "category_id", nullable = false)
-	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
-	@ToString.Exclude // --- THIS IS THE FIX ---
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
 	private Category category;
 
 	@OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
-	@ToString.Exclude // --- THIS IS THE FIX ---
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
 	private List<RecipeIngredient> ingredients = new ArrayList<>();
 
 	@NotNull(message = "Current stock cannot be null")
@@ -74,18 +75,27 @@ public class Product {
 	@Column(nullable = false)
 	private boolean recipeLocked = false;
 	
-	// --- ADDED ---
 	@Column(nullable = false, length = 20)
-	private String productStatus = "ACTIVE"; // "ACTIVE" or "INACTIVE"
+	private String productStatus = "ACTIVE"; 
+	
+	// --- ADDED: Date Tracking Fields ---
+	@Column(nullable = true)
+	private LocalDate createdDate; // Date produced/stocked
+
+	@Column(nullable = true)
+	private LocalDate expirationDate; // Date it expires
 	// --- END ADDED ---
 
 	@PrePersist
 	@PreUpdate
 	protected void onUpdate() {
 		stockLastUpdated = LocalDateTime.now();
-		// Ensure critical <= low
 		if (criticalStockThreshold > lowStockThreshold) {
 			criticalStockThreshold = lowStockThreshold;
+		}
+		// Ensure createdDate is set if null
+		if (createdDate == null) {
+			createdDate = LocalDate.now();
 		}
 	}
 
@@ -102,7 +112,6 @@ public class Product {
 		}
 	}
 
-	// --- MODIFIED: Renamed to getPublicStockStatusText ---
 	@Transient
 	public String getPublicStockStatusText() {
 		if (currentStock <= 0) {
@@ -111,16 +120,23 @@ public class Product {
 			return "Available";
 		}
 	}
-	// --- END MODIFIED ---
 
-	// --- ADDED: New method for CSS class ---
 	@Transient
 	public String getPublicStockStatusClass() {
 		if (currentStock <= 0) {
-			return "no_stock"; // Corresponds to status-no_stock
+			return "no_stock"; 
 		} else {
-			return "normal"; // Corresponds to status-normal (green)
+			return "normal"; 
 		}
+	}
+	
+	// --- ADDED: Helper to calculate days for display ---
+	@Transient
+	public Integer getExpirationDays() {
+		if (createdDate != null && expirationDate != null) {
+			return (int) ChronoUnit.DAYS.between(createdDate, expirationDate);
+		}
+		return 0;
 	}
 	// --- END ADDED ---
 

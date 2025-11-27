@@ -13,7 +13,6 @@ public interface ActivityLogService {
 
 	void logAdminAction(String username, String action, String details);
 	
-	// --- ADDED: Specific logger for waste ---
 	void logWasteAction(String username, String action, String details, 
 			String itemName, BigDecimal quantity, BigDecimal costPerUnit);
 
@@ -21,8 +20,8 @@ public interface ActivityLogService {
 
 	Page<ActivityLogEntry> getWasteLogs(Pageable pageable);
 	
-	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable);
+	// --- MODIFIED: Added wasteType parameter ---
+	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, Pageable pageable);
 	
-	// --- ADDED: Metrics ---
 	Map<String, Object> getWasteMetrics();
 }

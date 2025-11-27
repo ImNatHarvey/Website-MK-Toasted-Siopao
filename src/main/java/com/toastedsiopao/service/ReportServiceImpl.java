@@ -407,8 +407,8 @@ public class ReportServiceImpl implements ReportService {
     }
     
     @Override
-    public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); 
+    public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType) throws IOException {
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, Pageable.unpaged()); 
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -436,7 +436,10 @@ public class ReportServiceImpl implements ReportService {
             if (StringUtils.hasText(reasonCategory)) {
                 filterDesc += "Reason='" + reasonCategory + "'";
             }
-            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory)) {
+            if (StringUtils.hasText(wasteType)) {
+                filterDesc += "Type='" + wasteType + "'";
+            }
+            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory) && !StringUtils.hasText(wasteType)) {
                 filterDesc += "None (All Records)";
             }
             Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
@@ -445,7 +448,7 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
             
-            String[] headers = { "Timestamp", "Admin User", "Action Category", "Item Name", "Cost/Unit", "Total Value", "Details" };
+            String[] headers = { "Timestamp", "Admin User", "Type", "Reason", "Item Name", "Cost/Unit", "Total Value", "Details" };
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -461,23 +464,32 @@ public class ReportServiceImpl implements ReportService {
                 timestampCell.setCellStyle(dateTimeStyle);
 
                 row.createCell(1).setCellValue(logEntry.getUsername());
-                row.createCell(2).setCellValue(logEntry.getAction().replace("STOCK_WASTE_", ""));
                 
-                row.createCell(3).setCellValue(logEntry.getItemName() != null ? logEntry.getItemName() : "N/A");
+                // Type Logic
+                String type = "Unknown";
+                if (logEntry.getAction().startsWith("PRODUCT_")) type = "Product";
+                else if (logEntry.getAction().startsWith("STOCK_")) type = "Inventory";
+                row.createCell(2).setCellValue(type);
+                
+                // Reason Logic
+                String reason = logEntry.getAction().replace("STOCK_WASTE_", "").replace("PRODUCT_WASTE_", "");
+                row.createCell(3).setCellValue(reason);
+                
+                row.createCell(4).setCellValue(logEntry.getItemName() != null ? logEntry.getItemName() : "N/A");
                 
                 if (logEntry.getCostPerUnit() != null) {
-                    createCurrencyCell(row, 4, logEntry.getCostPerUnit(), currencyStyle);
-                } else {
-                    row.createCell(4).setCellValue("N/A");
-                }
-                
-                if (logEntry.getTotalValue() != null) {
-                    createCurrencyCell(row, 5, logEntry.getTotalValue(), currencyStyle);
+                    createCurrencyCell(row, 5, logEntry.getCostPerUnit(), currencyStyle);
                 } else {
                     row.createCell(5).setCellValue("N/A");
                 }
                 
-                row.createCell(6).setCellValue(logEntry.getDetails());
+                if (logEntry.getTotalValue() != null) {
+                    createCurrencyCell(row, 6, logEntry.getTotalValue(), currencyStyle);
+                } else {
+                    row.createCell(6).setCellValue("N/A");
+                }
+                
+                row.createCell(7).setCellValue(logEntry.getDetails());
             }
             
             autoSizeColumns(sheet, headers.length);
@@ -488,9 +500,9 @@ public class ReportServiceImpl implements ReportService {
     }
     
     @Override
-    public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged());
-        return pdfService.generateWasteLogPdf(wasteLogs, keyword, reasonCategory); 
+    public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory, String wasteType) throws IOException {
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, Pageable.unpaged());
+        return pdfService.generateWasteLogPdf(wasteLogs, keyword, reasonCategory, wasteType); 
     }
 
     @Override

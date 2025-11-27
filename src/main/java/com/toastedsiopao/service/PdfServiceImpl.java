@@ -51,7 +51,6 @@ public class PdfServiceImpl implements PdfService {
     @Autowired
     private FileStorageService fileStorageService; 
 
-    // --- Define Fonts ---
     private static final Font FONT_TITLE = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, Color.BLACK);
     private static final Font FONT_SUBTITLE = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.DARK_GRAY);
     private static final Font FONT_TABLE_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.WHITE);
@@ -63,7 +62,6 @@ public class PdfServiceImpl implements PdfService {
     private static final Font FONT_INVOICE_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
     private static final Font FONT_INVOICE_BODY = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
     private static final Font FONT_INVOICE_TOTAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
-
 
     private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); 
     private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230);
@@ -95,7 +93,6 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            log.debug("Calculating summary totals for PDF...");
             BigDecimal totalSales = BigDecimal.ZERO;
             BigDecimal totalCogs = BigDecimal.ZERO;
 
@@ -122,7 +119,6 @@ public class PdfServiceImpl implements PdfService {
             
             document.add(summaryTable);
 
-            log.debug("Building detailed breakdown table for PDF...");
             PdfPTable detailTable = new PdfPTable(7); 
             detailTable.setWidthPercentage(100);
             detailTable.setWidths(new float[] { 1f, 1.5f, 2f, 3f, 1.2f, 1.2f, 1.2f });
@@ -142,7 +138,7 @@ public class PdfServiceImpl implements PdfService {
 
                 String items = order.getItems().stream()
                         .map(item -> item.getQuantity() + "x " + item.getProduct().getName())
-                        .collect(Collectors.joining("\n")); // Use newline for PDF
+                        .collect(Collectors.joining("\n"));
 
                 addTableCell(detailTable, "ORD-" + order.getId(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, order.getOrderDate().format(orderDtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -168,7 +164,6 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    
     @Override
     public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -512,10 +507,9 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-    
-    // --- MODIFIED: Added reasonCategory parameter & Header Logic ---
+
     @Override
-    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory) throws IOException {
+    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory, String wasteType) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -531,12 +525,13 @@ public class PdfServiceImpl implements PdfService {
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Item Keyword='" + keyword + "' ";
             }
-            // --- ADDED: Handle reasonCategory in filter description ---
             if (StringUtils.hasText(reasonCategory)) {
-                filterDesc += "Reason='" + reasonCategory + "'";
+                filterDesc += "Reason='" + reasonCategory + "' ";
             }
-            // --- END ADDED ---
-            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory)) {
+            if (StringUtils.hasText(wasteType)) {
+                filterDesc += "Type='" + wasteType + "' ";
+            }
+            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory) && !StringUtils.hasText(wasteType)) {
                 filterDesc += "None (All Records)";
             }
             String pageInfo = String.format("Page %d of %d (Total Records: %d)",
@@ -549,22 +544,21 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
             
-            // --- SUM TOTAL WASTE VALUE ---
             BigDecimal totalWasteValue = BigDecimal.ZERO;
             for (ActivityLogEntry logEntry : logPage.getContent()) {
                 if (logEntry.getTotalValue() != null) {
                     totalWasteValue = totalWasteValue.add(logEntry.getTotalValue());
                 }
             }
-            // -----------------------------
 
-            PdfPTable detailTable = new PdfPTable(7); 
+            PdfPTable detailTable = new PdfPTable(8); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 1.5f, 1f, 1f, 2.5f }); 
+            detailTable.setWidths(new float[] { 1.5f, 1f, 0.8f, 1f, 1.5f, 1f, 1f, 2.2f }); 
 
             addTableHeader(detailTable, "Timestamp");
             addTableHeader(detailTable, "Admin User");
-            addTableHeader(detailTable, "Reason Category");
+            addTableHeader(detailTable, "Type");
+            addTableHeader(detailTable, "Reason");
             addTableHeader(detailTable, "Item Name");
             addTableHeader(detailTable, "Cost/Unit");
             addTableHeader(detailTable, "Total Value");
@@ -574,7 +568,14 @@ public class PdfServiceImpl implements PdfService {
             for (ActivityLogEntry logEntry : logPage.getContent()) {
                 addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, logEntry.getUsername(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
-                addTableCell(detailTable, logEntry.getAction().replace("STOCK_WASTE_", ""), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                
+                String type = "Unknown";
+                if (logEntry.getAction().startsWith("PRODUCT_")) type = "Product";
+                else if (logEntry.getAction().startsWith("STOCK_")) type = "Inventory";
+                addTableCell(detailTable, type, FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                
+                String reason = logEntry.getAction().replace("STOCK_WASTE_", "").replace("PRODUCT_WASTE_", "");
+                addTableCell(detailTable, reason, FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 
                 addTableCell(detailTable, logEntry.getItemName() != null ? logEntry.getItemName() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, logEntry.getCostPerUnit() != null ? formatCurrency(logEntry.getCostPerUnit()) : "N/A", FONT_TABLE_CELL, Element.ALIGN_RIGHT);
@@ -583,10 +584,8 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, StringUtils.hasText(logEntry.getDetails()) ? logEntry.getDetails() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
             }
             
-            // --- ADDED: Total Footer Row ---
-            addTableFooterCell(detailTable, "Total Waste Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 5);
+            addTableFooterCell(detailTable, "Total Waste Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 6);
             addTableFooterCell(detailTable, formatCurrency(totalWasteValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 2);
-            // --- END ADDED ---
 
             document.add(detailTable);
 
@@ -597,7 +596,6 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-    // --- END MODIFIED ---
 
     private void addTableHeader(PdfPTable table, String headerTitle) {
         PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));

@@ -58,7 +58,6 @@ public class AdminInventoryController {
 	@Autowired
 	private AdminService adminService;
 
-    // ... (addCommonAttributesForRedirect method)
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
 		redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
@@ -75,7 +74,8 @@ public class AdminInventoryController {
 			@RequestParam(value = "size", defaultValue = "10") int size,
 			@RequestParam(value = "activeTab", required = false) String activeTab, 
 			@RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
-			@RequestParam(value = "wasteCategory", required = false) String wasteCategory, 
+			@RequestParam(value = "wasteCategory", required = false) String wasteCategory,
+			@RequestParam(value = "wasteType", required = false) String wasteType,
 			@RequestParam(value = "wastePage", defaultValue = "0") int wastePage) {
 
 		Pageable pageable = PageRequest.of(page, size);
@@ -89,12 +89,14 @@ public class AdminInventoryController {
 		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
 
+		// --- WASTE LOGS SECTION ---
 		Pageable wastePageable = PageRequest.of(wastePage, size); 
-		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wastePageable); 
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wasteType, wastePageable); 
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
 		model.addAttribute("wasteLogPage", wasteLogPage);
 		model.addAttribute("wasteKeyword", wasteKeyword);
 		model.addAttribute("wasteCategoryId", wasteCategory); 
+		model.addAttribute("wasteTypeFilter", wasteType);
 		model.addAttribute("wastePage", wastePage);
 		
 		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics();
@@ -106,11 +108,7 @@ public class AdminInventoryController {
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);
 		model.addAttribute("lowStockCount", lowStockItems.size());
-		
-		// --- ADDED: Critical Stock Count ---
 		model.addAttribute("criticalStockCount", inventoryItemService.countCriticalStockItems());
-		// --- END ADDED ---
-		
 		model.addAttribute("outOfStockCount", outOfStockItems.size());
 
 		model.addAttribute("allInventoryItems", allItemsForStockModal);
@@ -146,8 +144,6 @@ public class AdminInventoryController {
 		return "admin/inventory";
 	}
 
-    // ... (Rest of the controller methods: saveInventoryItem, adjustInventoryStock, deleteOrDeactivateInventoryItem, activateInventoryItem remain unchanged from previous turn, included below for completeness)
-    
 	@PostMapping("/save")
 	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
@@ -265,7 +261,8 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			
-			if (isWaste) {
+			// --- MODIFIED: Only "true" waste reasons go to waste log. Manual adjustments go to standard log. ---
+			if (isWaste && action.equals("deduct")) {
 				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
 				activityLogService.logWasteAction(
 						principal.getName(), 
@@ -276,8 +273,10 @@ public class AdminInventoryController {
 						updatedItem.getCostPerUnit()
 				);
 			} else {
+				// Manual adjustments (even deductions) go here
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 			}
+			// --- END MODIFIED ---
 			
 		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());

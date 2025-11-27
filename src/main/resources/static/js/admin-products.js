@@ -13,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 	const editProductModal = document.getElementById('editProductModal');
 	if (editProductModal) {
-		// ...
 		const form = editProductModal.querySelector('#editProductForm');
 		const modalTitle = editProductModal.querySelector('#editProductModalLabel');
 		const ingredientsContainer = editProductModal.querySelector('#editIngredientsContainerModal');
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			let dataset;
 
 			const isValidationReopen = mainElement.dataset.showEditProductModal === 'true';
-			console.log("Edit Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen);
 
 			if (button && button.classList.contains('edit-product-btn-from-view')) {
 				const viewModal = document.getElementById('viewProductModal');
@@ -36,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else if (button && button.classList.contains('edit-product-btn')) {
 				dataset = button.dataset;
 			} else if (!isValidationReopen) {
-				console.warn("Edit Product modal opened without expected button source.");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				if (editImageUploader) editImageUploader.resetUploader();
@@ -44,13 +41,10 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 
 			if (isValidationReopen) {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
 				const nameInput = form.querySelector('#editProductNameModal');
 				modalTitle.textContent = 'Edit: ' + (nameInput.value || 'Product');
-
 				const existingImageUrl = form.querySelector('#editProductImageUrlHidden').value;
 				const removeImage = form.querySelector('#editProductRemoveImageHidden').value === 'true';
-
 				if (removeImage) {
 					editImageUploader.resetUploader();
 				} else if (existingImageUrl) {
@@ -60,8 +54,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				}
 
 			} else if (dataset) {
-				console.log("Populating Edit Product Modal with data:", dataset);
-
 				modalTitle.textContent = 'Edit: ' + (dataset.name || 'Product');
 				form.querySelector('#id').value = dataset.id || '';
 				form.querySelector('#editProductNameModal').value = dataset.name || '';
@@ -71,20 +63,19 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0';
 				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0';
 				
-				// --- ADDED ---
+				// Populate Date Fields
+				form.querySelector('#editCreatedDate').value = dataset.createdDate || '';
+				form.querySelector('#editExpirationDays').value = dataset.expirationDays || '0';
+				
 				const productStatusSelect = form.querySelector('#editProductStatus');
 				if (productStatusSelect) {
 					productStatusSelect.value = dataset.productStatus || 'ACTIVE';
 				}
-				// --- END ADDED ---
 
 				const imageUrl = dataset.imageUrl;
-
 				editImageUploader.showPreview(imageUrl);
 
-				if (ingredientsContainer) {
-					ingredientsContainer.innerHTML = '';
-				}
+				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 
 				let ingredients = [];
 				if (dataset.ingredients && dataset.ingredients.length > 0) {
@@ -98,31 +89,20 @@ document.addEventListener('DOMContentLoaded', function() {
 								return { itemId: parts[0], quantity: isNaN(quantity) ? '' : quantity };
 							});
 					} catch (e) {
-						console.error("Error parsing ingredients data for edit:", e, "Data:", dataset.ingredients);
+						console.error("Error parsing ingredients data:", e);
 						ingredients = [];
 					}
 				}
-				console.log("Parsed ingredients for Edit:", ingredients);
 
 				if (ingredientsContainer) {
 					ingredients.forEach((ingData) => {
 						addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal', ingData);
 					});
-				} else {
-					console.warn("Ingredient container not found for edit modal.");
 				}
 			}
 
 			let isRecipeLocked = (dataset && dataset.recipeLocked === 'true');
-
-			if (isValidationReopen && !dataset) {
-				if (form.querySelector('#id').value) {
-					console.log("Validation reopen: Assuming recipe is locked because product exists.");
-					isRecipeLocked = true;
-				}
-			}
-			console.log("Is recipe locked? ", isRecipeLocked);
-
+			if (isValidationReopen && !dataset && form.querySelector('#id').value) isRecipeLocked = true;
 
 			if (isRecipeLocked) {
 				if (recipeLockedWarning) recipeLockedWarning.style.display = 'block';
@@ -159,42 +139,43 @@ document.addEventListener('DOMContentLoaded', function() {
 					errorAlert.remove();
 				}
 			}
-
 			initThresholdSliders(editProductModal);
 		});
 
 		editProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showEditProductModal !== 'true') {
-				console.log("Clearing Edit Product modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelector('#id').value = '';
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
-				}
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) errorAlert.remove();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				if (editImageUploader) editImageUploader.resetUploader();
 			} else {
-				console.log("Resetting showEditProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-edit-product-modal');
 			}
 		});
+	}
+	
+	function formatDate(dateString) {
+		if (!dateString) return 'N/A';
+		try {
+			const date = new Date(dateString);
+			if (isNaN(date)) return 'N/A';
+			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+		} catch (e) {
+			return 'N/A';
+		}
 	}
 
 	const viewProductModal = document.getElementById('viewProductModal');
 	if (viewProductModal) {
 		viewProductModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
-			if (!button || !button.classList.contains('view-product-btn')) {
-				console.warn("View modal triggered by non-view button?");
-				return;
-			}
+			if (!button || !button.classList.contains('view-product-btn')) return;
 
 			const dataset = button.dataset;
 			viewProductModal.relatedTarget = button;
-
-			console.log("Populating View Product Modal with data:", dataset);
 
 			viewProductModal.querySelector('#viewProductModalLabel').textContent = 'Details for ' + (dataset.name || 'Product');
 			viewProductModal.querySelector('#viewProductName').textContent = dataset.name || 'N/A';
@@ -217,14 +198,16 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				lastUpdatedEl.style.display = 'none';
 			}
+			
+			viewProductModal.querySelector('#viewProductCreatedDate').textContent = formatDate(dataset.createdDate);
+			viewProductModal.querySelector('#viewProductExpirationDate').textContent = dataset.expirationDate || 'No Expiration';
+			const expDaysText = dataset.expirationDays && parseInt(dataset.expirationDays) > 0 ? `(${dataset.expirationDays} days)` : '';
+			viewProductModal.querySelector('#viewProductExpirationDays').textContent = expDaysText;
 
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
 			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading');
-
 			const existingBadge = ingredientsHeading ? ingredientsHeading.querySelector('.badge') : null;
-			if (existingBadge) {
-				existingBadge.remove();
-			}
+			if (existingBadge) existingBadge.remove();
 
 			ingredientsListDiv.innerHTML = '';
 
@@ -243,10 +226,9 @@ document.addEventListener('DOMContentLoaded', function() {
 							};
 						});
 				} catch (e) {
-					console.error("Error parsing ingredients data for view:", e, "Data:", dataset.ingredientsView);
+					ingredientsDataView = [];
 				}
 			}
-			console.log("Parsed ingredients for View:", ingredientsDataView);
 
 			const isRecipeLocked = (dataset.recipeLocked === 'true');
 			if (isRecipeLocked && ingredientsHeading) {
@@ -275,12 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			const deleteInput = viewProductModal.querySelector('.view-product-id-for-delete');
 			if (deleteForm && dataset.id) {
 				deleteForm.action = `/admin/products/delete/${dataset.id}`;
-				if (deleteInput) {
-					deleteInput.value = dataset.id;
-				}
-				console.log("Set delete form action to:", deleteForm.action);
-			} else {
-				console.warn("Could not set delete form action in view modal.");
+				if (deleteInput) deleteInput.value = dataset.id;
 			}
 		});
 	}
@@ -293,22 +270,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		addProductModal.addEventListener('show.bs.modal', function() {
 			const isValidationReopen = mainElement.dataset.showAddProductModal === 'true';
-			console.log("Add Product Modal 'show.bs.modal' event. IsValidationReopen:", isValidationReopen);
 
 			if (!isValidationReopen) {
-				console.log("Populating modal for ADD (resetting form).");
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				if (addImageUploader) addImageUploader.resetUploader();
-
-				const lowInput = form.querySelector('#addLowThresholdInput');
-				const critInput = form.querySelector('#addCriticalThresholdInput');
-				if (lowInput) lowInput.value = '';
-				if (critInput) critInput.value = '';
-
+				
+				const dateInput = form.querySelector('#addCreatedDate');
+				if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
+				
 				initThresholdSliders(addProductModal);
 			} else {
-				console.log("Modal is reopening from validation, form values are preserved by Thymeleaf.");
 				initThresholdSliders(addProductModal);
 				if (addImageUploader) addImageUploader.resetUploader();
 			}
@@ -316,17 +288,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
 		addProductModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showAddProductModal !== 'true') {
-				console.log("Clearing Add Product modal on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 				const errorAlert = form ? form.querySelector('.alert.alert-danger') : null;
-				if (errorAlert && errorAlert.getAttribute('th:if') === null) {
-					errorAlert.remove();
-				}
+				if (errorAlert && errorAlert.getAttribute('th:if') === null) errorAlert.remove();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				if (addImageUploader) addImageUploader.resetUploader();
 			} else {
-				console.log("Resetting showAddProductModal flag on hide.")
 				mainElement.removeAttribute('data-show-add-product-modal');
 			}
 		});
@@ -335,14 +303,11 @@ document.addEventListener('DOMContentLoaded', function() {
 	const manageCategoriesModal = document.getElementById('manageCategoriesModal');
 	if (manageCategoriesModal) {
 		const form = manageCategoriesModal.querySelector('#addCategoryForm');
-
 		manageCategoriesModal.addEventListener('hidden.bs.modal', function() {
 			if (mainElement.dataset.showManageCategoriesModal !== 'true') {
-				console.log("Clearing Manage Categories (Add) form on hide (not validation reopen).")
 				if (form) form.reset();
 				if (form) form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 			} else {
-				console.log("Resetting showManageCategoriesModal flag on hide.")
 				mainElement.removeAttribute('data-show-manage-categories-modal');
 			}
 		});
@@ -359,35 +324,21 @@ document.addEventListener('DOMContentLoaded', function() {
 	function addIngredientRow(containerId, templateId, data = null) {
 		const template = document.getElementById(templateId);
 		const containerDiv = document.getElementById(containerId);
-		if (!template || !containerDiv) {
-			console.warn("Cannot add ingredient row: container or template not found.", containerId, templateId);
-			return;
-		}
+		if (!template || !containerDiv) return;
 
 		const fragment = template.content ? template.content.cloneNode(true) : template.cloneNode(true).innerHTML;
 		const tempDiv = document.createElement('div');
-		if (typeof fragment === 'string') {
-			tempDiv.innerHTML = fragment;
-		} else {
-			tempDiv.appendChild(fragment);
-		}
+		if (typeof fragment === 'string') tempDiv.innerHTML = fragment;
+		else tempDiv.appendChild(fragment);
 		const newRowElement = tempDiv.querySelector('.ingredient-row');
 
-
-		if (!newRowElement) {
-			console.error("Template did not contain '.ingredient-row' or content could not be parsed.");
-			return;
-		}
+		if (!newRowElement) return;
 
 		const currentRowCount = containerDiv.querySelectorAll('.ingredient-row').length;
 		const index = currentRowCount;
 
 		newRowElement.querySelectorAll('[name]').forEach(input => {
-			if (input.name) {
-				input.name = input.name.replace('[INDEX]', `[${index}]`);
-			} else {
-				console.warn("Input found without name attribute in template:", input);
-			}
+			if (input.name) input.name = input.name.replace('[INDEX]', `[${index}]`);
 		});
 
 		if (data) {
@@ -396,9 +347,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (select) select.value = data.itemId || '';
 			if (quantityInput) quantityInput.value = data.quantity || '';
 		}
-
 		containerDiv.appendChild(newRowElement);
-		console.log(`Added ingredient row to ${containerId} with index ${index}`);
 	}
 
 	function removeIngredientRow(button) {
@@ -415,9 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		const rows = container.querySelectorAll('.ingredient-row');
 		rows.forEach((row, index) => {
 			row.querySelectorAll('[name]').forEach(input => {
-				if (input.name) {
-					input.name = input.name.replace(/\[\d+\]/g, `[${index}]`);
-				}
+				if (input.name) input.name = input.name.replace(/\[\d+\]/g, `[${index}]`);
 			});
 		});
 	}
@@ -426,7 +373,6 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('addIngredientBtnEditModal')?.addEventListener('click', () => addIngredientRow('editIngredientsContainerModal', 'ingredientRowTemplateEditModal'));
 
 	document.addEventListener('click', function(event) {
-
 		const removeBtn = event.target.closest('.remove-ingredient-btn');
 		if (removeBtn) {
 			removeIngredientRow(removeBtn);
@@ -436,42 +382,92 @@ document.addEventListener('DOMContentLoaded', function() {
 		const maxBtn = event.target.closest('.max-quantity-btn');
 		if (!maxBtn) return;
 
-		console.log("--- Max button clicked (product page) ---");
-
 		const row = maxBtn.closest('tr');
 		const quantityInput = row ? row.querySelector('.quantity-change-input') : null;
 		const productId = row ? row.dataset.productId : null;
 
-		if (!row) { alert("Internal error: Could not identify product row."); return; }
-		if (!quantityInput) { alert("Internal error: Could not find quantity field."); return; }
-		if (!productId) { alert("Internal error: Product ID missing."); return; }
+		if (!row || !quantityInput || !productId) return;
 
 		maxBtn.disabled = true;
 		maxBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
 
 		fetch(`/admin/products/calculate-max/${productId}`)
 			.then(response => {
-				if (!response.ok) {
-					throw new Error(`Server error: ${response.statusText}`);
-				}
+				if (!response.ok) throw new Error(response.statusText);
 				return response.json();
 			})
 			.then(data => {
 				if (data && data.maxQuantity !== undefined) {
-					console.log(`Received max quantity for product ${productId}: ${data.maxQuantity}`);
 					quantityInput.value = data.maxQuantity;
-				} else {
-					throw new Error("Invalid JSON response from server.");
 				}
 			})
 			.catch(error => {
-				console.error("Error fetching max quantity:", error);
-				alert(`Could not calculate maximum: ${error.message}`);
-				quantityInput.value = 0;
+				console.error("Error fetching max:", error);
+				alert("Error calculating max.");
 			})
 			.finally(() => {
 				maxBtn.disabled = false;
 				maxBtn.textContent = 'Max';
 			});
 	});
+	
+	const manageStockModal = document.getElementById('manageStockModal');
+	if (manageStockModal) {
+		
+		manageStockModal.addEventListener('change', function(e) {
+			if (e.target && e.target.classList.contains('reason-category-select')) {
+				const reason = e.target.value;
+				const row = e.target.closest('tr'); 
+				
+				const addBtn = row.querySelector('.add-stock-btn');
+				const deductBtn = row.querySelector('.deduct-stock-btn');
+				const maxBtn = row.querySelector('.max-quantity-btn');
+				
+				// Default state (e.g. for Manual Adjust)
+				addBtn.disabled = false;
+				addBtn.classList.remove('disabled');
+				addBtn.title = "Add stock (Production/Adjustment/Restock)";
+				
+				deductBtn.disabled = false;
+				deductBtn.classList.remove('disabled');
+				deductBtn.title = "Deduct stock (Waste/Adjustment)";
+				
+				if (maxBtn) {
+					maxBtn.disabled = false;
+					maxBtn.title = "Calculate max producible";
+				}
+				
+				// Handle Logic based on updated Reason List
+				if (reason === 'Production') {
+					deductBtn.disabled = true;
+					deductBtn.classList.add('disabled');
+					deductBtn.title = "Production implies increasing stock.";
+				} else if (reason === 'Restock') {
+					// Restock (for products) implies adding, usually without ingredient consumption
+					deductBtn.disabled = true;
+					deductBtn.classList.add('disabled');
+					deductBtn.title = "Restocking implies adding finished goods.";
+				} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
+					// Waste reasons -> Deduct only
+					addBtn.disabled = true;
+					addBtn.classList.add('disabled');
+					addBtn.title = "Waste reasons imply removing stock.";
+					if (maxBtn) {
+						maxBtn.disabled = true;
+					}
+				} 
+				// 'Manual' allows both
+			}
+		});
+
+		manageStockModal.addEventListener('hidden.bs.modal', function() {
+			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
+				input.value = '';
+			});
+			manageStockModal.querySelectorAll('.reason-category-select').forEach(select => {
+				select.value = 'Manual'; // Reset to Manual as standard default
+			});
+			mainElement.removeAttribute('data-show-manage-stock-modal');
+		});
+	}
 });

@@ -119,20 +119,23 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		if (!isNew) {
 			item = itemRepository.findById(itemDto.getId())
 					.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemDto.getId()));
-					
+
 			if ("INACTIVE".equals(itemDto.getItemStatus()) && "ACTIVE".equals(item.getItemStatus())) {
 				if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
-					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + item.getName() + "'. Item still has " + item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
+					throw new IllegalArgumentException(
+							"status.hasStock:• Cannot deactivate '" + item.getName() + "'. Item still has "
+									+ item.getCurrentStock() + " in stock. Please adjust stock to 0 first.");
 				}
 				if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-					throw new IllegalArgumentException("status.inRecipe:• Cannot deactivate '" + item.getName() + "'. Item is currently used in one or more product recipes.");
+					throw new IllegalArgumentException("status.inRecipe:• Cannot deactivate '" + item.getName()
+							+ "'. Item is currently used in one or more product recipes.");
 				}
 			}
 		} else {
 			item = new InventoryItem();
 			item.setCurrentStock(Optional.ofNullable(itemDto.getCurrentStock()).orElse(BigDecimal.ZERO));
 		}
-		
+
 		item.setName(itemDto.getName().trim());
 		item.setCategory(category);
 		item.setUnit(unit);
@@ -140,22 +143,34 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
 		item.setCostPerUnit(itemDto.getCostPerUnit());
-		
-		// --- DATE FIELDS ---
-		// If receivedDate is null, entity @PrePersist/@PreUpdate handles default (now) for new items
-		// or keeps existing for old. If explicit value is passed, use it.
-		if (itemDto.getReceivedDate() != null) {
-			item.setReceivedDate(itemDto.getReceivedDate());
-		} else if (isNew) {
-			item.setReceivedDate(LocalDate.now());
+
+		// --- DATE AND EXPIRATION LOGIC ---
+		LocalDate effectiveReceivedDate = itemDto.getReceivedDate();
+
+		if (effectiveReceivedDate == null) {
+			if (isNew) {
+				effectiveReceivedDate = LocalDate.now();
+			} else {
+				// Keep existing date if not provided in update
+				effectiveReceivedDate = item.getReceivedDate();
+				if (effectiveReceivedDate == null) {
+					effectiveReceivedDate = LocalDate.now(); // Fallback for old data
+				}
+			}
 		}
-		
-		item.setExpirationDate(itemDto.getExpirationDate()); // Can be null (never expires)
+		item.setReceivedDate(effectiveReceivedDate);
+
+		// Calculate expiration date based on days
+		if (itemDto.getExpirationDays() != null && itemDto.getExpirationDays() > 0) {
+			item.setExpirationDate(effectiveReceivedDate.plusDays(itemDto.getExpirationDays()));
+		} else {
+			item.setExpirationDate(null); // No expiration
+		}
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
-			log.info("{} inventory item: ID={}, Name='{}', Status='{}'", isNew ? "Created" : "Updated", savedItem.getId(),
-					savedItem.getName(), savedItem.getItemStatus());
+			log.info("{} inventory item: ID={}, Name='{}', Status='{}'", isNew ? "Created" : "Updated",
+					savedItem.getId(), savedItem.getName(), savedItem.getItemStatus());
 			return savedItem;
 		} catch (Exception e) {
 			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
@@ -169,12 +184,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + id));
 
 		if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
-			throw new IllegalArgumentException(
-					"status.hasStock:• Item '" + item.getName() + "' still has " + item.getCurrentStock() + " stock. Cannot deactivate.");
+			throw new IllegalArgumentException("status.hasStock:• Item '" + item.getName() + "' still has "
+					+ item.getCurrentStock() + " stock. Cannot deactivate.");
 		}
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-			throw new IllegalArgumentException(
-					"status.inRecipe:• Cannot deactivate '" + item.getName() + "'. Item is currently used in one or more product recipes.");
+			throw new IllegalArgumentException("status.inRecipe:• Cannot deactivate '" + item.getName()
+					+ "'. Item is currently used in one or more product recipes.");
 		}
 
 		item.setItemStatus("INACTIVE");
@@ -190,7 +205,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		itemRepository.save(item);
 		log.info("Activated inventory item: ID={}, Name='{}'", id, item.getName());
 	}
-	
+
 	@Override
 	public void deleteItem(Long id) {
 		InventoryItem item = itemRepository.findById(id)
@@ -202,8 +217,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 
 		if (recipeIngredientRepository.countByInventoryItem(item) > 0) {
-			throw new IllegalArgumentException(
-					"• Item '" + item.getName() + "' is used in one or more product recipes and cannot be permanently deleted. Please deactivate it via the Edit menu.");
+			throw new IllegalArgumentException("• Item '" + item.getName()
+					+ "' is used in one or more product recipes and cannot be permanently deleted. Please deactivate it via the Edit menu.");
 		}
 
 		itemRepository.delete(item);

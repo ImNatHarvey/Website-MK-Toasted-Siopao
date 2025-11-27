@@ -1,6 +1,7 @@
 package com.toastedsiopao.dto;
 
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -16,7 +17,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class InventoryItemDto {
 
-	private Long id; 
+	private Long id;
 
 	@NotBlank(message = "• Item name cannot be blank")
 	@Size(max = 100, message = "• Item name cannot exceed 100 characters")
@@ -35,7 +36,7 @@ public class InventoryItemDto {
 	@NotNull(message = "• Low stock threshold cannot be null")
 	@DecimalMin(value = "1.0", message = "• Low threshold must be at least 1")
 	private BigDecimal lowStockThreshold;
-	
+
 	@NotNull(message = "• Critical stock threshold cannot be null")
 	@DecimalMin(value = "1.0", message = "• Critical threshold must be at least 1")
 	private BigDecimal criticalStockThreshold;
@@ -43,12 +44,13 @@ public class InventoryItemDto {
 	@NotNull(message = "• Cost per unit cannot be null")
 	@DecimalMin(value = "0.0", message = "• Cost must be zero or positive")
 	private BigDecimal costPerUnit;
-	
+
 	@NotBlank(message = "• Status must be selected")
 	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
 	private String itemStatus;
-	
-	// --- NEW FIELDS ---
-	private LocalDate receivedDate; // Defaults to today in entity if null
-	private LocalDate expirationDate; // Null or future date
+
+	private LocalDate receivedDate; // Defaults to today if null
+
+	@Min(value = 0, message = "• Expiration days cannot be negative")
+	private Integer expirationDays; // 0 or null means no expiration
 }

@@ -154,19 +154,35 @@ body {
 	font-size: 0.875rem;
 }
 
-.btn-action-edit:disabled, .btn-action-edit.disabled {
-	background-color: var(--warning);
-	border-color: var(--warning);
-	color: var(--dark);
-	opacity: 0.65;
+/* --- MODIFIED: Style to keep color but reduce opacity on disabled state for action buttons --- */
+.btn-action-edit:disabled, .btn-action-edit.disabled,
+.btn-action-delete:disabled, .btn-action-delete.disabled,
+.btn-action-add:disabled, .btn-action-add.disabled,
+.btn-action-success:disabled, .btn-action-success.disabled,
+.btn-action-view:disabled, .btn-action-view.disabled,
+.btn-action-delivery:disabled, .btn-action-delivery.disabled {
+	opacity: 0.5; /* Keep color, apply opacity */
+	/* Revert the forced whitish styles, keep original color */
+	background-color: inherit !important; 
+	border-color: inherit !important;
+	color: inherit !important;
 }
 
 .btn-action-delete:disabled, .btn-action-delete.disabled {
-	background-color: var(--danger);
-	border-color: var(--danger);
-	color: var(--light);
-	opacity: 0.65;
+	/* Overriding inherit back to base danger color if needed for better contrast, then let opacity handle it */
+	background-color: var(--danger) !important;
+	border-color: var(--danger) !important;
+	color: var(--light) !important;
 }
+
+.btn-action-add:disabled, .btn-action-add.disabled,
+.btn-action-success:disabled, .btn-action-success.disabled {
+	/* Overriding inherit back to base success color */
+	background-color: var(--success) !important;
+	border-color: var(--success) !important;
+	color: var(--light) !important;
+}
+/* This ensures the original color persists, and the low opacity indicates disabled state. */
 /* ======================================================================== */
 /* == END: CENTRALIZED BUTTON STYLES == */
 /* ======================================================================== */

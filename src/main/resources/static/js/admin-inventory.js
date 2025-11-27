@@ -177,6 +177,41 @@ document.addEventListener('DOMContentLoaded', function() {
 	// --- manageStockModal (Complex) - Left as-is ---
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
+		
+		// --- ADDED: Event listener moved from inventory.html script block ---
+		manageStockModal.addEventListener('change', function(e) {
+			if (e.target && e.target.name === 'reasonCategory') {
+				const reason = e.target.value;
+				const row = e.target.closest('tr'); 
+				const addBtn = row.querySelector('button[value="add"]');
+				const deductBtn = row.querySelector('button[value="deduct"]');
+				
+				// Reset first
+				addBtn.disabled = false;
+				addBtn.classList.remove('disabled');
+				addBtn.title = "";
+				deductBtn.disabled = false;
+				deductBtn.classList.remove('disabled');
+				deductBtn.title = "";
+				
+				if (reason === 'Restock' || reason === 'Production') {
+					// Restock / Production = Add only. Disable Deduct.
+					deductBtn.disabled = true;
+					deductBtn.classList.add('disabled');
+					deductBtn.title = reason === 'Restock' ? 
+						"Restock implies adding stock." : 
+						"Production implies adding stock (finished good production/recipe raw materials received).";
+				} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
+					// Waste reasons = Deduct only. Disable Add.
+					addBtn.disabled = true;
+					addBtn.classList.add('disabled');
+					addBtn.title = "This reason implies removing stock.";
+				}
+				// 'Manual' allows both (reset covers this case)
+			}
+		});
+		// --- END ADDED ---
+		
 		manageStockModal.addEventListener('hidden.bs.modal', function() {
 			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
 				input.value = '';

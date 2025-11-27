@@ -333,59 +333,35 @@
 		
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
-				const manageStockModal = document.getElementById('manageStockModal');
-				if (manageStockModal) {
-					// When reason changes, toggle the Add button state
-					manageStockModal.addEventListener('change', function(e) {
-						if (e.target && e.target.name === 'reasonCategory') {
-							const reason = e.target.value;
-							const row = e.target.closest('tr'); 
-							const addBtn = row.querySelector('button[value="add"]');
-							const deductBtn = row.querySelector('button[value="deduct"]');
-							
-							// Reset first
-							addBtn.disabled = false;
-							addBtn.classList.remove('disabled');
-							addBtn.title = "";
-							deductBtn.disabled = false;
-							deductBtn.classList.remove('disabled');
-							deductBtn.title = "";
-							
-							if (reason === 'Restock') {
-								// Restock = Add only. Disable Deduct.
-								deductBtn.disabled = true;
-								deductBtn.classList.add('disabled');
-								deductBtn.title = "Restock implies adding stock. Use 'Manual' if you need to deduct.";
-							} else if (['Production', 'Expired', 'Damaged', 'Waste'].includes(reason)) {
-								// Production/Waste = Deduct only. Disable Add.
-								addBtn.disabled = true;
-								addBtn.classList.add('disabled');
-								addBtn.title = "This reason implies removing stock.";
-							}
-						}
-					});
-				}
+				// The stock modal logic has been moved entirely to admin-inventory.js.
 				
 				// Updated Edit Modal Population logic for Date fields
 				const addItemModal = document.getElementById('addItemModal');
 				if (addItemModal) {
 					addItemModal.addEventListener('show.bs.modal', function(event) {
 						const button = event.relatedTarget;
-						// Only if it's an Edit button
-						if (button && button.classList.contains('edit-item-btn')) {
+						const isEdit = button && button.classList.contains('edit-item-btn');
+						
+						const rInput = addItemModal.querySelector('input[name="receivedDate"]');
+						const eInput = addItemModal.querySelector('input[name="expirationDays"]');
+						
+						// Only if it's a fresh Edit button click (not a validation reopen)
+						const isValidationReopen = document.getElementById('admin-content-wrapper').dataset.showAddItemModal === 'true';
+
+						if (isEdit && !isValidationReopen) {
 							const rDate = button.dataset.receivedDate;
 							const eDays = button.dataset.expirationDays;
 							
-							const rInput = addItemModal.querySelector('input[name="receivedDate"]');
-							const eInput = addItemModal.querySelector('input[name="expirationDays"]');
-							
 							if(rInput && rDate) rInput.value = rDate;
 							if(eInput && eDays) eInput.value = eDays;
-						} else if (button) {
-							// For Add, set default received date to today
-							const rInput = addItemModal.querySelector('input[name="receivedDate"]');
+							
+						} else if (!isEdit && !isValidationReopen) {
+							// For fresh Add, set default received date to today
 							if (rInput) {
 								rInput.value = new Date().toISOString().split('T')[0];
+							}
+							if (eInput) {
+								eInput.value = ''; // Ensure days is clear
 							}
 						}
 					});

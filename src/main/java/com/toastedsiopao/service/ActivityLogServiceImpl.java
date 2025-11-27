@@ -12,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,41 +76,62 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
 	@Override
 	public Page<ActivityLogEntry> getWasteLogs(Pageable pageable) {
-		// Default view showing all waste types
-		return activityLogRepository.searchWasteLogs(null, null, null, pageable);
+		return searchWasteLogs(null, null, null, null, null, pageable);
 	}
 	
+	// --- HELPER: Parse Date Strings to LocalDateTime ---
+	private LocalDateTime[] parseDateRange(String startDate, String endDate) {
+		LocalDateTime startDateTime = null;
+		LocalDateTime endDateTime = null;
+
+		try {
+			if (StringUtils.hasText(startDate)) {
+				startDateTime = LocalDate.parse(startDate).atStartOfDay();
+			}
+		} catch (Exception e) {
+			log.warn("Invalid start date format: {}. Ignoring.", startDate);
+		}
+
+		try {
+			if (StringUtils.hasText(endDate)) {
+				endDateTime = LocalDate.parse(endDate).atTime(LocalTime.MAX);
+			}
+		} catch (Exception e) {
+			log.warn("Invalid end date format: {}. Ignoring.", endDate);
+		}
+		return new LocalDateTime[]{startDateTime, endDateTime};
+	}
+
 	@Override
-	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, Pageable pageable) {
+	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, String startDate, String endDate, Pageable pageable) {
 		String itemKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
 		String reasonSuffix = StringUtils.hasText(reasonCategory) ? reasonCategory.trim().toUpperCase() : null;
 		String typeFilter = StringUtils.hasText(wasteType) ? wasteType.trim().toUpperCase() : null;
 		
-		return activityLogRepository.searchWasteLogs(typeFilter, reasonSuffix, itemKeyword, pageable);
+		LocalDateTime[] dates = parseDateRange(startDate, endDate);
+		
+		return activityLogRepository.searchWasteLogs(typeFilter, reasonSuffix, itemKeyword, dates[0], dates[1], pageable);
 	}
 	
 	@Override
 	@Transactional(readOnly = true)
-	public Map<String, Object> getWasteMetrics(String keyword, String reasonCategory, String wasteType) {
+	public Map<String, Object> getWasteMetrics(String keyword, String reasonCategory, String wasteType, String startDate, String endDate) {
 		Map<String, Object> metrics = new HashMap<>();
 		
-		// Parse filters to match search logic
 		String itemKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
 		String reasonSuffix = StringUtils.hasText(reasonCategory) ? reasonCategory.trim().toUpperCase() : null;
 		String typeFilter = StringUtils.hasText(wasteType) ? wasteType.trim().toUpperCase() : null;
 		
-		// 1. Total Items matching current filter
-		long totalItems = activityLogRepository.countFilteredWaste(typeFilter, reasonSuffix, itemKeyword);
+		LocalDateTime[] dates = parseDateRange(startDate, endDate);
+		LocalDateTime start = dates[0];
+		LocalDateTime end = dates[1];
 		
-		// 2. Total Value matching current filter
-		BigDecimal totalWasteValue = activityLogRepository.sumFilteredWasteValue(typeFilter, reasonSuffix, itemKeyword);
+		long totalItems = activityLogRepository.countFilteredWaste(typeFilter, reasonSuffix, itemKeyword, start, end);
+		BigDecimal totalWasteValue = activityLogRepository.sumFilteredWasteValue(typeFilter, reasonSuffix, itemKeyword, start, end);
 		
-		// 3. Breakdown Values (Within the current filter context)
-		// e.g., If Filter is "Inventory Only", this sums "Inventory Expired", "Inventory Damaged", etc.
-		// e.g., If Filter is Reason="Damaged", Expired should be 0.
-		BigDecimal expiredValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "EXPIRED");
-		BigDecimal damagedValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "DAMAGED");
-		BigDecimal otherWasteValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "WASTE");
+		BigDecimal expiredValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, start, end, "EXPIRED");
+		BigDecimal damagedValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, start, end, "DAMAGED");
+		BigDecimal otherWasteValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, start, end, "WASTE");
 		
 		metrics.put("totalItems", totalItems);
 		metrics.put("totalWasteValue", totalWasteValue);

@@ -20,10 +20,10 @@ public interface ReportService {
 
     ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException;
 
-    // --- MODIFIED: Added wasteType parameter ---
-    ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType) throws IOException;
+    // --- MODIFIED: Added Date Range parameters ---
+    ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException;
     
-    ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory, String wasteType) throws IOException;
+    ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException;
     // --- END MODIFIED ---
 
     ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException;

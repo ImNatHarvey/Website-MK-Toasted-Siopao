@@ -9,14 +9,19 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, Long> {
 
+	// --- MODIFIED: Added Date Range Filter ---
 	String WASTE_FILTER_CONDITION = "(a.action LIKE 'STOCK_WASTE_%' OR a.action LIKE 'PRODUCT_WASTE_%') " +
 			"AND (:typeFilter IS NULL OR (:typeFilter = 'INVENTORY' AND a.action LIKE 'STOCK_WASTE_%') OR (:typeFilter = 'PRODUCT' AND a.action LIKE 'PRODUCT_WASTE_%')) " +
 			"AND (:reasonSuffix IS NULL OR a.action LIKE CONCAT('%_', :reasonSuffix)) " +
-			"AND (:itemName IS NULL OR LOWER(a.itemName) LIKE LOWER(CONCAT('%', :itemName, '%')))";
+			"AND (:itemName IS NULL OR LOWER(a.itemName) LIKE LOWER(CONCAT('%', :itemName, '%'))) " +
+			"AND (:startDate IS NULL OR a.timestamp >= :startDate) " +
+			"AND (:endDate IS NULL OR a.timestamp <= :endDate)";
+	// --- END MODIFIED ---
 
 	Page<ActivityLogEntry> findAllByOrderByTimestampDesc(Pageable pageable);
 
@@ -28,7 +33,9 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, L
 	@Query("SELECT a FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION + " ORDER BY a.timestamp DESC")
 	Page<ActivityLogEntry> searchWasteLogs(@Param("typeFilter") String typeFilter,
 	                                       @Param("reasonSuffix") String reasonSuffix,
-	                                       @Param("itemName") String itemName, 
+	                                       @Param("itemName") String itemName,
+	                                       @Param("startDate") LocalDateTime startDate,
+	                                       @Param("endDate") LocalDateTime endDate,
 	                                       Pageable pageable);
 
 	// --- DYNAMIC METRICS (Respecting Filters) ---
@@ -36,12 +43,16 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, L
 	@Query("SELECT COUNT(a) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION)
 	long countFilteredWaste(@Param("typeFilter") String typeFilter,
 							@Param("reasonSuffix") String reasonSuffix,
-							@Param("itemName") String itemName);
+							@Param("itemName") String itemName,
+							@Param("startDate") LocalDateTime startDate,
+							@Param("endDate") LocalDateTime endDate);
 
 	@Query("SELECT COALESCE(SUM(a.totalValue), 0) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION)
 	BigDecimal sumFilteredWasteValue(@Param("typeFilter") String typeFilter,
 									 @Param("reasonSuffix") String reasonSuffix,
-									 @Param("itemName") String itemName);
+									 @Param("itemName") String itemName,
+									 @Param("startDate") LocalDateTime startDate,
+									 @Param("endDate") LocalDateTime endDate);
 
 	// Calculates sum for a specific reason (e.g., EXPIRED) *within* the current filter context
 	@Query("SELECT COALESCE(SUM(a.totalValue), 0) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION + 
@@ -49,6 +60,8 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, L
 	BigDecimal sumFilteredWasteValueByReason(@Param("typeFilter") String typeFilter,
 											 @Param("reasonSuffix") String reasonSuffix,
 											 @Param("itemName") String itemName,
+											 @Param("startDate") LocalDateTime startDate,
+											 @Param("endDate") LocalDateTime endDate,
 											 @Param("specificReason") String specificReason);
 
 	// --- GLOBAL METRICS (For reports/unfiltered view if needed, kept for backward compatibility) ---

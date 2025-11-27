@@ -37,6 +37,7 @@ public class AdminReportController {
     @Autowired
     private OrderService orderService;
 
+    // ... (Financial, Inventory, Product endpoints remain unchanged) ...
     @GetMapping("/financial")
     @PreAuthorize("hasAuthority('VIEW_TRANSACTIONS')")
     public ResponseEntity<InputStreamResource> downloadFinancialReport(
@@ -231,17 +232,21 @@ public class AdminReportController {
         }
     }
 
+    // --- MODIFIED: Accepted Date Range Parameters ---
     @GetMapping("/waste")
     @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
     public ResponseEntity<InputStreamResource> downloadWasteReport(
             @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
             @RequestParam(value = "wasteCategory", required = false) String wasteCategory,
-            @RequestParam(value = "wasteType", required = false) String wasteType) { 
+            @RequestParam(value = "wasteType", required = false) String wasteType,
+            @RequestParam(value = "wasteStartDate", required = false) String wasteStartDate,
+            @RequestParam(value = "wasteEndDate", required = false) String wasteEndDate) { 
 
-        log.info("Generating waste EXCEL report for keyword: [{}], category: [{}], type: [{}]", wasteKeyword, wasteCategory, wasteType); 
+        log.info("Generating waste EXCEL report for keyword: [{}], category: [{}], type: [{}], dates: [{} - {}]", 
+                wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateWasteReport(wasteKeyword, wasteCategory, wasteType); 
+            ByteArrayInputStream bis = reportService.generateWasteReport(wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -269,12 +274,15 @@ public class AdminReportController {
     public ResponseEntity<InputStreamResource> downloadWasteReportPdf(
             @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
             @RequestParam(value = "wasteCategory", required = false) String wasteCategory,
-            @RequestParam(value = "wasteType", required = false) String wasteType) { 
+            @RequestParam(value = "wasteType", required = false) String wasteType,
+            @RequestParam(value = "wasteStartDate", required = false) String wasteStartDate,
+            @RequestParam(value = "wasteEndDate", required = false) String wasteEndDate) { 
 
-        log.info("Generating waste PDF report for keyword: [{}], category: [{}], type: [{}]", wasteKeyword, wasteCategory, wasteType); 
+        log.info("Generating waste PDF report for keyword: [{}], category: [{}], type: [{}], dates: [{} - {}]", 
+                wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateWasteReportPdf(wasteKeyword, wasteCategory, wasteType); 
+            ByteArrayInputStream bis = reportService.generateWasteReportPdf(wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -296,6 +304,7 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    // --- END MODIFIED ---
 
     @GetMapping("/download/{documentType}/{id}")
     @PreAuthorize("hasAuthority('VIEW_ORDERS')")

@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class PdfServiceImpl implements PdfService {
 
+    // ... (Logger, Autowired beans, Font constants remain unchanged) ...
     private static final Logger log = LoggerFactory.getLogger(PdfServiceImpl.class);
 
     @Autowired
@@ -65,9 +66,11 @@ public class PdfServiceImpl implements PdfService {
 
     private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103); 
     private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230);
-
+    
+    // ... (Other PDF generation methods remain unchanged: Financial, Inventory, Product, OrderDoc, ActivityLog) ...
     @Override
     public ByteArrayInputStream generateFinancialReportPdf(List<Order> orders, LocalDateTime start, LocalDateTime end) throws IOException {
+    	// Logic unchanged...
         SiteSettings settings = siteSettingsService.getSiteSettings();
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM dd, yyyy");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -163,9 +166,9 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
     @Override
     public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException {
+        // Logic unchanged...
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
@@ -230,6 +233,7 @@ public class PdfServiceImpl implements PdfService {
             addTableHeader(detailTable, "Stock");
             addTableHeader(detailTable, "Unit");
             addTableHeader(detailTable, "Cost/Unit");
+            addTableHeader(detailTable, "Total");
             addTableHeader(detailTable, "Status"); // Stock Status (moved up)
             
             // New Headers
@@ -247,8 +251,10 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, item.getCurrentStock().toString(), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
                 addTableCell(detailTable, item.getUnit().getAbbreviation(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 addTableCell(detailTable, formatCurrency(item.getCostPerUnit()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, formatCurrency(item.getTotalCostValue()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
                 addTableCell(detailTable, item.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
                 
+                // --- NEW CELLS ---
                 addTableCell(detailTable, item.getReceivedDate() != null ? item.getReceivedDate().format(dateFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 addTableCell(detailTable, item.getLastUpdated() != null ? item.getLastUpdated().format(dateTimeFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 addTableCell(detailTable, String.valueOf(item.getExpirationDays()), FONT_TABLE_CELL, Element.ALIGN_CENTER);
@@ -260,6 +266,7 @@ public class PdfServiceImpl implements PdfService {
             // Footer adjustment: Title spans 11 columns, Total is 12th
             addTableFooterCell(detailTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 11);
             addTableFooterCell(detailTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
+            addTableFooterCell(detailTable, "", FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 5);
 
             document.add(detailTable);
 
@@ -270,9 +277,9 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
     @Override
     public ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException {
+        // Logic unchanged...
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -361,9 +368,9 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
     @Override
     public ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException {
+    	// Logic unchanged...
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -502,9 +509,9 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
-
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException {
+    	// Logic unchanged...
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -556,7 +563,8 @@ public class PdfServiceImpl implements PdfService {
     }
 
     @Override
-    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory, String wasteType) throws IOException {
+    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException {
+        // --- MODIFIED: Support for Date Range in Header ---
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -568,19 +576,26 @@ public class PdfServiceImpl implements PdfService {
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
 
-            String filterDesc = "Filters: ";
+            StringBuilder filterDesc = new StringBuilder("Filters: ");
             if (StringUtils.hasText(keyword)) {
-                filterDesc += "Item Keyword='" + keyword + "' ";
+                filterDesc.append("Item Keyword='").append(keyword).append("' ");
             }
             if (StringUtils.hasText(reasonCategory)) {
-                filterDesc += "Reason='" + reasonCategory + "' ";
+                filterDesc.append("Reason='").append(reasonCategory).append("' ");
             }
             if (StringUtils.hasText(wasteType)) {
-                filterDesc += "Type='" + wasteType + "' ";
+                filterDesc.append("Type='").append(wasteType).append("' ");
             }
-            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory) && !StringUtils.hasText(wasteType)) {
-                filterDesc += "None (All Records)";
+            if (StringUtils.hasText(startDate)) {
+                filterDesc.append("From='").append(startDate).append("' ");
             }
+            if (StringUtils.hasText(endDate)) {
+                filterDesc.append("To='").append(endDate).append("' ");
+            }
+            if (filterDesc.length() == 9) {
+                filterDesc.append("None (All Records)");
+            }
+
             String pageInfo = String.format("Page %d of %d (Total Records: %d)",
                     logPage.getNumber() + 1,
                     logPage.getTotalPages(),
@@ -644,6 +659,7 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
+    // ... (Helper methods addTableHeader, addTableCell, addTableFooterCell, addSummaryCell, formatCurrency remain unchanged) ...
     private void addTableHeader(PdfPTable table, String headerTitle) {
         PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));
         cell.setBackgroundColor(COLOR_TABLE_HEADER_BG);

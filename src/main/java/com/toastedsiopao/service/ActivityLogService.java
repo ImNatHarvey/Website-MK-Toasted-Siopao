@@ -20,8 +20,9 @@ public interface ActivityLogService {
 
 	Page<ActivityLogEntry> getWasteLogs(Pageable pageable);
 	
-	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, Pageable pageable);
+	// --- MODIFIED: Added Date parameters ---
+	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, String wasteType, String startDate, String endDate, Pageable pageable);
 	
-	// --- MODIFIED: Added parameters to support filtered metrics ---
-	Map<String, Object> getWasteMetrics(String keyword, String reasonCategory, String wasteType);
+	Map<String, Object> getWasteMetrics(String keyword, String reasonCategory, String wasteType, String startDate, String endDate);
+	// --- END MODIFIED ---
 }

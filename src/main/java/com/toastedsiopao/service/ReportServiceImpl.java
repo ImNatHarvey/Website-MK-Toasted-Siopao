@@ -71,6 +71,8 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    // ... (Financial and Inventory report methods remain unchanged) ...
+
     @Override
     public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate) throws IOException { 
         LocalDateTime startDateTime = parseDate(startDate, false);
@@ -80,7 +82,6 @@ public class ReportServiceImpl implements ReportService {
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
-
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
@@ -100,12 +101,14 @@ public class ReportServiceImpl implements ReportService {
             return new ByteArrayInputStream(out.toByteArray());
         }
     }
+    
+    // ... (Helper methods createSummarySheet, createDetailedBreakdownSheet, generateFinancialReportPdf remain unchanged) ...
 
     private void createSummarySheet(Sheet sheet, List<Order> orders, SiteSettings settings,
             CellStyle headerStyle, CellStyle boldStyle, CellStyle currencyStyle,
             CellStyle totalCurrencyStyle,
             LocalDateTime start, LocalDateTime end) {
-
+    	// Implementation unchanged...
         AtomicInteger rowIdx = new AtomicInteger(0);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 
@@ -165,7 +168,7 @@ public class ReportServiceImpl implements ReportService {
 
     private void createDetailedBreakdownSheet(Sheet sheet, List<Order> orders, CellStyle headerStyle,
             CellStyle currencyStyle, CellStyle totalRowStyle, CellStyle totalCurrencyStyle) {
-
+    	// Implementation unchanged...
         AtomicInteger rowIdx = new AtomicInteger(0);
 
         String[] headers = { "Order ID", "Date", "Customer", "Items", "Total Sales", "Est. COGS", "Est. Gross Profit" };
@@ -214,7 +217,7 @@ public class ReportServiceImpl implements ReportService {
         createCurrencyCell(totalRow, 5, grandTotalCogs, totalCurrencyStyle);
         createCurrencyCell(totalRow, 6, grandTotalProfit, totalCurrencyStyle);
     }
-
+    
     @Override
     public ByteArrayInputStream generateFinancialReportPdf(String keyword, String startDate, String endDate) throws IOException { 
         LocalDateTime startDateTime = parseDate(startDate, false);
@@ -224,14 +227,15 @@ public class ReportServiceImpl implements ReportService {
         
         return pdfService.generateFinancialReportPdf(orders, startDateTime, endDateTime);
     }
-
+    
     private List<InventoryItem> getFilteredInventoryItems(String keyword, Long categoryId) {
         return inventoryItemService.searchItems(keyword, categoryId, Pageable.unpaged()).getContent();
     }
 
     @Override
     public ByteArrayInputStream generateInventoryReport(String keyword, Long categoryId) throws IOException {
-        List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
+    	// Implementation unchanged (Updated in previous turn)
+    	List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -244,13 +248,11 @@ public class ReportServiceImpl implements ReportService {
             CellStyle numericStyle = workbook.createCellStyle();
             numericStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
 
-            // --- ADDED STYLES ---
             CellStyle dateStyle = workbook.createCellStyle();
             dateStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
             
             CellStyle dateTimeStyle = workbook.createCellStyle();
             dateTimeStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
-            // --- END ADDED ---
 
             Sheet sheet = workbook.createSheet("Inventory Report");
             AtomicInteger rowIdx = new AtomicInteger(0);
@@ -277,12 +279,11 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
 
-            // --- UPDATED HEADERS ---
             String[] headers = { 
-            		"Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Total Cost Value", "Item Status", "Stock Status",
-            		"Received Date", "Last Updated", "Exp. Days", "Expiration Date"
+            		"Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Item Status", "Stock Status",
+            		"Received Date", "Last Updated", "Exp. Days", "Expiration Date",
+                    "Total Cost Value"
             };
-            // --- END UPDATED HEADERS ---
             
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
@@ -307,14 +308,10 @@ public class ReportServiceImpl implements ReportService {
                 
                 createCurrencyCell(row, 5, item.getCostPerUnit(), currencyStyle);
                 
-                BigDecimal totalCostValue = item.getTotalCostValue();
-                createCurrencyCell(row, 6, totalCostValue, currencyStyle);
-                
-                row.createCell(7).setCellValue(item.getItemStatus());
-                row.createCell(8).setCellValue(item.getStockStatus());
+                row.createCell(6).setCellValue(item.getItemStatus());
+                row.createCell(7).setCellValue(item.getStockStatus());
 
-                // --- NEW COLUMNS DATA ---
-                Cell recvCell = row.createCell(9);
+                Cell recvCell = row.createCell(8);
                 if (item.getReceivedDate() != null) {
                     recvCell.setCellValue(item.getReceivedDate());
                     recvCell.setCellStyle(dateStyle);
@@ -322,7 +319,7 @@ public class ReportServiceImpl implements ReportService {
                     recvCell.setCellValue("N/A");
                 }
 
-                Cell updatedCell = row.createCell(10);
+                Cell updatedCell = row.createCell(9);
                 if (item.getLastUpdated() != null) {
                     updatedCell.setCellValue(item.getLastUpdated());
                     updatedCell.setCellStyle(dateTimeStyle);
@@ -330,16 +327,18 @@ public class ReportServiceImpl implements ReportService {
                     updatedCell.setCellValue("N/A");
                 }
 
-                row.createCell(11).setCellValue(item.getExpirationDays());
+                row.createCell(10).setCellValue(item.getExpirationDays());
 
-                Cell expDateCell = row.createCell(12);
+                Cell expDateCell = row.createCell(11);
                 if (item.getExpirationDate() != null) {
                     expDateCell.setCellValue(item.getExpirationDate());
                     expDateCell.setCellStyle(dateStyle);
                 } else {
                     expDateCell.setCellValue("N/A");
                 }
-                // --- END NEW COLUMNS ---
+                
+                BigDecimal totalCostValue = item.getTotalCostValue();
+                createCurrencyCell(row, 12, totalCostValue, currencyStyle);
 
                 grandTotalValue = grandTotalValue.add(totalCostValue);
             }
@@ -348,8 +347,8 @@ public class ReportServiceImpl implements ReportService {
             for (int i = 0; i < headers.length; i++) {
                 totalRow.createCell(i).setCellStyle(totalRowStyle);
             }
-            totalRow.getCell(5).setCellValue("Total Inventory Value:");
-            createCurrencyCell(totalRow, 6, grandTotalValue, totalCurrencyStyle);
+            totalRow.getCell(11).setCellValue("Total Inventory Value:");
+            createCurrencyCell(totalRow, 12, grandTotalValue, totalCurrencyStyle);
             
             autoSizeColumns(sheet, headers.length);
 
@@ -366,7 +365,8 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ByteArrayInputStream generateProductReport(String keyword, Long categoryId) throws IOException {
-        List<Product> products = getFilteredProducts(keyword, categoryId);
+    	// Implementation unchanged (Updated in previous turn)
+    	List<Product> products = getFilteredProducts(keyword, categoryId);
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -375,7 +375,6 @@ public class ReportServiceImpl implements ReportService {
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
             
-            // --- ADDED STYLES ---
             CellStyle dateStyle = workbook.createCellStyle();
             dateStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
             
@@ -406,7 +405,6 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
             
-            // --- UPDATED HEADERS ---
             String[] headers = { 
             		"Product ID", "Product Name", "Category", "Price", "Current Stock", "Product Status", "Stock Status", 
             		"Created/Received", "Last Stock Update", "Exp. Days", "Exp. Date",
@@ -437,7 +435,6 @@ public class ReportServiceImpl implements ReportService {
                 row.createCell(5).setCellValue(product.getProductStatus());
                 row.createCell(6).setCellValue(product.getStockStatus());
                 
-                // --- NEW COLUMNS DATA ---
                 Cell createdCell = row.createCell(7);
                 if(product.getCreatedDate() != null) {
                     createdCell.setCellValue(product.getCreatedDate());
@@ -488,9 +485,11 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
     
+    // --- MODIFIED: Support for Date Range ---
     @Override
-    public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, Pageable.unpaged()); 
+    public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException {
+        // Use the new search method in service
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, startDate, endDate, Pageable.unpaged()); 
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -511,21 +510,29 @@ public class ReportServiceImpl implements ReportService {
             titleCell.setCellValue(settings.getWebsiteName() + " - Waste & Spoilage Log");
             titleCell.setCellStyle(headerStyle);
 
-            String filterDesc = "Filters: ";
+            // --- NEW: Format Filter Description ---
+            StringBuilder filterDesc = new StringBuilder("Filters: ");
             if (StringUtils.hasText(keyword)) {
-                filterDesc += "Item Keyword='" + keyword + "' ";
+                filterDesc.append("Item Keyword='").append(keyword).append("' ");
             }
             if (StringUtils.hasText(reasonCategory)) {
-                filterDesc += "Reason='" + reasonCategory + "'";
+                filterDesc.append("Reason='").append(reasonCategory).append("' ");
             }
             if (StringUtils.hasText(wasteType)) {
-                filterDesc += "Type='" + wasteType + "'";
+                filterDesc.append("Type='").append(wasteType).append("' ");
             }
-            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory) && !StringUtils.hasText(wasteType)) {
-                filterDesc += "None (All Records)";
+            if (StringUtils.hasText(startDate)) {
+                filterDesc.append("From='").append(startDate).append("' ");
             }
+            if (StringUtils.hasText(endDate)) {
+                filterDesc.append("To='").append(endDate).append("' ");
+            }
+            if (filterDesc.length() == 9) { // "Filters: " length
+                filterDesc.append("None (All Records)");
+            }
+
             Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
-            dateRow.createCell(0).setCellValue(filterDesc);
+            dateRow.createCell(0).setCellValue(filterDesc.toString());
             dateRow.getCell(0).setCellStyle(boldStyle);
 
             rowIdx.getAndIncrement(); 
@@ -547,13 +554,11 @@ public class ReportServiceImpl implements ReportService {
 
                 row.createCell(1).setCellValue(logEntry.getUsername());
                 
-                // Type Logic
                 String type = "Unknown";
                 if (logEntry.getAction().startsWith("PRODUCT_")) type = "Product";
                 else if (logEntry.getAction().startsWith("STOCK_")) type = "Inventory";
                 row.createCell(2).setCellValue(type);
                 
-                // Reason Logic
                 String reason = logEntry.getAction().replace("STOCK_WASTE_", "").replace("PRODUCT_WASTE_", "");
                 row.createCell(3).setCellValue(reason);
                 
@@ -582,10 +587,11 @@ public class ReportServiceImpl implements ReportService {
     }
     
     @Override
-    public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory, String wasteType) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, Pageable.unpaged());
-        return pdfService.generateWasteLogPdf(wasteLogs, keyword, reasonCategory, wasteType); 
+    public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException {
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType, startDate, endDate, Pageable.unpaged());
+        return pdfService.generateWasteLogPdf(wasteLogs, keyword, reasonCategory, wasteType, startDate, endDate); 
     }
+    // --- END MODIFIED ---
 
     @Override
     public ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException {

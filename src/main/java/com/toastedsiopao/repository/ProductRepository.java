@@ -24,6 +24,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	String ACTIVE_PRODUCT_AND_CLAUSE = "AND p.productStatus = 'ACTIVE' ";
 	
 	String CUSTOM_SORT = "ORDER BY (CASE WHEN p.currentStock > 0 THEN 0 ELSE 1 END), p.name ASC";
+	
+	// --- ADDED: Reusable Filter Condition for Metrics ---
+	String METRIC_FILTER_CONDITION = "(:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+			"AND (:category IS NULL OR p.category = :category)";
+	// --- END ADDED ---
 
 	Optional<Product> findByNameIgnoreCase(String name);
 
@@ -87,16 +92,31 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	@Query("SELECT p FROM Product p WHERE p.id = :id")
 	Optional<Product> findByIdForUpdate(@Param("id") Long id);
 	
+	// --- GLOBAL METRICS (Kept for Dashboard) ---
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
 	long countLowStockProducts();
 	
-	// --- ADDED: Count Critical Stock Products ---
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.criticalStockThreshold AND p.currentStock > 0")
 	long countCriticalStockProducts();
-	// --- END ADDED ---
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= 0")
 	long countOutOfStockProducts();
+
+	// --- ADDED: DYNAMIC FILTERED METRICS ---
+	@Query("SELECT COUNT(p) FROM Product p WHERE " + METRIC_FILTER_CONDITION)
+	long countFilteredProducts(@Param("keyword") String keyword, @Param("category") Category category);
+
+	@Query("SELECT COUNT(p) FROM Product p WHERE " + METRIC_FILTER_CONDITION + 
+		   " AND p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
+	long countFilteredLowStock(@Param("keyword") String keyword, @Param("category") Category category);
+
+	@Query("SELECT COUNT(p) FROM Product p WHERE " + METRIC_FILTER_CONDITION + 
+		   " AND p.currentStock <= p.criticalStockThreshold AND p.currentStock > 0")
+	long countFilteredCriticalStock(@Param("keyword") String keyword, @Param("category") Category category);
+
+	@Query("SELECT COUNT(p) FROM Product p WHERE " + METRIC_FILTER_CONDITION + " AND p.currentStock <= 0")
+	long countFilteredOutOfStock(@Param("keyword") String keyword, @Param("category") Category category);
+	// --- END ADDED ---
 
 	@Query("SELECT p FROM Product p JOIN FETCH p.category c LEFT JOIN FETCH p.ingredients i LEFT JOIN FETCH i.inventoryItem ii LEFT JOIN FETCH ii.unit u ORDER BY p.name ASC")
 	List<Product> findAllFullProducts();

@@ -22,7 +22,8 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.util.Collections; 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map; 
 import java.util.Optional;
@@ -183,7 +184,6 @@ public class ProductServiceImpl implements ProductService {
 		}
 		product.setCreatedDate(effectiveDate);
 
-		// MODIFIED: Only force recalculation on NEW items
 		if (isNew) {
 			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
 				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
@@ -191,11 +191,9 @@ public class ProductServiceImpl implements ProductService {
 				product.setExpirationDate(null);
 			}
 		} else {
-			// For existing items, if expiration date is null but days are set, calculate it.
 			if (product.getExpirationDate() == null && productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
 				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
 			}
-			// If user sets days to 0, clear date
 			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() == 0) {
 				product.setExpirationDate(null);
 			}
@@ -304,6 +302,32 @@ public class ProductServiceImpl implements ProductService {
 	@Transactional(readOnly = true)
 	public long countOutOfStockProducts() { return productRepository.countOutOfStockProducts(); }
 	
+	// --- ADDED: Dynamic Metrics Implementation ---
+	@Override
+	@Transactional(readOnly = true)
+	public Map<String, Object> getProductMetrics(String keyword, Long categoryId) {
+		Map<String, Object> metrics = new HashMap<>();
+		
+		Category category = null;
+		if (categoryId != null) {
+			category = categoryRepository.findById(categoryId).orElse(null);
+		}
+		String parsedKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+
+		long totalProducts = productRepository.countFilteredProducts(parsedKeyword, category);
+		long lowStock = productRepository.countFilteredLowStock(parsedKeyword, category);
+		long criticalStock = productRepository.countFilteredCriticalStock(parsedKeyword, category);
+		long outOfStock = productRepository.countFilteredOutOfStock(parsedKeyword, category);
+		
+		metrics.put("totalProducts", totalProducts);
+		metrics.put("lowStock", lowStock);
+		metrics.put("criticalStock", criticalStock);
+		metrics.put("outOfStock", outOfStock);
+		
+		return metrics;
+	}
+	// --- END ADDED ---
+	
 	@Override
 	@Transactional(readOnly = true)
 	public int calculateMaxProducible(Long productId) {
@@ -374,17 +398,13 @@ public class ProductServiceImpl implements ProductService {
 			}
 		}
 		
-		// --- MODIFIED: Update expiration but DO NOT update createdDate ---
 		if (quantityChange > 0 && createdDate != null) {
-			// REMOVED: product.setCreatedDate(createdDate);
 			if (expirationDays != null && expirationDays > 0) {
-				// Update expiration based on the Stock Update Date (passed as createdDate)
 				product.setExpirationDate(createdDate.plusDays(expirationDays));
 			} else {
 				product.setExpirationDate(null);
 			}
 		}
-		// --- END MODIFIED ---
 
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;

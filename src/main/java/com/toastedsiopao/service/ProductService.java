@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ProductService {
@@ -31,14 +32,11 @@ public interface ProductService {
 	
 	Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable);
 
-	// --- MODIFIED: Added Date parameters ---
 	Product adjustStock(Long productId, int quantityChange, String reason, LocalDate createdDate, Integer expirationDays);
 	
-	// Overload for backward compatibility or simple calls
 	default Product adjustStock(Long productId, int quantityChange, String reason) {
 		return adjustStock(productId, quantityChange, reason, null, null);
 	}
-	// --- END MODIFIED ---
 
 	long countAllProducts();
 
@@ -47,6 +45,10 @@ public interface ProductService {
 	long countCriticalStockProducts();
 
 	long countOutOfStockProducts();
+	
+	// --- ADDED: Dynamic Metrics ---
+	Map<String, Object> getProductMetrics(String keyword, Long categoryId);
+	// --- END ADDED ---
 
 	int calculateMaxProducible(Long productId);
 

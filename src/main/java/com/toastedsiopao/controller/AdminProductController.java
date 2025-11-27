@@ -92,15 +92,14 @@ public class AdminProductController {
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
 
-		long totalProducts = productService.countAllProducts();
-		long lowStockProducts = productService.countLowStockProducts();
-		long outOfStockProducts = productService.countOutOfStockProducts();
-		long criticalStockProducts = productService.countCriticalStockProducts();
+		// --- MODIFIED: Use Dynamic Metrics ---
+		Map<String, Object> metrics = productService.getProductMetrics(keyword, categoryId);
 		
-		model.addAttribute("totalProducts", totalProducts);
-		model.addAttribute("lowStockProducts", lowStockProducts);
-		model.addAttribute("outOfStockProducts", outOfStockProducts);
-		model.addAttribute("criticalStockProducts", criticalStockProducts);
+		model.addAttribute("totalProducts", metrics.get("totalProducts"));
+		model.addAttribute("lowStockProducts", metrics.get("lowStock"));
+		model.addAttribute("outOfStockProducts", metrics.get("outOfStock"));
+		model.addAttribute("criticalStockProducts", metrics.get("criticalStock"));
+		// --- END MODIFIED ---
 
 		model.addAttribute("productPage", productPage);
 		model.addAttribute("products", productPage.getContent());
@@ -330,19 +329,15 @@ public class AdminProductController {
 		}
 
 		try {
-			// --- MODIFIED: Force today's date for Production/Restock/Add actions ---
-			// We ignore the 'receivedDate' from the hidden form field because it likely contains the old date.
-			// Production/Add always implies a new batch (Today).
 			LocalDate dateToSet = null;
 			Integer expDaysToSet = null;
 			
 			if (action.equals("add")) {
-				dateToSet = LocalDate.now(); // Force today
-				expDaysToSet = expirationDays; // Use the existing expiration days rule
+				dateToSet = LocalDate.now(); 
+				expDaysToSet = expirationDays;
 			}
 
 			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, dateToSet, expDaysToSet);
-			// --- END MODIFIED ---
 			
 			String actionText = action.equals("add") ? "Added" : "Deducted";
 			if ("Production".equals(reasonCategory)) actionText = "Produced";

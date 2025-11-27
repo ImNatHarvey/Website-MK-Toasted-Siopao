@@ -406,11 +406,11 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
     
-    // --- ADDED: Waste Report Excel ---
+    // --- MODIFIED: Added reasonCategory parameter ---
     @Override
-    public ByteArrayInputStream generateWasteReport(String keyword) throws IOException {
+    public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory) throws IOException {
         // We use an unpaged request to get all filtered data for the report
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, null, Pageable.unpaged());
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); // --- MODIFIED: Passed reasonCategory ---
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
@@ -433,8 +433,14 @@ public class ReportServiceImpl implements ReportService {
 
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
-                filterDesc += "Item Keyword='" + keyword + "'";
-            } else {
+                filterDesc += "Item Keyword='" + keyword + "' ";
+            }
+            // --- ADDED: Include reasonCategory in filter description ---
+            if (StringUtils.hasText(reasonCategory)) {
+                filterDesc += "Reason='" + reasonCategory + "'";
+            }
+            // --- END ADDED ---
+            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory)) {
                 filterDesc += "None (All Records)";
             }
             Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
@@ -471,13 +477,13 @@ public class ReportServiceImpl implements ReportService {
         }
     }
     
-    // --- ADDED: Waste Report PDF ---
+    // --- MODIFIED: Added reasonCategory parameter ---
     @Override
-    public ByteArrayInputStream generateWasteReportPdf(String keyword) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, null, Pageable.unpaged());
-        return pdfService.generateWasteLogPdf(wasteLogs, keyword);
+    public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory) throws IOException {
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); // --- MODIFIED: Passed reasonCategory ---
+        return pdfService.generateWasteLogPdf(wasteLogs, keyword); // Note: PDF service only supports one keyword parameter on log, we will keep it simple there for now.
     }
-    // --- END ADDED ---
+    // --- END MODIFIED ---
 
     // --- MODIFIED METHOD SIGNATURE AND BODY ---
     @Override

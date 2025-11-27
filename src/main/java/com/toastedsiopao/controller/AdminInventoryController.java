@@ -71,11 +71,13 @@ public class AdminInventoryController {
 			@RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			// --- ADDED ---
+			// --- ADDED: Pass inventory list pagination to waste list form submit ---
+			@RequestParam(value = "activeTab", required = false) String activeTab, 
+			// --- MODIFIED: Renamed wasteKeyword -> keyword, added wasteCategory ---
 			@RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
-			@RequestParam(value = "wasteCategory", required = false) Long wasteCategoryId,
+			@RequestParam(value = "wasteCategory", required = false) String wasteCategory, 
 			@RequestParam(value = "wastePage", defaultValue = "0") int wastePage) {
-			// --- END ADDED ---
+			// --- END MODIFIED ---
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<InventoryItem> inventoryPage = inventoryItemService.searchItems(keyword, categoryId, pageable);
@@ -89,12 +91,12 @@ public class AdminInventoryController {
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
 
 		// --- MODIFIED: Waste Log Fetching ---
-		Pageable wastePageable = PageRequest.of(wastePage, size); // Use same size for now
-		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategoryId, wastePageable);
+		Pageable wastePageable = PageRequest.of(wastePage, size); 
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wastePageable); // --- MODIFIED: Pass String wasteCategory ---
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
 		model.addAttribute("wasteLogPage", wasteLogPage);
 		model.addAttribute("wasteKeyword", wasteKeyword);
-		model.addAttribute("wasteCategoryId", wasteCategoryId);
+		model.addAttribute("wasteCategoryId", wasteCategory); // --- MODIFIED: Pass as String for select box ---
 		model.addAttribute("wastePage", wastePage);
 		// ---------------------------------------------
 

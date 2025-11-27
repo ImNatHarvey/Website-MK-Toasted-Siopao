@@ -15,7 +15,7 @@ public interface ActivityLogService {
 	// --- NEW ---
 	Page<ActivityLogEntry> getWasteLogs(Pageable pageable);
 	
-	// --- ADDED ---
-	Page<ActivityLogEntry> searchWasteLogs(String keyword, Long categoryId, Pageable pageable);
-	// --- END ADDED ---
+	// --- MODIFIED: Changed categoryId to String reasonCategory ---
+	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable);
+	// --- END MODIFIED ---
 }

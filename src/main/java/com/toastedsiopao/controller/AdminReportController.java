@@ -231,16 +231,17 @@ public class AdminReportController {
         }
     }
 
-    // --- ADDED: Waste Report Endpoints ---
+    // --- MODIFIED: Waste Report Endpoints to include wasteCategory ---
     @GetMapping("/waste")
     @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
     public ResponseEntity<InputStreamResource> downloadWasteReport(
-            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword) {
+            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
+            @RequestParam(value = "wasteCategory", required = false) String wasteCategory) { 
 
-        log.info("Generating waste EXCEL report for keyword: [{}]", wasteKeyword);
+        log.info("Generating waste EXCEL report for keyword: [{}], category: [{}]", wasteKeyword, wasteCategory); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateWasteReport(wasteKeyword);
+            ByteArrayInputStream bis = reportService.generateWasteReport(wasteKeyword, wasteCategory); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -266,12 +267,13 @@ public class AdminReportController {
     @GetMapping("/waste/pdf")
     @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
     public ResponseEntity<InputStreamResource> downloadWasteReportPdf(
-            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword) {
+            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
+            @RequestParam(value = "wasteCategory", required = false) String wasteCategory) { 
 
-        log.info("Generating waste PDF report for keyword: [{}]", wasteKeyword);
+        log.info("Generating waste PDF report for keyword: [{}], category: [{}]", wasteKeyword, wasteCategory); 
 
         try {
-            ByteArrayInputStream bis = reportService.generateWasteReportPdf(wasteKeyword);
+            ByteArrayInputStream bis = reportService.generateWasteReportPdf(wasteKeyword, wasteCategory); 
 
             HttpHeaders headers = new HttpHeaders();
             String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
@@ -293,7 +295,7 @@ public class AdminReportController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    // --- END ADDED ---
+    // --- END MODIFIED ---
 
     // --- MODIFIED: Added documentType parameter ---
     @GetMapping("/download/{documentType}/{id}")

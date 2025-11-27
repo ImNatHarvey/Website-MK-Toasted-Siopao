@@ -92,7 +92,7 @@
 				</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link" id="waste-tab" data-bs-toggle="tab"
+				<button class="nav-link text-danger" id="waste-tab" data-bs-toggle="tab"
 					data-bs-target="#waste-content" type="button" role="tab"
 					aria-controls="waste-content" aria-selected="false">
 					<i class="fa-solid fa-trash-can me-1"></i> Waste & Spoilage
@@ -290,7 +290,7 @@
 					class="mb-4 p-3 bg-light rounded shadow-sm">
 					
 					<input type="hidden" name="activeTab" value="waste-tab" />
-					<input type="hidden" name="wastePage" th:value="${wastePage}" />
+					<input type="hidden" name="size" th:value="${size}" />
 					<div class="d-flex flex-column flex-md-row gap-2">
 						<div class="flex-grow-1">
 							<label for="wasteKeyword" class="form-label">Search by Item Name</label>
@@ -299,7 +299,7 @@
 						</div>
 						<div class="flex-grow-1">
 							<label for="wasteCategory" class="form-label">Filter by Reason</label>
-							<select class="form-select" id="wasteCategory" name="wasteCategory" disabled>
+							<select class="form-select" id="wasteCategory" name="wasteCategory">
 								<option value="">-- All Reasons --</option>
 								<option value="EXPIRED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'EXPIRED'}">Expired</option>
 								<option value="DAMAGED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'DAMAGED'}">Damaged</option>
@@ -323,17 +323,22 @@
 								</button>
 								<ul class="dropdown-menu dropdown-menu-end">
 									<li><button class="dropdown-item" type="submit"
-											formaction="/admin/reports/waste" formmethod="get">
+											formaction="/admin/reports/waste" formmethod="get"
+											th:formaction="@{/admin/reports/waste(wasteKeyword=${wasteKeyword})}"
+											th:formmethod="get">
 											<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
 										</button></li>
 									<li><button class="dropdown-item" type="submit"
-											formaction="/admin/reports/waste/pdf" formmethod="get">
+											formaction="/admin/reports/waste/pdf" formmethod="get"
+											th:formaction="@{/admin/reports/waste/pdf(wasteKeyword=${wasteKeyword})}"
+											th:formmethod="get">
 											<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
 										</button></li>
 								</ul>
 							</div>
 						</div>
 					</div>
+					<input type="hidden" name="page" th:value="${currentPage}" />
 				</form>
 				
 				<div class="card shadow-sm">
@@ -354,7 +359,9 @@
 								<tbody>
 									<tr th:each="logEntry : ${wasteLogs}">
 										<td th:text="${#temporals.format(logEntry.timestamp, 'MMM dd, yyyy HH:mm:ss')}">Date</td>
-										<td th:text="${logEntry.username}">User</td>
+										<td>
+											<span th:text="${logEntry.username}">User</span>
+										</td>
 										<td>
 											<span class="badge bg-danger"
 												th:text="${#strings.replace(#strings.replace(logEntry.action, 'STOCK_WASTE_', ''), '_', ' ')}">REASON</span>
@@ -363,7 +370,7 @@
 									</tr>
 									<tr th:if="${#lists.isEmpty(wasteLogs)}">
 										<td colspan="4" class="text-center text-muted"
-											th:text="${(wasteKeyword != null) ? 'No waste records found matching your criteria.' : 'No waste records found.'}">No waste records found.</td>
+											th:text="${(wasteKeyword != null or wasteCategoryId != null) ? 'No waste records found matching your criteria.' : 'No waste records found.'}">No waste records found.</td>
 									</tr>
 								</tbody>
 							</table>
@@ -377,7 +384,7 @@
 									<li class="page-item"
 										th:classappend="${wasteLogPage.first} ? 'disabled'"><a
 										class="page-link"
-										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number - 1}, size=${size}, wasteKeyword=${wasteKeyword})}">Previous</a>
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number - 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}">Previous</a>
 									</li>
 
 									<th:block
@@ -392,14 +399,14 @@
 										<li class="page-item"
 											th:classappend="${i == wasteLogPage.number} ? 'active'"><a
 											class="page-link"
-											th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${i}, size=${size}, wasteKeyword=${wasteKeyword})}"
+											th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${i}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
 											th:text="${i + 1}"></a></li>
 									</th:block>
 
 									<li class="page-item"
 										th:classappend="${wasteLogPage.last} ? 'disabled'"><a
 										class="page-link"
-										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number + 1}, size=${size}, wasteKeyword=${wasteKeyword})}">Next</a>
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number + 1}, size=${size}, wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}">Next</a>
 									</li>
 								</ul>
 							</nav>

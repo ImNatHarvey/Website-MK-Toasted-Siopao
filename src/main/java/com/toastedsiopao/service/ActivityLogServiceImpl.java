@@ -57,33 +57,28 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 	}
 	
 	@Override
-	public Page<ActivityLogEntry> searchWasteLogs(String keyword, Long categoryId, Pageable pageable) {
+	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable) {
 		// Base criteria: action must start with "STOCK_WASTE_"
 		String actionPrefix = "STOCK_WASTE_";
 		
 		boolean hasKeyword = StringUtils.hasText(keyword);
-		boolean hasCategory = categoryId != null;
+		boolean hasCategory = StringUtils.hasText(reasonCategory); // --- MODIFIED to check String ---
 
-		// The repository layer will be responsible for applying all filters.
-		// Since we don't have a direct link from ActivityLogEntry to InventoryCategory,
-		// we'll need to rely on the raw log message (details) to filter by item name.
-		// For category, the current architecture does not easily support filtering
-		// the ActivityLog by the item's category, so we will only use the keyword
-		// in the log search.
-		
-		// Note: The category filtering logic is deferred to a manual post-search or a dedicated repository method
-		// that joins ActivityLogEntry -> InventoryItem -> InventoryCategory, but given the structure, 
-		// we'll stick to basic keyword search on the details for simplicity, and log a warning if category is used.
-
+		String fullActionFilter = actionPrefix;
 		if (hasCategory) {
-			log.warn("Category ID filter for waste logs (ID: {}) is not implemented due to lack of direct relation in ActivityLogEntry. Ignoring category filter.", categoryId);
+			// Prepend the specific category to the prefix for an exact match on action: "STOCK_WASTE_EXPIRED"
+			fullActionFilter += reasonCategory.trim().toUpperCase();
 		}
 		
 		if (hasKeyword) {
+			// If filtering by category, use the fullActionFilter. Otherwise, use the base prefix.
+			String finalActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
 			return activityLogRepository.findByActionStartingWithAndDetailsContainingIgnoreCaseOrderByTimestampDesc(
-					actionPrefix, keyword.trim(), pageable);
+					finalActionPrefix, keyword.trim(), pageable);
 		} else {
-			return activityLogRepository.findByActionStartingWithOrderByTimestampDesc(actionPrefix, pageable);
+			// If only filtering by category, use the exact action name. Otherwise, use the base prefix.
+			String finalActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
+			return activityLogRepository.findByActionStartingWithOrderByTimestampDesc(finalActionPrefix, pageable);
 		}
 	}
 }

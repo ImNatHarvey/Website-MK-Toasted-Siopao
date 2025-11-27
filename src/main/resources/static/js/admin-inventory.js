@@ -219,8 +219,39 @@ document.addEventListener('DOMContentLoaded', function() {
 			mainElement.removeAttribute('data-show-manage-stock-modal');
 		});
 	}
+	
+	// Helper function for date calculations/formatting
+	function formatDate(dateString) {
+		if (!dateString) return 'N/A';
+		try {
+			const date = new Date(dateString);
+			if (isNaN(date)) return 'N/A';
+			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+		} catch (e) {
+			return 'N/A';
+		}
+	}
+	
+	function calculateExpirationDate(receivedDateString, expirationDays) {
+		if (!receivedDateString || !expirationDays || parseInt(expirationDays) <= 0) return 'No Expiration';
+		try {
+			const receivedDate = new Date(receivedDateString);
+			if (isNaN(receivedDate)) return 'N/A';
+			
+			const expDays = parseInt(expirationDays);
+			// Use setDate to add days, handling month/year rollovers
+			const expirationDate = new Date(receivedDate);
+			expirationDate.setDate(receivedDate.getDate() + expDays);
+			
+			return formatDate(expirationDate.toISOString().split('T')[0]);
+			
+		} catch (e) {
+			return 'N/A';
+		}
+	}
 
-	// --- viewItemModal (Custom) - MODIFIED to include Item Status ---
+
+	// --- viewItemModal (Custom) - MODIFIED to include Item Status and Dates ---
 	const viewItemModal = document.getElementById('viewItemModal');
 	if (viewItemModal) {
 		viewItemModal.addEventListener('show.bs.modal', function(event) {
@@ -264,6 +295,22 @@ document.addEventListener('DOMContentLoaded', function() {
 			} else {
 				console.warn("Element #viewItemStatusBadge not found.");
 			}
+			
+			// --- NEW DATE FIELDS ---
+			const receivedDate = dataset.receivedDate ? formatDate(dataset.receivedDate) : 'N/A';
+			const expirationDays = dataset.expirationDays || '0';
+			const expirationDate = calculateExpirationDate(dataset.receivedDate, dataset.expirationDays);
+			
+			setText('#viewItemReceivedDate', receivedDate);
+			setText('#viewItemExpirationDays', expirationDays + ' days');
+			setText('#viewItemExpirationDate', expirationDate);
+			
+			const expDateEl = viewItemModal.querySelector('#viewItemExpirationDate');
+			if (expDateEl) {
+				expDateEl.classList.toggle('text-danger', expirationDate !== 'N/A' && expirationDate !== 'No Expiration' && new Date(dataset.receivedDate).getTime() < new Date(Date.now()).getTime() - (expirationDays * 24 * 60 * 60 * 1000) );
+				expDateEl.classList.toggle('text-success', expirationDate === 'No Expiration');
+			}
+			// --- END NEW DATE FIELDS ---
 		});
 	}
 });

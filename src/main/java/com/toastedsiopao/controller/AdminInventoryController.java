@@ -58,6 +58,7 @@ public class AdminInventoryController {
 	@Autowired
 	private AdminService adminService;
 
+    // ... (addCommonAttributesForRedirect method)
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
 		redirectAttributes.addFlashAttribute("inventoryCategories", inventoryCategoryService.findAll());
 		redirectAttributes.addFlashAttribute("unitsOfMeasure", unitOfMeasureService.findAll());
@@ -88,7 +89,6 @@ public class AdminInventoryController {
 		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
 
-		// --- MODIFIED: Waste Log Fetching ---
 		Pageable wastePageable = PageRequest.of(wastePage, size); 
 		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wastePageable); 
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
@@ -97,17 +97,20 @@ public class AdminInventoryController {
 		model.addAttribute("wasteCategoryId", wasteCategory); 
 		model.addAttribute("wastePage", wastePage);
 		
-		// --- ADDED: Waste Metrics ---
 		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics();
 		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
 		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
 		model.addAttribute("expiredValue", wasteMetrics.get("expiredValue"));
 		model.addAttribute("damagedValue", wasteMetrics.get("damagedValue"));
 		model.addAttribute("wasteValue", wasteMetrics.get("wasteValue"));
-		// ---------------------------------------------
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);
 		model.addAttribute("lowStockCount", lowStockItems.size());
+		
+		// --- ADDED: Critical Stock Count ---
+		model.addAttribute("criticalStockCount", inventoryItemService.countCriticalStockItems());
+		// --- END ADDED ---
+		
 		model.addAttribute("outOfStockCount", outOfStockItems.size());
 
 		model.addAttribute("allInventoryItems", allItemsForStockModal);
@@ -123,7 +126,6 @@ public class AdminInventoryController {
 		model.addAttribute("totalItems", inventoryPage.getTotalElements());
 		model.addAttribute("size", size);
 		
-		// Pass activeTab to model to handle default tab on load if JS fails or for initial render state
 		model.addAttribute("activeTab", StringUtils.hasText(activeTab) ? activeTab : "list-tab");
 
 		if (!model.containsAttribute("inventoryItemDto")) {
@@ -144,6 +146,8 @@ public class AdminInventoryController {
 		return "admin/inventory";
 	}
 
+    // ... (Rest of the controller methods: saveInventoryItem, adjustInventoryStock, deleteOrDeactivateInventoryItem, activateInventoryItem remain unchanged from previous turn, included below for completeness)
+    
 	@PostMapping("/save")
 	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
@@ -261,7 +265,6 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			
-			// --- MODIFIED: Use new logWasteAction for detailed tracking ---
 			if (isWaste) {
 				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
 				activityLogService.logWasteAction(
@@ -269,13 +272,12 @@ public class AdminInventoryController {
 						logAction, 
 						details,
 						updatedItem.getName(),
-						quantity.abs(), // Always log positive quantity for waste amount
+						quantity.abs(),
 						updatedItem.getCostPerUnit()
 				);
 			} else {
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 			}
-			// --- END MODIFIED ---
 			
 		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());

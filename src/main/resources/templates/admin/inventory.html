@@ -45,7 +45,7 @@
 			th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
 
 		<div class="row text-center mb-4" id="inventoryStatsRow">
-			<div class="col-md-3 mb-3">
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Items</h5>
@@ -53,7 +53,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-3 mb-3">
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Inventory Value</h5>
@@ -63,7 +63,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-3 mb-3">
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Items Low</h5>
@@ -72,7 +72,16 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-3 mb-3">
+			<div class="col-lg col-md-4 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Items Critical</h5>
+						<p class="display-6 fw-bold" style="color: #fd7e14;"
+							th:text="${criticalStockCount}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-lg col-md-4 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Items Out of Stock</h5>
@@ -422,6 +431,7 @@
 										<td th:text="${logEntry.costPerUnit != null ? '₱' + #numbers.formatDecimal(logEntry.costPerUnit, 1, 'COMMA', 2, 'POINT') : 'N/A'}">Cost</td>
 										<td th:text="${logEntry.totalValue != null ? '₱' + #numbers.formatDecimal(logEntry.totalValue, 1, 'COMMA', 2, 'POINT') : 'N/A'}"
 											class="fw-bold text-danger">Total</td>
+										
 										<td th:text="${logEntry.details}">Details</td>
 									</tr>
 									<tr th:if="${#lists.isEmpty(wasteLogs)}">
@@ -484,8 +494,6 @@
 		
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
-				// The stock modal logic has been moved entirely to admin-inventory.js.
-				
 				// Logic to activate the correct tab on reload/redirect and TOGGLE METRICS
 				const urlParams = new URLSearchParams(window.location.search);
 				const activeTab = urlParams.get('activeTab') || 'list-tab';
@@ -510,14 +518,12 @@
 						const bsTab = new bootstrap.Tab(tabEl);
 						bsTab.show();
 						
-						// If active tab is waste-tab, show waste metrics immediately
 						if(activeTab === 'waste-tab') {
 							toggleStats('waste-tab');
 						}
 					}
 				}
 				
-				// Add listeners for client-side clicks
 				const triggerTabList = [].slice.call(document.querySelectorAll('#inventoryTabs button'))
 				triggerTabList.forEach(function (triggerEl) {
 				  triggerEl.addEventListener('shown.bs.tab', function (event) {
@@ -526,7 +532,6 @@
 				  })
 				})
 				
-				// Updated Edit Modal Population logic for Date fields
 				const addItemModal = document.getElementById('addItemModal');
 				if (addItemModal) {
 					addItemModal.addEventListener('show.bs.modal', function(event) {

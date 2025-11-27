@@ -44,8 +44,116 @@ public class ProductServiceImpl implements ProductService {
 	@Autowired
 	private InventoryItemService inventoryItemService;
 
-	private void validateThresholds(Integer lowThreshold, Integer criticalThreshold) {
+    // ... (previous methods omitted for brevity: validateThresholds, validateNameUniqueness, getPaginatedProducts, findAll, findById, save, deactivateProduct, activateProduct, deleteProduct, findByCategory, searchProducts, adjustStock, countAllProducts, countLowStockProducts)
 
+    // ... (Existing count methods)
+    
+	@Override
+	@Transactional(readOnly = true)
+	public long countAllProducts() {
+		return productRepository.count();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countLowStockProducts() {
+		return productRepository.countLowStockProducts();
+	}
+	
+	// --- ADDED ---
+	@Override
+	@Transactional(readOnly = true)
+	public long countCriticalStockProducts() {
+		return productRepository.countCriticalStockProducts();
+	}
+	// --- END ADDED ---
+
+	@Override
+	@Transactional(readOnly = true)
+	public long countOutOfStockProducts() {
+		return productRepository.countOutOfStockProducts();
+	}
+	
+	// ... (remaining methods: calculateMaxProducible, findAllForReport)
+
+	@Override
+	@Transactional(readOnly = true)
+	public int calculateMaxProducible(Long productId) {
+		Optional<Product> productOpt = productRepository.findById(productId);
+		if (productOpt.isEmpty()) {
+			log.warn("calculateMaxProducible: Product not found with ID {}", productId);
+			return 0;
+		}
+
+		List<RecipeIngredient> ingredients = productOpt.get().getIngredients();
+		if (ingredients == null || ingredients.isEmpty()) {
+			log.warn("calculateMaxProducible: Product '{}' has no ingredients.", productOpt.get().getName());
+			return 0;
+		}
+
+		int maxPossible = Integer.MAX_VALUE;
+
+		for (RecipeIngredient ingredient : ingredients) {
+			Optional<InventoryItem> itemOpt = inventoryItemService.findById(ingredient.getInventoryItem().getId());
+
+			if (itemOpt.isEmpty()) {
+				log.warn("calculateMaxProducible: Ingredient item ID {} not found.",
+						ingredient.getInventoryItem().getId());
+				return 0;
+			}
+
+			BigDecimal availableStock = itemOpt.get().getCurrentStock();
+			BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
+
+			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) {
+				log.warn("calculateMaxProducible: Ingredient '{}' has invalid quantity needed ({}).",
+						itemOpt.get().getName(), quantityNeeded);
+				continue;
+			}
+
+			if (availableStock.compareTo(quantityNeeded) < 0) {
+				log.debug("calculateMaxProducible: Not enough stock for '{}'. Need {}, have {}.",
+						itemOpt.get().getName(), quantityNeeded, availableStock);
+				return 0;
+			}
+
+			int possibleUnits = availableStock.divide(quantityNeeded, 0, RoundingMode.FLOOR).intValue();
+
+			if (possibleUnits < maxPossible) {
+				maxPossible = possibleUnits;
+			}
+		}
+
+		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public List<Product> findAllForReport(String keyword, Long categoryId) {
+		boolean hasKeyword = StringUtils.hasText(keyword);
+		boolean hasCategory = categoryId != null;
+
+		if (hasKeyword && hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findFullProductsByNameAndCategory(keyword.trim(), category);
+		} else if (hasKeyword) {
+			return productRepository.findFullProductsByName(keyword.trim());
+		} else if (hasCategory) {
+			Category category = categoryRepository.findById(categoryId)
+					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
+			return productRepository.findFullProductsByCategory(category);
+		} else {
+			return productRepository.findAllFullProducts();
+		}
+	}
+
+    // ... (previous methods re-inserted to ensure file completeness if needed, usually I just send the changed parts or full file if small enough. Since I am replacing the file content completely, I must include everything.)
+    
+    // NOTE: For brevity in this specific output block, I assume the previous standard methods (save, update, etc) are retained as they were in the previous full file content provided in context. 
+    // I will re-include the missing standard methods to be safe.
+    
+    private void validateThresholds(Integer lowThreshold, Integer criticalThreshold) {
 		if (lowThreshold == null || lowThreshold <= 0) {
 			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
 		}
@@ -127,15 +235,11 @@ public class ProductServiceImpl implements ProductService {
 					.orElseThrow(() -> new RuntimeException("Product not found with id: " + productDto.getId()));
 			log.info("{} product: ID={}, Name='{}'", logAction, product.getId(), productDto.getName());
 			
-			// --- MODIFIED: Check for deactivation constraint (from ACTIVE to INACTIVE) ---
 			if ("INACTIVE".equals(productDto.getProductStatus()) && "ACTIVE".equals(product.getProductStatus())) {
 				if (product.getCurrentStock() > 0) {
-					// NOTE: Changed to match inventory service for frontend split
 					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + product.getName() + "'. Product still has " + product.getCurrentStock() + " items in stock. Please adjust stock to 0 first.");
 				}
-				// Note: Deletion check (if in order) is handled in deleteProduct/controller logic.
 			}
-			// --- END MODIFIED ---
 			
 		} else {
 			product = new Product();
@@ -145,10 +249,7 @@ public class ProductServiceImpl implements ProductService {
 			log.info("Setting recipeLocked=true for new product '{}'", productDto.getName());
 		}
 		
-		// OLD: if (isNew) { product.setProductStatus("ACTIVE"); }
-		// --- MODIFIED: Set status from DTO ---
 		product.setProductStatus(productDto.getProductStatus());
-		// --- END MODIFIED ---
 
 		if (product.isRecipeLocked()) {
 			if (!isNew) {
@@ -236,7 +337,6 @@ public class ProductServiceImpl implements ProductService {
 	public void activateProduct(Long id) {
 		Product product = productRepository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
-		// --- ADDED: Check status before setting to active (optional but safe) ---
 		if (!"ACTIVE".equals(product.getProductStatus())) {
 			product.setProductStatus("ACTIVE");
 			productRepository.save(product);
@@ -244,7 +344,6 @@ public class ProductServiceImpl implements ProductService {
 		} else {
 			log.warn("Attempted to activate already active product: ID={}, Name='{}'", id, product.getName());
 		}
-		// --- END ADDED ---
 	}
 	
 	@Override
@@ -406,95 +505,5 @@ public class ProductServiceImpl implements ProductService {
 				product.getName(), quantityChange, newStock, reason);
 
 		return savedProduct;
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public long countAllProducts() {
-		return productRepository.count();
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public long countLowStockProducts() {
-		return productRepository.countLowStockProducts();
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public long countOutOfStockProducts() {
-		return productRepository.countOutOfStockProducts();
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public int calculateMaxProducible(Long productId) {
-		Optional<Product> productOpt = productRepository.findById(productId);
-		if (productOpt.isEmpty()) {
-			log.warn("calculateMaxProducible: Product not found with ID {}", productId);
-			return 0;
-		}
-
-		List<RecipeIngredient> ingredients = productOpt.get().getIngredients();
-		if (ingredients == null || ingredients.isEmpty()) {
-			log.warn("calculateMaxProducible: Product '{}' has no ingredients.", productOpt.get().getName());
-			return 0;
-		}
-
-		int maxPossible = Integer.MAX_VALUE;
-
-		for (RecipeIngredient ingredient : ingredients) {
-			Optional<InventoryItem> itemOpt = inventoryItemService.findById(ingredient.getInventoryItem().getId());
-
-			if (itemOpt.isEmpty()) {
-				log.warn("calculateMaxProducible: Ingredient item ID {} not found.",
-						ingredient.getInventoryItem().getId());
-				return 0;
-			}
-
-			BigDecimal availableStock = itemOpt.get().getCurrentStock();
-			BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
-
-			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) {
-				log.warn("calculateMaxProducible: Ingredient '{}' has invalid quantity needed ({}).",
-						itemOpt.get().getName(), quantityNeeded);
-				continue;
-			}
-
-			if (availableStock.compareTo(quantityNeeded) < 0) {
-				log.debug("calculateMaxProducible: Not enough stock for '{}'. Need {}, have {}.",
-						itemOpt.get().getName(), quantityNeeded, availableStock);
-				return 0;
-			}
-
-			int possibleUnits = availableStock.divide(quantityNeeded, 0, RoundingMode.FLOOR).intValue();
-
-			if (possibleUnits < maxPossible) {
-				maxPossible = possibleUnits;
-			}
-		}
-
-		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
-	}
-
-	@Override
-	@Transactional(readOnly = true)
-	public List<Product> findAllForReport(String keyword, Long categoryId) {
-		boolean hasKeyword = StringUtils.hasText(keyword);
-		boolean hasCategory = categoryId != null;
-
-		if (hasKeyword && hasCategory) {
-			Category category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findFullProductsByNameAndCategory(keyword.trim(), category);
-		} else if (hasKeyword) {
-			return productRepository.findFullProductsByName(keyword.trim());
-		} else if (hasCategory) {
-			Category category = categoryRepository.findById(categoryId)
-					.orElseThrow(() -> new RuntimeException("Category not found with id: " + categoryId));
-			return productRepository.findFullProductsByCategory(category);
-		} else {
-			return productRepository.findAllFullProducts();
-		}
 	}
 }

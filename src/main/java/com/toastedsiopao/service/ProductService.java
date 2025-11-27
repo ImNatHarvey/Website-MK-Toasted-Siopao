@@ -35,6 +35,10 @@ public interface ProductService {
 	long countAllProducts();
 
 	long countLowStockProducts();
+	
+	// --- ADDED ---
+	long countCriticalStockProducts();
+	// --- END ADDED ---
 
 	long countOutOfStockProducts();
 

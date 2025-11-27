@@ -41,7 +41,7 @@
 			th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
 
 		<div class="row text-center mb-4">
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Total Products</h5>
@@ -49,7 +49,7 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Products Low</h5>
@@ -58,7 +58,16 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-md-4 mb-3">
+			<div class="col-md-3 mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Products Critical</h5>
+						<p class="display-6 fw-bold" style="color: #fd7e14;"
+							th:text="${criticalStockProducts}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
 						<h5 class="card-title">Products Out of Stock</h5>

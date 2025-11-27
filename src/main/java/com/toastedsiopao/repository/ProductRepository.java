@@ -89,6 +89,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 	
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.lowStockThreshold AND p.currentStock > p.criticalStockThreshold")
 	long countLowStockProducts();
+	
+	// --- ADDED: Count Critical Stock Products ---
+	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= p.criticalStockThreshold AND p.currentStock > 0")
+	long countCriticalStockProducts();
+	// --- END ADDED ---
 
 	@Query("SELECT count(p) FROM Product p WHERE p.currentStock <= 0")
 	long countOutOfStockProducts();

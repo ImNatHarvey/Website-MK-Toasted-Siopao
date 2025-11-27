@@ -97,6 +97,11 @@ public class AdminProductController {
 		long totalProducts = productService.countAllProducts();
 		long lowStockProducts = productService.countLowStockProducts();
 		long outOfStockProducts = productService.countOutOfStockProducts();
+		
+		// --- ADDED: Critical Stock Count ---
+		long criticalStockProducts = productService.countCriticalStockProducts();
+		model.addAttribute("criticalStockProducts", criticalStockProducts);
+		// --- END ADDED ---
 
 		model.addAttribute("totalProducts", totalProducts);
 		model.addAttribute("lowStockProducts", lowStockProducts);

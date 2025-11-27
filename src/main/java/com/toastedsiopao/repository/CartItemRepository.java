@@ -15,19 +15,18 @@ import java.util.Optional;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
-    @Query("SELECT ci FROM CartItem ci " +
-           "JOIN FETCH ci.product p " +
-           "LEFT JOIN FETCH p.category " + 
-           "WHERE ci.user = :user " +
-           "ORDER BY ci.lastUpdated DESC")
-    List<CartItem> findByUserWithProduct(@Param("user") User user);
+	@Query("SELECT ci FROM CartItem ci " + "JOIN FETCH ci.product p " + "LEFT JOIN FETCH p.category "
+			+ "WHERE ci.user = :user " + "ORDER BY ci.lastUpdated DESC")
+	List<CartItem> findByUserWithProduct(@Param("user") User user);
 
-    Optional<CartItem> findByUserAndProduct(User user, Product product);
+	Optional<CartItem> findByUserAndProduct(User user, Product product);
 
-    @Modifying
-    void deleteByUser(User user);
-    
-    @Modifying
-    @Query("DELETE FROM CartItem ci WHERE ci.user = :user AND ci.product = :product")
-    void deleteByUserAndProduct(@Param("user") User user, @Param("product") Product product);
+// --- UPDATED: Explicit JPQL for efficient bulk delete ---
+	@Modifying
+	@Query("DELETE FROM CartItem ci WHERE ci.user = :user")
+	void deleteByUser(@Param("user") User user);
+
+	@Modifying
+	@Query("DELETE FROM CartItem ci WHERE ci.user = :user AND ci.product = :product")
+	void deleteByUserAndProduct(@Param("user") User user, @Param("product") Product product);
 }

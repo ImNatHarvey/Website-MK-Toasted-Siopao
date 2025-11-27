@@ -19,8 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference; 
-import com.fasterxml.jackson.databind.ObjectMapper; 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.CustomerCreateDto;
 import com.toastedsiopao.dto.CustomerPasswordDto;
 import com.toastedsiopao.dto.CustomerProfileDto;
@@ -29,12 +29,12 @@ import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.dto.PasswordResetDto;
 import com.toastedsiopao.model.CartItem;
 import com.toastedsiopao.model.Order;
-import com.toastedsiopao.model.Product; 
+import com.toastedsiopao.model.Product;
 import com.toastedsiopao.model.Role;
 import com.toastedsiopao.model.User;
-import com.toastedsiopao.repository.CartItemRepository; 
+import com.toastedsiopao.repository.CartItemRepository;
 import com.toastedsiopao.repository.OrderRepository;
-import com.toastedsiopao.repository.ProductRepository; 
+import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.repository.RoleRepository;
 import com.toastedsiopao.repository.UserRepository;
 
@@ -67,8 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private EmailService emailService;
-	
-	// --- ADDED ---
+
 	@Autowired
 	private ObjectMapper objectMapper;
 
@@ -77,7 +76,7 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Autowired
 	private CartItemRepository cartItemRepository;
-	
+
 	private static class CartItemDto {
 		public String name;
 		public double price;
@@ -90,7 +89,7 @@ public class CustomerServiceImpl implements CustomerService {
 			throw new IllegalArgumentException("Passwords do not match");
 		}
 	}
-	
+
 	@Override
 	public User saveCustomer(CustomerSignUpDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
@@ -122,26 +121,30 @@ public class CustomerServiceImpl implements CustomerService {
 		if (StringUtils.hasText(userDto.getCartDataJson())) {
 			log.info("Migrating guest cart for new user: {}", savedUser.getUsername());
 			try {
-				TypeReference<Map<Long, CartItemDto>> typeRef = new TypeReference<>() {};
+				TypeReference<Map<Long, CartItemDto>> typeRef = new TypeReference<>() {
+				};
 				Map<Long, CartItemDto> cart = objectMapper.readValue(userDto.getCartDataJson(), typeRef);
-				
+
 				if (!cart.isEmpty()) {
 					for (Map.Entry<Long, CartItemDto> entry : cart.entrySet()) {
 						Long productId = entry.getKey();
 						int quantity = entry.getValue().quantity;
-						
+
 						Optional<Product> productOpt = productRepository.findById(productId);
 						if (productOpt.isPresent() && quantity > 0) {
 							Product product = productOpt.get();
 							if ("ACTIVE".equals(product.getProductStatus()) && product.getCurrentStock() >= quantity) {
-								Optional<CartItem> existingItemOpt = cartItemRepository.findByUserAndProduct(savedUser, product);
+								Optional<CartItem> existingItemOpt = cartItemRepository.findByUserAndProduct(savedUser,
+										product);
 								if (existingItemOpt.isEmpty()) {
 									CartItem newCartItem = new CartItem(savedUser, product, quantity);
 									cartItemRepository.save(newCartItem);
-									log.info("Migrated product {} (Qty: {}) to new user {}'s cart.", product.getName(), quantity, savedUser.getUsername());
+									log.info("Migrated product {} (Qty: {}) to new user {}'s cart.", product.getName(),
+											quantity, savedUser.getUsername());
 								}
 							} else {
-								log.warn("Skipping migration for product ID {}: Not active or insufficient stock.", productId);
+								log.warn("Skipping migration for product ID {}: Not active or insufficient stock.",
+										productId);
 							}
 						}
 					}
@@ -150,8 +153,8 @@ public class CustomerServiceImpl implements CustomerService {
 				log.error("Failed to migrate guest cart for user {}: {}", savedUser.getUsername(), e.getMessage(), e);
 			}
 		}
-		
-		return savedUser; 
+
+		return savedUser;
 	}
 
 	@Override
@@ -246,6 +249,10 @@ public class CustomerServiceImpl implements CustomerService {
 		if (user.getRole() == null || !CUSTOMER_ROLE_NAME.equals(user.getRole().getName())) {
 			throw new RuntimeException("Cannot delete non-customer user with this method.");
 		}
+
+		// --- FIX: Clear cart before deleting user ---
+		cartItemRepository.deleteByUser(user);
+		// --- END FIX ---
 
 		userRepository.deleteById(id);
 	}
@@ -350,7 +357,7 @@ public class CustomerServiceImpl implements CustomerService {
 		String token = UUID.randomUUID().toString();
 
 		user.setResetPasswordToken(token);
-		user.setResetPasswordTokenExpiry(LocalDateTime.now(clock).plusHours(1)); 
+		user.setResetPasswordTokenExpiry(LocalDateTime.now(clock).plusHours(1));
 		userRepository.save(user);
 
 		String resetUrl = resetUrlBase + "/reset-password?token=" + token;

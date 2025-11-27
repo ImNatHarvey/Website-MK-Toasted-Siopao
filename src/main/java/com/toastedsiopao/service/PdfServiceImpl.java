@@ -168,8 +168,11 @@ public class PdfServiceImpl implements PdfService {
     public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+        
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-        try (Document document = new Document(PageSize.A4)) { 
+        try (Document document = new Document(PageSize.A4.rotate())) { // Changed to Landscape
             PdfWriter.getInstance(document, out);
             document.open();
 
@@ -209,9 +212,17 @@ public class PdfServiceImpl implements PdfService {
             
             document.add(summaryTable);
             
-            PdfPTable detailTable = new PdfPTable(8); 
+            // --- TABLE STRUCTURE UPDATE: Moved Total to end ---
+            PdfPTable detailTable = new PdfPTable(12); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 0.8f, 2.5f, 1.8f, 1f, 0.8f, 1.2f, 1.5f, 1f });
+            
+            // Adjusted widths to move Total to end
+            detailTable.setWidths(new float[] { 
+            	0.7f, 2.0f, 1.5f, 1.0f, 0.8f, // ID, Name, Cat, Stock, Unit
+            	1.0f, 1.0f,                   // Cost, Status
+            	1.0f, 1.2f, 1.2f, 0.8f,       // Received, Updated, ExpD, ExpDate 
+            	1.2f                          // Total (moved here)
+            });
 
             addTableHeader(detailTable, "ID");
             addTableHeader(detailTable, "Item Name");
@@ -219,8 +230,15 @@ public class PdfServiceImpl implements PdfService {
             addTableHeader(detailTable, "Stock");
             addTableHeader(detailTable, "Unit");
             addTableHeader(detailTable, "Cost/Unit");
-            addTableHeader(detailTable, "Total Value");
-            addTableHeader(detailTable, "Status");
+            addTableHeader(detailTable, "Status"); // Stock Status (moved up)
+            
+            // New Headers
+            addTableHeader(detailTable, "Received");
+            addTableHeader(detailTable, "Updated");
+            addTableHeader(detailTable, "Exp Day");
+            addTableHeader(detailTable, "Exp Date");
+            
+            addTableHeader(detailTable, "Total"); // Moved to end
             
             for (InventoryItem item : items) {
                 addTableCell(detailTable, item.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -229,12 +247,19 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, item.getCurrentStock().toString(), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
                 addTableCell(detailTable, item.getUnit().getAbbreviation(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 addTableCell(detailTable, formatCurrency(item.getCostPerUnit()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
-                addTableCell(detailTable, formatCurrency(item.getTotalCostValue()), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
                 addTableCell(detailTable, item.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
+                
+                addTableCell(detailTable, item.getReceivedDate() != null ? item.getReceivedDate().format(dateFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, item.getLastUpdated() != null ? item.getLastUpdated().format(dateTimeFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, String.valueOf(item.getExpirationDays()), FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, item.getExpirationDate() != null ? item.getExpirationDate().format(dateFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                
+                addTableCell(detailTable, formatCurrency(item.getTotalCostValue()), FONT_TABLE_CELL, Element.ALIGN_RIGHT); // Moved to end
             }
             
-            addTableFooterCell(detailTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 6);
-            addTableFooterCell(detailTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 2);
+            // Footer adjustment: Title spans 11 columns, Total is 12th
+            addTableFooterCell(detailTable, "Total Inventory Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 11);
+            addTableFooterCell(detailTable, formatCurrency(grandTotalValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
 
             document.add(detailTable);
 
@@ -250,6 +275,9 @@ public class PdfServiceImpl implements PdfService {
     public ByteArrayInputStream generateProductReportPdf(List<Product> products, String keyword, Long categoryId) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
         try (Document document = new Document(PageSize.A4.rotate())) {
             PdfWriter.getInstance(document, out);
@@ -275,24 +303,35 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
 
-            PdfPTable detailTable = new PdfPTable(8); 
+            PdfPTable detailTable = new PdfPTable(12); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 0.8f, 2f, 1.5f, 1f, 1f, 1f, 1.2f, 3.5f });
+            detailTable.setWidths(new float[] { 
+                0.6f, 1.8f, 1.2f, 0.9f, 0.8f, 
+                0.9f, 0.9f, 
+                1.1f, 1.3f, 0.7f, 1.1f, 
+                2.5f 
+            });
 
             addTableHeader(detailTable, "ID");
             addTableHeader(detailTable, "Product Name");
             addTableHeader(detailTable, "Category");
             addTableHeader(detailTable, "Price");
             addTableHeader(detailTable, "Stock");
-            addTableHeader(detailTable, "Prod. Status");
-            addTableHeader(detailTable, "Stock Status");
+            addTableHeader(detailTable, "Status");
+            addTableHeader(detailTable, "Stk Lvl");
+            
+            addTableHeader(detailTable, "Created");
+            addTableHeader(detailTable, "Updated");
+            addTableHeader(detailTable, "Exp Day");
+            addTableHeader(detailTable, "Exp Date");
+
             addTableHeader(detailTable, "Recipe Ingredients");
             
             for (Product product : products) {
                 String recipe = product.getIngredients().stream()
                         .map(ing -> ing.getQuantityNeeded() + " " +
                                 (ing.getInventoryItem().getUnit() != null ? ing.getInventoryItem().getUnit().getAbbreviation() : "units") +
-                                " of " + ing.getInventoryItem().getName())
+                                " " + ing.getInventoryItem().getName())
                         .collect(Collectors.joining("\n")); 
 
                 addTableCell(detailTable, product.getId().toString(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
@@ -302,6 +341,14 @@ public class PdfServiceImpl implements PdfService {
                 addTableCell(detailTable, product.getCurrentStock().toString(), FONT_TABLE_CELL, Element.ALIGN_RIGHT);
                 addTableCell(detailTable, product.getProductStatus(), FONT_TABLE_CELL, Element.ALIGN_CENTER);
                 addTableCell(detailTable, product.getStockStatus(), FONT_BOLD_CELL, Element.ALIGN_CENTER);
+                
+                // --- NEW COLUMNS DATA ---
+                addTableCell(detailTable, product.getCreatedDate() != null ? product.getCreatedDate().format(dateFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, product.getStockLastUpdated() != null ? product.getStockLastUpdated().format(dateTimeFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, String.valueOf(product.getExpirationDays()), FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                addTableCell(detailTable, product.getExpirationDate() != null ? product.getExpirationDate().format(dateFmt) : "N/A", FONT_TABLE_CELL, Element.ALIGN_CENTER);
+                // --- END NEW COLUMNS ---
+                
                 addTableCell(detailTable, recipe.isEmpty() ? "N/A" : recipe, FONT_TABLE_CELL, Element.ALIGN_LEFT);
             }
 

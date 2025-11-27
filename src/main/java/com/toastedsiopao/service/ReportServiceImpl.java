@@ -244,6 +244,14 @@ public class ReportServiceImpl implements ReportService {
             CellStyle numericStyle = workbook.createCellStyle();
             numericStyle.setDataFormat(workbook.createDataFormat().getFormat("0.00"));
 
+            // --- ADDED STYLES ---
+            CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
+            
+            CellStyle dateTimeStyle = workbook.createCellStyle();
+            dateTimeStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
+            // --- END ADDED ---
+
             Sheet sheet = workbook.createSheet("Inventory Report");
             AtomicInteger rowIdx = new AtomicInteger(0);
 
@@ -269,7 +277,13 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
 
-            String[] headers = { "Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Total Cost Value", "Item Status", "Stock Status" };
+            // --- UPDATED HEADERS ---
+            String[] headers = { 
+            		"Item ID", "Item Name", "Category", "Current Stock", "Unit", "Cost Per Unit", "Total Cost Value", "Item Status", "Stock Status",
+            		"Received Date", "Last Updated", "Exp. Days", "Expiration Date"
+            };
+            // --- END UPDATED HEADERS ---
+            
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -298,6 +312,34 @@ public class ReportServiceImpl implements ReportService {
                 
                 row.createCell(7).setCellValue(item.getItemStatus());
                 row.createCell(8).setCellValue(item.getStockStatus());
+
+                // --- NEW COLUMNS DATA ---
+                Cell recvCell = row.createCell(9);
+                if (item.getReceivedDate() != null) {
+                    recvCell.setCellValue(item.getReceivedDate());
+                    recvCell.setCellStyle(dateStyle);
+                } else {
+                    recvCell.setCellValue("N/A");
+                }
+
+                Cell updatedCell = row.createCell(10);
+                if (item.getLastUpdated() != null) {
+                    updatedCell.setCellValue(item.getLastUpdated());
+                    updatedCell.setCellStyle(dateTimeStyle);
+                } else {
+                    updatedCell.setCellValue("N/A");
+                }
+
+                row.createCell(11).setCellValue(item.getExpirationDays());
+
+                Cell expDateCell = row.createCell(12);
+                if (item.getExpirationDate() != null) {
+                    expDateCell.setCellValue(item.getExpirationDate());
+                    expDateCell.setCellStyle(dateStyle);
+                } else {
+                    expDateCell.setCellValue("N/A");
+                }
+                // --- END NEW COLUMNS ---
 
                 grandTotalValue = grandTotalValue.add(totalCostValue);
             }
@@ -332,6 +374,13 @@ public class ReportServiceImpl implements ReportService {
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle currencyStyle = createCurrencyStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
+            
+            // --- ADDED STYLES ---
+            CellStyle dateStyle = workbook.createCellStyle();
+            dateStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd"));
+            
+            CellStyle dateTimeStyle = workbook.createCellStyle();
+            dateTimeStyle.setDataFormat(workbook.createDataFormat().getFormat("yyyy-mm-dd hh:mm"));
 
             Sheet sheet = workbook.createSheet("Product Report");
             AtomicInteger rowIdx = new AtomicInteger(0);
@@ -357,7 +406,13 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
             
-            String[] headers = { "Product ID", "Product Name", "Category", "Price", "Current Stock", "Product Status", "Stock Status", "Recipe Ingredients" };
+            // --- UPDATED HEADERS ---
+            String[] headers = { 
+            		"Product ID", "Product Name", "Category", "Price", "Current Stock", "Product Status", "Stock Status", 
+            		"Created/Received", "Last Stock Update", "Exp. Days", "Exp. Date",
+            		"Recipe Ingredients" 
+            };
+            
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -382,7 +437,34 @@ public class ReportServiceImpl implements ReportService {
                 row.createCell(5).setCellValue(product.getProductStatus());
                 row.createCell(6).setCellValue(product.getStockStatus());
                 
-                Cell recipeCell = row.createCell(7);
+                // --- NEW COLUMNS DATA ---
+                Cell createdCell = row.createCell(7);
+                if(product.getCreatedDate() != null) {
+                    createdCell.setCellValue(product.getCreatedDate());
+                    createdCell.setCellStyle(dateStyle);
+                } else {
+                    createdCell.setCellValue("N/A");
+                }
+                
+                Cell updatedCell = row.createCell(8);
+                if(product.getStockLastUpdated() != null) {
+                    updatedCell.setCellValue(product.getStockLastUpdated());
+                    updatedCell.setCellStyle(dateTimeStyle);
+                } else {
+                    updatedCell.setCellValue("N/A");
+                }
+
+                row.createCell(9).setCellValue(product.getExpirationDays());
+
+                Cell expDateCell = row.createCell(10);
+                if(product.getExpirationDate() != null) {
+                    expDateCell.setCellValue(product.getExpirationDate());
+                    expDateCell.setCellStyle(dateStyle);
+                } else {
+                    expDateCell.setCellValue("N/A");
+                }
+                
+                Cell recipeCell = row.createCell(11);
                 recipeCell.setCellValue(recipe);
                 CellStyle wrapStyle = workbook.createCellStyle();
                 wrapStyle.setWrapText(true);

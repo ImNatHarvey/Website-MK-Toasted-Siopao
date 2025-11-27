@@ -82,180 +82,241 @@
 				</div>
 			</div>
 		</div>
-		<form th:action="@{/admin/inventory}" method="get"
-			class="mb-4 p-3 bg-light rounded shadow-sm">
-			<div class="d-flex flex-column flex-md-row gap-2">
-				<div class="flex-grow-1">
-					<label for="keyword" class="form-label">Search by Item Name</label>
-					<input type="text" class="form-control" id="keyword" name="keyword"
-						placeholder="Enter item name..." th:value="${keyword}">
-				</div>
-				<div class="flex-grow-1">
-					<label for="category" class="form-label">Filter by Category</label>
-					<select class="form-select" id="category" name="category">
-						<option value="">-- All Categories --</option>
-						<option th:each="cat : ${inventoryCategories}"
-							th:value="${cat.id}" th:text="${cat.name}"
-							th:selected="${selectedCategoryId != null && selectedCategoryId == cat.id}">
-							Category Name</option>
-					</select>
-				</div>
-				<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
-					<button type="submit" class="btn btn-action-view" title="Search">
-						<i class="fa-solid fa-search"></i> <span
-							class="d-none d-md-inline ms-1">Search</span>
-					</button>
-					<a th:href="@{/admin/inventory}" class="btn btn-custom-secondary"
-						title="Clear Filters"> <i class="fa-solid fa-times"></i> <span
-						class="d-none d-md-inline ms-1">Clear</span>
-					</a>
-					<div class="btn-group">
-						<button type="button"
-							class="btn btn-action-success dropdown-toggle"
-							data-bs-toggle="dropdown" aria-expanded="false">
-							<i class="fa-solid fa-download me-1"></i> Export
-						</button>
-						<ul class="dropdown-menu dropdown-menu-end">
-							<li><button class="dropdown-item" type="submit"
-									formaction="/admin/reports/inventory" formmethod="get">
-									<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
-								</button></li>
-							<li><button class="dropdown-item" type="submit"
-									formaction="/admin/reports/inventory/pdf" formmethod="get">
-									<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
-								</button></li>
-						</ul>
+		
+		<ul class="nav nav-tabs mb-3" id="inventoryTabs" role="tablist">
+			<li class="nav-item" role="presentation">
+				<button class="nav-link active" id="list-tab" data-bs-toggle="tab"
+					data-bs-target="#list-content" type="button" role="tab"
+					aria-controls="list-content" aria-selected="true">
+					<i class="fa-solid fa-list me-1"></i> Inventory List
+				</button>
+			</li>
+			<li class="nav-item" role="presentation">
+				<button class="nav-link text-danger" id="waste-tab" data-bs-toggle="tab"
+					data-bs-target="#waste-content" type="button" role="tab"
+					aria-controls="waste-content" aria-selected="false">
+					<i class="fa-solid fa-trash-can me-1"></i> Waste & Spoilage
+				</button>
+			</li>
+		</ul>
+
+		<div class="tab-content" id="inventoryTabsContent">
+			<div class="tab-pane fade show active" id="list-content" role="tabpanel" aria-labelledby="list-tab">
+				<form th:action="@{/admin/inventory}" method="get"
+					class="mb-4 p-3 bg-light rounded shadow-sm">
+					<div class="d-flex flex-column flex-md-row gap-2">
+						<div class="flex-grow-1">
+							<label for="keyword" class="form-label">Search by Item Name</label>
+							<input type="text" class="form-control" id="keyword" name="keyword"
+								placeholder="Enter item name..." th:value="${keyword}">
+						</div>
+						<div class="flex-grow-1">
+							<label for="category" class="form-label">Filter by Category</label>
+							<select class="form-select" id="category" name="category">
+								<option value="">-- All Categories --</option>
+								<option th:each="cat : ${inventoryCategories}"
+									th:value="${cat.id}" th:text="${cat.name}"
+									th:selected="${selectedCategoryId != null && selectedCategoryId == cat.id}">
+									Category Name</option>
+							</select>
+						</div>
+						<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
+							<button type="submit" class="btn btn-action-view" title="Search">
+								<i class="fa-solid fa-search"></i> <span
+									class="d-none d-md-inline ms-1">Search</span>
+							</button>
+							<a th:href="@{/admin/inventory}" class="btn btn-custom-secondary"
+								title="Clear Filters"> <i class="fa-solid fa-times"></i> <span
+								class="d-none d-md-inline ms-1">Clear</span>
+							</a>
+							<div class="btn-group">
+								<button type="button"
+									class="btn btn-action-success dropdown-toggle"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									<i class="fa-solid fa-download me-1"></i> Export
+								</button>
+								<ul class="dropdown-menu dropdown-menu-end">
+									<li><button class="dropdown-item" type="submit"
+											formaction="/admin/reports/inventory" formmethod="get">
+											<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
+										</button></li>
+									<li><button class="dropdown-item" type="submit"
+											formaction="/admin/reports/inventory/pdf" formmethod="get">
+											<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
+										</button></li>
+								</ul>
+							</div>
+						</div>
 					</div>
+				</form>
+
+				<div class="card shadow-sm mb-4">
+					<div class="card-header">
+						<h5 class="mb-0">Inventory Items</h5>
 					</div>
-			</div>
-		</form>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle text-center">
+								<thead class="table-light">
+									<tr>
+										<th>Item Name</th>
+										<th>Category</th>
+										<th>Current Stock</th>
+										<th>Unit</th>
+										<th>Cost/Unit</th>
+										<th>Status</th> 
+										<th>Stock Level</th> 
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="item : ${inventoryItems}">
+										<td th:text="${item.name}">Flour</td>
+										<td th:text="${item.category.name}">Dry Ingredients</td>
+										<td
+											th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">25.00</td>
+										<td th:text="${item.unit.abbreviation}">kg</td>
+										<td
+											th:text="'₱' + ${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}">₱50.00</td>
+										
+										<td>
+											<span class="status-badge"
+												th:text="${item.itemStatus != null ? item.itemStatus : 'UNKNOWN'}"
+												th:classappend="${item.itemStatus == 'ACTIVE' ? 'status-active' : (item.itemStatus == 'INACTIVE' ? 'status-cancelled' : 'status-low')}">
+											</span>
+										</td>
+										<td><span class="status-badge"
+											th:text="${#strings.replace(item.stockStatus, '_', ' ')}"
+											th:classappend="'status-' + ${#strings.toLowerCase(item.stockStatus)}">
+												Status </span></td>
+										<td class="d-flex justify-content-center gap-2">
+											<button class="btn btn-sm btn-action-view view-item-btn"
+												data-bs-toggle="modal" data-bs-target="#viewItemModal"
+												th:data-name="${item.name}"
+												th:data-category-name="${item.category.name}"
+												th:data-unit-name="${item.unit.name + ' (' + item.unit.abbreviation + ')'}"
+												th:data-current-stock="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}"
+												th:data-cost-per-unit="${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}"
+												th:data-total-cost-value="${#numbers.formatDecimal(item.getTotalCostValue(), 1, 'COMMA', 2, 'POINT')}"
+												th:data-low-threshold="${#numbers.formatDecimal(item.lowStockThreshold, 1, 'COMMA', 2, 'POINT')}"
+												th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 'COMMA', 2, 'POINT')}"
+												th:data-stock-status="${#strings.replace(item.stockStatus, '_', ' ')}"
+												th:data-stock-status-class="'status-' + ${#strings.toLowerCase(item.stockStatus)}"
+												th:data-last-updated="${item.lastUpdated != null ? #temporals.format(item.lastUpdated, 'MMM dd, yyyy HH:mm') : 'N/A'}"
+												th:data-item-status="${item.itemStatus}"
+												th:data-received-date="${item.receivedDate}"
+												th:data-expiration-days="${item.expirationDays}">
+												View</button>
+											<button sec:authorize="hasAuthority('EDIT_INVENTORY_ITEMS')"
+												class="btn btn-sm btn-action-edit edit-item-btn"
+												data-bs-toggle="modal" data-bs-target="#addItemModal"
+												th:data-id="${item.id}" th:data-name="${item.name}"
+												th:data-category-id="${item.category.id}"
+												th:data-unit-id="${item.unit.id}"
+												th:data-item-status="${item.itemStatus}"
+												th:data-current-stock="${#numbers.formatDecimal(item.currentStock, 1, 2)}"
+												th:data-low-threshold="${#numbers.formatDecimal(item.lowStockThreshold, 1, 2)}"
+												th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 2)}"
+												th:data-cost="${item.costPerUnit != null ? #numbers.formatDecimal(item.costPerUnit, 1, 2) : ''}"
+												th:data-received-date="${item.receivedDate}"
+												th:data-expiration-days="${item.expirationDays}">
+												Edit</button>
+												
+											<form 
+												sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
+												th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
+												method="post"
+												th:data-secure-delete-message="'Are you sure you want to delete the inventory item \'' + ${item.name} + '\'? This is permanent if it has no recipe usage, otherwise it will be deactivated.'">
+												
+												<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+												
+												<button type="submit" class="btn btn-sm btn-action-delete"
+													th:disabled="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
+													th:title="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'Cannot delete: Item has stock.' : 'Delete Item'}">
+													Delete</button>
+											</form>
+											
+											</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(inventoryItems)}">
+										<td colspan="8" class="text-center text-muted"
+											th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No inventory items added yet.'}">
+											No inventory items added yet.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<div th:if="${inventoryPage.totalPages > 0}"
+							class="d-flex justify-content-center mt-3">
 
-		<div class="card shadow-sm mb-4">
-			<div class="card-header">
-				<h5 class="mb-0">Inventory Items</h5>
-			</div>
-			<div class="card-body">
-				<div class="table-responsive">
-					<table class="table table-hover align-middle text-center">
-						<thead class="table-light">
-							<tr>
-								<th>Item Name</th>
-								<th>Category</th>
-								<th>Current Stock</th>
-								<th>Unit</th>
-								<th>Cost Per Unit</th>
-								<th>Item Status</th> 
-								<th>Stock Status</th> 
-								<th>Actions</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr th:each="item : ${inventoryItems}">
-								<td th:text="${item.name}">Flour</td>
-								<td th:text="${item.category.name}">Dry Ingredients</td>
-								<td
-									th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">25.00</td>
-								<td th:text="${item.unit.abbreviation}">kg</td>
-								<td
-									th:text="'₱' + ${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}">₱50.00</td>
-								
-								<td>
-									<span class="status-badge"
-										th:text="${item.itemStatus != null ? item.itemStatus : 'UNKNOWN'}"
-										th:classappend="${item.itemStatus == 'ACTIVE' ? 'status-active' : (item.itemStatus == 'INACTIVE' ? 'status-cancelled' : 'status-low')}">
-									</span>
-								</td>
-								<td><span class="status-badge"
-									th:text="${#strings.replace(item.stockStatus, '_', ' ')}"
-									th:classappend="'status-' + ${#strings.toLowerCase(item.stockStatus)}">
-										Status </span></td>
-								<td class="d-flex justify-content-center gap-2">
-									<button class="btn btn-sm btn-action-view view-item-btn"
-										data-bs-toggle="modal" data-bs-target="#viewItemModal"
-										th:data-name="${item.name}"
-										th:data-category-name="${item.category.name}"
-										th:data-unit-name="${item.unit.name + ' (' + item.unit.abbreviation + ')'}"
-										th:data-current-stock="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}"
-										th:data-cost-per-unit="${#numbers.formatDecimal(item.costPerUnit, 1, 'COMMA', 2, 'POINT')}"
-										th:data-total-cost-value="${#numbers.formatDecimal(item.getTotalCostValue(), 1, 'COMMA', 2, 'POINT')}"
-										th:data-low-threshold="${#numbers.formatDecimal(item.lowStockThreshold, 1, 'COMMA', 2, 'POINT')}"
-										th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 'COMMA', 2, 'POINT')}"
-										th:data-stock-status="${#strings.replace(item.stockStatus, '_', ' ')}"
-										th:data-stock-status-class="'status-' + ${#strings.toLowerCase(item.stockStatus)}"
-										th:data-last-updated="${item.lastUpdated != null ? #temporals.format(item.lastUpdated, 'MMM dd, yyyy HH:mm') : 'N/A'}"
-										th:data-item-status="${item.itemStatus}">
-										View</button>
-									<button sec:authorize="hasAuthority('EDIT_INVENTORY_ITEMS')"
-										class="btn btn-sm btn-action-edit edit-item-btn"
-										data-bs-toggle="modal" data-bs-target="#addItemModal"
-										th:data-id="${item.id}" th:data-name="${item.name}"
-										th:data-category-id="${item.category.id}"
-										th:data-unit-id="${item.unit.id}"
-										th:data-item-status="${item.itemStatus}"
-										th:data-current-stock="${#numbers.formatDecimal(item.currentStock, 1, 2)}"
-										th:data-low-threshold="${#numbers.formatDecimal(item.lowStockThreshold, 1, 2)}"
-										th:data-critical-threshold="${#numbers.formatDecimal(item.criticalStockThreshold, 1, 2)}"
-										th:data-cost="${item.costPerUnit != null ? #numbers.formatDecimal(item.costPerUnit, 1, 2) : ''}">
-										Edit</button>
-										
-									<form 
-										sec:authorize="hasAuthority('DELETE_INVENTORY_ITEMS')"
-										th:action="@{/admin/inventory/delete/{id}(id=${item.id})}"
-										method="post"
-										th:data-secure-delete-message="'Are you sure you want to delete the inventory item \'' + ${item.name} + '\'? This is permanent if it has no recipe usage, otherwise it will be deactivated.'">
-										
-										<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-										
-										<button type="submit" class="btn btn-sm btn-action-delete"
-											th:disabled="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0}"
-											th:title="${item.currentStock.compareTo(T(java.math.BigDecimal).ZERO) > 0 ? 'Cannot delete: Item has stock.' : 'Delete Item'}">
-											Delete</button>
-									</form>
-									
-									</td>
-							</tr>
-							<tr th:if="${#lists.isEmpty(inventoryItems)}">
-								<td colspan="8" class="text-center text-muted"
-									th:text="${(keyword != null or selectedCategoryId != null) ? 'No items found matching your criteria.' : 'No inventory items added yet.'}">
-									No inventory items added yet.</td>
-							</tr>
-						</tbody>
-					</table>
+							<nav aria-label="Inventory Pagination">
+								<ul class="pagination pagination-sm mb-0">
+									<li class="page-item"
+										th:classappend="${inventoryPage.first} ? 'disabled'"><a
+										class="page-link"
+										th:href="@{/admin/inventory(page=${inventoryPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
+									</li>
+
+									<th:block
+										th:each="i : ${#numbers.sequence(0, inventoryPage.totalPages - 1)}"
+										th:if="${inventoryPage.totalPages <= 7 || i == 0 || i == inventoryPage.totalPages - 1 || (i >= inventoryPage.number - 2 && i <= inventoryPage.number + 2)}">
+
+										<li class="page-item disabled"
+											th:if="${inventoryPage.totalPages > 7 && (i == 0 && inventoryPage.number > 3 || i == inventoryPage.totalPages - 1 && inventoryPage.number < inventoryPage.totalPages - 4)}">
+											<span class="page-link">...</span>
+										</li>
+
+										<li class="page-item"
+											th:classappend="${i == inventoryPage.number} ? 'active'"><a
+											class="page-link"
+											th:href="@{/admin/inventory(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
+											th:text="${i + 1}"></a></li>
+									</th:block>
+
+									<li class="page-item"
+										th:classappend="${inventoryPage.last} ? 'disabled'"><a
+										class="page-link"
+										th:href="@{/admin/inventory(page=${inventoryPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
+					</div>
 				</div>
-				<div th:if="${inventoryPage.totalPages > 0}"
-					class="d-flex justify-content-center mt-3">
-
-					<nav aria-label="Inventory Pagination">
-						<ul class="pagination pagination-sm mb-0">
-							<li class="page-item"
-								th:classappend="${inventoryPage.first} ? 'disabled'"><a
-								class="page-link"
-								th:href="@{/admin/inventory(page=${inventoryPage.number - 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Previous</a>
-							</li>
-
-							<th:block
-								th:each="i : ${#numbers.sequence(0, inventoryPage.totalPages - 1)}"
-								th:if="${inventoryPage.totalPages <= 7 || i == 0 || i == inventoryPage.totalPages - 1 || (i >= inventoryPage.number - 2 && i <= inventoryPage.number + 2)}">
-
-								<li class="page-item disabled"
-									th:if="${inventoryPage.totalPages > 7 && (i == 0 && inventoryPage.number > 3 || i == inventoryPage.totalPages - 1 && inventoryPage.number < inventoryPage.totalPages - 4)}">
-									<span class="page-link">...</span>
-								</li>
-
-								<li class="page-item"
-									th:classappend="${i == inventoryPage.number} ? 'active'"><a
-									class="page-link"
-									th:href="@{/admin/inventory(page=${i}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}"
-									th:text="${i + 1}"></a></li>
-							</th:block>
-
-							<li class="page-item"
-								th:classappend="${inventoryPage.last} ? 'disabled'"><a
-								class="page-link"
-								th:href="@{/admin/inventory(page=${inventoryPage.number + 1}, size=${size}, keyword=${keyword}, category=${selectedCategoryId})}">Next</a>
-							</li>
-						</ul>
-					</nav>
+			</div>
+			
+			<div class="tab-pane fade" id="waste-content" role="tabpanel" aria-labelledby="waste-tab">
+				<div class="card shadow-sm">
+					<div class="card-header bg-danger text-white">
+						<h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i> Waste, Spoilage & Expiry Log</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle">
+								<thead class="table-light">
+									<tr>
+										<th>Date</th>
+										<th>User</th>
+										<th>Reason</th>
+										<th>Details</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="log : ${wasteLogs}">
+										<td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}">Date</td>
+										<td th:text="${log.username}">User</td>
+										<td>
+											<span class="badge bg-danger" th:text="${#strings.replace(log.action, 'STOCK_WASTE_', '')}">REASON</span>
+										</td>
+										<td th:text="${log.details}">Details</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(wasteLogs)}">
+										<td colspan="4" class="text-center text-muted">No waste records found.</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -269,6 +330,68 @@
 	</div>
 	<th:block th:fragment="script">
 		<script th:src="@{/js/admin-inventory.js}"></script>
+		
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				const manageStockModal = document.getElementById('manageStockModal');
+				if (manageStockModal) {
+					// When reason changes, toggle the Add button state
+					manageStockModal.addEventListener('change', function(e) {
+						if (e.target && e.target.name === 'reasonCategory') {
+							const reason = e.target.value;
+							const row = e.target.closest('tr'); 
+							const addBtn = row.querySelector('button[value="add"]');
+							const deductBtn = row.querySelector('button[value="deduct"]');
+							
+							// Reset first
+							addBtn.disabled = false;
+							addBtn.classList.remove('disabled');
+							addBtn.title = "";
+							deductBtn.disabled = false;
+							deductBtn.classList.remove('disabled');
+							deductBtn.title = "";
+							
+							if (reason === 'Restock') {
+								// Restock = Add only. Disable Deduct.
+								deductBtn.disabled = true;
+								deductBtn.classList.add('disabled');
+								deductBtn.title = "Restock implies adding stock. Use 'Manual' if you need to deduct.";
+							} else if (['Production', 'Expired', 'Damaged', 'Waste'].includes(reason)) {
+								// Production/Waste = Deduct only. Disable Add.
+								addBtn.disabled = true;
+								addBtn.classList.add('disabled');
+								addBtn.title = "This reason implies removing stock.";
+							}
+						}
+					});
+				}
+				
+				// Updated Edit Modal Population logic for Date fields
+				const addItemModal = document.getElementById('addItemModal');
+				if (addItemModal) {
+					addItemModal.addEventListener('show.bs.modal', function(event) {
+						const button = event.relatedTarget;
+						// Only if it's an Edit button
+						if (button && button.classList.contains('edit-item-btn')) {
+							const rDate = button.dataset.receivedDate;
+							const eDays = button.dataset.expirationDays;
+							
+							const rInput = addItemModal.querySelector('input[name="receivedDate"]');
+							const eInput = addItemModal.querySelector('input[name="expirationDays"]');
+							
+							if(rInput && rDate) rInput.value = rDate;
+							if(eInput && eDays) eInput.value = eDays;
+						} else if (button) {
+							// For Add, set default received date to today
+							const rInput = addItemModal.querySelector('input[name="receivedDate"]');
+							if (rInput) {
+								rInput.value = new Date().toISOString().split('T')[0];
+							}
+						}
+					});
+				}
+			});
+		</script>
 	</th:block>
 
 </body>

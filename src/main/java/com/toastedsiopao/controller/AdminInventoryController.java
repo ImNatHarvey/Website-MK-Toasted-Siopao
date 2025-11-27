@@ -3,6 +3,7 @@ package com.toastedsiopao.controller;
 import com.toastedsiopao.dto.InventoryCategoryDto;
 import com.toastedsiopao.dto.InventoryItemDto;
 import com.toastedsiopao.dto.UnitOfMeasureDto;
+import com.toastedsiopao.model.ActivityLogEntry;
 import com.toastedsiopao.model.InventoryCategory;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.UnitOfMeasure;
@@ -34,7 +35,6 @@ import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin/inventory")
@@ -81,6 +81,12 @@ public class AdminInventoryController {
 				BigDecimal::add);
 		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
+
+		// --- UPDATED: Efficiently fetch Waste Logs ---
+		// Fetching the top 20 most recent waste logs for the tab view
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.getWasteLogs(PageRequest.of(0, 20));
+		model.addAttribute("wasteLogs", wasteLogPage.getContent());
+		// ---------------------------------------------
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);
 		model.addAttribute("lowStockCount", lowStockItems.size());
@@ -156,15 +162,9 @@ public class AdminInventoryController {
 			String errorMessage = e.getMessage();
 			String toastMessage = null;
 
-			// --- MODIFIED: Handle specific status error messages and bind to itemStatus field ---
 			if (errorMessage.startsWith("status.hasStock:") || errorMessage.startsWith("status.inRecipe:")) {
-				// The full message includes "• " for the modal display
 				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
-				
-				// Add FieldError for modal display
 				result.addError(new FieldError("inventoryItemDto", "itemStatus", itemDto.getItemStatus(), false, null, null, fieldSpecificError));
-				
-				// Toast message should NOT have the bullet
 				toastMessage = fieldSpecificError.replaceFirst("• ", "");
 			} else if (errorMessage.contains("already exists")) {
 				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
@@ -177,7 +177,6 @@ public class AdminInventoryController {
 				result.reject("global", errorMessage);
 				toastMessage = "Error saving item: " + errorMessage;
 			}
-			// --- END MODIFIED ---
 			
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 
@@ -201,9 +200,13 @@ public class AdminInventoryController {
 
 	@PostMapping("/stock/adjust")
 	@PreAuthorize("hasAuthority('ADJUST_INVENTORY_STOCK')")
-	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
-			@RequestParam("quantity") BigDecimal quantity, @RequestParam("action") String action,
-			@RequestParam(value = "reason", required = false) String reason, RedirectAttributes redirectAttributes,
+	public String adjustInventoryStock(
+			@RequestParam("inventoryItemId") Long itemId,
+			@RequestParam("quantity") BigDecimal quantity, 
+			@RequestParam("action") String action,
+			@RequestParam("reasonCategory") String reasonCategory, 
+			@RequestParam(value = "reasonNote", required = false) String reasonNote, 
+			RedirectAttributes redirectAttributes,
 			Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
@@ -213,19 +216,38 @@ public class AdminInventoryController {
 			return "redirect:" + redirectUrl;
 		}
 
-		BigDecimal quantityChange = action.equals("deduct") ? quantity.negate() : quantity;
+		// Determine direction based on Action OR Reason
+		// If reason is Expired/Damaged/Waste, force it to be a deduction
+		boolean isWaste = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
+		
+		BigDecimal quantityChange;
+		if (action.equals("deduct") || isWaste) {
+			quantityChange = quantity.negate();
+		} else {
+			quantityChange = quantity;
+		}
 
-		String finalReason = StringUtils.hasText(reason) ? reason
-				: (action.equals("add") ? "Manual Stock Increase" : "Manual Stock Decrease/Wastage");
+		// Construct formatted reason
+		String finalReason = reasonCategory;
+		if (StringUtils.hasText(reasonNote)) {
+			finalReason += ": " + reasonNote;
+		}
 
 		try {
 			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason);
-			String actionText = action.equals("add") ? "Increased" : "Decreased";
-			String details = actionText + " stock for " + updatedItem.getName() + " (ID: " + itemId + ") by "
-					+ quantity.abs() + ". Reason: " + finalReason;
+			
+			String actionText = (quantityChange.compareTo(BigDecimal.ZERO) > 0) ? "Increased" : "Deducted";
+			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of " + updatedItem.getName() + 
+							 " (ID: " + itemId + "). Reason: " + finalReason;
+			
+			// Use specific log action prefix for waste so we can filter easily in the Waste Tab
+			String logAction = isWaste ? "STOCK_WASTE_" + reasonCategory.toUpperCase() : "ADJUST_INVENTORY_STOCK";
+			
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
-			activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
+			
+			activityLogService.logAdminAction(principal.getName(), logAction, details);
+			
 		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
@@ -275,10 +297,8 @@ public class AdminInventoryController {
 		} catch (IllegalArgumentException e) {
 			log.warn("Failed to delete inventory item {}: {}", id, e.getMessage());
 			
-			// --- MODIFIED: Strip bullet for toast display ---
 			String toastMessage = e.getMessage().replaceFirst("• ", "");
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
-			// --- END MODIFIED ---
 
 		} catch (DataIntegrityViolationException e) {
 			log.warn("Data integrity violation on delete for inventory item {}: {}", id, e.getMessage());

@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,14 +38,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	private RecipeIngredientRepository recipeIngredientRepository;
 
 	private void validateThresholds(BigDecimal lowThreshold, BigDecimal criticalThreshold) {
-
 		if (lowThreshold == null || lowThreshold.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalArgumentException("Low stock threshold must be greater than 0.");
 		}
 		if (criticalThreshold == null || criticalThreshold.compareTo(BigDecimal.ZERO) <= 0) {
 			throw new IllegalArgumentException("Critical stock threshold must be greater than 0.");
 		}
-
 		if (criticalThreshold.compareTo(lowThreshold) > 0) {
 			throw new IllegalArgumentException("Critical stock threshold cannot be greater than low stock threshold.");
 		}
@@ -92,7 +91,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem save(InventoryItemDto itemDto) {
-		
 		if (itemDto == null) {
 			throw new IllegalArgumentException("Inventory item data cannot be null.");
 		}
@@ -138,12 +136,21 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setName(itemDto.getName().trim());
 		item.setCategory(category);
 		item.setUnit(unit);
-
 		item.setItemStatus(Optional.ofNullable(itemDto.getItemStatus()).orElse("ACTIVE"));
-
 		item.setLowStockThreshold(itemDto.getLowStockThreshold());
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
 		item.setCostPerUnit(itemDto.getCostPerUnit());
+		
+		// --- DATE FIELDS ---
+		// If receivedDate is null, entity @PrePersist/@PreUpdate handles default (now) for new items
+		// or keeps existing for old. If explicit value is passed, use it.
+		if (itemDto.getReceivedDate() != null) {
+			item.setReceivedDate(itemDto.getReceivedDate());
+		} else if (isNew) {
+			item.setReceivedDate(LocalDate.now());
+		}
+		
+		item.setExpirationDate(itemDto.getExpirationDate()); // Can be null (never expires)
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
@@ -152,7 +159,6 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 			return savedItem;
 		} catch (Exception e) {
 			log.error("Database error saving inventory item '{}': {}", itemDto.getName(), e.getMessage(), e);
-
 			throw new RuntimeException("Could not save inventory item due to a database error.", e);
 		}
 	}
@@ -246,7 +252,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 	@Override
 	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
-		InventoryItem item = itemRepository.findByIdForUpdate(itemId) // Use locking find
+		InventoryItem item = itemRepository.findByIdForUpdate(itemId)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
 
 		if (!"ACTIVE".equals(item.getItemStatus())) {

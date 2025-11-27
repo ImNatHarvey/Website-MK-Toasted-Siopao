@@ -10,8 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional; 
 
-import java.util.List;
-
 @Service
 public class ActivityLogServiceImpl implements ActivityLogService {
 
@@ -45,7 +43,12 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
 	@Override
 	public Page<ActivityLogEntry> getAllLogs(Pageable pageable) {
-		
 		return activityLogRepository.findAllByOrderByTimestampDesc(pageable);
+	}
+
+	@Override
+	public Page<ActivityLogEntry> getWasteLogs(Pageable pageable) {
+		// Fetch logs starting with "STOCK_WASTE_" to identify damaged/expired items
+		return activityLogRepository.findByActionStartingWithOrderByTimestampDesc("STOCK_WASTE_", pageable);
 	}
 }

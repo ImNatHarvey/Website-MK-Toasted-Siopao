@@ -81,7 +81,25 @@
 									</select>
 									<div class="invalid-feedback" th:if="${#fields.hasErrors('itemStatus')}" th:errors="*{itemStatus}">Status Error</div>
 								</div>
-								
+							</div>
+							
+							<div class="row">
+								<div class="col-md-6 mb-3">
+									<label for="itemReceivedDate" class="form-label">Received/Created Date</label>
+									<input type="date" class="form-control" th:field="*{receivedDate}" id="itemReceivedDate"
+										th:classappend="${#fields.hasErrors('receivedDate')} ? 'is-invalid' : ''">
+									<div class="form-text">Defaults to today if left blank.</div>
+								</div>
+								<div class="col-md-6 mb-3">
+									<label for="itemExpirationDays" class="form-label">Expiration (Days)</label>
+									<div class="input-group" th:classappend="${#fields.hasErrors('expirationDays')} ? 'is-invalid' : ''">
+										<input type="number" class="form-control" th:field="*{expirationDays}" id="itemExpirationDays" min="0" placeholder="0"
+											th:classappend="${#fields.hasErrors('expirationDays')} ? 'is-invalid' : ''">
+										<span class="input-group-text">days</span>
+									</div>
+									<div class="form-text">0 = No expiration.</div>
+									<div class="invalid-feedback" th:if="${#fields.hasErrors('expirationDays')}" th:errors="*{expirationDays}">Error</div>
+								</div>
 							</div>
 
 							<hr>
@@ -124,9 +142,6 @@
 										th:errors="*{criticalStockThreshold}">Critical Threshold
 										Error</div>
 								</div>
-
-								<div class="col-12">
-								</div>
 							</div>
 
 							<div id="itemStockInfoContainer" style="display: none;"
@@ -154,7 +169,7 @@
 		
 		<div class="modal fade" id="manageStockModal" tabindex="-1"
 			aria-labelledby="manageStockModalLabel" aria-hidden="true">
-			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+			<div class="modal-dialog modal-xl modal-dialog-scrollable"> 
 				<div class="modal-content">
 					<div class="modal-header">
 						<h5 class="modal-title" id="manageStockModalLabel">Manage
@@ -171,9 +186,7 @@
 							<button type="button" class="btn-close" data-bs-dismiss="alert"
 								aria-label="Close"></button>
 						</div>
-						<p class="small text-muted">Adjust stock levels manually
-							(e.g., for receiving new stock, spoilage, corrections). Enter a
-							positive number and click "Add" or "Deduct".</p>
+						<p class="small text-muted">Adjust stock levels manually. Select a reason to categorize the adjustment.</p>
 						<div class="table-responsive">
 							<table class="table table-sm align-middle">
 								<thead>
@@ -181,8 +194,10 @@
 										<th>Item Name</th>
 										<th>Current Stock</th>
 										<th>Unit</th>
-										<th>Quantity</th>
-										<th>Actions</th>
+										<th style="width: 120px;">Quantity</th>
+										<th style="width: 150px;">Reason</th>
+										<th>Note</th>
+										<th style="width: 140px;">Actions</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -191,31 +206,45 @@
 											method="post" class="stock-adjust-form">
 											
 											<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-											
-											<input type="hidden" name="inventoryItemId"
-												th:value="${item.id}" />
+											<input type="hidden" name="inventoryItemId" th:value="${item.id}" />
 
 											<td th:text="${item.name}">Item Name</td>
-											<td
-												th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">0.00</td>
+											<td th:text="${#numbers.formatDecimal(item.currentStock, 1, 'COMMA', 2, 'POINT')}">0.00</td>
 											<td th:text="${item.unit.abbreviation}">unit</td>
 
-											<td><input type="number" step="0.01" min="0.01"
-												name="quantity" class="form-control form-control-sm"
-												style="width: 100px;" placeholder="Qty" required /></td>
+											<td>
+												<input type="number" step="0.01" min="0.01"
+													name="quantity" class="form-control form-control-sm"
+													placeholder="Qty" required />
+											</td>
+											
+											<td>
+												<select name="reasonCategory" class="form-select form-select-sm" required>
+													<option value="Manual">Manual Adjust</option>
+													<option value="Production">Production</option>
+													<option value="Restock">Restock</option>
+													<option value="Expired" class="text-danger">Expired</option>
+													<option value="Damaged" class="text-danger">Damaged</option>
+													<option value="Waste" class="text-danger">Waste/Spoilage</option>
+												</select>
+											</td>
+											
+											<td>
+												<input type="text" name="reasonNote" class="form-control form-control-sm" placeholder="Optional details...">
+											</td>
 
 											<td>
 												<div class="d-flex gap-1">
 													<button type="submit" name="action" value="add"
-														class="btn btn-sm btn-action-success">Add</button>
+														class="btn btn-sm btn-action-success w-50">Add</button>
 													<button type="submit" name="action" value="deduct"
-														class="btn btn-sm btn-action-delete">Deduct</button>
+														class="btn btn-sm btn-action-delete w-50">Deduct</button>
 												</div>
 											</td>
 										</form>
 									</tr>
 									<tr th:if="${#lists.isEmpty(allInventoryItems)}">
-										<td colspan="5" class="text-center text-muted">No
+										<td colspan="7" class="text-center text-muted">No
 											inventory items found. Add items first.</td>
 									</tr>
 								</tbody>

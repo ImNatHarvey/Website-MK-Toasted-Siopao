@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -46,4 +47,8 @@ public class InventoryItemDto {
 	@NotBlank(message = "• Status must be selected")
 	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
 	private String itemStatus;
+	
+	// --- NEW FIELDS ---
+	private LocalDate receivedDate; // Defaults to today in entity if null
+	private LocalDate expirationDate; // Null or future date
 }

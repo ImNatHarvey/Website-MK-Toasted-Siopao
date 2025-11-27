@@ -322,10 +322,6 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateInventoryReportPdf(items, keyword, categoryId);
     }
 
-    private List<Product> getFilteredProducts(String keyword, Long categoryId) {
-        return productService.findAllForReport(keyword, categoryId);
-    }
-
     @Override
     public ByteArrayInputStream generateProductReport(String keyword, Long categoryId) throws IOException {
         List<Product> products = getFilteredProducts(keyword, categoryId);
@@ -400,11 +396,88 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
+    private List<Product> getFilteredProducts(String keyword, Long categoryId) {
+        return productService.findAllForReport(keyword, categoryId);
+    }
+
     @Override
     public ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException {
         List<Product> products = getFilteredProducts(keyword, categoryId);
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
+    
+    // --- ADDED: Waste Report Excel ---
+    @Override
+    public ByteArrayInputStream generateWasteReport(String keyword) throws IOException {
+        // We use an unpaged request to get all filtered data for the report
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, null, Pageable.unpaged());
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
+            
+            CellStyle headerStyle = createHeaderStyle(workbook);
+            CellStyle boldStyle = createBoldStyle(workbook);
+            CellStyle dateTimeStyle = workbook.createCellStyle();
+            DataFormat format = workbook.createDataFormat();
+            // Using a standard date/time format for Excel
+            dateTimeStyle.setDataFormat(format.getFormat("yyyy-mm-dd hh:mm:ss"));
+
+
+            Sheet sheet = workbook.createSheet("Waste & Spoilage Log");
+            AtomicInteger rowIdx = new AtomicInteger(0);
+
+            Row titleRow = sheet.createRow(rowIdx.getAndIncrement());
+            Cell titleCell = titleRow.createCell(0);
+            titleCell.setCellValue(settings.getWebsiteName() + " - Waste & Spoilage Log");
+            titleCell.setCellStyle(headerStyle);
+
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Item Keyword='" + keyword + "'";
+            } else {
+                filterDesc += "None (All Records)";
+            }
+            Row dateRow = sheet.createRow(rowIdx.getAndIncrement());
+            dateRow.createCell(0).setCellValue(filterDesc);
+            dateRow.getCell(0).setCellStyle(boldStyle);
+
+            rowIdx.getAndIncrement(); 
+            
+            String[] headers = { "Timestamp", "Admin User", "Action Category", "Details" };
+            Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+
+            for (ActivityLogEntry logEntry : wasteLogs.getContent()) {
+                Row row = sheet.createRow(rowIdx.getAndIncrement());
+
+                Cell timestampCell = row.createCell(0);
+                timestampCell.setCellValue(logEntry.getTimestamp());
+                timestampCell.setCellStyle(dateTimeStyle);
+
+                row.createCell(1).setCellValue(logEntry.getUsername());
+                // Remove the prefix for a cleaner report
+                row.createCell(2).setCellValue(logEntry.getAction().replace("STOCK_WASTE_", ""));
+                row.createCell(3).setCellValue(logEntry.getDetails());
+            }
+            
+            autoSizeColumns(sheet, headers.length);
+
+            workbook.write(out);
+            return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+    
+    // --- ADDED: Waste Report PDF ---
+    @Override
+    public ByteArrayInputStream generateWasteReportPdf(String keyword) throws IOException {
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, null, Pageable.unpaged());
+        return pdfService.generateWasteLogPdf(wasteLogs, keyword);
+    }
+    // --- END ADDED ---
 
     // --- MODIFIED METHOD SIGNATURE AND BODY ---
     @Override

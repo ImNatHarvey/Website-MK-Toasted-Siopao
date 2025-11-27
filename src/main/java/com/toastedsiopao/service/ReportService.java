@@ -20,6 +20,12 @@ public interface ReportService {
 
     ByteArrayInputStream generateProductReportPdf(String keyword, Long categoryId) throws IOException;
 
+    // --- ADDED ---
+    ByteArrayInputStream generateWasteReport(String keyword) throws IOException;
+    
+    ByteArrayInputStream generateWasteReportPdf(String keyword) throws IOException;
+    // --- END ADDED ---
+
     // --- MODIFIED: Renamed and added documentType parameter ---
     ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException;
 

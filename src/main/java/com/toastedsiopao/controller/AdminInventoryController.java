@@ -66,10 +66,16 @@ public class AdminInventoryController {
 
 	@GetMapping
 	@PreAuthorize("hasAuthority('VIEW_INVENTORY')")
-	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
+	public String manageInventory(Model model, 
+			@RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "size", defaultValue = "10") int size) {
+			@RequestParam(value = "size", defaultValue = "10") int size,
+			// --- ADDED ---
+			@RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
+			@RequestParam(value = "wasteCategory", required = false) Long wasteCategoryId,
+			@RequestParam(value = "wastePage", defaultValue = "0") int wastePage) {
+			// --- END ADDED ---
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<InventoryItem> inventoryPage = inventoryItemService.searchItems(keyword, categoryId, pageable);
@@ -82,10 +88,14 @@ public class AdminInventoryController {
 		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
 		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
 
-		// --- UPDATED: Efficiently fetch Waste Logs ---
-		// Fetching the top 20 most recent waste logs for the tab view
-		Page<ActivityLogEntry> wasteLogPage = activityLogService.getWasteLogs(PageRequest.of(0, 20));
+		// --- MODIFIED: Waste Log Fetching ---
+		Pageable wastePageable = PageRequest.of(wastePage, size); // Use same size for now
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategoryId, wastePageable);
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
+		model.addAttribute("wasteLogPage", wasteLogPage);
+		model.addAttribute("wasteKeyword", wasteKeyword);
+		model.addAttribute("wasteCategoryId", wasteCategoryId);
+		model.addAttribute("wastePage", wastePage);
 		// ---------------------------------------------
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);

@@ -13,4 +13,9 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, L
 
 	// Efficiently fetch logs where action starts with a prefix (e.g., "STOCK_WASTE_")
 	Page<ActivityLogEntry> findByActionStartingWithOrderByTimestampDesc(String actionPrefix, Pageable pageable);
+	
+	// --- ADDED ---
+	Page<ActivityLogEntry> findByActionStartingWithAndDetailsContainingIgnoreCaseOrderByTimestampDesc(
+			String actionPrefix, String detailsKeyword, Pageable pageable);
+	// --- END ADDED ---
 }

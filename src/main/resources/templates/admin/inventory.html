@@ -92,7 +92,7 @@
 				</button>
 			</li>
 			<li class="nav-item" role="presentation">
-				<button class="nav-link text-danger" id="waste-tab" data-bs-toggle="tab"
+				<button class="nav-link" id="waste-tab" data-bs-toggle="tab"
 					data-bs-target="#waste-content" type="button" role="tab"
 					aria-controls="waste-content" aria-selected="false">
 					<i class="fa-solid fa-trash-can me-1"></i> Waste & Spoilage
@@ -286,40 +286,128 @@
 			</div>
 			
 			<div class="tab-pane fade" id="waste-content" role="tabpanel" aria-labelledby="waste-tab">
+				<form th:action="@{/admin/inventory}" method="get"
+					class="mb-4 p-3 bg-light rounded shadow-sm">
+					
+					<input type="hidden" name="activeTab" value="waste-tab" />
+					<input type="hidden" name="wastePage" th:value="${wastePage}" />
+					<div class="d-flex flex-column flex-md-row gap-2">
+						<div class="flex-grow-1">
+							<label for="wasteKeyword" class="form-label">Search by Item Name</label>
+							<input type="text" class="form-control" id="wasteKeyword" name="wasteKeyword"
+								placeholder="Enter item name..." th:value="${wasteKeyword}">
+						</div>
+						<div class="flex-grow-1">
+							<label for="wasteCategory" class="form-label">Filter by Reason</label>
+							<select class="form-select" id="wasteCategory" name="wasteCategory" disabled>
+								<option value="">-- All Reasons --</option>
+								<option value="EXPIRED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'EXPIRED'}">Expired</option>
+								<option value="DAMAGED" th:selected="${wasteCategoryId != null && wasteCategoryId == 'DAMAGED'}">Damaged</option>
+								<option value="WASTE" th:selected="${wasteCategoryId != null && wasteCategoryId == 'WASTE'}">Other Waste</option>
+							</select>
+						</div>
+						<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
+							<button type="submit" class="btn btn-action-view" title="Search">
+								<i class="fa-solid fa-search"></i> <span
+									class="d-none d-md-inline ms-1">Search</span>
+							</button>
+							<a th:href="@{/admin/inventory(activeTab='waste-tab', size=${size})}" class="btn btn-custom-secondary"
+								title="Clear Filters"> <i class="fa-solid fa-times"></i> <span
+								class="d-none d-md-inline ms-1">Clear</span>
+							</a>
+							<div class="btn-group">
+								<button type="button"
+									class="btn btn-action-success dropdown-toggle"
+									data-bs-toggle="dropdown" aria-expanded="false">
+									<i class="fa-solid fa-download me-1"></i> Export
+								</button>
+								<ul class="dropdown-menu dropdown-menu-end">
+									<li><button class="dropdown-item" type="submit"
+											formaction="/admin/reports/waste" formmethod="get">
+											<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
+										</button></li>
+									<li><button class="dropdown-item" type="submit"
+											formaction="/admin/reports/waste/pdf" formmethod="get">
+											<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
+										</button></li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</form>
+				
 				<div class="card shadow-sm">
-					<div class="card-header bg-danger text-white">
-						<h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i> Waste, Spoilage & Expiry Log</h5>
+					<div class="card-header">
+						<h5 class="mb-0">Waste & Spoilage Log</h5>
 					</div>
 					<div class="card-body">
 						<div class="table-responsive">
 							<table class="table table-hover align-middle">
 								<thead class="table-light">
 									<tr>
-										<th>Date</th>
-										<th>User</th>
+										<th>Timestamp</th>
+										<th>Admin User</th>
 										<th>Reason</th>
 										<th>Details</th>
 									</tr>
 								</thead>
 								<tbody>
-									<tr th:each="log : ${wasteLogs}">
-										<td th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy HH:mm')}">Date</td>
-										<td th:text="${log.username}">User</td>
+									<tr th:each="logEntry : ${wasteLogs}">
+										<td th:text="${#temporals.format(logEntry.timestamp, 'MMM dd, yyyy HH:mm:ss')}">Date</td>
+										<td th:text="${logEntry.username}">User</td>
 										<td>
-											<span class="badge bg-danger" th:text="${#strings.replace(log.action, 'STOCK_WASTE_', '')}">REASON</span>
+											<span class="badge bg-danger"
+												th:text="${#strings.replace(#strings.replace(logEntry.action, 'STOCK_WASTE_', ''), '_', ' ')}">REASON</span>
 										</td>
-										<td th:text="${log.details}">Details</td>
+										<td th:text="${logEntry.details}">Details</td>
 									</tr>
 									<tr th:if="${#lists.isEmpty(wasteLogs)}">
-										<td colspan="4" class="text-center text-muted">No waste records found.</td>
+										<td colspan="4" class="text-center text-muted"
+											th:text="${(wasteKeyword != null) ? 'No waste records found matching your criteria.' : 'No waste records found.'}">No waste records found.</td>
 									</tr>
 								</tbody>
 							</table>
 						</div>
+						
+						<div th:if="${wasteLogPage.totalPages > 0}"
+							class="d-flex justify-content-center mt-3">
+
+							<nav aria-label="Waste Log Pagination">
+								<ul class="pagination pagination-sm mb-0">
+									<li class="page-item"
+										th:classappend="${wasteLogPage.first} ? 'disabled'"><a
+										class="page-link"
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number - 1}, size=${size}, wasteKeyword=${wasteKeyword})}">Previous</a>
+									</li>
+
+									<th:block
+										th:each="i : ${#numbers.sequence(0, wasteLogPage.totalPages - 1)}"
+										th:if="${wasteLogPage.totalPages <= 7 || i == 0 || i == wasteLogPage.totalPages - 1 || (i >= wasteLogPage.number - 2 && i <= wasteLogPage.number + 2)}">
+
+										<li class="page-item disabled"
+											th:if="${wasteLogPage.totalPages > 7 && (i == 0 && wasteLogPage.number > 3 || i == wasteLogPage.totalPages - 1 && wasteLogPage.number < wasteLogPage.totalPages - 4)}">
+											<span class="page-link">...</span>
+										</li>
+
+										<li class="page-item"
+											th:classappend="${i == wasteLogPage.number} ? 'active'"><a
+											class="page-link"
+											th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${i}, size=${size}, wasteKeyword=${wasteKeyword})}"
+											th:text="${i + 1}"></a></li>
+									</th:block>
+
+									<li class="page-item"
+										th:classappend="${wasteLogPage.last} ? 'disabled'"><a
+										class="page-link"
+										th:href="@{/admin/inventory(activeTab='waste-tab', wastePage=${wasteLogPage.number + 1}, size=${size}, wasteKeyword=${wasteKeyword})}">Next</a>
+									</li>
+								</ul>
+							</nav>
+						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+			</div>
 
 		<div
 			th:replace="~{admin/fragments/inventory-item-modals :: all-inventory-item-modals}"></div>
@@ -334,6 +422,26 @@
 		<script>
 			document.addEventListener('DOMContentLoaded', function() {
 				// The stock modal logic has been moved entirely to admin-inventory.js.
+				
+				// --- MODIFIED: Logic to activate the correct tab on reload/redirect ---
+				const urlParams = new URLSearchParams(window.location.search);
+				const activeTab = urlParams.get('activeTab');
+				if (activeTab) {
+					console.log("Activating tab:", activeTab);
+					const tabEl = document.getElementById(activeTab);
+					if (tabEl) {
+						const bsTab = new bootstrap.Tab(tabEl);
+						bsTab.show();
+					}
+				} else {
+					// Default to 'list-tab' if no activeTab parameter is present
+					const listTabEl = document.getElementById('list-tab');
+					if (listTabEl) {
+						const bsTab = new bootstrap.Tab(listTabEl);
+						bsTab.show();
+					}
+				}
+				// --- END MODIFIED ---
 				
 				// Updated Edit Modal Population logic for Date fields
 				const addItemModal = document.getElementById('addItemModal');

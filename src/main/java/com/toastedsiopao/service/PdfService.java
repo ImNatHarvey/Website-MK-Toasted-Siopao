@@ -23,5 +23,8 @@ public interface PdfService {
     ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException;
 
     ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException;
-
+    
+    // --- ADDED ---
+    ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword) throws IOException;
+    // --- END ADDED ---
 }

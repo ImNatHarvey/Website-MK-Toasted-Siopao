@@ -231,6 +231,70 @@ public class AdminReportController {
         }
     }
 
+    // --- ADDED: Waste Report Endpoints ---
+    @GetMapping("/waste")
+    @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
+    public ResponseEntity<InputStreamResource> downloadWasteReport(
+            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword) {
+
+        log.info("Generating waste EXCEL report for keyword: [{}]", wasteKeyword);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateWasteReport(wasteKeyword);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "MK-Toasted-Siopao_Waste-Spoilage-Report_" + timestamp + ".xlsx";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate waste Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating waste Excel report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    @GetMapping("/waste/pdf")
+    @PreAuthorize("hasAuthority('VIEW_INVENTORY')")
+    public ResponseEntity<InputStreamResource> downloadWasteReportPdf(
+            @RequestParam(value = "wasteKeyword", required = false) String wasteKeyword) {
+
+        log.info("Generating waste PDF report for keyword: [{}]", wasteKeyword);
+
+        try {
+            ByteArrayInputStream bis = reportService.generateWasteReportPdf(wasteKeyword);
+
+            HttpHeaders headers = new HttpHeaders();
+            String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String fileName = "MK-Toasted-Siopao_Waste-Spoilage-Report_" + timestamp + ".pdf";
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            log.error("Failed to generate waste PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Unexpected error generating waste PDF report: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+    // --- END ADDED ---
+
     // --- MODIFIED: Added documentType parameter ---
     @GetMapping("/download/{documentType}/{id}")
     @PreAuthorize("hasAuthority('VIEW_ORDERS')")

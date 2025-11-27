@@ -517,6 +517,63 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
+    
+    @Override
+    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword) throws IOException {
+        SiteSettings settings = siteSettingsService.getSiteSettings();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        try (Document document = new Document(PageSize.A4.rotate())) { 
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            Paragraph title = new Paragraph(settings.getWebsiteName() + " - Waste & Spoilage Log", FONT_TITLE);
+            title.setAlignment(Element.ALIGN_CENTER);
+            document.add(title);
+
+            String filterDesc = "Filters: ";
+            if (StringUtils.hasText(keyword)) {
+                filterDesc += "Item Keyword='" + keyword + "'";
+            } else {
+                filterDesc += "None (All Records)";
+            }
+            String pageInfo = String.format("Page %d of %d (Total Records: %d)",
+                    logPage.getNumber() + 1,
+                    logPage.getTotalPages(),
+                    logPage.getTotalElements());
+
+            Paragraph subtitle = new Paragraph(filterDesc + " | " + pageInfo, FONT_SUBTITLE);
+            subtitle.setAlignment(Element.ALIGN_CENTER);
+            subtitle.setSpacingAfter(15f);
+            document.add(subtitle);
+
+            PdfPTable detailTable = new PdfPTable(4);
+            detailTable.setWidthPercentage(100);
+            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f }); 
+
+            addTableHeader(detailTable, "Timestamp");
+            addTableHeader(detailTable, "Admin User");
+            addTableHeader(detailTable, "Reason Category");
+            addTableHeader(detailTable, "Details");
+
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            for (ActivityLogEntry logEntry : logPage.getContent()) {
+                addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, logEntry.getUsername(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                // Remove the prefix for cleaner display
+                addTableCell(detailTable, logEntry.getAction().replace("STOCK_WASTE_", ""), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, StringUtils.hasText(logEntry.getDetails()) ? logEntry.getDetails() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
+            }
+
+            document.add(detailTable);
+
+        } catch (DocumentException e) {
+            log.error("DocumentException during Waste PDF generation: {}", e.getMessage(), e);
+            throw new IOException("Error creating Waste PDF document", e);
+        }
+
+        return new ByteArrayInputStream(out.toByteArray());
+    }
 
     private void addTableHeader(PdfPTable table, String headerTitle) {
         PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));

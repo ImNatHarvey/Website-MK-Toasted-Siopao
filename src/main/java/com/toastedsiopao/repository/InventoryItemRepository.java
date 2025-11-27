@@ -21,6 +21,10 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 
 	String FIND_ITEM_WITH_RELATIONS = "SELECT i FROM InventoryItem i " + "JOIN FETCH i.category c "
 			+ "JOIN FETCH i.unit u ";
+	
+	// --- ADDED: Reusable Filter Condition ---
+	String FILTER_CONDITION = "(:keyword IS NULL OR LOWER(i.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+			"AND (:category IS NULL OR i.category = :category)";
 
 	Optional<InventoryItem> findByNameIgnoreCase(String name);
 
@@ -54,6 +58,27 @@ public interface InventoryItemRepository extends JpaRepository<InventoryItem, Lo
 
 	@Query("SELECT i FROM InventoryItem i WHERE i.currentStock <= 0 ORDER BY i.name ASC")
 	List<InventoryItem> findOutOfStockItems();
+
+	// --- ADDED: Dynamic Metric Queries ---
+	
+	@Query("SELECT COUNT(i) FROM InventoryItem i WHERE " + FILTER_CONDITION)
+	long countFilteredItems(@Param("keyword") String keyword, @Param("category") InventoryCategory category);
+
+	@Query("SELECT COALESCE(SUM(i.currentStock * i.costPerUnit), 0) FROM InventoryItem i WHERE " + FILTER_CONDITION)
+	BigDecimal sumFilteredStockValue(@Param("keyword") String keyword, @Param("category") InventoryCategory category);
+	
+	@Query("SELECT COUNT(i) FROM InventoryItem i WHERE " + FILTER_CONDITION + 
+		   " AND i.currentStock <= i.lowStockThreshold AND i.currentStock > i.criticalStockThreshold")
+	long countFilteredLowStock(@Param("keyword") String keyword, @Param("category") InventoryCategory category);
+
+	@Query("SELECT COUNT(i) FROM InventoryItem i WHERE " + FILTER_CONDITION + 
+		   " AND i.currentStock <= i.criticalStockThreshold AND i.currentStock > 0")
+	long countFilteredCriticalStock(@Param("keyword") String keyword, @Param("category") InventoryCategory category);
+
+	@Query("SELECT COUNT(i) FROM InventoryItem i WHERE " + FILTER_CONDITION + " AND i.currentStock <= 0")
+	long countFilteredOutOfStock(@Param("keyword") String keyword, @Param("category") InventoryCategory category);
+
+	// --- END ADDED ---
 
 	@Query("SELECT COALESCE(SUM(i.currentStock), 0) FROM InventoryItem i")
 	BigDecimal sumTotalStockQuantity();

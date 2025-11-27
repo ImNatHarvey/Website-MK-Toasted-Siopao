@@ -84,11 +84,30 @@ public class AdminInventoryController {
 		List<InventoryCategory> categories = inventoryCategoryService.findAll();
 		List<UnitOfMeasure> units = unitOfMeasureService.findAll();
 		List<InventoryItem> allItemsForStockModal = inventoryItemService.findAllActive();
-		List<InventoryItem> allItems = inventoryItemService.findAll();
-		BigDecimal totalInventoryValue = allItems.stream().map(InventoryItem::getTotalCostValue).reduce(BigDecimal.ZERO,
-				BigDecimal::add);
-		List<InventoryItem> lowStockItems = inventoryItemService.findLowStockItems();
-		List<InventoryItem> outOfStockItems = inventoryItemService.findOutOfStockItems();
+
+		// --- MODIFIED: Dynamic Inventory Metrics ---
+		Map<String, Object> invMetrics = inventoryItemService.getInventoryMetrics(keyword, categoryId);
+		model.addAttribute("totalInventoryValue", invMetrics.get("totalValue"));
+		model.addAttribute("lowStockCount", invMetrics.get("lowStock"));
+		model.addAttribute("criticalStockCount", invMetrics.get("criticalStock"));
+		model.addAttribute("outOfStockCount", invMetrics.get("outOfStock"));
+		// We can use the filtered total item count from the page or the metrics query.
+		// Since the page might be paginated, using the metrics query result is safer for "Total Items matching filter".
+		// The original controller used inventoryItemService.findAll().size() or inventoryPage.getTotalElements() depending on context.
+		// The image shows "Total Items: 1" which matches the filtered result.
+		// Let's use the metric count if filters are active, or page total elements if pagination works on filtered data.
+		// Actually, inventoryPage.getTotalElements() already returns the total filtered count.
+		// But let's use the explicit metric for consistency if available, or fallback.
+		// However, totalItems (for pagination) is usually sent as 'totalItems' to the view. 
+		// The card in 'inventory.html' uses ${totalItems}.
+		// Let's verify 'inventory.html'. It uses ${totalItems} for pagination AND the card.
+		// So inventoryPage.getTotalElements() is correct for that.
+		// But we need to make sure 'totalItems' reflects the FILTERED count.
+		// inventoryPage is derived from 'searchItems', so it IS filtered.
+		// So ${totalItems} (which is inventoryPage.getTotalElements()) is already dynamic.
+		// The other metrics (Value, Low, Critical) were previously static global sums.
+		// Now they come from invMetrics.
+		// --- END MODIFIED ---
 
 		// --- WASTE LOGS SECTION ---
 		Pageable wastePageable = PageRequest.of(wastePage, size); 
@@ -100,19 +119,12 @@ public class AdminInventoryController {
 		model.addAttribute("wasteTypeFilter", wasteType);
 		model.addAttribute("wastePage", wastePage);
 		
-		// --- MODIFIED: Pass filters to getWasteMetrics ---
 		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics(wasteKeyword, wasteCategory, wasteType);
 		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
 		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
 		model.addAttribute("expiredValue", wasteMetrics.get("expiredValue"));
 		model.addAttribute("damagedValue", wasteMetrics.get("damagedValue"));
 		model.addAttribute("wasteValue", wasteMetrics.get("wasteValue"));
-		// --- END MODIFIED ---
-
-		model.addAttribute("totalInventoryValue", totalInventoryValue);
-		model.addAttribute("lowStockCount", lowStockItems.size());
-		model.addAttribute("criticalStockCount", inventoryItemService.countCriticalStockItems());
-		model.addAttribute("outOfStockCount", outOfStockItems.size());
 
 		model.addAttribute("allInventoryItems", allItemsForStockModal);
 		model.addAttribute("inventoryPage", inventoryPage);

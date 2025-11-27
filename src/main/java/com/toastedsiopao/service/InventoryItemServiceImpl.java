@@ -19,7 +19,9 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -295,19 +297,15 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 
 		item.setCurrentStock(newStock);
 		
-		// --- MODIFIED: Update expiration but DO NOT update receivedDate/createdDate ---
 		if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
 			if (receivedDate != null) {
-				// REMOVED: item.setReceivedDate(receivedDate); <-- This line prevented the date from changing
 				if (expirationDays != null && expirationDays > 0) {
-					// Calculates new expiration based on the *Update Date* (passed as receivedDate)
 					item.setExpirationDate(receivedDate.plusDays(expirationDays));
 				} else {
 					item.setExpirationDate(null);
 				}
 			}
 		}
-		// --- END MODIFIED ---
 		
 		InventoryItem savedItem = itemRepository.save(item);
 
@@ -350,5 +348,31 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	@Override
 	public long countByUnit(UnitOfMeasure unit) {
 		return itemRepository.countByUnit(unit);
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public Map<String, Object> getInventoryMetrics(String keyword, Long categoryId) {
+		Map<String, Object> metrics = new HashMap<>();
+		
+		InventoryCategory category = null;
+		if (categoryId != null) {
+			category = categoryRepository.findById(categoryId).orElse(null);
+		}
+		String parsedKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+
+		long totalItems = itemRepository.countFilteredItems(parsedKeyword, category);
+		BigDecimal totalValue = itemRepository.sumFilteredStockValue(parsedKeyword, category);
+		long lowStock = itemRepository.countFilteredLowStock(parsedKeyword, category);
+		long criticalStock = itemRepository.countFilteredCriticalStock(parsedKeyword, category);
+		long outOfStock = itemRepository.countFilteredOutOfStock(parsedKeyword, category);
+		
+		metrics.put("totalItems", totalItems);
+		metrics.put("totalValue", totalValue);
+		metrics.put("lowStock", lowStock);
+		metrics.put("criticalStock", criticalStock);
+		metrics.put("outOfStock", outOfStock);
+		
+		return metrics;
 	}
 }

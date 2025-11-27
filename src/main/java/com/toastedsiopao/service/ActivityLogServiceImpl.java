@@ -88,15 +88,26 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 	
 	@Override
 	@Transactional(readOnly = true)
-	public Map<String, Object> getWasteMetrics() {
+	public Map<String, Object> getWasteMetrics(String keyword, String reasonCategory, String wasteType) {
 		Map<String, Object> metrics = new HashMap<>();
 		
-		long totalItems = activityLogRepository.countTotalWasteEntries();
-		BigDecimal totalWasteValue = activityLogRepository.sumTotalWasteValue();
-		// Summing values by reason suffix (works for both STOCK_WASTE_... and PRODUCT_WASTE_...)
-		BigDecimal expiredValue = activityLogRepository.sumValueByReason("EXPIRED");
-		BigDecimal damagedValue = activityLogRepository.sumValueByReason("DAMAGED");
-		BigDecimal otherWasteValue = activityLogRepository.sumValueByReason("WASTE");
+		// Parse filters to match search logic
+		String itemKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+		String reasonSuffix = StringUtils.hasText(reasonCategory) ? reasonCategory.trim().toUpperCase() : null;
+		String typeFilter = StringUtils.hasText(wasteType) ? wasteType.trim().toUpperCase() : null;
+		
+		// 1. Total Items matching current filter
+		long totalItems = activityLogRepository.countFilteredWaste(typeFilter, reasonSuffix, itemKeyword);
+		
+		// 2. Total Value matching current filter
+		BigDecimal totalWasteValue = activityLogRepository.sumFilteredWasteValue(typeFilter, reasonSuffix, itemKeyword);
+		
+		// 3. Breakdown Values (Within the current filter context)
+		// e.g., If Filter is "Inventory Only", this sums "Inventory Expired", "Inventory Damaged", etc.
+		// e.g., If Filter is Reason="Damaged", Expired should be 0.
+		BigDecimal expiredValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "EXPIRED");
+		BigDecimal damagedValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "DAMAGED");
+		BigDecimal otherWasteValue = activityLogRepository.sumFilteredWasteValueByReason(typeFilter, reasonSuffix, itemKeyword, "WASTE");
 		
 		metrics.put("totalItems", totalItems);
 		metrics.put("totalWasteValue", totalWasteValue);

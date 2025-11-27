@@ -100,12 +100,14 @@ public class AdminInventoryController {
 		model.addAttribute("wasteTypeFilter", wasteType);
 		model.addAttribute("wastePage", wastePage);
 		
-		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics();
+		// --- MODIFIED: Pass filters to getWasteMetrics ---
+		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics(wasteKeyword, wasteCategory, wasteType);
 		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
 		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
 		model.addAttribute("expiredValue", wasteMetrics.get("expiredValue"));
 		model.addAttribute("damagedValue", wasteMetrics.get("damagedValue"));
 		model.addAttribute("wasteValue", wasteMetrics.get("wasteValue"));
+		// --- END MODIFIED ---
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);
 		model.addAttribute("lowStockCount", lowStockItems.size());
@@ -254,14 +256,12 @@ public class AdminInventoryController {
 		}
 
 		try {
-			// --- MODIFIED: Pass current date and expiration days if adding ---
 			LocalDate receivedDate = null;
 			if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
 				receivedDate = LocalDate.now();
 			}
 			
 			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason, receivedDate, expirationDays);
-			// --- END MODIFIED ---
 			
 			String actionText = (quantityChange.compareTo(BigDecimal.ZERO) > 0) ? "Increased" : "Deducted";
 			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of " + updatedItem.getName() + 

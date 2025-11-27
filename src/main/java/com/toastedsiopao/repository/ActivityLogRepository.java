@@ -13,6 +13,11 @@ import java.math.BigDecimal;
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, Long> {
 
+	String WASTE_FILTER_CONDITION = "(a.action LIKE 'STOCK_WASTE_%' OR a.action LIKE 'PRODUCT_WASTE_%') " +
+			"AND (:typeFilter IS NULL OR (:typeFilter = 'INVENTORY' AND a.action LIKE 'STOCK_WASTE_%') OR (:typeFilter = 'PRODUCT' AND a.action LIKE 'PRODUCT_WASTE_%')) " +
+			"AND (:reasonSuffix IS NULL OR a.action LIKE CONCAT('%_', :reasonSuffix)) " +
+			"AND (:itemName IS NULL OR LOWER(a.itemName) LIKE LOWER(CONCAT('%', :itemName, '%')))";
+
 	Page<ActivityLogEntry> findAllByOrderByTimestampDesc(Pageable pageable);
 
 	Page<ActivityLogEntry> findByActionStartingWithOrderByTimestampDesc(String actionPrefix, Pageable pageable);
@@ -20,19 +25,33 @@ public interface ActivityLogRepository extends JpaRepository<ActivityLogEntry, L
 	Page<ActivityLogEntry> findByActionStartingWithAndDetailsContainingIgnoreCaseOrderByTimestampDesc(
 			String actionPrefix, String detailsKeyword, Pageable pageable);
 	
-	// --- MODIFIED: Unified search for Inventory and Product waste with Filters ---
-	@Query("SELECT a FROM ActivityLogEntry a WHERE " + 
-	       "(a.action LIKE 'STOCK_WASTE_%' OR a.action LIKE 'PRODUCT_WASTE_%') " +
-	       "AND (:typeFilter IS NULL OR (:typeFilter = 'INVENTORY' AND a.action LIKE 'STOCK_WASTE_%') OR (:typeFilter = 'PRODUCT' AND a.action LIKE 'PRODUCT_WASTE_%')) " +
-	       "AND (:reasonSuffix IS NULL OR a.action LIKE CONCAT('%_', :reasonSuffix)) " +
-	       "AND (:itemName IS NULL OR LOWER(a.itemName) LIKE LOWER(CONCAT('%', :itemName, '%'))) " +
-	       "ORDER BY a.timestamp DESC")
+	@Query("SELECT a FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION + " ORDER BY a.timestamp DESC")
 	Page<ActivityLogEntry> searchWasteLogs(@Param("typeFilter") String typeFilter,
 	                                       @Param("reasonSuffix") String reasonSuffix,
 	                                       @Param("itemName") String itemName, 
 	                                       Pageable pageable);
 
-	// --- METRICS ---
+	// --- DYNAMIC METRICS (Respecting Filters) ---
+	
+	@Query("SELECT COUNT(a) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION)
+	long countFilteredWaste(@Param("typeFilter") String typeFilter,
+							@Param("reasonSuffix") String reasonSuffix,
+							@Param("itemName") String itemName);
+
+	@Query("SELECT COALESCE(SUM(a.totalValue), 0) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION)
+	BigDecimal sumFilteredWasteValue(@Param("typeFilter") String typeFilter,
+									 @Param("reasonSuffix") String reasonSuffix,
+									 @Param("itemName") String itemName);
+
+	// Calculates sum for a specific reason (e.g., EXPIRED) *within* the current filter context
+	@Query("SELECT COALESCE(SUM(a.totalValue), 0) FROM ActivityLogEntry a WHERE " + WASTE_FILTER_CONDITION + 
+		   " AND a.action LIKE CONCAT('%_', :specificReason)")
+	BigDecimal sumFilteredWasteValueByReason(@Param("typeFilter") String typeFilter,
+											 @Param("reasonSuffix") String reasonSuffix,
+											 @Param("itemName") String itemName,
+											 @Param("specificReason") String specificReason);
+
+	// --- GLOBAL METRICS (For reports/unfiltered view if needed, kept for backward compatibility) ---
 	@Query("SELECT COALESCE(SUM(a.totalValue), 0) FROM ActivityLogEntry a WHERE a.action LIKE '%_WASTE_%'")
 	BigDecimal sumTotalWasteValue();
 

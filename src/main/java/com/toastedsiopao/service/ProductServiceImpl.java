@@ -183,10 +183,22 @@ public class ProductServiceImpl implements ProductService {
 		}
 		product.setCreatedDate(effectiveDate);
 
-		if (productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
-			product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
+		// MODIFIED: Only force recalculation on NEW items
+		if (isNew) {
+			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
+				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
+			} else {
+				product.setExpirationDate(null);
+			}
 		} else {
-			product.setExpirationDate(null);
+			// For existing items, if expiration date is null but days are set, calculate it.
+			if (product.getExpirationDate() == null && productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
+				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
+			}
+			// If user sets days to 0, clear date
+			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() == 0) {
+				product.setExpirationDate(null);
+			}
 		}
 
 		try {
@@ -360,16 +372,19 @@ public class ProductServiceImpl implements ProductService {
 					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
 				}
 			}
-			
-			if (createdDate != null) {
-				product.setCreatedDate(createdDate);
-				if (expirationDays != null && expirationDays > 0) {
-					product.setExpirationDate(createdDate.plusDays(expirationDays));
-				} else {
-					product.setExpirationDate(null);
-				}
+		}
+		
+		// --- MODIFIED: Update expiration but DO NOT update createdDate ---
+		if (quantityChange > 0 && createdDate != null) {
+			// REMOVED: product.setCreatedDate(createdDate);
+			if (expirationDays != null && expirationDays > 0) {
+				// Update expiration based on the Stock Update Date (passed as createdDate)
+				product.setExpirationDate(createdDate.plusDays(expirationDays));
+			} else {
+				product.setExpirationDate(null);
 			}
 		}
+		// --- END MODIFIED ---
 
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;

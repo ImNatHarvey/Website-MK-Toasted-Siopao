@@ -167,6 +167,24 @@ document.addEventListener('DOMContentLoaded', function() {
 			return 'N/A';
 		}
 	}
+	
+	function calculateExpirationDate(createdDateString, expirationDays) {
+		if (!createdDateString || !expirationDays || parseInt(expirationDays) <= 0) return 'No Expiration';
+		try {
+			const createdDate = new Date(createdDateString);
+			if (isNaN(createdDate)) return 'N/A';
+			
+			const expDays = parseInt(expirationDays);
+			// Use setDate to add days, handling month/year rollovers
+			const expirationDate = new Date(createdDate);
+			expirationDate.setDate(createdDate.getDate() + expDays);
+			
+			return formatDate(expirationDate.toISOString().split('T')[0]);
+			
+		} catch (e) {
+			return 'N/A';
+		}
+	}
 
 	const viewProductModal = document.getElementById('viewProductModal');
 	if (viewProductModal) {
@@ -191,18 +209,60 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewProductModal.querySelector('#viewProductCurrentStock').textContent = dataset.currentStock || '0';
 			viewProductModal.querySelector('#viewProductLowThreshold').textContent = dataset.lowStockThreshold || '0';
 			viewProductModal.querySelector('#viewProductCriticalThreshold').textContent = dataset.criticalStockThreshold || '0';
+			
+			// --- MODIFIED DATE FIELDS LOGIC ---
+			const lastUpdated = dataset.stockLastUpdated || 'N/A';
 			const lastUpdatedEl = viewProductModal.querySelector('#viewProductStockLastUpdated');
-			if (dataset.stockLastUpdated) {
-				lastUpdatedEl.textContent = 'Stock last updated: ' + dataset.stockLastUpdated;
-				lastUpdatedEl.style.display = 'block';
+			if (lastUpdatedEl) {
+				lastUpdatedEl.textContent = lastUpdated !== 'N/A' ? lastUpdated : 'N/A';
+			}
+
+			const createdDate = dataset.createdDate ? formatDate(dataset.createdDate) : 'N/A';
+			const expirationDays = dataset.expirationDays || '0';
+			
+			// Prefer the pre-calculated expiration date from server if available
+			let expirationDateText = 'No Expiration';
+			if (dataset.expirationDate) {
+				expirationDateText = formatDate(dataset.expirationDate);
 			} else {
-				lastUpdatedEl.style.display = 'none';
+				// Fallback to calculation
+				expirationDateText = calculateExpirationDate(dataset.createdDate, dataset.expirationDays);
 			}
 			
-			viewProductModal.querySelector('#viewProductCreatedDate').textContent = formatDate(dataset.createdDate);
-			viewProductModal.querySelector('#viewProductExpirationDate').textContent = dataset.expirationDate || 'No Expiration';
-			const expDaysText = dataset.expirationDays && parseInt(dataset.expirationDays) > 0 ? `(${dataset.expirationDays} days)` : '';
+			viewProductModal.querySelector('#viewProductCreatedDate').textContent = createdDate;
+			viewProductModal.querySelector('#viewProductExpirationDate').textContent = expirationDateText;
+			
+			const expDaysText = parseInt(expirationDays) > 0 ? `(${expirationDays} days)` : '';
 			viewProductModal.querySelector('#viewProductExpirationDays').textContent = expDaysText;
+			
+			const expDateEl = viewProductModal.querySelector('#viewProductExpirationDate');
+			if (expDateEl) {
+				if (expirationDateText !== 'N/A' && expirationDateText !== 'No Expiration') {
+					// Check if actually expired against today
+					const now = new Date();
+					now.setHours(0,0,0,0);
+					
+					let expDateObj = null;
+					if(dataset.expirationDate) {
+						expDateObj = new Date(dataset.expirationDate);
+					} else if (dataset.createdDate && parseInt(expirationDays) > 0) {
+						expDateObj = new Date(dataset.createdDate);
+						expDateObj.setDate(expDateObj.getDate() + parseInt(expirationDays));
+					}
+					
+					if (expDateObj) {
+						expDateObj.setHours(0,0,0,0);
+						if (expDateObj < now) {
+							expDateEl.className = 'fw-bold text-danger';
+						} else {
+							expDateEl.className = 'fw-bold text-danger'; // User prefers red for expiration date
+						}
+					}
+				} else {
+					expDateEl.className = 'fw-bold text-success';
+				}
+			}
+			// --- END MODIFIED DATE FIELDS LOGIC ---
 
 			const ingredientsListDiv = viewProductModal.querySelector('#viewProductIngredientsList');
 			const ingredientsHeading = viewProductModal.querySelector('#viewProductIngredientsHeading');

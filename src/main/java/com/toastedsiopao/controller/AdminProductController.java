@@ -318,7 +318,6 @@ public class AdminProductController {
 		int quantityChange = action.equals("deduct") ? -quantity : quantity;
 		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
 		
-		// --- MODIFIED: "Manual" deductions should NOT go to waste log anymore ---
 		boolean isWasteAction = action.equals("deduct") && 
 			List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
 		
@@ -331,21 +330,27 @@ public class AdminProductController {
 		}
 
 		try {
-			// Step 1: Adjust stock (consume raw materials, update dates if provided)
-			// Pass dates only if action is Add
-			LocalDate dateToSet = action.equals("add") ? receivedDate : null;
-			Integer expDaysToSet = action.equals("add") ? expirationDays : null;
+			// --- MODIFIED: Force today's date for Production/Restock/Add actions ---
+			// We ignore the 'receivedDate' from the hidden form field because it likely contains the old date.
+			// Production/Add always implies a new batch (Today).
+			LocalDate dateToSet = null;
+			Integer expDaysToSet = null;
+			
+			if (action.equals("add")) {
+				dateToSet = LocalDate.now(); // Force today
+				expDaysToSet = expirationDays; // Use the existing expiration days rule
+			}
 
 			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, dateToSet, expDaysToSet);
+			// --- END MODIFIED ---
 			
 			String actionText = action.equals("add") ? "Added" : "Deducted";
 			if ("Production".equals(reasonCategory)) actionText = "Produced";
-			else if (isWasteAction) actionText = "Wasted"; // Only true waste reasons
+			else if (isWasteAction) actionText = "Wasted"; 
 			
 			String details = actionText + " " + quantity + " unit(s) of " + updatedProduct.getName() + " (ID: "
 					+ productId + "). Reason: " + finalReason;
 
-			// Step 2: Log the action
 			if (isWasteAction) {
 				BigDecimal unitValue = updatedProduct.getPrice();
 				BigDecimal quantityDecimal = BigDecimal.valueOf(quantity);
@@ -360,7 +365,6 @@ public class AdminProductController {
 						unitValue
 				);
 			} else {
-				// "Manual" adjustments (deductions or additions) go here
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
 			}
 

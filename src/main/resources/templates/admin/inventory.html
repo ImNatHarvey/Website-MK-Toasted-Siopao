@@ -262,7 +262,8 @@
 												th:data-last-updated="${item.lastUpdated != null ? #temporals.format(item.lastUpdated, 'MMM dd, yyyy HH:mm') : 'N/A'}"
 												th:data-item-status="${item.itemStatus}"
 												th:data-received-date="${item.receivedDate}"
-												th:data-expiration-days="${item.expirationDays}">
+												th:data-expiration-days="${item.expirationDays}"
+												th:data-expiration-date="${item.expirationDate}">
 												View</button>
 											<button sec:authorize="hasAuthority('EDIT_INVENTORY_ITEMS')"
 												class="btn btn-sm btn-action-edit edit-item-btn"

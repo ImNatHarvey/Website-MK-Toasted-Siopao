@@ -187,6 +187,7 @@
 								th:data-stock-last-updated="${product.stockLastUpdated != null ? #temporals.format(product.stockLastUpdated, 'MMM dd, yyyy HH:mm') : ''}"
 								th:data-created-date="${product.createdDate}"
 								th:data-expiration-days="${product.getExpirationDays()}"
+								th:data-expiration-date="${product.expirationDate}"
 								th:attr="data-ingredients-view=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.name + ':' + #numbers.formatDecimal(quantityNeeded, 1, 'COMMA', 2, 'POINT') + ':' + inventoryItem.unit.abbreviation], ',') : ''},
 											 data-ingredients=${product.ingredients != null && !#lists.isEmpty(product.ingredients) ? #strings.listJoin(product.ingredients.![inventoryItem.id + ':' + quantityNeeded], ',') : ''},
 											 data-recipe-locked=${product.recipeLocked}">

@@ -33,6 +33,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -226,7 +227,8 @@ public class AdminInventoryController {
 			@RequestParam("quantity") BigDecimal quantity, 
 			@RequestParam("action") String action,
 			@RequestParam("reasonCategory") String reasonCategory, 
-			@RequestParam(value = "reasonNote", required = false) String reasonNote, 
+			@RequestParam(value = "reasonNote", required = false) String reasonNote,
+			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
 			RedirectAttributes redirectAttributes,
 			Principal principal, UriComponentsBuilder uriBuilder) {
 
@@ -252,7 +254,14 @@ public class AdminInventoryController {
 		}
 
 		try {
-			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason);
+			// --- MODIFIED: Pass current date and expiration days if adding ---
+			LocalDate receivedDate = null;
+			if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
+				receivedDate = LocalDate.now();
+			}
+			
+			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason, receivedDate, expirationDays);
+			// --- END MODIFIED ---
 			
 			String actionText = (quantityChange.compareTo(BigDecimal.ZERO) > 0) ? "Increased" : "Deducted";
 			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of " + updatedItem.getName() + 
@@ -261,7 +270,6 @@ public class AdminInventoryController {
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			
-			// --- MODIFIED: Only "true" waste reasons go to waste log. Manual adjustments go to standard log. ---
 			if (isWaste && action.equals("deduct")) {
 				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
 				activityLogService.logWasteAction(
@@ -273,10 +281,8 @@ public class AdminInventoryController {
 						updatedItem.getCostPerUnit()
 				);
 			} else {
-				// Manual adjustments (even deductions) go here
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 			}
-			// --- END MODIFIED ---
 			
 		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());

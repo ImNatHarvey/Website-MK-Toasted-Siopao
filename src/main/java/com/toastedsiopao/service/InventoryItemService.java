@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal; 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,7 +39,13 @@ public interface InventoryItemService {
 
 	List<InventoryItem> findOutOfStockItems();
 
-	InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason);
+	// --- MODIFIED: Overloaded adjustStock to include dates ---
+	InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason, LocalDate receivedDate, Integer expirationDays);
+
+	default InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason) {
+		return adjustStock(itemId, quantityChange, reason, null, null);
+	}
+	// --- END MODIFIED ---
 
 	BigDecimal getTotalStockQuantity();
 

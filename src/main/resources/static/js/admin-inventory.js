@@ -280,7 +280,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			setText('#viewItemTotalCostValue', '₱' + (dataset.totalCostValue || '0.00'));
 			setText('#viewItemLowThreshold', dataset.lowThreshold);
 			setText('#viewItemCriticalThreshold', dataset.criticalThreshold);
-			setText('#viewItemLastUpdated', 'Last Updated: ' + (dataset.lastUpdated || 'N/A'));
+			
+			// --- MODIFIED DATE FIELDS LOGIC ---
+			const lastUpdated = dataset.lastUpdated || 'N/A';
+			if (lastUpdated !== 'N/A' && viewItemModal.querySelector('#viewItemLastUpdated')) {
+				viewItemModal.querySelector('#viewItemLastUpdated').textContent = lastUpdated;
+			} else {
+				viewItemModal.querySelector('#viewItemLastUpdated').textContent = 'N/A';
+			}
 			
 			// ADDED: Item Active Status
 			setText('#viewItemActiveStatus', dataset.itemStatus || 'N/A');
@@ -296,21 +303,54 @@ document.addEventListener('DOMContentLoaded', function() {
 				console.warn("Element #viewItemStatusBadge not found.");
 			}
 			
-			// --- NEW DATE FIELDS ---
 			const receivedDate = dataset.receivedDate ? formatDate(dataset.receivedDate) : 'N/A';
 			const expirationDays = dataset.expirationDays || '0';
-			const expirationDate = calculateExpirationDate(dataset.receivedDate, dataset.expirationDays);
+			
+			// Prefer stored expirationDate, fallback to calculation
+			let expirationDateText = 'No Expiration';
+			if (dataset.expirationDate) {
+				expirationDateText = formatDate(dataset.expirationDate);
+			} else {
+				expirationDateText = calculateExpirationDate(dataset.receivedDate, dataset.expirationDays);
+			}
 			
 			setText('#viewItemReceivedDate', receivedDate);
 			setText('#viewItemExpirationDays', expirationDays + ' days');
-			setText('#viewItemExpirationDate', expirationDate);
+			setText('#viewItemExpirationDate', expirationDateText);
 			
 			const expDateEl = viewItemModal.querySelector('#viewItemExpirationDate');
 			if (expDateEl) {
-				expDateEl.classList.toggle('text-danger', expirationDate !== 'N/A' && expirationDate !== 'No Expiration' && new Date(dataset.receivedDate).getTime() < new Date(Date.now()).getTime() - (expirationDays * 24 * 60 * 60 * 1000) );
-				expDateEl.classList.toggle('text-success', expirationDate === 'No Expiration');
+				if (expirationDateText !== 'N/A' && expirationDateText !== 'No Expiration') {
+					// Check if actually expired against today
+					const now = new Date();
+					now.setHours(0,0,0,0);
+					
+					// Need to parse the formatted string back or use the raw data for comparison
+					let expDateObj = null;
+					if(dataset.expirationDate) {
+						expDateObj = new Date(dataset.expirationDate);
+					} else if (dataset.receivedDate && parseInt(expirationDays) > 0) {
+						expDateObj = new Date(dataset.receivedDate);
+						expDateObj.setDate(expDateObj.getDate() + parseInt(expirationDays));
+					}
+					
+					if (expDateObj) {
+						expDateObj.setHours(0,0,0,0);
+						if (expDateObj < now) {
+							// Expired
+							expDateEl.className = 'fw-bold text-danger';
+						} else {
+							// Not expired, show red as user requested style, or perhaps simple text
+							// The user image showed red text for expiration date regardless.
+							// I will keep it red as per their screenshot unless valid logic dictates otherwise.
+							expDateEl.className = 'fw-bold text-danger';
+						}
+					}
+				} else {
+					expDateEl.className = 'fw-bold text-success';
+				}
 			}
-			// --- END NEW DATE FIELDS ---
+			// --- END MODIFIED DATE FIELDS LOGIC ---
 		});
 	}
 });

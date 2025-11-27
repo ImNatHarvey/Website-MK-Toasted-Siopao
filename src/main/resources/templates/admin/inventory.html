@@ -44,7 +44,7 @@
 		<div
 			th:replace="~{admin/fragments/common-alerts :: all-alerts-as-toasts}"></div>
 
-		<div class="row text-center mb-4">
+		<div class="row text-center mb-4" id="inventoryStatsRow">
 			<div class="col-md-3 mb-3">
 				<div class="stats-card card shadow-sm">
 					<div class="card-body">
@@ -78,6 +78,54 @@
 						<h5 class="card-title">Items Out of Stock</h5>
 						<p class="display-6 fw-bold text-danger"
 							th:text="${outOfStockCount}">0</p>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<div class="row text-center mb-4 d-none" id="wasteStatsRow">
+			<div class="col mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Items</h5>
+						<p class="display-6 fw-bold" th:text="${totalWasteItems}">0</p>
+					</div>
+				</div>
+			</div>
+			<div class="col mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Total Waste Value</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="'₱' + ${#numbers.formatDecimal(totalWasteValue, 1, 'COMMA', 2, 'POINT')}">
+							₱0.00</p>
+					</div>
+				</div>
+			</div>
+			<div class="col mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Expired</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="'₱' + ${#numbers.formatDecimal(expiredValue, 1, 'COMMA', 2, 'POINT')}">0.00</p>
+					</div>
+				</div>
+			</div>
+			<div class="col mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Damaged</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="'₱' + ${#numbers.formatDecimal(damagedValue, 1, 'COMMA', 2, 'POINT')}">0.00</p>
+					</div>
+				</div>
+			</div>
+			<div class="col mb-3">
+				<div class="stats-card card shadow-sm">
+					<div class="card-body">
+						<h5 class="card-title">Other Waste</h5>
+						<p class="display-6 fw-bold text-danger"
+							th:text="'₱' + ${#numbers.formatDecimal(wasteValue, 1, 'COMMA', 2, 'POINT')}">0.00</p>
 					</div>
 				</div>
 			</div>
@@ -324,13 +372,13 @@
 								<ul class="dropdown-menu dropdown-menu-end">
 									<li><button class="dropdown-item" type="submit"
 											formaction="/admin/reports/waste" formmethod="get"
-											th:formaction="@{/admin/reports/waste(wasteKeyword=${wasteKeyword})}"
+											th:formaction="@{/admin/reports/waste(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
 											th:formmethod="get">
 											<i class="fa-solid fa-file-excel me-2"></i>Export as Excel
 										</button></li>
 									<li><button class="dropdown-item" type="submit"
 											formaction="/admin/reports/waste/pdf" formmethod="get"
-											th:formaction="@{/admin/reports/waste/pdf(wasteKeyword=${wasteKeyword})}"
+											th:formaction="@{/admin/reports/waste/pdf(wasteKeyword=${wasteKeyword}, wasteCategory=${wasteCategoryId})}"
 											th:formmethod="get">
 											<i class="fa-solid fa-file-pdf me-2"></i>Export as PDF
 										</button></li>
@@ -353,6 +401,9 @@
 										<th>Timestamp</th>
 										<th>Admin User</th>
 										<th>Reason</th>
+										<th>Item Name</th>
+										<th>Cost/Unit</th>
+										<th>Total Value</th>
 										<th>Details</th>
 									</tr>
 								</thead>
@@ -366,10 +417,15 @@
 											<span class="badge bg-danger"
 												th:text="${#strings.replace(#strings.replace(logEntry.action, 'STOCK_WASTE_', ''), '_', ' ')}">REASON</span>
 										</td>
+										
+										<td th:text="${logEntry.itemName != null ? logEntry.itemName : 'N/A'}">Item</td>
+										<td th:text="${logEntry.costPerUnit != null ? '₱' + #numbers.formatDecimal(logEntry.costPerUnit, 1, 'COMMA', 2, 'POINT') : 'N/A'}">Cost</td>
+										<td th:text="${logEntry.totalValue != null ? '₱' + #numbers.formatDecimal(logEntry.totalValue, 1, 'COMMA', 2, 'POINT') : 'N/A'}"
+											class="fw-bold text-danger">Total</td>
 										<td th:text="${logEntry.details}">Details</td>
 									</tr>
 									<tr th:if="${#lists.isEmpty(wasteLogs)}">
-										<td colspan="4" class="text-center text-muted"
+										<td colspan="7" class="text-center text-muted"
 											th:text="${(wasteKeyword != null or wasteCategoryId != null) ? 'No waste records found matching your criteria.' : 'No waste records found.'}">No waste records found.</td>
 									</tr>
 								</tbody>
@@ -430,25 +486,45 @@
 			document.addEventListener('DOMContentLoaded', function() {
 				// The stock modal logic has been moved entirely to admin-inventory.js.
 				
-				// --- MODIFIED: Logic to activate the correct tab on reload/redirect ---
+				// Logic to activate the correct tab on reload/redirect and TOGGLE METRICS
 				const urlParams = new URLSearchParams(window.location.search);
-				const activeTab = urlParams.get('activeTab');
+				const activeTab = urlParams.get('activeTab') || 'list-tab';
+				
+				const inventoryStatsRow = document.getElementById('inventoryStatsRow');
+				const wasteStatsRow = document.getElementById('wasteStatsRow');
+				
+				function toggleStats(tabId) {
+					if (tabId === 'waste-tab') {
+						inventoryStatsRow.classList.add('d-none');
+						wasteStatsRow.classList.remove('d-none');
+					} else {
+						wasteStatsRow.classList.add('d-none');
+						inventoryStatsRow.classList.remove('d-none');
+					}
+				}
+
 				if (activeTab) {
 					console.log("Activating tab:", activeTab);
 					const tabEl = document.getElementById(activeTab);
 					if (tabEl) {
 						const bsTab = new bootstrap.Tab(tabEl);
 						bsTab.show();
-					}
-				} else {
-					// Default to 'list-tab' if no activeTab parameter is present
-					const listTabEl = document.getElementById('list-tab');
-					if (listTabEl) {
-						const bsTab = new bootstrap.Tab(listTabEl);
-						bsTab.show();
+						
+						// If active tab is waste-tab, show waste metrics immediately
+						if(activeTab === 'waste-tab') {
+							toggleStats('waste-tab');
+						}
 					}
 				}
-				// --- END MODIFIED ---
+				
+				// Add listeners for client-side clicks
+				const triggerTabList = [].slice.call(document.querySelectorAll('#inventoryTabs button'))
+				triggerTabList.forEach(function (triggerEl) {
+				  triggerEl.addEventListener('shown.bs.tab', function (event) {
+					const activeId = event.target.id;
+					toggleStats(activeId);
+				  })
+				})
 				
 				// Updated Edit Modal Population logic for Date fields
 				const addItemModal = document.getElementById('addItemModal');
@@ -460,7 +536,6 @@
 						const rInput = addItemModal.querySelector('input[name="receivedDate"]');
 						const eInput = addItemModal.querySelector('input[name="expirationDays"]');
 						
-						// Only if it's a fresh Edit button click (not a validation reopen)
 						const isValidationReopen = document.getElementById('admin-content-wrapper').dataset.showAddItemModal === 'true';
 
 						if (isEdit && !isValidationReopen) {
@@ -471,12 +546,11 @@
 							if(eInput && eDays) eInput.value = eDays;
 							
 						} else if (!isEdit && !isValidationReopen) {
-							// For fresh Add, set default received date to today
 							if (rInput) {
 								rInput.value = new Date().toISOString().split('T')[0];
 							}
 							if (eInput) {
-								eInput.value = ''; // Ensure days is clear
+								eInput.value = '';
 							}
 						}
 					});

@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.stream.Collectors;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -44,6 +46,27 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 					e.getMessage());
 		}
 	}
+	
+	// --- ADDED ---
+	@Override
+	@Transactional
+	public void logWasteAction(String username, String action, String details, 
+			String itemName, BigDecimal quantity, BigDecimal costPerUnit) {
+		
+		BigDecimal totalValue = BigDecimal.ZERO;
+		if (quantity != null && costPerUnit != null) {
+			totalValue = quantity.multiply(costPerUnit);
+		}
+		
+		try {
+			ActivityLogEntry entry = new ActivityLogEntry(username, action, details, itemName, quantity, costPerUnit, totalValue);
+			activityLogRepository.save(entry);
+			log.info("Logged waste action: Item='{}', Value='{}'", itemName, totalValue);
+		} catch (Exception e) {
+			log.error("Failed to save waste log entry: {}", e.getMessage());
+		}
+	}
+	// --- END ADDED ---
 
 	@Override
 	public Page<ActivityLogEntry> getAllLogs(Pageable pageable) {
@@ -52,33 +75,48 @@ public class ActivityLogServiceImpl implements ActivityLogService {
 
 	@Override
 	public Page<ActivityLogEntry> getWasteLogs(Pageable pageable) {
-		// Fetch logs starting with "STOCK_WASTE_" to identify damaged/expired items
 		return activityLogRepository.findByActionStartingWithOrderByTimestampDesc("STOCK_WASTE_", pageable);
 	}
 	
 	@Override
 	public Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable) {
-		// Base criteria: action must start with "STOCK_WASTE_"
 		String actionPrefix = "STOCK_WASTE_";
 		
-		boolean hasKeyword = StringUtils.hasText(keyword);
-		boolean hasCategory = StringUtils.hasText(reasonCategory); // --- MODIFIED to check String ---
+		boolean hasCategory = StringUtils.hasText(reasonCategory);
 
 		String fullActionFilter = actionPrefix;
 		if (hasCategory) {
-			// Prepend the specific category to the prefix for an exact match on action: "STOCK_WASTE_EXPIRED"
 			fullActionFilter += reasonCategory.trim().toUpperCase();
 		}
 		
-		if (hasKeyword) {
-			// If filtering by category, use the fullActionFilter. Otherwise, use the base prefix.
-			String finalActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
-			return activityLogRepository.findByActionStartingWithAndDetailsContainingIgnoreCaseOrderByTimestampDesc(
-					finalActionPrefix, keyword.trim(), pageable);
-		} else {
-			// If only filtering by category, use the exact action name. Otherwise, use the base prefix.
-			String finalActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
-			return activityLogRepository.findByActionStartingWithOrderByTimestampDesc(finalActionPrefix, pageable);
-		}
+		// Use the new repository method that searches explicitly on itemName if provided, 
+		// falling back to standard behavior if needed.
+		// Note: The repository method expects the prefix to match LIKE 'STOCK_WASTE_%'
+		
+		String repoActionPrefix = hasCategory ? fullActionFilter : actionPrefix;
+		String itemKeyword = StringUtils.hasText(keyword) ? keyword.trim() : null;
+		
+		return activityLogRepository.searchWasteLogs(repoActionPrefix, itemKeyword, pageable);
+	}
+	
+	// --- ADDED ---
+	@Override
+	@Transactional(readOnly = true)
+	public Map<String, Object> getWasteMetrics() {
+		Map<String, Object> metrics = new HashMap<>();
+		
+		long totalItems = activityLogRepository.countTotalWasteEntries();
+		BigDecimal totalWasteValue = activityLogRepository.sumTotalWasteValue();
+		BigDecimal expiredValue = activityLogRepository.sumValueByAction("STOCK_WASTE_EXPIRED");
+		BigDecimal damagedValue = activityLogRepository.sumValueByAction("STOCK_WASTE_DAMAGED");
+		BigDecimal otherWasteValue = activityLogRepository.sumValueByAction("STOCK_WASTE_WASTE");
+		
+		metrics.put("totalItems", totalItems);
+		metrics.put("totalWasteValue", totalWasteValue);
+		metrics.put("expiredValue", expiredValue);
+		metrics.put("damagedValue", damagedValue);
+		metrics.put("wasteValue", otherWasteValue);
+		
+		return metrics;
 	}
 }

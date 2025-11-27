@@ -34,6 +34,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -71,13 +72,10 @@ public class AdminInventoryController {
 			@RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			// --- ADDED: Pass inventory list pagination to waste list form submit ---
 			@RequestParam(value = "activeTab", required = false) String activeTab, 
-			// --- MODIFIED: Renamed wasteKeyword -> keyword, added wasteCategory ---
 			@RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
 			@RequestParam(value = "wasteCategory", required = false) String wasteCategory, 
 			@RequestParam(value = "wastePage", defaultValue = "0") int wastePage) {
-			// --- END MODIFIED ---
 
 		Pageable pageable = PageRequest.of(page, size);
 		Page<InventoryItem> inventoryPage = inventoryItemService.searchItems(keyword, categoryId, pageable);
@@ -92,12 +90,20 @@ public class AdminInventoryController {
 
 		// --- MODIFIED: Waste Log Fetching ---
 		Pageable wastePageable = PageRequest.of(wastePage, size); 
-		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wastePageable); // --- MODIFIED: Pass String wasteCategory ---
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wastePageable); 
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
 		model.addAttribute("wasteLogPage", wasteLogPage);
 		model.addAttribute("wasteKeyword", wasteKeyword);
-		model.addAttribute("wasteCategoryId", wasteCategory); // --- MODIFIED: Pass as String for select box ---
+		model.addAttribute("wasteCategoryId", wasteCategory); 
 		model.addAttribute("wastePage", wastePage);
+		
+		// --- ADDED: Waste Metrics ---
+		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics();
+		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
+		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
+		model.addAttribute("expiredValue", wasteMetrics.get("expiredValue"));
+		model.addAttribute("damagedValue", wasteMetrics.get("damagedValue"));
+		model.addAttribute("wasteValue", wasteMetrics.get("wasteValue"));
 		// ---------------------------------------------
 
 		model.addAttribute("totalInventoryValue", totalInventoryValue);
@@ -116,6 +122,9 @@ public class AdminInventoryController {
 		model.addAttribute("totalPages", inventoryPage.getTotalPages());
 		model.addAttribute("totalItems", inventoryPage.getTotalElements());
 		model.addAttribute("size", size);
+		
+		// Pass activeTab to model to handle default tab on load if JS fails or for initial render state
+		model.addAttribute("activeTab", StringUtils.hasText(activeTab) ? activeTab : "list-tab");
 
 		if (!model.containsAttribute("inventoryItemDto")) {
 			model.addAttribute("inventoryItemDto", new InventoryItemDto());
@@ -228,8 +237,6 @@ public class AdminInventoryController {
 			return "redirect:" + redirectUrl;
 		}
 
-		// Determine direction based on Action OR Reason
-		// If reason is Expired/Damaged/Waste, force it to be a deduction
 		boolean isWaste = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
 		
 		BigDecimal quantityChange;
@@ -239,7 +246,6 @@ public class AdminInventoryController {
 			quantityChange = quantity;
 		}
 
-		// Construct formatted reason
 		String finalReason = reasonCategory;
 		if (StringUtils.hasText(reasonNote)) {
 			finalReason += ": " + reasonNote;
@@ -252,13 +258,24 @@ public class AdminInventoryController {
 			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of " + updatedItem.getName() + 
 							 " (ID: " + itemId + "). Reason: " + finalReason;
 			
-			// Use specific log action prefix for waste so we can filter easily in the Waste Tab
-			String logAction = isWaste ? "STOCK_WASTE_" + reasonCategory.toUpperCase() : "ADJUST_INVENTORY_STOCK";
-			
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
 			
-			activityLogService.logAdminAction(principal.getName(), logAction, details);
+			// --- MODIFIED: Use new logWasteAction for detailed tracking ---
+			if (isWaste) {
+				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
+				activityLogService.logWasteAction(
+						principal.getName(), 
+						logAction, 
+						details,
+						updatedItem.getName(),
+						quantity.abs(), // Always log positive quantity for waste amount
+						updatedItem.getCostPerUnit()
+				);
+			} else {
+				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
+			}
+			// --- END MODIFIED ---
 			
 		} catch (RuntimeException e) { 
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());

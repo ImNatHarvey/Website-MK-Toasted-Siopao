@@ -3,6 +3,7 @@ package com.toastedsiopao.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,20 @@ public class ActivityLogEntry {
 
 	@Column(length = 1000) 
 	private String details;
+	
+	// --- ADDED: Waste/Inventory specific fields ---
+	@Column(length = 100)
+	private String itemName;
+
+	@Column(precision = 10, scale = 2)
+	private BigDecimal quantity;
+
+	@Column(precision = 10, scale = 2)
+	private BigDecimal costPerUnit;
+
+	@Column(precision = 10, scale = 2)
+	private BigDecimal totalValue;
+	// --- END ADDED ---
 
 	@PrePersist
 	protected void onCreate() {
@@ -40,5 +55,17 @@ public class ActivityLogEntry {
 
 	public ActivityLogEntry(String username, String action) {
 		this(username, action, null);
+	}
+	
+	// --- ADDED: Constructor for waste logs ---
+	public ActivityLogEntry(String username, String action, String details, 
+			String itemName, BigDecimal quantity, BigDecimal costPerUnit, BigDecimal totalValue) {
+		this.username = username;
+		this.action = action;
+		this.details = details;
+		this.itemName = itemName;
+		this.quantity = quantity;
+		this.costPerUnit = costPerUnit;
+		this.totalValue = totalValue;
 	}
 }

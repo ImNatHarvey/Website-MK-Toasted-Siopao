@@ -329,7 +329,6 @@ public class PdfServiceImpl implements PdfService {
             PdfWriter.getInstance(document, out);
             document.open();
             
-            // --- MODIFIED: Dynamic Title ---
             String titleText = "INVOICE";
             if ("RECEIPT".equalsIgnoreCase(documentType)) {
                 titleText = "ORDER RECEIPT";
@@ -338,7 +337,6 @@ public class PdfServiceImpl implements PdfService {
             Paragraph title = new Paragraph(titleText, FONT_INVOICE_TITLE);
             title.setAlignment(Element.ALIGN_CENTER);
             document.add(title);
-            // --- END MODIFIED ---
             
             Paragraph storeName = new Paragraph(settings.getWebsiteName(), FONT_INVOICE_BODY);
             storeName.setAlignment(Element.ALIGN_CENTER);
@@ -367,7 +365,6 @@ public class PdfServiceImpl implements PdfService {
             orderCell.addElement(new Phrase("PAYMENT STATUS:", FONT_INVOICE_HEADER));
             orderCell.addElement(new Phrase(order.getPaymentStatus().replace("_", " "), FONT_INVOICE_BODY));
 
-            // --- Condition for GCash Receipt/Transaction ID ---
             if ("gcash".equalsIgnoreCase(order.getPaymentMethod())) {
                 if (StringUtils.hasText(order.getTransactionId())) {
                     orderCell.addElement(Chunk.NEWLINE);
@@ -375,7 +372,6 @@ public class PdfServiceImpl implements PdfService {
                     orderCell.addElement(new Phrase(order.getTransactionId(), FONT_INVOICE_BODY));
                 }
                 
-                // Only show QR if we are generating a RECEIPT, or if it is PAID/FOR_VERIFICATION
                 if ("RECEIPT".equalsIgnoreCase(documentType) || order.getPaymentStatus().equals(Order.PAYMENT_FOR_VERIFICATION) || order.getPaymentStatus().equals(Order.PAYMENT_PAID)) {
                     if (StringUtils.hasText(order.getPaymentReceiptImageUrl())) {
                         orderCell.addElement(Chunk.NEWLINE);
@@ -397,7 +393,6 @@ public class PdfServiceImpl implements PdfService {
                     }
                 }
             }
-            // --- END Condition for GCash Receipt/Transaction ID ---
             
             PdfPCell customerCell = new PdfPCell();
             customerCell.setBorder(Rectangle.NO_BORDER);
@@ -518,8 +513,9 @@ public class PdfServiceImpl implements PdfService {
         return new ByteArrayInputStream(out.toByteArray());
     }
     
+    // --- MODIFIED: Added reasonCategory parameter & Header Logic ---
     @Override
-    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword) throws IOException {
+    public ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory) throws IOException {
         SiteSettings settings = siteSettingsService.getSiteSettings();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -533,8 +529,14 @@ public class PdfServiceImpl implements PdfService {
 
             String filterDesc = "Filters: ";
             if (StringUtils.hasText(keyword)) {
-                filterDesc += "Item Keyword='" + keyword + "'";
-            } else {
+                filterDesc += "Item Keyword='" + keyword + "' ";
+            }
+            // --- ADDED: Handle reasonCategory in filter description ---
+            if (StringUtils.hasText(reasonCategory)) {
+                filterDesc += "Reason='" + reasonCategory + "'";
+            }
+            // --- END ADDED ---
+            if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory)) {
                 filterDesc += "None (All Records)";
             }
             String pageInfo = String.format("Page %d of %d (Total Records: %d)",
@@ -546,24 +548,45 @@ public class PdfServiceImpl implements PdfService {
             subtitle.setAlignment(Element.ALIGN_CENTER);
             subtitle.setSpacingAfter(15f);
             document.add(subtitle);
+            
+            // --- SUM TOTAL WASTE VALUE ---
+            BigDecimal totalWasteValue = BigDecimal.ZERO;
+            for (ActivityLogEntry logEntry : logPage.getContent()) {
+                if (logEntry.getTotalValue() != null) {
+                    totalWasteValue = totalWasteValue.add(logEntry.getTotalValue());
+                }
+            }
+            // -----------------------------
 
-            PdfPTable detailTable = new PdfPTable(4);
+            PdfPTable detailTable = new PdfPTable(7); 
             detailTable.setWidthPercentage(100);
-            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f }); 
+            detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 1.5f, 1f, 1f, 2.5f }); 
 
             addTableHeader(detailTable, "Timestamp");
             addTableHeader(detailTable, "Admin User");
             addTableHeader(detailTable, "Reason Category");
+            addTableHeader(detailTable, "Item Name");
+            addTableHeader(detailTable, "Cost/Unit");
+            addTableHeader(detailTable, "Total Value");
             addTableHeader(detailTable, "Details");
 
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
             for (ActivityLogEntry logEntry : logPage.getContent()) {
                 addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
                 addTableCell(detailTable, logEntry.getUsername(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
-                // Remove the prefix for cleaner display
                 addTableCell(detailTable, logEntry.getAction().replace("STOCK_WASTE_", ""), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                
+                addTableCell(detailTable, logEntry.getItemName() != null ? logEntry.getItemName() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
+                addTableCell(detailTable, logEntry.getCostPerUnit() != null ? formatCurrency(logEntry.getCostPerUnit()) : "N/A", FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                addTableCell(detailTable, logEntry.getTotalValue() != null ? formatCurrency(logEntry.getTotalValue()) : "N/A", FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+                
                 addTableCell(detailTable, StringUtils.hasText(logEntry.getDetails()) ? logEntry.getDetails() : "", FONT_TABLE_CELL, Element.ALIGN_LEFT);
             }
+            
+            // --- ADDED: Total Footer Row ---
+            addTableFooterCell(detailTable, "Total Waste Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 5);
+            addTableFooterCell(detailTable, formatCurrency(totalWasteValue), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 2);
+            // --- END ADDED ---
 
             document.add(detailTable);
 
@@ -574,6 +597,7 @@ public class PdfServiceImpl implements PdfService {
 
         return new ByteArrayInputStream(out.toByteArray());
     }
+    // --- END MODIFIED ---
 
     private void addTableHeader(PdfPTable table, String headerTitle) {
         PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));

@@ -4,18 +4,25 @@ import com.toastedsiopao.model.ActivityLogEntry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.util.Map;
+
 public interface ActivityLogService {
 
 	void logAdminAction(String username, String action);
 
 	void logAdminAction(String username, String action, String details);
+	
+	// --- ADDED: Specific logger for waste ---
+	void logWasteAction(String username, String action, String details, 
+			String itemName, BigDecimal quantity, BigDecimal costPerUnit);
 
 	Page<ActivityLogEntry> getAllLogs(Pageable pageable);
 
-	// --- NEW ---
 	Page<ActivityLogEntry> getWasteLogs(Pageable pageable);
 	
-	// --- MODIFIED: Changed categoryId to String reasonCategory ---
 	Page<ActivityLogEntry> searchWasteLogs(String keyword, String reasonCategory, Pageable pageable);
-	// --- END MODIFIED ---
+	
+	// --- ADDED: Metrics ---
+	Map<String, Object> getWasteMetrics();
 }

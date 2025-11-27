@@ -406,20 +406,18 @@ public class ReportServiceImpl implements ReportService {
         return pdfService.generateProductReportPdf(products, keyword, categoryId);
     }
     
-    // --- MODIFIED: Added reasonCategory parameter ---
     @Override
     public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory) throws IOException {
-        // We use an unpaged request to get all filtered data for the report
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); // --- MODIFIED: Passed reasonCategory ---
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); 
         SiteSettings settings = siteSettingsService.getSiteSettings();
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
             
             CellStyle headerStyle = createHeaderStyle(workbook);
             CellStyle boldStyle = createBoldStyle(workbook);
+            CellStyle currencyStyle = createCurrencyStyle(workbook); 
             CellStyle dateTimeStyle = workbook.createCellStyle();
             DataFormat format = workbook.createDataFormat();
-            // Using a standard date/time format for Excel
             dateTimeStyle.setDataFormat(format.getFormat("yyyy-mm-dd hh:mm:ss"));
 
 
@@ -435,11 +433,9 @@ public class ReportServiceImpl implements ReportService {
             if (StringUtils.hasText(keyword)) {
                 filterDesc += "Item Keyword='" + keyword + "' ";
             }
-            // --- ADDED: Include reasonCategory in filter description ---
             if (StringUtils.hasText(reasonCategory)) {
                 filterDesc += "Reason='" + reasonCategory + "'";
             }
-            // --- END ADDED ---
             if (!StringUtils.hasText(keyword) && !StringUtils.hasText(reasonCategory)) {
                 filterDesc += "None (All Records)";
             }
@@ -449,7 +445,7 @@ public class ReportServiceImpl implements ReportService {
 
             rowIdx.getAndIncrement(); 
             
-            String[] headers = { "Timestamp", "Admin User", "Action Category", "Details" };
+            String[] headers = { "Timestamp", "Admin User", "Action Category", "Item Name", "Cost/Unit", "Total Value", "Details" };
             Row headerRow = sheet.createRow(rowIdx.getAndIncrement());
             for (int i = 0; i < headers.length; i++) {
                 Cell cell = headerRow.createCell(i);
@@ -465,9 +461,23 @@ public class ReportServiceImpl implements ReportService {
                 timestampCell.setCellStyle(dateTimeStyle);
 
                 row.createCell(1).setCellValue(logEntry.getUsername());
-                // Remove the prefix for a cleaner report
                 row.createCell(2).setCellValue(logEntry.getAction().replace("STOCK_WASTE_", ""));
-                row.createCell(3).setCellValue(logEntry.getDetails());
+                
+                row.createCell(3).setCellValue(logEntry.getItemName() != null ? logEntry.getItemName() : "N/A");
+                
+                if (logEntry.getCostPerUnit() != null) {
+                    createCurrencyCell(row, 4, logEntry.getCostPerUnit(), currencyStyle);
+                } else {
+                    row.createCell(4).setCellValue("N/A");
+                }
+                
+                if (logEntry.getTotalValue() != null) {
+                    createCurrencyCell(row, 5, logEntry.getTotalValue(), currencyStyle);
+                } else {
+                    row.createCell(5).setCellValue("N/A");
+                }
+                
+                row.createCell(6).setCellValue(logEntry.getDetails());
             }
             
             autoSizeColumns(sheet, headers.length);
@@ -477,21 +487,16 @@ public class ReportServiceImpl implements ReportService {
         }
     }
     
-    // --- MODIFIED: Added reasonCategory parameter ---
     @Override
     public ByteArrayInputStream generateWasteReportPdf(String keyword, String reasonCategory) throws IOException {
-        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged()); // --- MODIFIED: Passed reasonCategory ---
-        return pdfService.generateWasteLogPdf(wasteLogs, keyword); // Note: PDF service only supports one keyword parameter on log, we will keep it simple there for now.
+        Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, Pageable.unpaged());
+        return pdfService.generateWasteLogPdf(wasteLogs, keyword, reasonCategory); 
     }
-    // --- END MODIFIED ---
 
-    // --- MODIFIED METHOD SIGNATURE AND BODY ---
     @Override
     public ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException {
-    	
         return pdfService.generateOrderDocumentPdf(order, documentType);
     }
-    // --- END MODIFIED ---
     
     @Override
     public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	th:replace="~{admin/base :: layout(~{::#admin-dashboard-content}, ~{::script}, 'dashboard')}">
 <head>
@@ -8,11 +9,11 @@
 
 	<div id="admin-dashboard-content"
 		th:attr="data-sales-labels=${salesChartLabels},
-                 data-sales-data=${salesChartData},
-                 data-order-status-labels=${orderStatusChartLabels},
-                 data-order-status-data=${orderStatusChartData},
-                 data-top-products-labels=${topProductsChartLabels},
-                 data-top-products-data=${topProductsChartData}">
+             data-sales-data=${salesChartData},
+             data-order-status-labels=${orderStatusChartLabels},
+             data-order-status-data=${orderStatusChartData},
+             data-top-products-labels=${topProductsChartLabels},
+             data-top-products-data=${topProductsChartData}">
 
 		<div
 			class="dashboard-header d-flex justify-content-between align-items-center">
@@ -20,6 +21,12 @@
 				<h1 class="section-title">Admin Dashboard</h1>
 				<p class="text-muted">Welcome back! Here's your business
 					overview.</p>
+			</div>
+			<div>
+				<a th:href="@{/admin/reports/dashboard/pdf}" target="_blank"
+					class="btn btn-action-success"> <i
+					class="fa-solid fa-file-pdf me-2"></i> Export Dashboard PDF
+				</a>
 			</div>
 		</div>
 
@@ -534,9 +541,8 @@
 
 	<th:block th:fragment="script">
 		<script
-			src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+			src="[https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js](https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js)"></script>
 		<script th:src="@{/js/admin-dashboard.js}"></script>
 	</th:block>
-
 </body>
 </html>

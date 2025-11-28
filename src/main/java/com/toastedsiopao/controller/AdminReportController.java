@@ -314,7 +314,6 @@ public class AdminReportController {
 		}
 	}
 
-	// --- MODIFIED: Activity Log PDF Endpoint ---
 	@GetMapping("/activity-log/pdf")
 	@PreAuthorize("hasAuthority('VIEW_ACTIVITY_LOG')")
 	public ResponseEntity<InputStreamResource> downloadActivityLogPdf(
@@ -329,7 +328,6 @@ public class AdminReportController {
 
 		try {
 			Pageable pageable = PageRequest.of(page, size);
-			// Pass filters to service
 			ByteArrayInputStream bis = reportService.generateActivityLogPdf(keyword, startDate, endDate, pageable);
 
 			HttpHeaders headers = new HttpHeaders();
@@ -346,6 +344,32 @@ public class AdminReportController {
 			return ResponseEntity.internalServerError().build();
 		} catch (Exception e) {
 			log.error("Unexpected error generating activity log PDF report: {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError().build();
+		}
+	}
+
+	// --- NEW: Dashboard PDF Report ---
+	@GetMapping("/dashboard/pdf")
+	@PreAuthorize("hasAuthority('VIEW_DASHBOARD')")
+	public ResponseEntity<InputStreamResource> downloadDashboardReportPdf() {
+		log.info("Generating Admin Dashboard PDF Report...");
+		try {
+			ByteArrayInputStream bis = reportService.generateDashboardReportPdf();
+
+			HttpHeaders headers = new HttpHeaders();
+			String timestamp = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+			String fileName = "MK-Toasted-Siopao_Dashboard-Report_" + timestamp + ".pdf";
+
+			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+
+			return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF)
+					.body(new InputStreamResource(bis));
+
+		} catch (IOException e) {
+			log.error("Failed to generate dashboard PDF report: {}", e.getMessage(), e);
+			return ResponseEntity.internalServerError().build();
+		} catch (Exception e) {
+			log.error("Unexpected error generating dashboard PDF report: {}", e.getMessage(), e);
 			return ResponseEntity.internalServerError().build();
 		}
 	}

@@ -23,11 +23,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -58,6 +61,12 @@ public class ReportServiceImpl implements ReportService {
 	@Autowired
 	private ActivityLogService activityLogService;
 
+	@Autowired
+	private CustomerService customerService;
+
+	@Autowired
+	private AdminService adminService;
+
 	private LocalDateTime parseDate(String date, boolean isEndDate) {
 		if (!StringUtils.hasText(date)) {
 			return null;
@@ -70,8 +79,6 @@ public class ReportServiceImpl implements ReportService {
 			return null;
 		}
 	}
-
-	// ... (Financial, Inventory, Product methods...)
 
 	@Override
 	public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate)
@@ -606,14 +613,75 @@ public class ReportServiceImpl implements ReportService {
 		return pdfService.generateOrderDocumentPdf(order, documentType);
 	}
 
-	// --- MODIFIED: PDF Generation for Activity Log with filters ---
 	@Override
 	public ByteArrayInputStream generateActivityLogPdf(String keyword, String startDate, String endDate,
 			Pageable pageable) throws IOException {
 		Page<ActivityLogEntry> logPage = activityLogService.searchLogs(keyword, startDate, endDate, pageable);
 		return pdfService.generateActivityLogPdf(logPage, keyword, startDate, endDate);
 	}
-	// --- END MODIFIED ---
+
+	// --- NEW: Gather Dashboard Stats and Call PDF Service ---
+	@Override
+	public ByteArrayInputStream generateDashboardReportPdf() throws IOException {
+		Map<String, Object> data = new HashMap<>();
+
+		// Financials
+		data.put("salesToday", orderService.getSalesToday());
+		data.put("salesWeek", orderService.getSalesThisWeek());
+		data.put("salesMonth", orderService.getSalesThisMonth());
+		data.put("cogsToday", orderService.getCogsToday());
+		data.put("cogsWeek", orderService.getCogsThisWeek());
+		data.put("cogsMonth", orderService.getCogsThisMonth());
+
+		data.put("totalRevenue", orderService.getTotalRevenueAllTime());
+		data.put("totalTransactions", orderService.getTotalTransactionsAllTime());
+		BigDecimal avg = BigDecimal.ZERO;
+		if ((long) data.get("totalTransactions") > 0) {
+			avg = ((BigDecimal) data.get("totalRevenue")).divide(new BigDecimal((long) data.get("totalTransactions")),
+					2, RoundingMode.HALF_UP);
+		}
+		data.put("avgOrderValue", avg);
+		data.put("potentialRevenue", orderService.getTotalPotentialRevenue());
+
+		// Order Counts
+		Map<String, Long> orderCounts = orderService.getOrderStatusCounts();
+		data.put("totalOrders", orderCounts.values().stream().mapToLong(Long::longValue).sum());
+		data.put("pendingVerification", orderCounts.getOrDefault(Order.STATUS_PENDING_VERIFICATION, 0L));
+		data.put("pending", orderCounts.getOrDefault(Order.STATUS_PENDING, 0L));
+		data.put("processing", orderCounts.getOrDefault(Order.STATUS_PROCESSING, 0L));
+		data.put("outForDelivery", orderCounts.getOrDefault(Order.STATUS_OUT_FOR_DELIVERY, 0L));
+		data.put("delivered", orderCounts.getOrDefault(Order.STATUS_DELIVERED, 0L));
+		data.put("cancelled", orderCounts.getOrDefault(Order.STATUS_CANCELLED, 0L));
+		data.put("rejected", orderCounts.getOrDefault(Order.STATUS_REJECTED, 0L));
+
+		// Inventory
+		data.put("totalInventoryItems", inventoryItemService.findAll().size());
+		data.put("totalStockValue", inventoryItemService.getTotalStockValue());
+		data.put("invLow", inventoryItemService.countLowStockItems());
+		data.put("invCritical", inventoryItemService.countCriticalStockItems());
+		data.put("invOut", inventoryItemService.countOutOfStockItems());
+
+		// Products
+		data.put("totalProducts", productService.countAllProducts());
+		data.put("prodLow", productService.countLowStockProducts());
+		data.put("prodCritical", productService.countCriticalStockProducts());
+		data.put("prodOut", productService.countOutOfStockProducts());
+
+		// Waste
+		Map<String, Object> waste = activityLogService.getWasteMetrics(null, null, null, null, null);
+		data.put("wasteTotalValue", waste.get("totalWasteValue"));
+		data.put("wasteExpired", waste.get("expiredValue"));
+		data.put("wasteDamaged", waste.get("damagedValue"));
+		data.put("wasteOther", waste.get("wasteValue"));
+
+		// Users
+		data.put("totalCustomers", customerService.findAllCustomers(null).getTotalElements());
+		data.put("activeCustomers", customerService.countActiveCustomers());
+		data.put("newCustomers", customerService.countNewCustomersThisMonth());
+		data.put("totalAdmins", adminService.countAllAdmins());
+
+		return pdfService.generateDashboardPdf(data);
+	}
 
 	private CellStyle createHeaderStyle(Workbook workbook) {
 		CellStyle style = workbook.createCellStyle();

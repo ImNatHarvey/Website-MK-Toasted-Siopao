@@ -26,6 +26,8 @@ public interface ReportService {
 
     ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException, IllegalArgumentException;
 
-    // --- MODIFIED: Added filter params ---
     ByteArrayInputStream generateActivityLogPdf(String keyword, String startDate, String endDate, Pageable pageable) throws IOException;
+    
+    // --- NEW: Dashboard Report ---
+    ByteArrayInputStream generateDashboardReportPdf() throws IOException;
 }

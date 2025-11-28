@@ -10,16 +10,50 @@
 		<div
 			class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
 			<h1 class="mb-3 mb-md-0 section-title">Admin Activity Log</h1>
-			<form th:action="@{/admin/reports/activity-log/pdf}" method="get"
-				target="_blank">
-				<input type="hidden" name="page" th:value="${currentPage}" /> <input
-					type="hidden" name="size" th:value="${size}" />
-				<button type="submit" class="btn btn-action-success">
-					<i class="fa-solid fa-file-pdf me-1"></i> Export Current Page as
-					PDF
-				</button>
-			</form>
+		</div>
+
+		<form th:action="@{/admin/activity-log}" method="get"
+			class="mb-4 p-3 bg-light rounded shadow-sm">
+			<div class="d-flex flex-column flex-md-row gap-2">
+				<div class="flex-grow-1">
+					<div class="row g-2">
+						<div class="col-md-6">
+							<label for="keyword" class="form-label">Search by User,
+								Action, or Details</label> <input type="text" class="form-control"
+								id="keyword" name="keyword" th:value="${keyword}"
+								placeholder="Enter search term...">
+						</div>
+						<div class="col-md-3">
+							<label for="startDate" class="form-label">From</label> <input
+								type="date" class="form-control" id="startDate" name="startDate"
+								th:value="${startDate}">
+						</div>
+						<div class="col-md-3">
+							<label for="endDate" class="form-label">To</label> <input
+								type="date" class="form-control" id="endDate" name="endDate"
+								th:value="${endDate}">
+						</div>
+					</div>
+				</div>
+				<div class="d-flex gap-2 align-self-md-end" style="flex-shrink: 0;">
+					<button type="submit" class="btn btn-action-view" title="Filter">
+						<i class="fa-solid fa-search"></i> <span
+							class="d-none d-md-inline ms-1">Search</span>
+					</button>
+					<a th:href="@{/admin/activity-log}"
+						class="btn btn-custom-secondary" title="Clear Filters"> <i
+						class="fa-solid fa-times"></i> <span
+						class="d-none d-md-inline ms-1">Clear</span>
+					</a>
+					<div class="btn-group">
+						<button type="submit" formaction="/admin/reports/activity-log/pdf"
+							formmethod="get" target="_blank" class="btn btn-action-success">
+							<i class="fa-solid fa-file-pdf me-1"></i> Export PDF
+						</button>
+					</div>
+				</div>
 			</div>
+		</form>
 
 		<div class="card shadow-sm">
 			<div class="card-header">
@@ -46,7 +80,7 @@
 							</tr>
 							<tr th:if="${#lists.isEmpty(activityLogs)}">
 								<td colspan="4" class="text-center text-muted">No activity
-									recorded yet.</td>
+									recorded yet matching your criteria.</td>
 							</tr>
 						</tbody>
 					</table>
@@ -60,7 +94,7 @@
 							<li class="page-item"
 								th:classappend="${activityLogPage.first} ? 'disabled'"><a
 								class="page-link"
-								th:href="@{/admin/activity-log(page=${activityLogPage.number - 1}, size=${size})}">Previous</a>
+								th:href="@{/admin/activity-log(page=${activityLogPage.number - 1}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}">Previous</a>
 							</li>
 							<th:block
 								th:each="i : ${#numbers.sequence(0, activityLogPage.totalPages - 1)}"
@@ -72,13 +106,13 @@
 								<li class="page-item"
 									th:classappend="${i == activityLogPage.number} ? 'active'"><a
 									class="page-link"
-									th:href="@{/admin/activity-log(page=${i}, size=${size})}"
+									th:href="@{/admin/activity-log(page=${i}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}"
 									th:text="${i + 1}"></a></li>
 							</th:block>
 							<li class="page-item"
 								th:classappend="${activityLogPage.last} ? 'disabled'"><a
 								class="page-link"
-								th:href="@{/admin/activity-log(page=${activityLogPage.number + 1}, size=${size})}">Next</a>
+								th:href="@{/admin/activity-log(page=${activityLogPage.number + 1}, size=${size}, keyword=${keyword}, startDate=${startDate}, endDate=${endDate})}">Next</a>
 							</li>
 						</ul>
 					</nav>

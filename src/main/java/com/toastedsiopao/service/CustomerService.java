@@ -1,8 +1,8 @@
 package com.toastedsiopao.service;
 
 import com.toastedsiopao.dto.CustomerCreateDto;
-import com.toastedsiopao.dto.CustomerPasswordDto; 
-import com.toastedsiopao.dto.CustomerProfileDto; 
+import com.toastedsiopao.dto.CustomerPasswordDto;
+import com.toastedsiopao.dto.CustomerProfileDto;
 import com.toastedsiopao.dto.CustomerSignUpDto;
 import com.toastedsiopao.dto.CustomerUpdateDto;
 import com.toastedsiopao.dto.PasswordResetDto;
@@ -14,7 +14,7 @@ import java.util.Optional;
 
 public interface CustomerService {
 
-	User saveCustomer(CustomerSignUpDto customerDto);
+	User saveCustomer(CustomerSignUpDto customerDto, String siteUrl) throws Exception;
 
 	User createCustomerFromAdmin(CustomerCreateDto userDto);
 
@@ -51,4 +51,7 @@ public interface CustomerService {
 	void updateCustomerProfile(String currentUsername, CustomerProfileDto profileDto);
 
 	void updateCustomerPassword(String currentUsername, CustomerPasswordDto passwordDto);
+
+	// --- UPDATED: Now takes ID and returns specific status string ---
+	String verifyAccount(Long userId, String token);
 }

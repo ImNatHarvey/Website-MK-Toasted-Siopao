@@ -16,6 +16,17 @@
 						<p class="text-center text-muted mb-4">Log in to your account
 							to continue.</p>
 
+						<div th:if="${param.verified}" class="alert alert-success"
+							role="alert">
+							<span th:if="${param.verified[0] == 'success'}"> <i
+								class="fa-solid fa-check-circle me-2"></i> Account successfully
+								verified! You can now log in.
+							</span> <span th:if="${param.verified[0] == 'already'}"> <i
+								class="fa-solid fa-circle-info me-2"></i> Your account is
+								already verified. Please log in.
+							</span>
+						</div>
+
 						<div th:if="${param.error}" class="alert alert-danger"
 							role="alert">
 							<span
@@ -23,11 +34,16 @@
 								Invalid username or password. </span> <span
 								th:if="${param.error[0] == 'disabled'}"> Your account is
 								inactive. Please contact the system Owner. </span> <span
+								th:if="${param.error[0] == 'unverified'}"> Your account
+								is not verified. Please check your email for the verification
+								link. </span> <span th:if="${param.error[0] == 'invalid_token'}">
+								Invalid or expired verification link. It may have already been
+								used or is incorrect. </span> <span
 								th:if="${param.error[0] == 'oauth_cancelled'}"> Google
 								Sign-in was cancelled. </span> <span
 								th:if="${param.error[0] == 'internal'}"> An unexpected
 								error occurred. Please try again. </span> <span
-								th:if="${param.error[0] != 'credentials' and param.error[0] != 'true' and param.error[0] != 'disabled' and param.error[0] != 'internal' and param.error[0] != 'oauth_cancelled'}">
+								th:if="${param.error[0] != 'credentials' and param.error[0] != 'true' and param.error[0] != 'disabled' and param.error[0] != 'internal' and param.error[0] != 'oauth_cancelled' and param.error[0] != 'unverified' and param.error[0] != 'invalid_token'}">
 								Authentication failed. Please try again. </span>
 						</div>
 
@@ -100,6 +116,7 @@
 									in with Google</span>
 							</a>
 						</div>
+
 						<p class="text-center">
 							Don't have an account? <a
 								th:href="@{/signup(source=${param.source})}">Sign up here</a>

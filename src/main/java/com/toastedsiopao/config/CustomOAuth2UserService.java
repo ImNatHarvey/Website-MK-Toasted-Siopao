@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		String firstName = (String) attributes.get("given_name");
 		String lastName = (String) attributes.get("family_name");
 
-		// Fallback if details are missing
 		if (firstName == null)
 			firstName = "User";
 		if (lastName == null)
@@ -61,12 +61,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 		User user;
 
 		if (userOptional.isPresent()) {
-			// Update existing user info
 			user = userOptional.get();
-			// Optional: Update name from Google if you want to keep it synced
-			// user.setFirstName(firstName);
-			// user.setLastName(lastName);
-			// userRepository.save(user);
+
+			// --- FIX: Handle Status Checks for Existing Users ---
+			if ("INACTIVE".equals(user.getStatus())) {
+				// Block banned/inactive users even if they have valid Google Auth
+				throw new OAuth2AuthenticationException(new OAuth2Error("account_disabled"),
+						"Your account is inactive/banned.");
+			} else if ("PENDING".equals(user.getStatus())) {
+				// Auto-Verify: Logging in via Google proves email ownership.
+				user.setStatus("ACTIVE");
+				user.setVerificationToken(null);
+				userRepository.save(user);
+				log.info("User {} account auto-verified via Google login.", user.getUsername());
+			}
+			// ---------------------------------------------------
+
 			log.info("User {} logged in via Google.", user.getUsername());
 		} else {
 			// Register new user
@@ -76,72 +86,49 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			user.setFirstName(firstName);
 			user.setLastName(lastName);
 
-			// Generate Unique Username based on Name
 			String baseUsername = generateBaseUsername(firstName, lastName);
 			String uniqueUsername = generateUniqueUsername(baseUsername);
 			user.setUsername(uniqueUsername);
 
-			// Generate a random dummy password
 			user.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
 
-			// Assign default Customer role
 			Role customerRole = roleRepository.findByName("ROLE_CUSTOMER")
 					.orElseThrow(() -> new RuntimeException("Default role ROLE_CUSTOMER not found"));
 			user.setRole(customerRole);
 
+			// Google users are automatically ACTIVE (verified)
 			user.setStatus("ACTIVE");
 
 			userRepository.save(user);
 		}
 
-		// 4. Return the OAuth2User with our DB Authorities (Role) attached
+		// 4. Return User
 		Set<SimpleGrantedAuthority> authorities = new HashSet<>();
 		if (user.getRole() != null) {
 			authorities.add(new SimpleGrantedAuthority(user.getRole().getName()));
 			user.getRole().getPermissions().forEach(p -> authorities.add(new SimpleGrantedAuthority(p)));
 		}
 
-		// --- FIX: Use the Database Username as the Principal Name ---
-		// We create a mutable copy of the attributes to add our custom key
 		Map<String, Object> extendedAttributes = new HashMap<>(attributes);
 		extendedAttributes.put("db_username", user.getUsername());
 
-		// We pass "db_username" as the key.
-		// Now principal.getName() will return 'joshcrisologo' instead of
-		// 'email@gmail.com'
 		return new DefaultOAuth2User(authorities, extendedAttributes, "db_username");
 	}
 
-	/**
-	 * Generates a base username from First Name (1st word) + Last Name. Example:
-	 * "Josh Harvey", "Crisologo" -> "josh" + "crisologo" -> "joshcrisologo"
-	 */
 	private String generateBaseUsername(String firstName, String lastName) {
-		// Get the first word of the first name
 		String firstPart = firstName.trim().split("\\s+")[0];
-
-		// Remove spaces from last name to make it one string
 		String lastPart = lastName.trim().replaceAll("\\s+", "");
-
-		// Combine, lowercase, and strip non-alphanumeric characters (just to be safe)
 		String rawUsername = (firstPart + lastPart).toLowerCase();
 		return rawUsername.replaceAll("[^a-z0-9_]", "");
 	}
 
-	/**
-	 * Checks if the username exists and appends a counter if necessary. Example:
-	 * "joshcrisologo" -> "joshcrisologo1" -> "joshcrisologo2"
-	 */
 	private String generateUniqueUsername(String baseUsername) {
 		String candidateUsername = baseUsername;
 		int counter = 1;
-
-		// Loop until we find a username that doesn't exist
 		while (userRepository.findByUsername(candidateUsername).isPresent()) {
 			candidateUsername = baseUsername + counter;
 			counter++;
 		}
-
 		return candidateUsername;
 	}
 }

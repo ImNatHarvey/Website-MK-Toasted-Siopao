@@ -9,4 +9,7 @@ public interface EmailService {
 	void sendPasswordResetEmail(User user, String token, String resetUrl) throws MessagingException;
 
 	void sendOrderStatusUpdateEmail(Order order, String subject, String message) throws MessagingException;
+
+	// --- ADDED ---
+	void sendVerificationEmail(User user, String verifyUrl) throws MessagingException;
 }

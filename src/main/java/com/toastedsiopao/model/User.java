@@ -1,9 +1,7 @@
 package com.toastedsiopao.model;
 
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CollectionTable; // REMOVED
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection; // REMOVED
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -11,21 +9,21 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany; // --- IMPORT ADDED ---
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import lombok.EqualsAndHashCode; // IMPORT ADDED
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString; // IMPORT ADDED
+import lombok.ToString;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList; // --- IMPORT ADDED ---
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List; // --- IMPORT ADDED ---
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -49,24 +47,14 @@ public class User {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "role_id")
-	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
-	@ToString.Exclude // --- THIS IS THE FIX ---
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
 	private Role role;
 
-	// --- REMOVED: Individual permission overrides ---
-	// @ElementCollection(fetch = FetchType.EAGER)
-	// @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name =
-	// "user_id"))
-	// @Column(name = "permission", nullable = false)
-	// private Set<String> permissions = new HashSet<>();
-	// --- END REMOVED ---
-	
-	// --- START: NEW RELATIONSHIP ---
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-	@EqualsAndHashCode.Exclude // --- THIS IS THE FIX ---
-	@ToString.Exclude // --- THIS IS THE FIX ---
+	@EqualsAndHashCode.Exclude
+	@ToString.Exclude
 	private List<IssueReport> issueReports = new ArrayList<>();
-	// --- END: NEW RELATIONSHIP ---
 
 	@Column(length = 50)
 	private String firstName;
@@ -110,12 +98,15 @@ public class User {
 	@Column(nullable = true)
 	private LocalDateTime lastActivity;
 
-	// --- ADDED: Fields for password reset ---
 	@Column(nullable = true)
 	private String resetPasswordToken;
 
 	@Column(nullable = true)
 	private LocalDateTime resetPasswordTokenExpiry;
+
+	// --- ADDED: Email Verification Token ---
+	@Column(nullable = true)
+	private String verificationToken;
 	// --- END ADDED ---
 
 	public User(String username, String password, Role role) {
@@ -137,18 +128,12 @@ public class User {
 		}
 	}
 
-	// --- UPDATED: Helper method for permissions ---
-	// public void addPermission(String permission) {
-	// this.permissions.add(permission);
-	// }
-
 	@Transient
 	public Set<String> getCombinedPermissions() {
 		Set<String> combined = new HashSet<>();
 		if (role != null) {
 			combined.addAll(role.getPermissions());
 		}
-		// combined.addAll(this.permissions); // Removed user overrides
 		return combined;
 	}
 }

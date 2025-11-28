@@ -27,9 +27,9 @@ public class EmailServiceImpl implements EmailService {
 	private JavaMailSender mailSender;
 
 	@Autowired
-	@Qualifier("emailTemplateEngine") 
+	@Qualifier("emailTemplateEngine")
 	private TemplateEngine templateEngine;
-	
+
 	@Autowired
 	private SiteSettingsService siteSettingsService;
 
@@ -40,13 +40,14 @@ public class EmailServiceImpl implements EmailService {
 		try {
 			return ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
 		} catch (Exception e) {
-			log.warn("Could not determine base URL from web request for email template. Defaulting to http://localhost:8080");
-			return "http://localhost:8080"; 
+			log.warn(
+					"Could not determine base URL from web request for email template. Defaulting to http://localhost:8080");
+			return "http://localhost:8080";
 		}
 	}
 
 	@Override
-	@Async 
+	@Async
 	public void sendPasswordResetEmail(User user, String token, String resetUrl) throws MessagingException {
 		if (user.getEmail() == null) {
 			log.warn("Cannot send password reset email: User {} (ID: {}) has no email address.", user.getUsername(),
@@ -69,7 +70,7 @@ public class EmailServiceImpl implements EmailService {
 		helper.setFrom(fromEmail);
 		helper.setTo(user.getEmail());
 		helper.setSubject("Your Password Reset Request - MK Toasted Siopao");
-		helper.setText(htmlBody, true); 
+		helper.setText(htmlBody, true);
 
 		mailSender.send(message);
 		log.info("Password reset email sent successfully to {}", user.getEmail());
@@ -108,5 +109,35 @@ public class EmailServiceImpl implements EmailService {
 
 		mailSender.send(message);
 		log.info("Order status update email sent successfully to {}", toEmail);
+	}
+
+	@Override
+	@Async
+	public void sendVerificationEmail(User user, String verifyUrl) throws MessagingException {
+		if (user.getEmail() == null) {
+			log.warn("Cannot send verification email: User {} has no email address.", user.getUsername());
+			return;
+		}
+
+		log.info("Attempting to send verification email to {}", user.getEmail());
+
+		Context context = new Context();
+		context.setVariable("siteSettings", siteSettingsService.getSiteSettings());
+		context.setVariable("baseUrl", getBaseUrl());
+		context.setVariable("name", user.getFirstName());
+		context.setVariable("verifyUrl", verifyUrl);
+
+		String htmlBody = templateEngine.process("mail/verification-email", context);
+
+		MimeMessage message = mailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+		helper.setFrom(fromEmail);
+		helper.setTo(user.getEmail());
+		helper.setSubject("Verify Your Account - MK Toasted Siopao");
+		helper.setText(htmlBody, true);
+
+		mailSender.send(message);
+		log.info("Verification email sent successfully to {}", user.getEmail());
 	}
 }

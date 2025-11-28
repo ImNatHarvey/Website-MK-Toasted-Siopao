@@ -11,12 +11,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.toastedsiopao.model.Permission;
 import com.toastedsiopao.model.User;
 import com.toastedsiopao.service.CustomerService;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,13 +46,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		}
 
 		log.info("--- User found: {} ---", user.getUsername());
-		log.debug("--- Hashed Password from DB: [PROTECTED] ---");
-		if (user.getRole() != null) {
-			log.info("--- Role from DB: {} ---", user.getRole().getName());
-		} else {
-			log.warn("--- User {} has a NULL role! ---", user.getUsername());
-		}
-		
+
 		boolean enabled = true;
 		String roleName = (user.getRole() != null) ? user.getRole().getName() : "";
 
@@ -62,13 +54,18 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 			enabled = false;
 			log.warn("--- User {} is an admin and is set to INACTIVE. Marking as disabled. ---", user.getUsername());
 		} else if (CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
-			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---", user.getUsername());
+			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---",
+					user.getUsername());
+		} else if ("PENDING".equals(user.getStatus())) {
+			// --- ADDED: Block login for pending users ---
+			enabled = false;
+			log.warn("--- User {} is PENDING verification. Marking as disabled. ---", user.getUsername());
 		}
-		
+
 		Collection<? extends GrantedAuthority> authorities = getAuthorities(user);
 
-		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(),
-				enabled, true, true, true, authorities);
+		return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), enabled,
+				true, true, true, authorities);
 	}
 
 	private Collection<? extends GrantedAuthority> getAuthorities(User user) {
@@ -83,7 +80,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 			log.error("User {} has no role! Assigning no authorities.", user.getUsername());
 		}
 
-		log.debug("--- Assigning role-based authorities for {}: {} ---", user.getUsername(), authorities);
 		return authorities;
 	}
 }

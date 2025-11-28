@@ -4,20 +4,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; 
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.util.StringUtils; 
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.util.StringUtils;
 
 import com.toastedsiopao.dto.CustomerSignUpDto;
-import com.toastedsiopao.dto.PasswordResetDto; 
-import com.toastedsiopao.model.SiteSettings; 
+import com.toastedsiopao.dto.PasswordResetDto;
+import com.toastedsiopao.model.SiteSettings;
 import com.toastedsiopao.service.CustomerService;
-import com.toastedsiopao.service.SiteSettingsService; 
+import com.toastedsiopao.service.SiteSettingsService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -30,10 +31,10 @@ public class AuthController {
 	@Autowired
 	private CustomerService customerService;
 
-	@Autowired 
+	@Autowired
 	private SiteSettingsService siteSettingsService;
 
-	@ModelAttribute 
+	@ModelAttribute
 	public void addCommonAttributes(Model model) {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		model.addAttribute("siteSettings", settings);
@@ -45,7 +46,7 @@ public class AuthController {
 	}
 
 	@GetMapping("/signup")
-	public String showSignupForm(Model model, @RequestParam(value = "source", required = false) String source) { 
+	public String showSignupForm(Model model, @RequestParam(value = "source", required = false) String source) {
 		if (!model.containsAttribute("customerSignUpDto")) {
 			model.addAttribute("customerSignUpDto", new CustomerSignUpDto());
 		}
@@ -59,27 +60,30 @@ public class AuthController {
 
 	@PostMapping("/signup")
 	public String processSignup(@Valid @ModelAttribute("customerSignUpDto") CustomerSignUpDto userDto,
-			BindingResult result, @RequestParam(value = "source", required = false) String source, 
-			RedirectAttributes redirectAttributes) {
+			BindingResult result, @RequestParam(value = "source", required = false) String source,
+			RedirectAttributes redirectAttributes, HttpServletRequest request) {
 
 		if (result.hasErrors()) {
 			log.warn("Signup form validation failed (DTO level). Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : "");
 		}
 
 		try {
-			customerService.saveCustomer(userDto);
+			String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request).replacePath(null).build()
+					.toUriString();
+
+			customerService.saveCustomer(userDto, baseUrl);
 			log.info("Signup successful for username: {}", userDto.getUsername());
 
-			redirectAttributes.addFlashAttribute("successMessage", "Registration successful! Please log in.");
-			
+			redirectAttributes.addFlashAttribute("successMessage",
+					"Registration successful! Please check your email to verify your account.");
+
 			String redirectUrl = "/login";
 			if ("checkout".equals(source)) {
-				redirectUrl = "/login?source=checkout"; 
-				log.info("Signup from checkout successful. Redirecting to login with source=checkout.");
+				redirectUrl = "/login?source=checkout";
 			}
 			return "redirect:" + redirectUrl;
 
@@ -99,14 +103,29 @@ public class AuthController {
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.customerSignUpDto",
 					result);
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : "");
 
 		} catch (Exception e) {
 			log.error("Unexpected error during signup for username {}: {}", userDto.getUsername(), e.getMessage(), e);
 			redirectAttributes.addFlashAttribute("errorMessage",
 					"An unexpected error occurred during registration. Please try again later.");
 			redirectAttributes.addFlashAttribute("customerSignUpDto", userDto);
-			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : ""); 
+			return "redirect:/signup" + (StringUtils.hasText(source) ? "?source=" + source : "");
+		}
+	}
+
+	// --- UPDATED: Verification now uses explicit URL parameters for feedback ---
+	@GetMapping("/verify")
+	public String verifyAccount(@RequestParam("id") Long userId, @RequestParam("token") String token) {
+
+		String result = customerService.verifyAccount(userId, token);
+
+		if ("SUCCESS".equals(result)) {
+			return "redirect:/login?verified=success";
+		} else if ("ALREADY_VERIFIED".equals(result)) {
+			return "redirect:/login?verified=already";
+		} else {
+			return "redirect:/login?error=invalid_token";
 		}
 	}
 
@@ -155,7 +174,7 @@ public class AuthController {
 
 		if (result.hasErrors()) {
 			model.addAttribute("passwordResetDto", passwordResetDto);
-			return "reset-password"; 
+			return "reset-password";
 		}
 
 		try {
@@ -168,7 +187,7 @@ public class AuthController {
 			log.warn("Password reset failed: {}", e.getMessage());
 			result.reject("global", e.getMessage());
 			model.addAttribute("passwordResetDto", passwordResetDto);
-			model.addAttribute("errorMessage", e.getMessage()); // Also add as a general error
+			model.addAttribute("errorMessage", e.getMessage());
 			return "reset-password";
 
 		} catch (Exception e) {

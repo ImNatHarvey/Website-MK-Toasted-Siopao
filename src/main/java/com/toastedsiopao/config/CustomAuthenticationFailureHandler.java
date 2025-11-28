@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
@@ -13,12 +14,19 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import com.toastedsiopao.model.User;
+import com.toastedsiopao.repository.UserRepository;
+
 import java.io.IOException;
+import java.util.Optional;
 
 @Component
 public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
 	private static final Logger log = LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
+
+	@Autowired
+	private UserRepository userRepository;
 
 	public CustomAuthenticationFailureHandler() {
 		super("/login?error=true");
@@ -37,10 +45,21 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			log.warn("Login failure: Bad credentials for user '{}'", username);
 			errorType = "credentials";
 		} else if (exception instanceof DisabledException || (cause != null && cause instanceof DisabledException)) {
-			log.warn("Login failure: Account for user '{}' is disabled/inactive.", username);
-			errorType = "disabled";
+			// --- UPDATED: Distinguish between Banned (INACTIVE) and Unverified (PENDING)
+			// ---
+			errorType = "disabled"; // Default to disabled
+
+			if (StringUtils.hasText(username)) {
+				Optional<User> userOpt = userRepository.findByUsername(username);
+				if (userOpt.isPresent() && "PENDING".equals(userOpt.get().getStatus())) {
+					log.warn("Login failure: User '{}' is PENDING verification.", username);
+					errorType = "unverified";
+				} else {
+					log.warn("Login failure: Account for user '{}' is disabled/inactive.", username);
+				}
+			}
+			// --- END UPDATE ---
 		} else if (exception instanceof OAuth2AuthenticationException) {
-			// --- ADDED: specific handling for OAuth failures like cancellation ---
 			log.warn("OAuth2 Login failed: {}", exception.getMessage());
 			errorType = "oauth_cancelled";
 		} else {

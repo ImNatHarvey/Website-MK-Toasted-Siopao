@@ -24,7 +24,7 @@
 		</div>
 
 		<h2 class="dashboard-section-title">Financial Summary</h2>
-		
+
 		<div class="row">
 			<div class="col-xl-4 col-md-4 mb-4">
 				<div class="stats-card-v2">
@@ -38,10 +38,10 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="col-xl-4 col-md-4 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon icon-orders" 
+					<div class="stats-icon icon-orders"
 						style="background-color: #fff1f0; color: #f5222d;">
 						<i class="fa-solid fa-money-bill-transfer"></i>
 					</div>
@@ -52,10 +52,10 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="col-xl-4 col-md-4 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon icon-inventory" 
+					<div class="stats-icon icon-inventory"
 						style="background-color: #f6ffed; color: #52c41a;">
 						<i class="fa-solid fa-hand-holding-dollar"></i>
 					</div>
@@ -67,7 +67,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<div class="row">
 			<div class="col-xl col-md-6 mb-4">
 				<div class="stats-card-v2">
@@ -79,7 +79,8 @@
 						<div class="stats-value"
 							th:text="'₱' + ${#numbers.formatDecimal(salesThisWeek, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 						<div class="stats-sub-value"
-							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisWeek, 1, 'COMMA', 2, 'POINT')}">GP: ₱0.00</div>
+							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisWeek, 1, 'COMMA', 2, 'POINT')}">GP:
+							₱0.00</div>
 					</div>
 				</div>
 			</div>
@@ -93,14 +94,15 @@
 						<div class="stats-value"
 							th:text="'₱' + ${#numbers.formatDecimal(salesThisMonth, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 						<div class="stats-sub-value"
-							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisMonth, 1, 'COMMA', 2, 'POINT')}">GP: ₱0.00</div>
+							th:text="'GP: ₱' + ${#numbers.formatDecimal(grossProfitThisMonth, 1, 'COMMA', 2, 'POINT')}">GP:
+							₱0.00</div>
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="col-xl col-md-6 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon icon-sales" 
+					<div class="stats-icon icon-sales"
 						style="background-color: #f9f0ff; color: #722ed1;">
 						<i class="fa-solid fa-calculator"></i>
 					</div>
@@ -111,10 +113,10 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="col-xl col-md-6 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" 
+					<div class="stats-icon"
 						style="background-color: #e6f7ff; color: #1890ff;">
 						<i class="fa-solid fa-hourglass-half"></i>
 					</div>
@@ -148,8 +150,7 @@
 					</div>
 					<div class="stats-info">
 						<div class="stats-label">Pending (GCASH)</div>
-						<div class="stats-value"
-							th:text="${pendingVerificationOrders}"
+						<div class="stats-value" th:text="${pendingVerificationOrders}"
 							th:styleappend="${pendingVerificationOrders > 0 ? 'color: var(--primary);' : ''}">0</div>
 					</div>
 				</div>
@@ -230,7 +231,7 @@
 					</div>
 				</div>
 			</div>
-			</div>
+		</div>
 
 		<div class="row">
 			<div class="col-xl-8 mb-4">
@@ -272,10 +273,11 @@
 					</div>
 				</div>
 			</div>
-			
+
 			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #fffbe6; color: #faad14;">
+					<div class="stats-icon"
+						style="background-color: #fffbe6; color: #faad14;">
 						<i class="fa-solid fa-arrow-down-short-wide"></i>
 					</div>
 					<div class="stats-info">
@@ -287,7 +289,8 @@
 			</div>
 			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #fff1f0; color: #f5222d;">
+					<div class="stats-icon"
+						style="background-color: #fff1f0; color: #f5222d;">
 						<i class="fa-solid fa-triangle-exclamation"></i>
 					</div>
 					<div class="stats-info">
@@ -299,7 +302,8 @@
 			</div>
 			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #f0f2f5; color: #595959;">
+					<div class="stats-icon"
+						style="background-color: #f0f2f5; color: #595959;">
 						<i class="fa-solid fa-box-open"></i>
 					</div>
 					<div class="stats-info">
@@ -311,7 +315,8 @@
 			</div>
 			<div class="col-lg-2 col-md-3 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #f9f0ff; color: #722ed1;">
+					<div class="stats-icon"
+						style="background-color: #f9f0ff; color: #722ed1;">
 						<i class="fa-solid fa-tags"></i>
 					</div>
 					<div class="stats-info">
@@ -320,13 +325,14 @@
 					</div>
 				</div>
 			</div>
-			</div>
-		
+		</div>
+
 		<h2 class="dashboard-section-title">Product Summary</h2>
 		<div class="row">
-			<div class="col-lg-4 col-md-6 mb-4">
+			<div class="col-xl-3 col-md-6 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #e6f7ff; color: #1890ff;">
+					<div class="stats-icon"
+						style="background-color: #e6f7ff; color: #1890ff;">
 						<i class="fa-solid fa-burger"></i>
 					</div>
 					<div class="stats-info">
@@ -335,27 +341,103 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-lg-4 col-md-6 mb-4">
+			<div class="col-xl-3 col-md-6 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #fffbe6; color: #faad14;">
+					<div class="stats-icon"
+						style="background-color: #fffbe6; color: #faad14;">
 						<i class="fa-solid fa-triangle-exclamation"></i>
 					</div>
 					<div class="stats-info">
-						<div class="stats-label">Products Low on Stock</div>
+						<div class="stats-label">Products Low</div>
 						<div class="stats-value" style="color: #faad14;"
 							th:text="${lowStockProducts}">0</div>
 					</div>
 				</div>
 			</div>
-			<div class="col-lg-4 col-md-6 mb-4">
+			<div class="col-xl-3 col-md-6 mb-4">
 				<div class="stats-card-v2">
-					<div class="stats-icon" style="background-color: #fff1f0; color: #f5222d;">
+					<div class="stats-icon"
+						style="background-color: #fff7e6; color: #fd7e14;">
+						<i class="fa-solid fa-fire"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Products Critical</div>
+						<div class="stats-value" style="color: #fd7e14;"
+							th:text="${criticalStockProducts}">0</div>
+					</div>
+				</div>
+			</div>
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon"
+						style="background-color: #fff1f0; color: #f5222d;">
 						<i class="fa-solid fa-circle-xmark"></i>
 					</div>
 					<div class="stats-info">
-						<div class="stats-label">Products Out of Stock</div>
+						<div class="stats-label">Products Out</div>
 						<div class="stats-value" style="color: #f5222d;"
 							th:text="${outOfStockProducts}">0</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h2 class="dashboard-section-title">Waste & Spoilage Summary</h2>
+		<div class="row">
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon icon-inventory"
+						style="background-color: #fff1f0; color: #cf1322;">
+						<i class="fa-solid fa-trash-can"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Total Waste Value</div>
+						<div class="stats-value" style="color: #cf1322;"
+							th:text="'₱' + ${#numbers.formatDecimal(totalWasteValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+						<div class="stats-sub-value"
+							th:text="${totalWasteItems} + ' recorded events'">0 events</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon"
+						style="background-color: #fff2e8; color: #d4380d;">
+						<i class="fa-solid fa-calendar-xmark"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Expired</div>
+						<div class="stats-value" style="color: #d4380d;"
+							th:text="'₱' + ${#numbers.formatDecimal(wasteExpiredValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon"
+						style="background-color: #fffbe6; color: #d48806;">
+						<i class="fa-solid fa-burst"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Damaged</div>
+						<div class="stats-value" style="color: #d48806;"
+							th:text="'₱' + ${#numbers.formatDecimal(wasteDamagedValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-xl-3 col-md-6 mb-4">
+				<div class="stats-card-v2">
+					<div class="stats-icon"
+						style="background-color: #f5f5f5; color: #595959;">
+						<i class="fa-solid fa-clipboard-question"></i>
+					</div>
+					<div class="stats-info">
+						<div class="stats-label">Other Waste</div>
+						<div class="stats-value" style="color: #595959;"
+							th:text="'₱' + ${#numbers.formatDecimal(wasteOtherValue, 1, 'COMMA', 2, 'POINT')}">₱0.00</div>
 					</div>
 				</div>
 			</div>

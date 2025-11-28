@@ -3,6 +3,7 @@ package com.toastedsiopao.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.model.Order; 
+import com.toastedsiopao.service.ActivityLogService;
 import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.CustomerService;
 import com.toastedsiopao.service.InventoryItemService;
@@ -46,9 +47,10 @@ public class AdminDashboardController {
 	private ObjectMapper objectMapper;
 	@Autowired
 	private Clock clock;
-	
 	@Autowired
 	private ProductService productService;
+	@Autowired
+	private ActivityLogService activityLogService;
 
 	private Map<String, List<?>> getFormattedOrderStatusData(Map<String, Long> statusCounts) {
 		Map<String, String> orderedLabels = new LinkedHashMap<>();
@@ -126,9 +128,19 @@ public class AdminDashboardController {
 		model.addAttribute("criticalStockItems", inventoryItemService.countCriticalStockItems());
 		model.addAttribute("outOfStockItems", inventoryItemService.countOutOfStockItems());
 		
+		// Product Metrics
 		model.addAttribute("totalProducts", productService.countAllProducts());
 		model.addAttribute("lowStockProducts", productService.countLowStockProducts());
+		model.addAttribute("criticalStockProducts", productService.countCriticalStockProducts());
 		model.addAttribute("outOfStockProducts", productService.countOutOfStockProducts());
+
+		// Waste & Spoilage Metrics
+		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics(null, null, null, null, null);
+		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
+		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
+		model.addAttribute("wasteExpiredValue", wasteMetrics.get("expiredValue"));
+		model.addAttribute("wasteDamagedValue", wasteMetrics.get("damagedValue"));
+		model.addAttribute("wasteOtherValue", wasteMetrics.get("wasteValue"));
 
 		model.addAttribute("totalCustomers", customerService.findAllCustomers(null).getTotalElements());
 		model.addAttribute("activeCustomers", customerService.countActiveCustomers());

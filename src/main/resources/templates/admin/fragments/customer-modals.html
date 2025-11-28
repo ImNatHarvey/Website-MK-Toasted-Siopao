@@ -152,7 +152,8 @@
 								<div class="col-md-6">
 									<label for="firstName" class="form-label">First Name</label> <input
 										type="text" class="form-control" th:field="*{firstName}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.firstName}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('firstName')}"
 										th:errors="*{firstName}">Error</div>
@@ -160,7 +161,8 @@
 								<div class="col-md-6">
 									<label for="lastName" class="form-label">Last Name</label> <input
 										type="text" class="form-control" th:field="*{lastName}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.lastName}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lastName')}"
 										th:errors="*{lastName}">Error</div>
@@ -170,7 +172,8 @@
 								<div class="col-md-6">
 									<label for="username" class="form-label">Username</label> <input
 										type="text" class="form-control" th:field="*{username}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.username}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('username')}"
 										th:errors="*{username}">Error</div>
@@ -178,7 +181,8 @@
 								<div class="col-md-6">
 									<label for="email" class="form-label">Email</label> <input
 										type="email" class="form-control" th:field="*{email}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.email}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Error</div>
 								</div>
@@ -187,7 +191,8 @@
 								<div class="col-md-6">
 									<label for="phone" class="form-label">Phone Number</label> <input
 										type="tel" class="form-control" th:field="*{phone}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.phone}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">Error</div>
 								</div>
@@ -196,7 +201,8 @@
 										class="form-select" th:field="*{status}" id="status"
 										th:errorclass="is-invalid">
 										<option value="ACTIVE">ACTIVE</option>
-										<option value="INACTIVE">INACTIVE</option>
+										<option value="INACTIVE">INACTIVE (Inactivity)</option>
+										<option value="DISABLED">DISABLED (Banned)</option>
 									</select>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Error</div>
@@ -208,21 +214,24 @@
 								<div class="col">
 									<label for="houseNo" class="form-label">House No.</label> <input
 										type="text" class="form-control" placeholder="House No."
-										th:field="*{houseNo}" th:errorclass="is-invalid">
+										th:field="*{houseNo}" th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.houseNo}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('houseNo')}" th:errors="*{houseNo}">Error</div>
 								</div>
 								<div class="col">
 									<label for="lotNo" class="form-label">Lot No.</label> <input
 										type="text" class="form-control" placeholder="Lot No."
-										th:field="*{lotNo}" th:errorclass="is-invalid">
+										th:field="*{lotNo}" th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.lotNo}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('lotNo')}" th:errors="*{lotNo}">Error</div>
 								</div>
 								<div class="col">
 									<label for="blockNo" class="form-label">Block No.</label> <input
 										type="text" class="form-control" placeholder="Block No."
-										th:field="*{blockNo}" th:errorclass="is-invalid">
+										th:field="*{blockNo}" th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.blockNo}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('blockNo')}" th:errors="*{blockNo}">Error</div>
 								</div>
@@ -231,7 +240,8 @@
 								<label for="street" class="form-label">Street</label> <input
 									type="text" class="form-control"
 									placeholder="Street / Subdivision" th:field="*{street}"
-									th:errorclass="is-invalid">
+									th:errorclass="is-invalid"
+									th:value="${customerUpdateDto.street}">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('street')}" th:errors="*{street}">Error</div>
 							</div>
@@ -239,7 +249,8 @@
 								<div class="col">
 									<label for="barangay" class="form-label">Barangay</label> <input
 										type="text" class="form-control" placeholder="Barangay"
-										th:field="*{barangay}" th:errorclass="is-invalid">
+										th:field="*{barangay}" th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.barangay}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('barangay')}"
 										th:errors="*{barangay}">Error</div>
@@ -248,7 +259,8 @@
 									<label for="municipality" class="form-label">Municipality</label>
 									<input type="text" class="form-control"
 										placeholder="Municipality" th:field="*{municipality}"
-										th:errorclass="is-invalid">
+										th:errorclass="is-invalid"
+										th:value="${customerUpdateDto.municipality}">
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('municipality')}"
 										th:errors="*{municipality}">Error</div>
@@ -257,7 +269,8 @@
 							<div class="mb-3">
 								<label for="province" class="form-label">Province</label> <input
 									type="text" class="form-control" placeholder="Province"
-									th:field="*{province}" th:errorclass="is-invalid">
+									th:field="*{province}" th:errorclass="is-invalid"
+									th:value="${customerUpdateDto.province}">
 								<div class="invalid-feedback"
 									th:if="${#fields.hasErrors('province')}"
 									th:errors="*{province}">Error</div>

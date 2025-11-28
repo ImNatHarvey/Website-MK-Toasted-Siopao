@@ -227,7 +227,7 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.save(newUser);
 	}
 
-// ... (Rest of the methods remain exactly as they were) ...
+	// ... (Rest of the methods remain exactly as they were) ...
 	@Override
 	@Transactional(readOnly = true)
 	public User findByUsername(String username) {
@@ -254,18 +254,36 @@ public class CustomerServiceImpl implements CustomerService {
 		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
+		
+		// 1. Validate Username uniqueness (only if it changed)
+		if (!userToUpdate.getUsername().equals(userDto.getUsername())) {
+			userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
+		}
 
-		userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
-		userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
+		// 2. Validate Email uniqueness and format (only if it changed AND is not blank)
+		// FIX: Use StringUtils.hasText() to safely compare the original database value (which might be null) 
+		// against the submitted DTO value.
+		if (!StringUtils.hasText(userToUpdate.getEmail()) || !userToUpdate.getEmail().equals(userDto.getEmail())) {
+			if (StringUtils.hasText(userDto.getEmail())) {
+				// We need to manually check if the new email is valid email format
+				// and if it exists for another user.
+				if (!userDto.getEmail().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
+					throw new IllegalArgumentException("Email format is invalid.");
+				}
+				userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
+			} 
+		}
 
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		userToUpdate.setPhone(userDto.getPhone());
+		
+		userToUpdate.setPhone(userDto.getPhone()); 
+		// END FIX
 
 		if (StringUtils.hasText(userDto.getStatus())
-				&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE"))) {
+				&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE") || userDto.getStatus().equals("DISABLED"))) {
 			userToUpdate.setStatus(userDto.getStatus());
 		} else {
 			throw new IllegalArgumentException("Invalid status value provided.");
@@ -321,6 +339,7 @@ public class CustomerServiceImpl implements CustomerService {
 			User user = findByUsername(username);
 			if (user != null) {
 				user.setLastActivity(LocalDateTime.now(clock));
+				// Reactivate INACTIVE users on login. DISABLED users are blocked at login, so this won't run for them.
 				if ("INACTIVE".equals(user.getStatus())) {
 					user.setStatus("ACTIVE");
 				}
@@ -333,8 +352,8 @@ public class CustomerServiceImpl implements CustomerService {
 
 	@Override
 	public void updateCustomerStatus(Long userId, String status) {
-		if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status)) {
-			throw new IllegalArgumentException("Status must be either ACTIVE or INACTIVE.");
+		if (!"ACTIVE".equals(status) && !"INACTIVE".equals(status) && !"DISABLED".equals(status)) {
+			throw new IllegalArgumentException("Status must be ACTIVE, INACTIVE or DISABLED.");
 		}
 		User user = userRepository.findById(userId)
 				.orElseThrow(() -> new RuntimeException("User not found with id: " + userId));

@@ -50,16 +50,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 		boolean enabled = true;
 		String roleName = (user.getRole() != null) ? user.getRole().getName() : "";
 
-		if (!CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
+		if ("DISABLED".equals(user.getStatus())) {
 			enabled = false;
-			log.warn("--- User {} is an admin and is set to INACTIVE. Marking as disabled. ---", user.getUsername());
-		} else if (CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
-			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---",
-					user.getUsername());
+			log.warn("--- User {} is DISABLED. Login blocked. ---", user.getUsername());
 		} else if ("PENDING".equals(user.getStatus())) {
-			// --- ADDED: Block login for pending users ---
 			enabled = false;
 			log.warn("--- User {} is PENDING verification. Marking as disabled. ---", user.getUsername());
+		} else if (!CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
+			// Admins who are INACTIVE are now allowed to log in to get reactivated by the
+			// success handler
+			log.info("--- Inactive admin {} logging in. Will be reactivated by success handler. ---",
+					user.getUsername());
+			enabled = true; // Allow login
+		} else if (CUSTOMER_ROLE_NAME.equals(roleName) && "INACTIVE".equals(user.getStatus())) {
+			// Inactive customers are allowed to log in so they can be reactivated
+			log.info("--- Inactive customer {} logging in. Will be reactivated by success handler. ---",
+					user.getUsername());
+			enabled = true;
 		}
 
 		Collection<? extends GrantedAuthority> authorities = getAuthorities(user);

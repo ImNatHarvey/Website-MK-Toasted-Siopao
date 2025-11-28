@@ -22,7 +22,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService; 
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -211,7 +211,7 @@ public class AdminManagementController {
 				result.rejectValue("email", "adminUpdateDto.email", e.getMessage());
 			} else if (e.getMessage().contains("role")) {
 				result.rejectValue("roleName", "adminUpdateDto.roleName", e.getMessage());
-			} else if (e.getMessage().contains("status")) { 
+			} else if (e.getMessage().contains("status")) {
 				result.rejectValue("status", "adminUpdateDto.status", e.getMessage());
 			}
 			redirectAttributes.addFlashAttribute("globalError", "Error updating admin: " + e.getMessage());
@@ -256,7 +256,8 @@ public class AdminManagementController {
 		try {
 			User updatedUser = adminService.updateAdminProfile(adminDto);
 
-			// --- ADDED FIX: Reload user details and update SecurityContext if username changed ---
+			// --- ADDED FIX: Reload user details and update SecurityContext if username
+			// changed ---
 			if (!principal.getName().equals(updatedUser.getUsername())) {
 				UserDetails userDetails = userDetailsService.loadUserByUsername(updatedUser.getUsername());
 				UsernamePasswordAuthenticationToken newAuth = new UsernamePasswordAuthenticationToken(userDetails, null,
@@ -325,10 +326,10 @@ public class AdminManagementController {
 	}
 
 	@PostMapping("/delete/{id}")
-	@PreAuthorize("hasAuthority('DELETE_ADMINS')") 
+	@PreAuthorize("hasAuthority('DELETE_ADMINS')")
 	public String deleteAdmin(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password, 
-			RedirectAttributes redirectAttributes, Principal principal) {
+			@RequestParam(value = "password", required = false) String password, RedirectAttributes redirectAttributes,
+			Principal principal) {
 
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Deletion cancelled.");

@@ -347,13 +347,13 @@ body {
 	color: var(--light);
 }
 
-.status-badge.status-low, .status-badge.status-pending {
+.status-badge.status-low, .status-badge.status-pending, .status-badge.status-inactive {
 	background-color: var(--warning);
 	color: var(--light);
 }
 
 .status-badge.status-critical, .status-badge.status-cancelled,
-	.status-badge.status-inactive, .status-badge.status-rejected {
+	.status-badge.status-disabled, .status-badge.status-rejected {
 	background-color: var(--danger);
 	color: var(--light);
 }

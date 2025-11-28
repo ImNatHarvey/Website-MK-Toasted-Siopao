@@ -249,8 +249,9 @@ public class AdminServiceImpl implements AdminService {
 		userToUpdate.setEmail(userDto.getEmail());
 
 		if (isOwner) {
-			if (StringUtils.hasText(userDto.getStatus())
-					&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE"))) {
+			// --- UPDATED: Allow DISABLED status ---
+			if (StringUtils.hasText(userDto.getStatus()) && (userDto.getStatus().equals("ACTIVE")
+					|| userDto.getStatus().equals("INACTIVE") || userDto.getStatus().equals("DISABLED"))) {
 				userToUpdate.setStatus(userDto.getStatus());
 			} else {
 				throw new IllegalArgumentException("Invalid status value provided.");
@@ -401,26 +402,25 @@ public class AdminServiceImpl implements AdminService {
 		userRepository.save(userToUpdate);
 		log.info("User password updated for: {}", currentUsername);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public boolean validateOwnerPassword(String password) {
 		if (!StringUtils.hasText(password)) {
 			return false;
 		}
-		
-		User owner = userRepository.findByUsername(OWNER_USERNAME) 
-				.orElse(null);
-		
+
+		User owner = userRepository.findByUsername(OWNER_USERNAME).orElse(null);
+
 		if (owner == null) {
-			 log.error("CRITICAL: The Owner account '{}' could not be found for password validation.", OWNER_USERNAME);
-			 return false;
+			log.error("CRITICAL: The Owner account '{}' could not be found for password validation.", OWNER_USERNAME);
+			return false;
 		}
 
 		if (passwordEncoder.matches(password, owner.getPassword())) {
 			return true;
 		}
-		
+
 		return false;
 	}
 }

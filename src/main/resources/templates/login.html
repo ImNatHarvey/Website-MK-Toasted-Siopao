@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	th:replace="~{base :: layout(~{::main}, ~{})}">
 <head>
@@ -36,14 +37,16 @@
 								inactive. Please contact the system Owner. </span> <span
 								th:if="${param.error[0] == 'unverified'}"> Your account
 								is not verified. Please check your email for the verification
-								link. </span> <span th:if="${param.error[0] == 'invalid_token'}">
-								Invalid or expired verification link. It may have already been
-								used or is incorrect. </span> <span
-								th:if="${param.error[0] == 'oauth_cancelled'}"> Google
-								Sign-in was cancelled. </span> <span
+								link. </span> <span th:if="${param.error[0] == 'account_disabled'}">
+								Your account has been disabled. Please contact the
+								administrator. </span> <span
+								th:if="${param.error[0] == 'invalid_token'}"> Invalid or
+								expired verification link. It may have already been used or is
+								incorrect. </span> <span th:if="${param.error[0] == 'oauth_cancelled'}">
+								Google Sign-in was cancelled. </span> <span
 								th:if="${param.error[0] == 'internal'}"> An unexpected
 								error occurred. Please try again. </span> <span
-								th:if="${param.error[0] != 'credentials' and param.error[0] != 'true' and param.error[0] != 'disabled' and param.error[0] != 'internal' and param.error[0] != 'oauth_cancelled' and param.error[0] != 'unverified' and param.error[0] != 'invalid_token'}">
+								th:if="${param.error[0] != 'credentials' and param.error[0] != 'true' and param.error[0] != 'disabled' and param.error[0] != 'internal' and param.error[0] != 'oauth_cancelled' and param.error[0] != 'unverified' and param.error[0] != 'invalid_token' and param.error[0] != 'account_disabled'}">
 								Authentication failed. Please try again. </span>
 						</div>
 
@@ -126,6 +129,5 @@
 			</div>
 		</div>
 	</main>
-
 </body>
 </html>

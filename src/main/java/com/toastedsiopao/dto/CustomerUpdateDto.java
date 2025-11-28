@@ -13,6 +13,7 @@ public class CustomerUpdateDto {
 
 	private Long id; 
 
+	// Keeping @NotBlank for core identity fields
 	@NotBlank(message = "• First name cannot be blank")
 	@Size(min = 2, max = 50, message = "• First name length must be 2-50 characters")
 	@Pattern(regexp = "^(?! )[A-Za-z\\s]+(?<! )$", message = "• First name must contain only letters and single spaces, and cannot start or end with a space")
@@ -28,12 +29,13 @@ public class CustomerUpdateDto {
 	@Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "• Username can only contain letters, numbers, and underscores")
 	private String username;
 
-	@NotBlank(message = "• Email cannot be blank")
-	@Email(message = "• Invalid email format")
+	// RELAXED: Removed @NotBlank. We rely on the pattern allowing blank/null and service side checks.
 	@Size(max = 100, message = "• Email cannot exceed 100 characters")
+	@Pattern(regexp = "^$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "• Invalid email format")
 	private String email;
 
-	@Pattern(regexp = "^(09|\\+639)\\d{9}$", message = "• Invalid Philippine phone number format (e.g., 09xxxxxxxxx or +639xxxxxxxxx)")
+	// Phone is already relaxed
+	@Pattern(regexp = "^$|^(09|\\+639)\\d{9}$", message = "• Invalid Philippine phone number format (e.g., 09xxxxxxxxx or +639xxxxxxxxx)")
 	private String phone;
 
 	@Size(max = 50, message = "• House No. cannot exceed 50 characters")
@@ -62,7 +64,7 @@ public class CustomerUpdateDto {
 	private String province;
 
 	@NotBlank(message = "• Status must be selected")
-	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE|DISABLED)$", message = "• Status must be ACTIVE, INACTIVE, or DISABLED")
 	private String status;
 	
 	// --- Custom Setters for trimming and normalizing internal whitespace ---

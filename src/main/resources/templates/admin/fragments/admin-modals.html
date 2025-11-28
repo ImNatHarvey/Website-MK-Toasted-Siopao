@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
@@ -11,9 +12,10 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/add}" method="post"
 						th:object="${adminAccountCreateDto}" id="addAdminForm">
-						
-						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-						
+
+						<input type="hidden" th:name="${_csrf.parameterName}"
+							th:value="${_csrf.token}" />
+
 						<div class="modal-header">
 							<h5 class="modal-title" id="addAdminModalLabel">Add New
 								Admin Account</h5>
@@ -118,9 +120,10 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/update}" method="post"
 						th:object="${adminUpdateDto}" id="editAdminForm">
-						
-						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-						
+
+						<input type="hidden" th:name="${_csrf.parameterName}"
+							th:value="${_csrf.token}" />
+
 						<div class="modal-header">
 							<h5 class="modal-title" id="editAdminModalLabel">Edit Admin
 								Account</h5>
@@ -174,16 +177,16 @@
 
 							<div class="row">
 								<div class="col-md-6 mb-3">
-									<label for="editAdminRoleName" class="form-label">Role</label> <select
-										class="form-select" th:field="*{roleName}"
+									<label for="editAdminRoleName" class="form-label">Role</label>
+									<select class="form-select" th:field="*{roleName}"
 										id="editAdminRoleName" th:errorclass="is-invalid"
 										th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
 										th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change roles' : 'Select a role'}">
 										<option value="">-- Select a Role --</option>
 										<option th:each="role : ${allAdminRoles}"
 											th:if="${role.name != 'ROLE_OWNER'}" th:value="${role.name}"
-											th:text="${role.name.replace('ROLE_', '')}">Role Name
-										</option>
+											th:text="${role.name.replace('ROLE_', '')}">Role
+											Name</option>
 									</select>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('roleName')}"
@@ -196,7 +199,8 @@
 										th:disabled="!${#authorization.expression('hasRole(''OWNER'')')}"
 										th:title="${#authorization.expression('!hasRole(''OWNER'')') ? 'Only the Owner can change status' : 'Select a status'}">
 										<option value="ACTIVE">ACTIVE</option>
-										<option value="INACTIVE">INACTIVE</option>
+										<option value="INACTIVE">INACTIVE (Inactivity)</option>
+										<option value="DISABLED">DISABLED (Banned)</option>
 									</select>
 									<div class="invalid-feedback"
 										th:if="${#fields.hasErrors('status')}" th:errors="*{status}">Status
@@ -264,8 +268,9 @@
 				<div class="modal-content">
 					<form th:action="@{/admin/admins/profile/update}" method="post"
 						th:object="${adminProfileDto}" id="editProfileForm">
-						
-						<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+						<input type="hidden" th:name="${_csrf.parameterName}"
+							th:value="${_csrf.token}" />
 						<div class="modal-header">
 							<h5 class="modal-title" id="editProfileModalLabel">Edit My
 								Profile</h5>

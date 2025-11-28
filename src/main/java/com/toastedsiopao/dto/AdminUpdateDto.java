@@ -38,10 +38,10 @@ public class AdminUpdateDto {
 	private String roleName;
 
 	@NotBlank(message = "• Status must be selected")
-	@Pattern(regexp = "^(ACTIVE|INACTIVE)$", message = "• Status must be either ACTIVE or INACTIVE")
+	@Pattern(regexp = "^(ACTIVE|INACTIVE|DISABLED)$", message = "• Status must be ACTIVE, INACTIVE, or DISABLED")
 	private String status;
-	
-	// --- Custom Setters for trimming and normalizing internal whitespace ---
+
+// --- Custom Setters for trimming and normalizing internal whitespace ---
 	public void setFirstName(String firstName) {
 		this.firstName = (firstName == null) ? null : firstName.trim().replaceAll("\\s+", " ");
 	}

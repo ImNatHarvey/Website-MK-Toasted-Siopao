@@ -45,17 +45,25 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			log.warn("Login failure: Bad credentials for user '{}'", username);
 			errorType = "credentials";
 		} else if (exception instanceof DisabledException || (cause != null && cause instanceof DisabledException)) {
-			// --- UPDATED: Distinguish between Banned (INACTIVE) and Unverified (PENDING)
-			// ---
-			errorType = "disabled"; // Default to disabled
+			// --- UPDATED: Distinguish between Banned/Disabled, Inactive Admin, and
+			// Unverified
+			errorType = "disabled"; // Default to generic disabled
 
 			if (StringUtils.hasText(username)) {
 				Optional<User> userOpt = userRepository.findByUsername(username);
-				if (userOpt.isPresent() && "PENDING".equals(userOpt.get().getStatus())) {
-					log.warn("Login failure: User '{}' is PENDING verification.", username);
-					errorType = "unverified";
-				} else {
-					log.warn("Login failure: Account for user '{}' is disabled/inactive.", username);
+				if (userOpt.isPresent()) {
+					User user = userOpt.get();
+					if ("PENDING".equals(user.getStatus())) {
+						log.warn("Login failure: User '{}' is PENDING verification.", username);
+						errorType = "unverified";
+					} else if ("DISABLED".equals(user.getStatus())) {
+						log.warn("Login failure: User '{}' is explicitly DISABLED.", username);
+						errorType = "account_disabled";
+					} else {
+						// Likely an INACTIVE admin
+						log.warn("Login failure: Account for user '{}' is inactive/disabled.", username);
+						errorType = "disabled";
+					}
 				}
 			}
 			// --- END UPDATE ---

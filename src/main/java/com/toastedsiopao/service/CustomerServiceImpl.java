@@ -192,7 +192,8 @@ public class CustomerServiceImpl implements CustomerService {
 		if (token != null && token.equals(user.getVerificationToken())) {
 			user.setStatus("ACTIVE");
 			user.setVerificationToken(null);
-			userRepository.save(user);
+			// --- UPDATED: Use saveAndFlush to ensure DB is updated before redirect ---
+			userRepository.saveAndFlush(user);
 			log.info("User {} successfully verified via email.", user.getUsername());
 			return "SUCCESS";
 		}
@@ -226,7 +227,7 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.save(newUser);
 	}
 
-	// ... (Rest of the methods remain exactly as they were) ...
+// ... (Rest of the methods remain exactly as they were) ...
 	@Override
 	@Transactional(readOnly = true)
 	public User findByUsername(String username) {

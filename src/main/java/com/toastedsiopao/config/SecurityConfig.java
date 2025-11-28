@@ -51,7 +51,8 @@ public class SecurityConfig {
 
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/css/**", "/img/**", "/js/**", "/img/uploads/**", "/favicon.ico", "/",
-								"/about", "/login", "/access-denied", "/logout", "/forgot-password", "/reset-password")
+								"/about", "/login", "/access-denied", "/logout", "/forgot-password", "/reset-password",
+								"/verify") // Added /verify here
 						.permitAll().requestMatchers("/menu", "/order", "/signup").access((authentication, context) -> {
 							boolean isAnonymous = !authentication.get().isAuthenticated() || authentication.get()
 									.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ANONYMOUS"));

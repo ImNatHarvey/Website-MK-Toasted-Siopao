@@ -33,14 +33,13 @@
 
 						<form id="signupForm" method="post" th:action="@{/signup}"
 							th:object="${customerSignUpDto}">
-							
-							<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-							
-							<input type="hidden" name="source" th:value="${param.source}">
-							<input type="hidden" th:field="*{cartDataJson}" id="cartDataJsonInput">
+
+							<input type="hidden" th:name="${_csrf.parameterName}"
+								th:value="${_csrf.token}" /> <input type="hidden" name="source"
+								th:value="${param.source}"> <input type="hidden"
+								th:field="*{cartDataJson}" id="cartDataJsonInput">
 
 							<div class="row">
-
 								<div class="col-lg-6">
 									<h5 class="mb-3">Personal Details</h5>
 
@@ -218,6 +217,27 @@
 							</div>
 						</form>
 
+						<div class="row justify-content-center mt-3">
+							<div class="col-12 col-md-10 col-lg-8">
+								<div class="text-center mb-3">
+									<div
+										class="d-flex align-items-center justify-content-center mb-3">
+										<hr class="flex-grow-1" style="margin: 0 10px;">
+										<span class="text-muted small">OR</span>
+										<hr class="flex-grow-1" style="margin: 0 10px;">
+									</div>
+
+									<a href="/oauth2/authorization/google"
+										class="btn btn-outline-dark w-100"
+										style="border-radius: 30px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+										<img
+										src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png"
+										alt="Google" style="width: 20px; height: 20px;"> <span>Sign
+											up with Google</span>
+									</a>
+								</div>
+							</div>
+						</div>
 						<p class="text-center mt-3">
 							Already have an account? <a th:href="@{/login}">Log in here</a>
 						</p>
@@ -232,6 +252,7 @@
 						.addEventListener(
 								'DOMContentLoaded',
 								function() {
+									// (Keep existing JS)
 									const params = new URLSearchParams(
 											window.location.search);
 									if (params.get('source') === 'checkout') {
@@ -239,23 +260,25 @@
 												.log("Signup page loaded from checkout.");
 										const guestDataString = sessionStorage
 												.getItem('guestCheckoutData');
-												
+
 										const cartDataString = sessionStorage
 												.getItem('mkSiopaoCart');
-										const cartInput = document.getElementById('cartDataJsonInput');
-										
+										const cartInput = document
+												.getElementById('cartDataJsonInput');
+
 										if (cartInput && cartDataString) {
-											console.log("Found guest cart data. Attaching to form.");
+											console
+													.log("Found guest cart data. Attaching to form.");
 											cartInput.value = cartDataString;
 										}
-												
+
 										if (guestDataString) {
 											console
 													.log("Found guest checkout data. Pre-filling form.");
 											try {
 												const guestData = JSON
 														.parse(guestDataString);
-	
+
 												// Map of guestData keys to form field IDs
 												const fieldMap = {
 													firstName : 'firstName',
@@ -270,7 +293,7 @@
 													municipality : 'municipality',
 													province : 'province'
 												};
-	
+
 												for ( const key in fieldMap) {
 													const field = document
 															.getElementById(fieldMap[key]);
@@ -278,18 +301,18 @@
 														field.value = guestData[key];
 													}
 												}
-	
+
 												// Clean up the address data, but NOT the cart data
 												sessionStorage
 														.removeItem('guestCheckoutData');
-	
+
 												// Focus the first empty field (username)
 												const usernameField = document
 														.getElementById('username');
 												if (usernameField) {
 													usernameField.focus();
 												}
-	
+
 											} catch (e) {
 												console
 														.error(
@@ -302,14 +325,20 @@
 											console
 													.log("Loaded from checkout, but no guest data found in session storage.");
 										}
-										
+
 										// Clear the cart from session storage AFTER submitting the form
-										const signupForm = document.getElementById('signupForm');
+										const signupForm = document
+												.getElementById('signupForm');
 										if (signupForm) {
-											signupForm.addEventListener('submit', function() {
-												console.log("Signup submitted, clearing guest cart from session storage.");
-												sessionStorage.removeItem('mkSiopaoCart');
-											});
+											signupForm
+													.addEventListener(
+															'submit',
+															function() {
+																console
+																		.log("Signup submitted, clearing guest cart from session storage.");
+																sessionStorage
+																		.removeItem('mkSiopaoCart');
+															});
 										}
 									}
 								});

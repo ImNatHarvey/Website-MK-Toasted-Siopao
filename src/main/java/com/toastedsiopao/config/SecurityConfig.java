@@ -31,6 +31,9 @@ public class SecurityConfig {
 	@Autowired
 	private AuthenticationFailureHandler customAuthenticationFailureHandler;
 
+	@Autowired
+	private CustomOAuth2UserService customOAuth2UserService;
+
 	@Bean
 	public static PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
@@ -65,14 +68,23 @@ public class SecurityConfig {
 				.formLogin(form -> form.loginPage("/login").loginProcessingUrl("/login")
 						.successHandler(customerAuthenticationSuccessHandler)
 						.failureHandler(customAuthenticationFailureHandler).permitAll())
+
+				// --- ADDED: OAuth2 Login Configuration ---
+				.oauth2Login(oauth2 -> oauth2.loginPage("/login") // Reuse existing login page
+						.userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService) // Use our logic to
+																									// create/load users
+						).successHandler(customerAuthenticationSuccessHandler) // Redirect to dashboard/order after
+																				// Google login
+				)
+				// ----------------------------------------
+
 				.rememberMe(rememberMe -> rememberMe.key("a-very-secret-key-for-mk-toasted-siopao-remember-me")
 						.tokenValiditySeconds(14 * 24 * 60 * 60).userDetailsService(userDetailsService)
 						.rememberMeParameter("remember-me"))
 
 				.logout(logout -> logout.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
 						.logoutSuccessUrl("/login?logout=true").invalidateHttpSession(true)
-						.deleteCookies("JSESSIONID", "remember-me")
-						.clearAuthentication(true))
+						.deleteCookies("JSESSIONID", "remember-me").clearAuthentication(true))
 				.exceptionHandling(exceptions -> exceptions.accessDeniedPage("/access-denied"))
 				.headers(headers -> headers.cacheControl(cache -> cache.disable()));
 

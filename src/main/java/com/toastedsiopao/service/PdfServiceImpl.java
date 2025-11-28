@@ -175,9 +175,7 @@ public class PdfServiceImpl implements PdfService {
 		DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-		// --- ADDED: Current Date Formatter ---
 		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
-		// --- END ADDED ---
 
 		try (Document document = new Document(PageSize.A4.rotate())) {
 			PdfWriter.getInstance(document, out);
@@ -187,12 +185,10 @@ public class PdfServiceImpl implements PdfService {
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
 
-			// --- ADDED: Generated On Line ---
 			Paragraph genDate = new Paragraph("Generated on: " + LocalDateTime.now().format(genDateFmt), FONT_SUBTITLE);
 			genDate.setAlignment(Element.ALIGN_CENTER);
 			genDate.setSpacingAfter(5f);
 			document.add(genDate);
-			// --- END ADDED ---
 
 			String filterDesc = "Filters: ";
 			if (StringUtils.hasText(keyword)) {
@@ -298,9 +294,7 @@ public class PdfServiceImpl implements PdfService {
 		DateTimeFormatter dateFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 		DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-		// --- ADDED: Current Date Formatter ---
 		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
-		// --- END ADDED ---
 
 		try (Document document = new Document(PageSize.A4.rotate())) {
 			PdfWriter.getInstance(document, out);
@@ -310,12 +304,10 @@ public class PdfServiceImpl implements PdfService {
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
 
-			// --- ADDED: Generated On Line ---
 			Paragraph genDate = new Paragraph("Generated on: " + LocalDateTime.now().format(genDateFmt), FONT_SUBTITLE);
 			genDate.setAlignment(Element.ALIGN_CENTER);
 			genDate.setSpacingAfter(5f);
 			document.add(genDate);
-			// --- END ADDED ---
 
 			String filterDesc = "Filters: ";
 			if (StringUtils.hasText(keyword)) {
@@ -544,8 +536,10 @@ public class PdfServiceImpl implements PdfService {
 		return new ByteArrayInputStream(out.toByteArray());
 	}
 
+	// --- MODIFIED: PDF Generation for Activity Log ---
 	@Override
-	public ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException {
+	public ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage, String keyword, String startDate,
+			String endDate) throws IOException {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -557,14 +551,30 @@ public class PdfServiceImpl implements PdfService {
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
 
+			// --- NEW: Filter Description ---
+			StringBuilder filterDesc = new StringBuilder("Filters: ");
+			if (StringUtils.hasText(keyword)) {
+				filterDesc.append("Keyword='").append(keyword).append("' ");
+			}
+			if (StringUtils.hasText(startDate)) {
+				filterDesc.append("From='").append(startDate).append("' ");
+			}
+			if (StringUtils.hasText(endDate)) {
+				filterDesc.append("To='").append(endDate).append("' ");
+			}
+			if (filterDesc.length() == 9) { // "Filters: " length
+				filterDesc.append("None (All Records)");
+			}
+
 			String pageInfo = String.format("Page %d of %d (Entries %d-%d of %d)", logPage.getNumber() + 1,
 					logPage.getTotalPages(), logPage.getPageable().getOffset() + 1,
 					logPage.getPageable().getOffset() + logPage.getNumberOfElements(), logPage.getTotalElements());
 
-			Paragraph subtitle = new Paragraph(pageInfo, FONT_SUBTITLE);
+			Paragraph subtitle = new Paragraph(filterDesc.toString() + " | " + pageInfo, FONT_SUBTITLE);
 			subtitle.setAlignment(Element.ALIGN_CENTER);
 			subtitle.setSpacingAfter(15f);
 			document.add(subtitle);
+			// --- END NEW ---
 
 			PdfPTable detailTable = new PdfPTable(4);
 			detailTable.setWidthPercentage(100);
@@ -697,6 +707,8 @@ public class PdfServiceImpl implements PdfService {
 		return new ByteArrayInputStream(out.toByteArray());
 	}
 
+	// ... (Helper methods addTableHeader, addTableCell, addTableFooterCell,
+	// addSummaryCell, formatCurrency remain unchanged) ...
 	private void addTableHeader(PdfPTable table, String headerTitle) {
 		PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));
 		cell.setBackgroundColor(COLOR_TABLE_HEADER_BG);

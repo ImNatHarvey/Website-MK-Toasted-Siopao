@@ -71,6 +71,8 @@ public class ReportServiceImpl implements ReportService {
 		}
 	}
 
+	// ... (Financial, Inventory, Product methods...)
+
 	@Override
 	public ByteArrayInputStream generateFinancialReport(String keyword, String startDate, String endDate)
 			throws IOException {
@@ -234,9 +236,7 @@ public class ReportServiceImpl implements ReportService {
 		List<InventoryItem> items = getFilteredInventoryItems(keyword, categoryId);
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 
-		// --- ADDED: Current Date Formatter ---
 		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
-		// --- END ADDED ---
 
 		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 
@@ -262,11 +262,9 @@ public class ReportServiceImpl implements ReportService {
 			titleCell.setCellValue(settings.getWebsiteName() + " - Inventory Stock Report");
 			titleCell.setCellStyle(headerStyle);
 
-			// --- ADDED: Generated On Row ---
 			Row genDateRow = sheet.createRow(rowIdx.getAndIncrement());
 			genDateRow.createCell(0).setCellValue("Generated on: " + LocalDateTime.now().format(genDateFmt));
 			genDateRow.getCell(0).setCellStyle(boldStyle);
-			// --- END ADDED ---
 
 			String filterDesc = "Filters: ";
 			if (StringUtils.hasText(keyword)) {
@@ -373,9 +371,7 @@ public class ReportServiceImpl implements ReportService {
 		List<Product> products = getFilteredProducts(keyword, categoryId);
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 
-		// --- ADDED: Current Date Formatter ---
 		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
-		// --- END ADDED ---
 
 		try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream();) {
 
@@ -397,11 +393,9 @@ public class ReportServiceImpl implements ReportService {
 			titleCell.setCellValue(settings.getWebsiteName() + " - Product & Recipe Report");
 			titleCell.setCellStyle(headerStyle);
 
-			// --- ADDED: Generated On Row ---
 			Row genDateRow = sheet.createRow(rowIdx.getAndIncrement());
 			genDateRow.createCell(0).setCellValue("Generated on: " + LocalDateTime.now().format(genDateFmt));
 			genDateRow.getCell(0).setCellStyle(boldStyle);
-			// --- END ADDED ---
 
 			String filterDesc = "Filters: ";
 			if (StringUtils.hasText(keyword)) {
@@ -499,7 +493,6 @@ public class ReportServiceImpl implements ReportService {
 	@Override
 	public ByteArrayInputStream generateWasteReport(String keyword, String reasonCategory, String wasteType,
 			String startDate, String endDate) throws IOException {
-		// Use the new search method in service
 		Page<ActivityLogEntry> wasteLogs = activityLogService.searchWasteLogs(keyword, reasonCategory, wasteType,
 				startDate, endDate, Pageable.unpaged());
 		SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -613,11 +606,14 @@ public class ReportServiceImpl implements ReportService {
 		return pdfService.generateOrderDocumentPdf(order, documentType);
 	}
 
+	// --- MODIFIED: PDF Generation for Activity Log with filters ---
 	@Override
-	public ByteArrayInputStream generateActivityLogPdf(Pageable pageable) throws IOException {
-		Page<ActivityLogEntry> logPage = activityLogService.getAllLogs(pageable);
-		return pdfService.generateActivityLogPdf(logPage);
+	public ByteArrayInputStream generateActivityLogPdf(String keyword, String startDate, String endDate,
+			Pageable pageable) throws IOException {
+		Page<ActivityLogEntry> logPage = activityLogService.searchLogs(keyword, startDate, endDate, pageable);
+		return pdfService.generateActivityLogPdf(logPage, keyword, startDate, endDate);
 	}
+	// --- END MODIFIED ---
 
 	private CellStyle createHeaderStyle(Workbook workbook) {
 		CellStyle style = workbook.createCellStyle();

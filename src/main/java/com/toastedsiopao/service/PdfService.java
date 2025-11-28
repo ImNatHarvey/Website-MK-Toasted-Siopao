@@ -21,9 +21,8 @@ public interface PdfService {
 
     ByteArrayInputStream generateOrderDocumentPdf(Order order, String documentType) throws IOException;
 
-    ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage) throws IOException;
+    // --- MODIFIED: Added Filter Parameters ---
+    ByteArrayInputStream generateActivityLogPdf(Page<ActivityLogEntry> logPage, String keyword, String startDate, String endDate) throws IOException;
     
-    // --- MODIFIED: Added Date Range parameters ---
     ByteArrayInputStream generateWasteLogPdf(Page<ActivityLogEntry> logPage, String keyword, String reasonCategory, String wasteType, String startDate, String endDate) throws IOException;
-    // --- END MODIFIED ---
 }

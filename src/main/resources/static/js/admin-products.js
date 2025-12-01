@@ -232,10 +232,8 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewProductModal.querySelector('#viewProductCreatedDate').textContent = createdDate;
 			viewProductModal.querySelector('#viewProductExpirationDate').textContent = expirationDateText;
 
-			// --- FIX: Removed parentheses from expiration days display ---
 			const expDaysText = parseInt(expirationDays) > 0 ? `${expirationDays} days` : '';
 			viewProductModal.querySelector('#viewProductExpirationDays').textContent = expDaysText;
-			// --- END FIX ---
 
 			const expDateEl = viewProductModal.querySelector('#viewProductExpirationDate');
 			if (expDateEl) {
@@ -445,7 +443,8 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (!maxBtn) return;
 
 		const row = maxBtn.closest('tr');
-		const quantityInput = row ? row.querySelector('.quantity-change-input') : null;
+		// --- FIXED SELECTOR HERE ---
+		const quantityInput = row ? row.querySelector('.stock-qty-input') : null;
 		const productId = row ? row.dataset.productId : null;
 
 		if (!row || !quantityInput || !productId) return;
@@ -473,62 +472,112 @@ document.addEventListener('DOMContentLoaded', function() {
 			});
 	});
 
+	// --- UPDATED: Stock Modal Button Logic ---
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
+
+		// Function to update button visibility based on reason
+		const updateStockActionButtons = (row, reason) => {
+			const addBtn = row.querySelector('.btn-add');
+			const setBtn = row.querySelector('.btn-set');
+			const deductBtn = row.querySelector('.btn-deduct');
+
+			if (!addBtn || !setBtn || !deductBtn) return;
+
+			// Hide all first
+			addBtn.style.display = 'none';
+			addBtn.disabled = true;
+
+			setBtn.style.display = 'none';
+			setBtn.disabled = true;
+
+			deductBtn.style.display = 'none';
+			deductBtn.disabled = true;
+
+			if (reason === 'Production') {
+				addBtn.style.display = 'block';
+				addBtn.disabled = false;
+			} else if (reason === 'Manual') {
+				setBtn.style.display = 'block';
+				setBtn.disabled = false;
+			} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
+				deductBtn.style.display = 'block';
+				deductBtn.disabled = false;
+			}
+		};
 
 		manageStockModal.addEventListener('change', function(e) {
 			if (e.target && e.target.classList.contains('reason-category-select')) {
 				const reason = e.target.value;
 				const row = e.target.closest('tr');
+				updateStockActionButtons(row, reason);
+			}
+		});
 
-				const addBtn = row.querySelector('.add-stock-btn');
-				const deductBtn = row.querySelector('.deduct-stock-btn');
-				const maxBtn = row.querySelector('.max-quantity-btn');
+		// Initialize buttons on modal show (reset to Production/Add)
+		manageStockModal.addEventListener('show.bs.modal', function() {
+			const rows = manageStockModal.querySelectorAll('tbody tr');
+			rows.forEach(row => {
+				const select = row.querySelector('.reason-category-select');
+				if (select) {
+					select.value = 'Production'; // Reset to default
+					updateStockActionButtons(row, 'Production');
+				}
+				// Clear inputs
+				// --- FIXED SELECTOR HERE ---
+				const qtyInput = row.querySelector('.stock-qty-input');
+				const noteInput = row.querySelector('.stock-note-input');
+				if (qtyInput) qtyInput.value = '';
+				if (noteInput) noteInput.value = '';
+			});
+		});
 
-				// Default state (e.g. for Manual Adjust)
-				addBtn.disabled = false;
-				addBtn.classList.remove('disabled');
-				addBtn.title = "Add stock (Production/Adjustment/Restock)";
+		// --- NEW: Handle Stock Submission via Hidden Form ---
+		manageStockModal.addEventListener('click', function(e) {
+			if (e.target && e.target.classList.contains('btn-stock-submit')) {
+				e.preventDefault();
+				const button = e.target;
+				const row = button.closest('tr');
+				const action = button.dataset.action;
 
-				deductBtn.disabled = false;
-				deductBtn.classList.remove('disabled');
-				deductBtn.title = "Deduct stock (Waste/Adjustment)";
+				// Get values from the row
+				const productId = row.dataset.productId;
+				const expirationDays = row.dataset.expirationDays;
+				const createdDate = row.dataset.createdDate;
 
-				if (maxBtn) {
-					maxBtn.disabled = false;
-					maxBtn.title = "Calculate max producible";
+				// --- FIXED SELECTOR HERE ---
+				const qtyInput = row.querySelector('.stock-qty-input');
+				const reasonSelect = row.querySelector('.reason-category-select');
+				const noteInput = row.querySelector('.stock-note-input');
+
+				const quantity = qtyInput ? qtyInput.value : '';
+				const reason = reasonSelect ? reasonSelect.value : '';
+				const note = noteInput ? noteInput.value : '';
+
+				// Basic validation
+				if (!quantity || parseFloat(quantity) < 0) {
+					alert("Please enter a valid positive quantity.");
+					return;
 				}
 
-				// Handle Logic based on updated Reason List
-				if (reason === 'Production') {
-					deductBtn.disabled = true;
-					deductBtn.classList.add('disabled');
-					deductBtn.title = "Production implies increasing stock.";
-				} else if (reason === 'Restock') {
-					// Restock (for products) implies adding, usually without ingredient consumption
-					deductBtn.disabled = true;
-					deductBtn.classList.add('disabled');
-					deductBtn.title = "Restocking implies adding finished goods.";
-				} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
-					// Waste reasons -> Deduct only
-					addBtn.disabled = true;
-					addBtn.classList.add('disabled');
-					addBtn.title = "Waste reasons imply removing stock.";
-					if (maxBtn) {
-						maxBtn.disabled = true;
-					}
-				}
-				// 'Manual' allows both
+				// Populate Hidden Form
+				const hiddenForm = document.getElementById('productStockForm');
+				document.getElementById('hiddenProductId').value = productId;
+				document.getElementById('hiddenQuantity').value = quantity;
+				document.getElementById('hiddenAction').value = action;
+				document.getElementById('hiddenReasonCategory').value = reason;
+				document.getElementById('hiddenReasonNote').value = note;
+
+				// These two are often null/empty, which is fine (handled by backend)
+				document.getElementById('hiddenReceivedDate').value = createdDate || '';
+				document.getElementById('hiddenExpirationDays').value = expirationDays || '';
+
+				// Submit Hidden Form
+				hiddenForm.submit();
 			}
 		});
 
 		manageStockModal.addEventListener('hidden.bs.modal', function() {
-			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
-				input.value = '';
-			});
-			manageStockModal.querySelectorAll('.reason-category-select').forEach(select => {
-				select.value = 'Manual'; // Reset to Manual as standard default
-			});
 			mainElement.removeAttribute('data-show-manage-stock-modal');
 		});
 	}

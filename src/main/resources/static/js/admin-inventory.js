@@ -18,21 +18,11 @@ document.addEventListener('DOMContentLoaded', function() {
 		const itemCategorySelect = addItemModal.querySelector('#itemCategory');
 		const itemUnitSelect = addItemModal.querySelector('#itemUnit');
 		const itemStatusSelect = addItemModal.querySelector('#itemStatus');
-		// Removed itemStatusWarning element reference
-
 		const itemStockInfoContainer = addItemModal.querySelector('#itemStockInfoContainer');
-
 		const itemStockHiddenInput = addItemModal.querySelector('#itemCurrentStockHidden');
-
 		const itemLowThresholdInput = addItemModal.querySelector('#itemLowThreshold');
 		const itemCriticalThresholdInput = addItemModal.querySelector('#itemCriticalThreshold');
 		const itemCostInput = addItemModal.querySelector('#itemCost');
-
-		// Removed helper to toggle status warning text
-
-		// Removed itemStatusSelect.addEventListener('change', ...)
-
-
 
 		addItemModal.addEventListener('show.bs.modal', function(event) {
 			const button = event.relatedTarget;
@@ -41,12 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			const isValidationReopen = mainElement.dataset.showAddItemModal === 'true';
 			const dataset = isEdit ? button.dataset : {};
 
-			// --- Step 1: Handle Validation Reopen vs. Fresh Open (Resetting all fields if new session) ---
 			if (!isValidationReopen) {
-				// This is a fresh open (Add or Edit button click)
 				if (itemForm) {
 					itemForm.reset();
-					// Clear validation classes, etc.
 					itemForm.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
 					itemForm.querySelectorAll('.invalid-feedback').forEach(el => {
 						if (el.getAttribute('th:if') === null) {
@@ -55,11 +42,9 @@ document.addEventListener('DOMContentLoaded', function() {
 						}
 					});
 				}
-				// Explicitly clear non-standard fields for a guaranteed clean slate
 				itemIdInput.value = '';
 				itemStockInfoContainer.style.display = 'none';
 
-				// --- FIX: Explicitly clear main input/select fields for ADD mode clean slate ---
 				itemNameInput.value = '';
 				itemCategorySelect.value = '';
 				itemUnitSelect.value = '';
@@ -67,18 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
 				itemLowThresholdInput.value = '';
 				itemCriticalThresholdInput.value = '';
 				if (itemStatusSelect) itemStatusSelect.value = 'ACTIVE';
-				// --- END FIX ---
 			}
 
-			// --- Step 2: Determine Add vs. Edit/Reopen State and Set UI ---
 			let isExistingItem = isEdit || (isValidationReopen && itemIdInput.value);
 
 			if (itemStatusSelect) itemStatusSelect.disabled = false;
 
 			if (isExistingItem) {
-				// Case A: Fresh Edit or Validation Reopen of an Edit
-
-				// For a FRESH EDIT, populate fields now (overwriting the reset defaults/explicit clears)
 				if (isEdit && !isValidationReopen) {
 					console.log("Fresh Edit: Populating fields from button dataset.");
 					itemIdInput.value = dataset.id || '';
@@ -91,15 +71,10 @@ document.addEventListener('DOMContentLoaded', function() {
 					itemCriticalThresholdInput.value = parseFloat(dataset.criticalThreshold || '0').toFixed(0);
 					itemCostInput.value = dataset.cost || '';
 				}
-
-				// Set title based on current value (for reopen) or fresh value (for click)
 				modalTitle.textContent = 'Edit Inventory Item: ' + (itemNameInput.value || 'N/A');
 				itemStockInfoContainer.style.display = 'block';
 
 			} else {
-				// Case B: Fresh Add (guaranteed clean slate) or Validation Reopen (Add)
-
-				// Set default title 
 				modalTitle.textContent = 'Add New Inventory Item';
 				itemStockInfoContainer.style.display = 'none';
 
@@ -107,9 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
 					if (itemStatusSelect) itemStatusSelect.value = 'ACTIVE';
 				}
 			}
-
-			// --- Step 3: Final UI Adjustments ---
-			// Removed status warning toggle call
 			initThresholdSliders(addItemModal);
 		});
 
@@ -120,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				mainElement.removeAttribute('data-show-add-item-modal');
 			}
 			if (itemStatusSelect) itemStatusSelect.disabled = false;
-			// Removed status warning reset call
 		});
 	}
 
@@ -139,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- editInvCategoryModal (Simple) - REFACTORED (Still simple form) ---
+	// --- editInvCategoryModal (Simple) - REFACTORED ---
 	initializeModalForm({
 		modalId: 'editInvCategoryModal',
 		formId: 'editInvCategoryForm',
@@ -165,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		});
 	}
 
-	// --- editUnitModal (Simple) - REFACTORED (Still simple form) ---
+	// --- editUnitModal (Simple) - REFACTORED ---
 	initializeModalForm({
 		modalId: 'editUnitModal',
 		formId: 'editUnitForm',
@@ -174,48 +145,104 @@ document.addEventListener('DOMContentLoaded', function() {
 		editTriggerClass: 'edit-unit-btn'
 	});
 
-	// --- manageStockModal (Complex) - Left as-is ---
+	// --- manageStockModal (Complex) - UPDATE LOGIC FOR BUTTON TOGGLE ---
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
 
-		// --- ADDED: Event listener moved from inventory.html script block ---
+		// Function to update button visibility based on reason
+		const updateStockActionButtons = (row, reason) => {
+			const addBtn = row.querySelector('.btn-add');
+			const setBtn = row.querySelector('.btn-set');
+			const deductBtn = row.querySelector('.btn-deduct');
+
+			if (!addBtn || !setBtn || !deductBtn) return;
+
+			// Hide all first
+			addBtn.style.display = 'none';
+			addBtn.disabled = true;
+
+			setBtn.style.display = 'none';
+			setBtn.disabled = true;
+
+			deductBtn.style.display = 'none';
+			deductBtn.disabled = true;
+
+			if (reason === 'Production') {
+				addBtn.style.display = 'block';
+				addBtn.disabled = false;
+			} else if (reason === 'Manual') {
+				setBtn.style.display = 'block';
+				setBtn.disabled = false;
+			} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
+				deductBtn.style.display = 'block';
+				deductBtn.disabled = false;
+			}
+		};
+
 		manageStockModal.addEventListener('change', function(e) {
-			if (e.target && e.target.name === 'reasonCategory') {
+			if (e.target && e.target.classList.contains('reason-category-select')) {
 				const reason = e.target.value;
 				const row = e.target.closest('tr');
-				const addBtn = row.querySelector('button[value="add"]');
-				const deductBtn = row.querySelector('button[value="deduct"]');
-
-				// Reset first
-				addBtn.disabled = false;
-				addBtn.classList.remove('disabled');
-				addBtn.title = "";
-				deductBtn.disabled = false;
-				deductBtn.classList.remove('disabled');
-				deductBtn.title = "";
-
-				if (reason === 'Restock' || reason === 'Production') {
-					// Restock / Production = Add only. Disable Deduct.
-					deductBtn.disabled = true;
-					deductBtn.classList.add('disabled');
-					deductBtn.title = reason === 'Restock' ?
-						"Restock implies adding stock." :
-						"Production implies adding stock (finished good production/recipe raw materials received).";
-				} else if (['Expired', 'Damaged', 'Waste'].includes(reason)) {
-					// Waste reasons = Deduct only. Disable Add.
-					addBtn.disabled = true;
-					addBtn.classList.add('disabled');
-					addBtn.title = "This reason implies removing stock.";
-				}
-				// 'Manual' allows both (reset covers this case)
+				updateStockActionButtons(row, reason);
 			}
 		});
-		// --- END ADDED ---
+
+		// Initialize buttons on modal show (reset to Production/Add)
+		manageStockModal.addEventListener('show.bs.modal', function() {
+			const rows = manageStockModal.querySelectorAll('tbody tr');
+			rows.forEach(row => {
+				const select = row.querySelector('.reason-category-select');
+				if (select) {
+					select.value = 'Production'; // Reset to default
+					updateStockActionButtons(row, 'Production');
+				}
+				// Clear visible inputs only
+				const qtyInput = row.querySelector('.stock-qty-input');
+				const noteInput = row.querySelector('.stock-note-input');
+				if (qtyInput) qtyInput.value = '';
+				if (noteInput) noteInput.value = '';
+			});
+		});
+
+		// --- NEW: Handle Stock Submission via Hidden Form ---
+		manageStockModal.addEventListener('click', function(e) {
+			if (e.target && e.target.classList.contains('btn-stock-submit')) {
+				e.preventDefault();
+				const button = e.target;
+				const row = button.closest('tr');
+				const action = button.dataset.action;
+
+				// Get values from the row
+				const itemId = row.dataset.itemId;
+				const expirationDays = row.dataset.expirationDays;
+				const qtyInput = row.querySelector('.stock-qty-input');
+				const reasonSelect = row.querySelector('.reason-category-select');
+				const noteInput = row.querySelector('.stock-note-input');
+
+				const quantity = qtyInput ? qtyInput.value : '';
+				const reason = reasonSelect ? reasonSelect.value : '';
+				const note = noteInput ? noteInput.value : '';
+
+				if (!quantity || parseFloat(quantity) < 0) {
+					alert("Please enter a valid positive quantity.");
+					return;
+				}
+
+				// Populate Hidden Form
+				const hiddenForm = document.getElementById('inventoryStockForm');
+				document.getElementById('hiddenItemId').value = itemId;
+				document.getElementById('hiddenQuantity').value = quantity;
+				document.getElementById('hiddenAction').value = action;
+				document.getElementById('hiddenReasonCategory').value = reason;
+				document.getElementById('hiddenReasonNote').value = note;
+				document.getElementById('hiddenExpirationDays').value = expirationDays;
+
+				// Submit Hidden Form
+				hiddenForm.submit();
+			}
+		});
 
 		manageStockModal.addEventListener('hidden.bs.modal', function() {
-			manageStockModal.querySelectorAll('.stock-adjust-form input[type="number"]').forEach(input => {
-				input.value = '';
-			});
 			mainElement.removeAttribute('data-show-manage-stock-modal');
 		});
 	}
@@ -224,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	function formatDate(dateString) {
 		if (!dateString) return 'N/A';
 		try {
-			const date = new Date(dateString + 'T00:00:00'); // Ensure date is parsed in UTC to avoid timezone issues
+			const date = new Date(dateString + 'T00:00:00');
 			if (isNaN(date)) return 'N/A';
 			return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 		} catch (e) {
@@ -239,11 +266,9 @@ document.addEventListener('DOMContentLoaded', function() {
 			if (isNaN(receivedDate)) return 'N/A';
 
 			const expDays = parseInt(expirationDays);
-			// Use setDate to add days, handling month/year rollovers
 			const expirationDate = new Date(receivedDate);
 			expirationDate.setDate(receivedDate.getDate() + expDays);
 
-			// Format to YYYY-MM-DD to avoid confusion, then convert to display format
 			const rawDateString = expirationDate.toISOString().split('T')[0];
 			return formatDate(rawDateString);
 
@@ -253,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 
 
-	// --- viewItemModal (Custom) - MODIFIED to include Item Status and Dates ---
+	// --- viewItemModal (Custom) ---
 	const viewItemModal = document.getElementById('viewItemModal');
 	if (viewItemModal) {
 		viewItemModal.addEventListener('show.bs.modal', function(event) {
@@ -283,9 +308,6 @@ document.addEventListener('DOMContentLoaded', function() {
 			setText('#viewItemLowThreshold', dataset.lowThreshold);
 			setText('#viewItemCriticalThreshold', dataset.criticalThreshold);
 
-			// --- MODIFIED DATE FIELDS LOGIC ---
-
-			// Use .split(' • ')[0] to only show date/time, and default to N/A
 			const lastUpdated = (dataset.lastUpdated && dataset.lastUpdated !== 'N/A') ? dataset.lastUpdated.split(' • ')[0] : 'N/A';
 
 			const lastUpdatedEl = viewItemModal.querySelector('#viewItemLastUpdated');
@@ -293,7 +315,6 @@ document.addEventListener('DOMContentLoaded', function() {
 				lastUpdatedEl.textContent = lastUpdated;
 			}
 
-			// ADDED: Item Active Status
 			setText('#viewItemActiveStatus', dataset.itemStatus || 'N/A');
 
 			const statusBadge = viewItemModal.querySelector('#viewItemStatusBadge');
@@ -303,16 +324,12 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (dataset.stockStatusClass) {
 					statusBadge.classList.add(dataset.stockStatusClass);
 				}
-			} else {
-				console.warn("Element #viewItemStatusBadge not found.");
 			}
 
 			const receivedDate = dataset.receivedDate ? formatDate(dataset.receivedDate) : 'N/A';
 			const expirationDays = dataset.expirationDays || '0';
 
-			// Prefer stored expirationDate, fallback to calculation
 			let expirationDateText = 'No Expiration';
-			// Check if expirationDate dataset attribute is present AND not the string "null"
 			if (dataset.expirationDate && dataset.expirationDate !== 'null' && dataset.expirationDate !== 'N/A') {
 				expirationDateText = formatDate(dataset.expirationDate);
 			} else {
@@ -325,9 +342,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const expDateEl = viewItemModal.querySelector('#viewItemExpirationDate');
 			if (expDateEl) {
-				// Only apply color if there is an actual expiration date set (i.e., expirationDays > 0)
 				if (parseInt(expirationDays) > 0) {
-					// Check if actually expired against today
 					const now = new Date();
 					now.setHours(0, 0, 0, 0);
 
@@ -342,20 +357,16 @@ document.addEventListener('DOMContentLoaded', function() {
 					if (expDateObj) {
 						expDateObj.setHours(0, 0, 0, 0);
 						if (expDateObj < now) {
-							// Expired
 							expDateEl.className = 'fw-bold text-danger';
 						} else {
-							// Not expired, keep red for visual warning of impending doom, as per original UI
 							expDateEl.className = 'fw-bold text-danger';
 						}
 					}
 				} else {
-					// No Expiration
 					expDateEl.className = 'fw-bold text-success';
 					expDateEl.textContent = 'No Expiration';
 				}
 			}
-			// --- END MODIFIED DATE FIELDS LOGIC ---
 		});
 	}
 });

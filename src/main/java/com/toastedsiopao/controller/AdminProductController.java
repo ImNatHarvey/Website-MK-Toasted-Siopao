@@ -295,7 +295,9 @@ public class AdminProductController {
 
 	@PostMapping("/stock/adjust")
 	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')")
-	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
+	public String adjustProductStock(@RequestParam("productId") Long productId,
+			@RequestParam(value = "quantity", required = false) Integer quantity, // Made required=false to handle
+																					// validation
 			@RequestParam("action") String action,
 			@RequestParam(value = "reasonCategory", required = false) String reasonCategory,
 			@RequestParam(value = "reasonNote", required = false) String reasonNote,
@@ -303,44 +305,87 @@ public class AdminProductController {
 			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
-		if (quantity <= 0) {
-			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
+		// --- MODIFIED VALIDATION ---
+		if (quantity == null) {
+			redirectAttributes.addFlashAttribute("stockError", "Quantity is required.");
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		int quantityChange = action.equals("deduct") ? -quantity : quantity;
-		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
-
-		boolean isWasteAction = action.equals("deduct")
-				&& List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
-
-		String finalReason = derivedReason;
-		if (StringUtils.hasText(reasonCategory)) {
-			finalReason = reasonCategory;
+		if ("set".equals(action)) {
+			if (quantity < 0) {
+				redirectAttributes.addFlashAttribute("stockError", "Stock quantity cannot be negative.");
+				String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal")
+						.build().toUriString();
+				return "redirect:" + redirectUrl;
+			}
+		} else {
+			if (quantity <= 0) {
+				redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
+				String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal")
+						.build().toUriString();
+				return "redirect:" + redirectUrl;
+			}
 		}
-		if (StringUtils.hasText(reasonNote)) {
-			finalReason += ": " + reasonNote;
-		}
+		// --- END MODIFIED VALIDATION ---
 
 		try {
-			// --- FIX: Pass receivedDate (likely null from modal) directly ---
+			// --- FETCH PRODUCT FIRST TO CALCULATE CHANGE FOR 'SET' ---
+			Product product = productService.findById(productId)
+					.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
+
+			int quantityChange;
+
+			if ("set".equals(action)) {
+				quantityChange = quantity - product.getCurrentStock();
+			} else if ("deduct".equals(action)) {
+				quantityChange = -quantity;
+			} else {
+				quantityChange = quantity; // add
+			}
+
+			String derivedReason = ("add".equals(action) || "set".equals(action)) ? "Production" : "Adjustment/Wastage"; // Default
+																															// fallback
+
+			// Force deduct if it's a waste category
+			boolean isWasteAction = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
+			if (isWasteAction && quantityChange > 0) {
+				quantityChange = -quantityChange; // Flip if positive
+			}
+
+			String finalReason = reasonCategory;
+			if (!StringUtils.hasText(finalReason)) {
+				finalReason = derivedReason;
+			}
+			if (StringUtils.hasText(reasonNote)) {
+				finalReason += ": " + reasonNote;
+			}
+
 			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, receivedDate,
 					expirationDays);
 
-			String actionText = action.equals("add") ? "Added" : "Deducted";
-			if ("Production".equals(reasonCategory))
+			String actionText;
+			if ("set".equals(action)) {
+				actionText = "Set";
+			} else {
+				actionText = (quantityChange >= 0) ? "Increased" : "Deducted";
+			}
+
+			if ("Production".equals(reasonCategory) && !"set".equals(action))
 				actionText = "Produced";
 			else if (isWasteAction)
 				actionText = "Wasted";
 
-			String details = actionText + " " + quantity + " unit(s) of " + updatedProduct.getName() + " (ID: "
-					+ productId + "). Reason: " + finalReason;
+			String details = actionText + " stock of " + updatedProduct.getName() + " (ID: " + productId + "). Change: "
+					+ quantityChange + ". New Stock: " + updatedProduct.getCurrentStock() + ". Reason: " + finalReason;
 
-			if (isWasteAction) {
+			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedProduct.getName()
+					+ "'. New stock: " + updatedProduct.getCurrentStock());
+
+			if (isWasteAction && quantityChange < 0) { // Only log waste if actual deduction happened
 				BigDecimal unitValue = updatedProduct.getPrice();
-				BigDecimal quantityDecimal = BigDecimal.valueOf(quantity);
+				BigDecimal quantityDecimal = BigDecimal.valueOf(Math.abs(quantityChange));
 
 				String logAction = "PRODUCT_WASTE_" + reasonCategory.toUpperCase();
 				activityLogService.logWasteAction(principal.getName(), logAction, details, updatedProduct.getName(),
@@ -348,9 +393,6 @@ public class AdminProductController {
 			} else {
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
 			}
-
-			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " unit(s) of '"
-					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
 
 		} catch (RuntimeException e) {
 			log.warn("Stock adjustment failed: {}", e.getMessage());

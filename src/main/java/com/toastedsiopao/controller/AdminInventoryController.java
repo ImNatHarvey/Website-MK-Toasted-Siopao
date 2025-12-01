@@ -233,44 +233,85 @@ public class AdminInventoryController {
 			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
 			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
-		if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
-			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
+		// --- MODIFIED VALIDATION ---
+		if (quantity == null) {
+			redirectAttributes.addFlashAttribute("stockError", "Quantity is required.");
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
 					.toUriString();
 			return "redirect:" + redirectUrl;
 		}
 
-		boolean isWaste = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
-
-		BigDecimal quantityChange;
-		if (action.equals("deduct") || isWaste) {
-			quantityChange = quantity.negate();
+		if ("set".equals(action)) {
+			if (quantity.compareTo(BigDecimal.ZERO) < 0) {
+				redirectAttributes.addFlashAttribute("stockError", "Stock quantity cannot be negative.");
+				String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal")
+						.build().toUriString();
+				return "redirect:" + redirectUrl;
+			}
 		} else {
-			quantityChange = quantity;
+			if (quantity.compareTo(BigDecimal.ZERO) <= 0) {
+				redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
+				String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal")
+						.build().toUriString();
+				return "redirect:" + redirectUrl;
+			}
 		}
-
-		String finalReason = reasonCategory;
-		if (StringUtils.hasText(reasonNote)) {
-			finalReason += ": " + reasonNote;
-		}
+		// --- END MODIFIED VALIDATION ---
 
 		try {
-			// --- FIX: Pass the receivedDate (usually null from Manage Stock) directly.
-			// DO NOT force LocalDate.now() here.
+			// --- FETCH ITEM FIRST TO CALCULATE CHANGE FOR 'SET' ---
+			InventoryItem item = inventoryItemService.findById(itemId)
+					.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
+
+			BigDecimal quantityChange;
+
+			if ("set".equals(action)) {
+				quantityChange = quantity.subtract(item.getCurrentStock());
+			} else if ("deduct".equals(action)) {
+				quantityChange = quantity.negate();
+			} else {
+				quantityChange = quantity; // add
+			}
+
+			// If SET resulted in no change, we can still proceed to update metadata like
+			// dates if provided,
+			// or simply log it. The service handles 0 change gracefully usually, but let's
+			// let it flow.
+
+			boolean isWaste = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
+			// Force deduct if it's a waste category, though UI should handle this.
+			if (isWaste && quantityChange.compareTo(BigDecimal.ZERO) > 0) {
+				// This effectively prevents "Adding" waste, ensuring data integrity.
+				quantityChange = quantityChange.negate();
+			}
+
+			String finalReason = reasonCategory;
+			if (StringUtils.hasText(reasonNote)) {
+				finalReason += ": " + reasonNote;
+			}
+
 			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason,
 					receivedDate, expirationDays);
 
-			String actionText = (quantityChange.compareTo(BigDecimal.ZERO) > 0) ? "Increased" : "Deducted";
-			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of "
-					+ updatedItem.getName() + " (ID: " + itemId + "). Reason: " + finalReason;
+			String actionText;
+			if ("set".equals(action)) {
+				actionText = "Set";
+			} else {
+				actionText = (quantityChange.compareTo(BigDecimal.ZERO) >= 0) ? "Increased" : "Deducted";
+			}
+
+			String details = actionText + " stock of " + updatedItem.getName() + " (ID: " + itemId + "). " + "Change: "
+					+ quantityChange + ". New Stock: " + updatedItem.getCurrentStock() + " "
+					+ updatedItem.getUnit().getAbbreviation() + ". Reason: " + finalReason;
 
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
-					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
+					+ "'. New stock: " + updatedItem.getCurrentStock());
 
-			if (isWaste && action.equals("deduct")) {
+			// Log Waste if applicable (Deducting due to waste reasons)
+			if (isWaste && quantityChange.compareTo(BigDecimal.ZERO) < 0) {
 				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
 				activityLogService.logWasteAction(principal.getName(), logAction, details, updatedItem.getName(),
-						quantity.abs(), updatedItem.getCostPerUnit());
+						quantityChange.abs(), updatedItem.getCostPerUnit());
 			} else {
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 			}

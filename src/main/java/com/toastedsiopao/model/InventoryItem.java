@@ -13,7 +13,7 @@ import lombok.ToString;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit; // Import required for days calculation
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "inventory_items")
@@ -67,14 +67,19 @@ public class InventoryItem {
 	private LocalDateTime lastUpdated;
 
 	@Column(nullable = false, length = 20)
-	private String itemStatus = "ACTIVE"; 
-	
+	private String itemStatus = "ACTIVE";
+
 	@Column(nullable = true)
 	private LocalDate receivedDate;
 
 	@Column(nullable = true)
 	private LocalDate expirationDate;
-	
+
+	// --- ADDED: Store the shelf life setting directly ---
+	@Column(nullable = true)
+	private Integer expirationDays;
+	// --- END ADDED ---
+
 	@PrePersist
 	@PreUpdate
 	protected void onUpdate() {
@@ -120,12 +125,12 @@ public class InventoryItem {
 	public int getCriticalStockPercentage() {
 		return 5;
 	}
-	
-	// --- ADDED: Helper to calculate days for the Edit form/Display ---
-	@Transient
+
+	// --- FIX: Return the stored shelf life integer directly, not a calculated
+	// difference ---
 	public Integer getExpirationDays() {
-		if (receivedDate != null && expirationDate != null) {
-			return (int) ChronoUnit.DAYS.between(receivedDate, expirationDate);
+		if (expirationDays != null) {
+			return expirationDays;
 		}
 		return 0;
 	}

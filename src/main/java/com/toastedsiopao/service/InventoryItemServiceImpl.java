@@ -19,6 +19,7 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime; // Added
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,10 +118,19 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 				.orElseThrow(() -> new RuntimeException("Unit of Measure not found with id: " + itemDto.getUnitId()));
 
 		InventoryItem item;
+		LocalDate anchorDateForExpiration = LocalDate.now();
+		Integer oldExpirationDays = null;
+
 		boolean isNew = itemDto.getId() == null;
 		if (!isNew) {
 			item = itemRepository.findById(itemDto.getId())
 					.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemDto.getId()));
+
+			// Capture state before update
+			oldExpirationDays = item.getExpirationDays();
+			if (item.getLastUpdated() != null) {
+				anchorDateForExpiration = item.getLastUpdated().toLocalDate();
+			}
 
 			if ("INACTIVE".equals(itemDto.getItemStatus()) && "ACTIVE".equals(item.getItemStatus())) {
 				if (item.getCurrentStock().compareTo(BigDecimal.ZERO) > 0) {
@@ -146,36 +156,40 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setCriticalStockThreshold(itemDto.getCriticalStockThreshold());
 		item.setCostPerUnit(itemDto.getCostPerUnit());
 
-		// --- DATE AND EXPIRATION LOGIC ---
-		LocalDate effectiveReceivedDate = itemDto.getReceivedDate();
+		// Update Expiration Days setting
+		Integer newExpirationDays = itemDto.getExpirationDays();
+		item.setExpirationDays(newExpirationDays);
 
-		if (effectiveReceivedDate == null) {
-			if (isNew) {
-				effectiveReceivedDate = LocalDate.now();
-			} else {
-				// Keep existing date if not provided in update
-				effectiveReceivedDate = item.getReceivedDate();
-				if (effectiveReceivedDate == null) {
-					effectiveReceivedDate = LocalDate.now(); // Fallback for old data
-				}
-			}
-		}
-		item.setReceivedDate(effectiveReceivedDate);
-
-		// Calculate expiration date based on days
-		if (itemDto.getExpirationDays() != null) {
-			if (itemDto.getExpirationDays() > 0) {
-				// FIX: Recalculate expiration date based on the (potentially updated)
-				// receivedDate
-				item.setExpirationDate(effectiveReceivedDate.plusDays(itemDto.getExpirationDays()));
-			} else {
-				item.setExpirationDate(null); // No expiration
-			}
+		// --- DATE LOGIC ---
+		// 1. Update Received Date (Only if explicitly changed in DTO, or defaults for
+		// new item)
+		// This step is completely independent of Expiration Date now.
+		if (itemDto.getReceivedDate() != null) {
+			item.setReceivedDate(itemDto.getReceivedDate());
 		} else if (isNew) {
-			// Ensure no expiration date is set for new items if days is null/default 0
-			item.setExpirationDate(null);
+			item.setReceivedDate(LocalDate.now());
+		} else if (item.getReceivedDate() == null) {
+			// Fallback for legacy data
+			item.setReceivedDate(LocalDate.now());
 		}
-		// --- END DATE AND EXPIRATION LOGIC ---
+
+		// 2. Update Expiration Date
+		// Logic: Only recalculate if the shelf life (days) setting actually changed.
+		// Anchor: Use the 'Last Updated' date (Dec 02), not the 'Received Date' (Nov
+		// 20).
+		boolean daysChanged = (newExpirationDays != null && !newExpirationDays.equals(oldExpirationDays))
+				|| (newExpirationDays == null && oldExpirationDays != null);
+
+		if (daysChanged || isNew) {
+			if (newExpirationDays != null && newExpirationDays > 0) {
+				item.setExpirationDate(anchorDateForExpiration.plusDays(newExpirationDays));
+			} else {
+				item.setExpirationDate(null);
+			}
+		}
+		// If days didn't change, we touch nothing. Even if ReceivedDate changed above,
+		// ExpirationDate stays fixed.
+		// --- END DATE LOGIC ---
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
@@ -305,10 +319,7 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 				}
 			}
 
-			// 2. Only update Received Date if the user explicitly provided one (e.g.
-			// manually via UI).
-			// If receivedDate is null (standard Add Stock), the original date (e.g. Nov 20)
-			// is PRESERVED.
+			// 2. Only update Received Date if the user explicitly provided one.
 			if (receivedDate != null) {
 				item.setReceivedDate(receivedDate);
 			}

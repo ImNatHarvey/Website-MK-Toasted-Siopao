@@ -96,12 +96,10 @@ public class CustomerServiceImpl implements CustomerService {
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
-		// --- FIX: Auto-create role if missing instead of crashing ---
 		Role customerRole = roleRepository.findByName(CUSTOMER_ROLE_NAME).orElseGet(() -> {
 			log.warn("Role '{}' not found during signup. Auto-creating it.", CUSTOMER_ROLE_NAME);
 			return roleRepository.save(new Role(CUSTOMER_ROLE_NAME));
 		});
-		// ------------------------------------------------------------
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -126,16 +124,16 @@ public class CustomerServiceImpl implements CustomerService {
 
 		User savedUser = userRepository.save(newUser);
 
-		// Send Verification Email with ID and Token
 		String verifyLink = siteUrl + "/verify?id=" + savedUser.getId() + "&token=" + token;
 		try {
 			emailService.sendVerificationEmail(savedUser, verifyLink);
 		} catch (Exception e) {
 			log.error("Failed to send verification email to {}", savedUser.getEmail(), e);
+			// We still return the user, but maybe we should let the user know email failed?
+			// For now, the user can use the new "Resend" button if they don't get it.
 			throw e;
 		}
 
-		// Cart Migration Logic
 		if (StringUtils.hasText(userDto.getCartDataJson())) {
 			log.info("Migrating guest cart for new user: {}", savedUser.getUsername());
 			try {
@@ -192,7 +190,6 @@ public class CustomerServiceImpl implements CustomerService {
 		if (token != null && token.equals(user.getVerificationToken())) {
 			user.setStatus("ACTIVE");
 			user.setVerificationToken(null);
-			// --- UPDATED: Use saveAndFlush to ensure DB is updated before redirect ---
 			userRepository.saveAndFlush(user);
 			log.info("User {} successfully verified via email.", user.getUsername());
 			return "SUCCESS";
@@ -201,18 +198,41 @@ public class CustomerServiceImpl implements CustomerService {
 		return "INVALID";
 	}
 
+	// --- NEW: Resend Verification Logic ---
+	@Override
+	public void resendVerificationEmail(String usernameOrEmail, String siteUrl) throws Exception {
+		User user = userRepository.findByUsername(usernameOrEmail).orElse(null);
+		if (user == null) {
+			user = userRepository.findByEmail(usernameOrEmail).orElse(null);
+		}
+
+		if (user != null && "PENDING".equals(user.getStatus())) {
+			// Generate a fresh token
+			String token = UUID.randomUUID().toString();
+			user.setVerificationToken(token);
+			userRepository.save(user);
+
+			String verifyLink = siteUrl + "/verify?id=" + user.getId() + "&token=" + token;
+			emailService.sendVerificationEmail(user, verifyLink);
+			log.info("Resent verification email to {} (User ID: {})", user.getEmail(), user.getId());
+		} else {
+			log.warn("Resend verification requested for {}, but user not found or not PENDING.", usernameOrEmail);
+			// We silently ignore to prevent user enumeration, or you could throw an
+			// exception if you prefer explicit errors.
+		}
+	}
+	// --------------------------------------
+
 	@Override
 	public User createCustomerFromAdmin(CustomerCreateDto userDto) {
 		userValidationService.validateUsernameDoesNotExist(userDto.getUsername());
 		userValidationService.validateEmailDoesNotExist(userDto.getEmail());
 		validatePasswordConfirmation(userDto.getPassword(), userDto.getConfirmPassword());
 
-		// --- FIX: Auto-create role if missing ---
 		Role customerRole = roleRepository.findByName(CUSTOMER_ROLE_NAME).orElseGet(() -> {
 			log.warn("Role '{}' not found during admin creation. Auto-creating it.", CUSTOMER_ROLE_NAME);
 			return roleRepository.save(new Role(CUSTOMER_ROLE_NAME));
 		});
-		// ----------------------------------------
 
 		User newUser = new User();
 		newUser.setFirstName(userDto.getFirstName());
@@ -227,7 +247,6 @@ public class CustomerServiceImpl implements CustomerService {
 		return userRepository.save(newUser);
 	}
 
-	// ... (Rest of the methods remain exactly as they were) ...
 	@Override
 	@Transactional(readOnly = true)
 	public User findByUsername(String username) {
@@ -254,36 +273,28 @@ public class CustomerServiceImpl implements CustomerService {
 		if (userToUpdate.getRole() == null || !CUSTOMER_ROLE_NAME.equals(userToUpdate.getRole().getName())) {
 			throw new IllegalArgumentException("Cannot update non-customer user with this method.");
 		}
-		
-		// 1. Validate Username uniqueness (only if it changed)
+
 		if (!userToUpdate.getUsername().equals(userDto.getUsername())) {
 			userValidationService.validateUsernameOnUpdate(userDto.getUsername(), userDto.getId());
 		}
 
-		// 2. Validate Email uniqueness and format (only if it changed AND is not blank)
-		// FIX: Use StringUtils.hasText() to safely compare the original database value (which might be null) 
-		// against the submitted DTO value.
 		if (!StringUtils.hasText(userToUpdate.getEmail()) || !userToUpdate.getEmail().equals(userDto.getEmail())) {
 			if (StringUtils.hasText(userDto.getEmail())) {
-				// We need to manually check if the new email is valid email format
-				// and if it exists for another user.
 				if (!userDto.getEmail().matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")) {
 					throw new IllegalArgumentException("Email format is invalid.");
 				}
 				userValidationService.validateEmailOnUpdate(userDto.getEmail(), userDto.getId());
-			} 
+			}
 		}
 
 		userToUpdate.setFirstName(userDto.getFirstName());
 		userToUpdate.setLastName(userDto.getLastName());
 		userToUpdate.setUsername(userDto.getUsername());
 		userToUpdate.setEmail(userDto.getEmail());
-		
-		userToUpdate.setPhone(userDto.getPhone()); 
-		// END FIX
+		userToUpdate.setPhone(userDto.getPhone());
 
-		if (StringUtils.hasText(userDto.getStatus())
-				&& (userDto.getStatus().equals("ACTIVE") || userDto.getStatus().equals("INACTIVE") || userDto.getStatus().equals("DISABLED"))) {
+		if (StringUtils.hasText(userDto.getStatus()) && (userDto.getStatus().equals("ACTIVE")
+				|| userDto.getStatus().equals("INACTIVE") || userDto.getStatus().equals("DISABLED"))) {
 			userToUpdate.setStatus(userDto.getStatus());
 		} else {
 			throw new IllegalArgumentException("Invalid status value provided.");
@@ -339,7 +350,6 @@ public class CustomerServiceImpl implements CustomerService {
 			User user = findByUsername(username);
 			if (user != null) {
 				user.setLastActivity(LocalDateTime.now(clock));
-				// Reactivate INACTIVE users on login. DISABLED users are blocked at login, so this won't run for them.
 				if ("INACTIVE".equals(user.getStatus())) {
 					user.setStatus("ACTIVE");
 				}

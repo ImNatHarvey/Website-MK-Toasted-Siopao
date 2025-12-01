@@ -114,7 +114,6 @@ public class AuthController {
 		}
 	}
 
-	// --- UPDATED: Verification now uses explicit URL parameters for feedback ---
 	@GetMapping("/verify")
 	public String verifyAccount(@RequestParam("id") Long userId, @RequestParam("token") String token) {
 
@@ -128,6 +127,24 @@ public class AuthController {
 			return "redirect:/login?error=invalid_token";
 		}
 	}
+
+	// --- NEW: Resend Verification Endpoint ---
+	@PostMapping("/resend-verification")
+	public String resendVerification(@RequestParam("username") String username, HttpServletRequest request,
+			RedirectAttributes redirectAttributes) {
+		try {
+			String baseUrl = ServletUriComponentsBuilder.fromRequestUri(request).replacePath(null).build()
+					.toUriString();
+			customerService.resendVerificationEmail(username, baseUrl);
+			redirectAttributes.addFlashAttribute("successMessage",
+					"Verification email has been resent! Please check your inbox.");
+		} catch (Exception e) {
+			log.error("Failed to resend verification email", e);
+			redirectAttributes.addFlashAttribute("errorMessage", "Failed to resend email. Please try again later.");
+		}
+		return "redirect:/login";
+	}
+	// -----------------------------------------
 
 	@PostMapping("/forgot-password")
 	public String processForgotPassword(@RequestParam("email") String email, HttpServletRequest request,

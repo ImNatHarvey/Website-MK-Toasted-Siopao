@@ -50,9 +50,11 @@ public class SecurityConfig {
 		http.addFilterBefore(loginWhitespaceFilter, UsernamePasswordAuthenticationFilter.class)
 
 				.authorizeHttpRequests(auth -> auth
+						// --- UPDATED: Added /resend-verification ---
 						.requestMatchers("/css/**", "/img/**", "/js/**", "/img/uploads/**", "/favicon.ico", "/",
 								"/about", "/login", "/access-denied", "/logout", "/forgot-password", "/reset-password",
-								"/verify")
+								"/verify", "/resend-verification")
+						// ------------------------------------------
 						.permitAll().requestMatchers("/menu", "/order", "/signup").access((authentication, context) -> {
 							boolean isAnonymous = !authentication.get().isAuthenticated() || authentication.get()
 									.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ANONYMOUS"));
@@ -70,13 +72,10 @@ public class SecurityConfig {
 						.successHandler(customerAuthenticationSuccessHandler)
 						.failureHandler(customAuthenticationFailureHandler).permitAll())
 
-				// --- UPDATED: Added failureHandler to OAuth2 Login ---
 				.oauth2Login(oauth2 -> oauth2.loginPage("/login")
 						.userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
 						.successHandler(customerAuthenticationSuccessHandler)
-						.failureHandler(customAuthenticationFailureHandler) // <--- ADDED THIS LINE
-				)
-				// ----------------------------------------------------
+						.failureHandler(customAuthenticationFailureHandler))
 
 				.rememberMe(rememberMe -> rememberMe.key("a-very-secret-key-for-mk-toasted-siopao-remember-me")
 						.tokenValiditySeconds(14 * 24 * 60 * 60).userDetailsService(userDetailsService)

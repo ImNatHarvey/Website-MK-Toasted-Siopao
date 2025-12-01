@@ -19,6 +19,8 @@ import com.toastedsiopao.model.User;
 import com.toastedsiopao.repository.UserRepository;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 @Component
@@ -46,7 +48,6 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			log.warn("Login failure: Bad credentials for user '{}'", username);
 			errorType = "credentials";
 		} else if (exception instanceof DisabledException || (cause != null && cause instanceof DisabledException)) {
-			// Handle standard form login disabled/inactive checks
 			errorType = "disabled";
 
 			if (StringUtils.hasText(username)) {
@@ -86,6 +87,12 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 		if (StringUtils.hasText(source)) {
 			failureUrl += "&source=" + source;
 		}
+
+		// --- NEW: Pass username back if unverified so we can resend email ---
+		if ("unverified".equals(errorType) && StringUtils.hasText(username)) {
+			failureUrl += "&username=" + URLEncoder.encode(username, StandardCharsets.UTF_8);
+		}
+		// --------------------------------------------------------------------
 
 		getRedirectStrategy().sendRedirect(request, response, failureUrl);
 	}

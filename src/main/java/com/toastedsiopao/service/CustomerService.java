@@ -52,6 +52,8 @@ public interface CustomerService {
 
 	void updateCustomerPassword(String currentUsername, CustomerPasswordDto passwordDto);
 
-	// --- UPDATED: Now takes ID and returns specific status string ---
 	String verifyAccount(Long userId, String token);
+
+	// --- NEW: Resend verification email ---
+	void resendVerificationEmail(String usernameOrEmail, String siteUrl) throws Exception;
 }

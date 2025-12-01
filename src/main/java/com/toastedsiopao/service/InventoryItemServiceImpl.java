@@ -163,24 +163,19 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setReceivedDate(effectiveReceivedDate);
 
 		// Calculate expiration date based on days
-		// MODIFIED: Only force recalculation on NEW items to avoid changing expiration date on edits
-		if (isNew) {
-			if (itemDto.getExpirationDays() != null && itemDto.getExpirationDays() > 0) {
+		if (itemDto.getExpirationDays() != null) {
+			if (itemDto.getExpirationDays() > 0) {
+				// FIX: Recalculate expiration date based on the (potentially updated)
+				// receivedDate
 				item.setExpirationDate(effectiveReceivedDate.plusDays(itemDto.getExpirationDays()));
 			} else {
 				item.setExpirationDate(null); // No expiration
 			}
-		} else {
-			// For existing items, if expiration date is null but days are set (e.g. new requirement), calculate it.
-			// Otherwise, preserve the existing expiration date (which might be set by a stock update).
-			if (item.getExpirationDate() == null && itemDto.getExpirationDays() != null && itemDto.getExpirationDays() > 0) {
-				item.setExpirationDate(effectiveReceivedDate.plusDays(itemDto.getExpirationDays()));
-			}
-			// If user actively removes expiration (days = 0), clear the date
-			if (itemDto.getExpirationDays() != null && itemDto.getExpirationDays() == 0) {
-				item.setExpirationDate(null);
-			}
+		} else if (isNew) {
+			// Ensure no expiration date is set for new items if days is null/default 0
+			item.setExpirationDate(null);
 		}
+		// --- END DATE AND EXPIRATION LOGIC ---
 
 		try {
 			InventoryItem savedItem = itemRepository.save(item);
@@ -281,7 +276,8 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	}
 
 	@Override
-	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason, LocalDate receivedDate, Integer expirationDays) {
+	public InventoryItem adjustStock(Long itemId, BigDecimal quantityChange, String reason, LocalDate receivedDate,
+			Integer expirationDays) {
 		InventoryItem item = itemRepository.findByIdForUpdate(itemId)
 				.orElseThrow(() -> new RuntimeException("Inventory Item not found with id: " + itemId));
 
@@ -296,17 +292,19 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		}
 
 		item.setCurrentStock(newStock);
-		
+
 		if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
 			if (receivedDate != null) {
 				if (expirationDays != null && expirationDays > 0) {
 					item.setExpirationDate(receivedDate.plusDays(expirationDays));
+					// Set received date to current date for new expiration
+					item.setReceivedDate(receivedDate);
 				} else {
 					item.setExpirationDate(null);
 				}
 			}
 		}
-		
+
 		InventoryItem savedItem = itemRepository.save(item);
 
 		log.info("Stock adjusted for Inventory ID {}: Change={}, New Stock={}, Reason='{}'", itemId, quantityChange,
@@ -349,12 +347,12 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 	public long countByUnit(UnitOfMeasure unit) {
 		return itemRepository.countByUnit(unit);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> getInventoryMetrics(String keyword, Long categoryId) {
 		Map<String, Object> metrics = new HashMap<>();
-		
+
 		InventoryCategory category = null;
 		if (categoryId != null) {
 			category = categoryRepository.findById(categoryId).orElse(null);
@@ -366,13 +364,13 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		long lowStock = itemRepository.countFilteredLowStock(parsedKeyword, category);
 		long criticalStock = itemRepository.countFilteredCriticalStock(parsedKeyword, category);
 		long outOfStock = itemRepository.countFilteredOutOfStock(parsedKeyword, category);
-		
+
 		metrics.put("totalItems", totalItems);
 		metrics.put("totalValue", totalValue);
 		metrics.put("lowStock", lowStock);
 		metrics.put("criticalStock", criticalStock);
 		metrics.put("outOfStock", outOfStock);
-		
+
 		return metrics;
 	}
 }

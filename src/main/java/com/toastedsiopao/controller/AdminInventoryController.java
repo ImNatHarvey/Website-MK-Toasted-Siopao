@@ -68,17 +68,16 @@ public class AdminInventoryController {
 
 	@GetMapping
 	@PreAuthorize("hasAuthority('VIEW_INVENTORY')")
-	public String manageInventory(Model model, 
-			@RequestParam(value = "keyword", required = false) String keyword,
+	public String manageInventory(Model model, @RequestParam(value = "keyword", required = false) String keyword,
 			@RequestParam(value = "category", required = false) Long categoryId,
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "size", defaultValue = "10") int size,
-			@RequestParam(value = "activeTab", required = false) String activeTab, 
+			@RequestParam(value = "activeTab", required = false) String activeTab,
 			@RequestParam(value = "wasteKeyword", required = false) String wasteKeyword,
 			@RequestParam(value = "wasteCategory", required = false) String wasteCategory,
 			@RequestParam(value = "wasteType", required = false) String wasteType,
-			@RequestParam(value = "wasteStartDate", required = false) String wasteStartDate, // ADDED
-			@RequestParam(value = "wasteEndDate", required = false) String wasteEndDate,     // ADDED
+			@RequestParam(value = "wasteStartDate", required = false) String wasteStartDate,
+			@RequestParam(value = "wasteEndDate", required = false) String wasteEndDate,
 			@RequestParam(value = "wastePage", defaultValue = "0") int wastePage) {
 
 		Pageable pageable = PageRequest.of(page, size);
@@ -94,21 +93,21 @@ public class AdminInventoryController {
 		model.addAttribute("outOfStockCount", invMetrics.get("outOfStock"));
 
 		// --- WASTE LOGS SECTION ---
-		Pageable wastePageable = PageRequest.of(wastePage, size); 
-		// Updated call
-		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate, wastePageable); 
-		
+		Pageable wastePageable = PageRequest.of(wastePage, size);
+		Page<ActivityLogEntry> wasteLogPage = activityLogService.searchWasteLogs(wasteKeyword, wasteCategory, wasteType,
+				wasteStartDate, wasteEndDate, wastePageable);
+
 		model.addAttribute("wasteLogs", wasteLogPage.getContent());
 		model.addAttribute("wasteLogPage", wasteLogPage);
 		model.addAttribute("wasteKeyword", wasteKeyword);
-		model.addAttribute("wasteCategoryId", wasteCategory); 
+		model.addAttribute("wasteCategoryId", wasteCategory);
 		model.addAttribute("wasteTypeFilter", wasteType);
-		model.addAttribute("wasteStartDate", wasteStartDate); // ADDED
-		model.addAttribute("wasteEndDate", wasteEndDate);     // ADDED
+		model.addAttribute("wasteStartDate", wasteStartDate);
+		model.addAttribute("wasteEndDate", wasteEndDate);
 		model.addAttribute("wastePage", wastePage);
-		
-		// Updated call
-		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics(wasteKeyword, wasteCategory, wasteType, wasteStartDate, wasteEndDate);
+
+		Map<String, Object> wasteMetrics = activityLogService.getWasteMetrics(wasteKeyword, wasteCategory, wasteType,
+				wasteStartDate, wasteEndDate);
 		model.addAttribute("totalWasteItems", wasteMetrics.get("totalItems"));
 		model.addAttribute("totalWasteValue", wasteMetrics.get("totalWasteValue"));
 		model.addAttribute("expiredValue", wasteMetrics.get("expiredValue"));
@@ -127,7 +126,7 @@ public class AdminInventoryController {
 		model.addAttribute("totalPages", inventoryPage.getTotalPages());
 		model.addAttribute("totalItems", inventoryPage.getTotalElements());
 		model.addAttribute("size", size);
-		
+
 		model.addAttribute("activeTab", StringUtils.hasText(activeTab) ? activeTab : "list-tab");
 
 		if (!model.containsAttribute("inventoryItemDto")) {
@@ -148,15 +147,14 @@ public class AdminInventoryController {
 		return "admin/inventory";
 	}
 
-	// ... rest of controller methods (save, adjust, delete) remain unchanged ...
 	@PostMapping("/save")
 	@PreAuthorize("hasAuthority('ADD_INVENTORY_ITEMS') or hasAuthority('EDIT_INVENTORY_ITEMS')")
 	public String saveInventoryItem(@Valid @ModelAttribute("inventoryItemDto") InventoryItemDto itemDto,
 			BindingResult result, RedirectAttributes redirectAttributes, Principal principal,
 			UriComponentsBuilder uriBuilder) {
-		
+
 		boolean isNew = itemDto.getId() == null;
-		
+
 		if (result.hasErrors()) {
 			log.warn("Inventory item DTO validation failed. Errors: {}", result.getAllErrors());
 			redirectAttributes.addFlashAttribute("globalError", "Validation failed. Please check the fields below.");
@@ -164,10 +162,10 @@ public class AdminInventoryController {
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			
+
 			String modal = "addItemModal";
 			UriComponentsBuilder builder = uriBuilder.path("/admin/inventory").queryParam("showModal", modal);
-			
+
 			if (!isNew && itemDto.getId() != null) {
 				builder = builder.queryParam("editId", itemDto.getId());
 			}
@@ -182,38 +180,39 @@ public class AdminInventoryController {
 					message + " inventory item: " + savedItem.getName() + " (ID: " + savedItem.getId() + ")");
 			redirectAttributes.addFlashAttribute("inventorySuccess",
 					"Item '" + savedItem.getName() + "' " + message.toLowerCase() + " successfully!");
-		} catch (IllegalArgumentException e) { 
+		} catch (IllegalArgumentException e) {
 			log.warn("Error saving inventory item: {}", e.getMessage());
-			
+
 			String errorMessage = e.getMessage();
 			String toastMessage = null;
 
 			if (errorMessage.startsWith("status.hasStock:") || errorMessage.startsWith("status.inRecipe:")) {
 				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
-				result.addError(new FieldError("inventoryItemDto", "itemStatus", itemDto.getItemStatus(), false, null, null, fieldSpecificError));
+				result.addError(new FieldError("inventoryItemDto", "itemStatus", itemDto.getItemStatus(), false, null,
+						null, fieldSpecificError));
 				toastMessage = fieldSpecificError.replaceFirst("• ", "");
 			} else if (errorMessage.contains("already exists")) {
-				result.addError(new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null,
-						errorMessage));
+				result.addError(
+						new FieldError("inventoryItemDto", "name", itemDto.getName(), false, null, null, errorMessage));
 				toastMessage = errorMessage;
 			} else if (errorMessage.contains("threshold")) {
-				result.reject("global", errorMessage); 
+				result.reject("global", errorMessage);
 				toastMessage = errorMessage;
 			} else {
 				result.reject("global", errorMessage);
 				toastMessage = "Error saving item: " + errorMessage;
 			}
-			
+
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.inventoryItemDto",
 					result);
 			redirectAttributes.addFlashAttribute("inventoryItemDto", itemDto);
 			addCommonAttributesForRedirect(redirectAttributes);
-			
+
 			String modal = "addItemModal";
 			UriComponentsBuilder builder = uriBuilder.path("/admin/inventory").queryParam("showModal", modal);
-			
+
 			if (!isNew && itemDto.getId() != null) {
 				builder = builder.queryParam("editId", itemDto.getId());
 			}
@@ -226,15 +225,13 @@ public class AdminInventoryController {
 
 	@PostMapping("/stock/adjust")
 	@PreAuthorize("hasAuthority('ADJUST_INVENTORY_STOCK')")
-	public String adjustInventoryStock(
-			@RequestParam("inventoryItemId") Long itemId,
-			@RequestParam("quantity") BigDecimal quantity, 
-			@RequestParam("action") String action,
-			@RequestParam("reasonCategory") String reasonCategory, 
+	public String adjustInventoryStock(@RequestParam("inventoryItemId") Long itemId,
+			@RequestParam("quantity") BigDecimal quantity, @RequestParam("action") String action,
+			@RequestParam("reasonCategory") String reasonCategory,
 			@RequestParam(value = "reasonNote", required = false) String reasonNote,
+			@RequestParam(value = "receivedDate", required = false) LocalDate receivedDate,
 			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
-			RedirectAttributes redirectAttributes,
-			Principal principal, UriComponentsBuilder uriBuilder) {
+			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (quantity == null || quantity.compareTo(BigDecimal.ZERO) <= 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
@@ -244,7 +241,7 @@ public class AdminInventoryController {
 		}
 
 		boolean isWaste = List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
-		
+
 		BigDecimal quantityChange;
 		if (action.equals("deduct") || isWaste) {
 			quantityChange = quantity.negate();
@@ -258,35 +255,27 @@ public class AdminInventoryController {
 		}
 
 		try {
-			LocalDate receivedDate = null;
-			if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
-				receivedDate = LocalDate.now();
-			}
-			
-			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason, receivedDate, expirationDays);
-			
+			// --- FIX: Pass the receivedDate (usually null from Manage Stock) directly.
+			// DO NOT force LocalDate.now() here.
+			InventoryItem updatedItem = inventoryItemService.adjustStock(itemId, quantityChange, finalReason,
+					receivedDate, expirationDays);
+
 			String actionText = (quantityChange.compareTo(BigDecimal.ZERO) > 0) ? "Increased" : "Deducted";
-			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of " + updatedItem.getName() + 
-							 " (ID: " + itemId + "). Reason: " + finalReason;
-			
+			String details = actionText + " " + quantity.abs() + " " + updatedItem.getUnit().getAbbreviation() + " of "
+					+ updatedItem.getName() + " (ID: " + itemId + "). Reason: " + finalReason;
+
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " stock for '" + updatedItem.getName()
 					+ "' by " + quantity.abs() + ". New stock: " + updatedItem.getCurrentStock());
-			
+
 			if (isWaste && action.equals("deduct")) {
 				String logAction = "STOCK_WASTE_" + reasonCategory.toUpperCase();
-				activityLogService.logWasteAction(
-						principal.getName(), 
-						logAction, 
-						details,
-						updatedItem.getName(),
-						quantity.abs(),
-						updatedItem.getCostPerUnit()
-				);
+				activityLogService.logWasteAction(principal.getName(), logAction, details, updatedItem.getName(),
+						quantity.abs(), updatedItem.getCostPerUnit());
 			} else {
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_INVENTORY_STOCK", details);
 			}
-			
-		} catch (RuntimeException e) { 
+
+		} catch (RuntimeException e) {
 			log.error("Error adjusting inventory stock for item ID {}: {}", itemId, e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/inventory").queryParam("showModal", "manageStockModal").build()
@@ -326,21 +315,21 @@ public class AdminInventoryController {
 
 		try {
 			inventoryItemService.deleteItem(id);
-			
+
 			activityLogService.logAdminAction(principal.getName(), "DELETE_INVENTORY_ITEM",
 					"Permanently deleted inventory item: " + itemName + " (ID: " + id + ")");
-			redirectAttributes.addFlashAttribute("inventorySuccess",
-					"Item '" + itemName + "' deleted successfully!");
+			redirectAttributes.addFlashAttribute("inventorySuccess", "Item '" + itemName + "' deleted successfully!");
 
 		} catch (IllegalArgumentException e) {
 			log.warn("Failed to delete inventory item {}: {}", id, e.getMessage());
-			
+
 			String toastMessage = e.getMessage().replaceFirst("• ", "");
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 
 		} catch (DataIntegrityViolationException e) {
 			log.warn("Data integrity violation on delete for inventory item {}: {}", id, e.getMessage());
-			redirectAttributes.addFlashAttribute("globalError", "Data integrity violation: Item is protected and cannot be deleted.");
+			redirectAttributes.addFlashAttribute("globalError",
+					"Data integrity violation: Item is protected and cannot be deleted.");
 		}
 
 		return "redirect:/admin/inventory";

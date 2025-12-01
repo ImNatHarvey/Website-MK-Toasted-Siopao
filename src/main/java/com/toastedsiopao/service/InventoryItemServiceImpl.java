@@ -294,14 +294,23 @@ public class InventoryItemServiceImpl implements InventoryItemService {
 		item.setCurrentStock(newStock);
 
 		if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
-			if (receivedDate != null) {
-				if (expirationDays != null && expirationDays > 0) {
-					item.setExpirationDate(receivedDate.plusDays(expirationDays));
-					// Set received date to current date for new expiration
-					item.setReceivedDate(receivedDate);
-				} else {
+			// 1. Recalculate Expiration Date relative to TODAY (LocalDate.now())
+			// This ensures the expiration reflects the new stock being added now.
+			if (expirationDays != null && expirationDays > 0) {
+				item.setExpirationDate(LocalDate.now().plusDays(expirationDays));
+			} else {
+				// If explicit 0/null expiration days provided (non-perishable), clear the date
+				if (expirationDays != null) {
 					item.setExpirationDate(null);
 				}
+			}
+
+			// 2. Only update Received Date if the user explicitly provided one (e.g.
+			// manually via UI).
+			// If receivedDate is null (standard Add Stock), the original date (e.g. Nov 20)
+			// is PRESERVED.
+			if (receivedDate != null) {
+				item.setReceivedDate(receivedDate);
 			}
 		}
 

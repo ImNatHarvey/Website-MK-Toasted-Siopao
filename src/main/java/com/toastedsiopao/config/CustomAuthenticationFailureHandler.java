@@ -10,6 +10,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -45,9 +46,8 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 			log.warn("Login failure: Bad credentials for user '{}'", username);
 			errorType = "credentials";
 		} else if (exception instanceof DisabledException || (cause != null && cause instanceof DisabledException)) {
-			// --- UPDATED: Distinguish between Banned/Disabled, Inactive Admin, and
-			// Unverified
-			errorType = "disabled"; // Default to generic disabled
+			// Handle standard form login disabled/inactive checks
+			errorType = "disabled";
 
 			if (StringUtils.hasText(username)) {
 				Optional<User> userOpt = userRepository.findByUsername(username);
@@ -60,16 +60,21 @@ public class CustomAuthenticationFailureHandler extends SimpleUrlAuthenticationF
 						log.warn("Login failure: User '{}' is explicitly DISABLED.", username);
 						errorType = "account_disabled";
 					} else {
-						// Likely an INACTIVE admin
 						log.warn("Login failure: Account for user '{}' is inactive/disabled.", username);
 						errorType = "disabled";
 					}
 				}
 			}
-			// --- END UPDATE ---
 		} else if (exception instanceof OAuth2AuthenticationException) {
-			log.warn("OAuth2 Login failed: {}", exception.getMessage());
-			errorType = "oauth_cancelled";
+			OAuth2AuthenticationException oauthEx = (OAuth2AuthenticationException) exception;
+			OAuth2Error error = oauthEx.getError();
+			log.warn("OAuth2 Login failed: {} (Error Code: {})", exception.getMessage(), error.getErrorCode());
+
+			if ("account_disabled".equals(error.getErrorCode())) {
+				errorType = "account_disabled";
+			} else {
+				errorType = "oauth_cancelled";
+			}
 		} else {
 			log.error("Internal authentication error for user '{}'", username, exception);
 			errorType = "internal";

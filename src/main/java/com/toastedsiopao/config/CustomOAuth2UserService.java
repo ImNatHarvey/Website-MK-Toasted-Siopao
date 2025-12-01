@@ -64,12 +64,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 			user = userOptional.get();
 
 			// --- FIX: Handle Status Checks for Existing Users ---
-			if ("INACTIVE".equals(user.getStatus())) {
-				// Block banned/inactive users even if they have valid Google Auth
+			// Block DISABLED (Banned) users.
+			if ("DISABLED".equals(user.getStatus())) {
+				log.warn("Blocked login attempt for DISABLED user: {}", user.getUsername());
 				throw new OAuth2AuthenticationException(new OAuth2Error("account_disabled"),
-						"Your account is inactive/banned.");
-			} else if ("PENDING".equals(user.getStatus())) {
-				// Auto-Verify: Logging in via Google proves email ownership.
+						"Your account has been disabled.");
+			}
+			// Allow INACTIVE users to proceed; the SuccessHandler will update their status
+			// to ACTIVE.
+
+			// Auto-verify PENDING users if they login via Google
+			else if ("PENDING".equals(user.getStatus())) {
 				user.setStatus("ACTIVE");
 				user.setVerificationToken(null);
 				userRepository.save(user);

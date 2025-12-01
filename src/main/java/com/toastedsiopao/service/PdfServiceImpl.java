@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map; // Added
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,20 +63,15 @@ public class PdfServiceImpl implements PdfService {
 	private static final Font FONT_INVOICE_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.BLACK);
 	private static final Font FONT_INVOICE_BODY = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
 	private static final Font FONT_INVOICE_TOTAL = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, Color.BLACK);
-	// --- NEW FONT for Sections ---
 	private static final Font FONT_SECTION_HEADER = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12,
 			new Color(17, 63, 103));
 
 	private static final Color COLOR_TABLE_HEADER_BG = new Color(17, 63, 103);
 	private static final Color COLOR_TOTAL_ROW_BG = new Color(230, 230, 230);
 
-	// ... (keep existing methods: generateFinancialReportPdf,
-	// generateInventoryReportPdf, etc.) ...
-
 	@Override
 	public ByteArrayInputStream generateFinancialReportPdf(List<Order> orders, LocalDateTime start, LocalDateTime end)
 			throws IOException {
-		// ... (Same implementation as before) ...
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("MMM dd, yyyy");
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -88,11 +83,6 @@ public class PdfServiceImpl implements PdfService {
 			Paragraph title = new Paragraph(settings.getWebsiteName() + " - Financial Report", FONT_TITLE);
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
-
-			// ... (rest of logic is same as fetched file, omitting for brevity to fit 5
-			// file limit fully) ...
-			// But since I am sending the whole file, I must include it.
-			// RE-INSERTING FULL LOGIC for safety.
 
 			String dateRange = "For all completed orders";
 			if (start != null && end != null) {
@@ -179,10 +169,6 @@ public class PdfServiceImpl implements PdfService {
 		return new ByteArrayInputStream(out.toByteArray());
 	}
 
-	// ... (Keep generateInventoryReportPdf, generateProductReportPdf,
-	// generateOrderDocumentPdf, generateActivityLogPdf, generateWasteLogPdf exactly
-	// as they were. Since I am replacing the file, I include them.) ...
-
 	@Override
 	public ByteArrayInputStream generateInventoryReportPdf(List<InventoryItem> items, String keyword, Long categoryId)
 			throws IOException {
@@ -203,7 +189,6 @@ public class PdfServiceImpl implements PdfService {
 			genDate.setSpacingAfter(5f);
 			document.add(genDate);
 
-			// Filter logic visual...
 			String filterDesc = "Filters: " + (StringUtils.hasText(keyword) ? "Keyword='" + keyword + "' " : "")
 					+ (categoryId != null ? "Category ID " + categoryId : "");
 			Paragraph subtitle = new Paragraph(filterDesc, FONT_SUBTITLE);
@@ -364,17 +349,12 @@ public class PdfServiceImpl implements PdfService {
 			storeName.setSpacingAfter(20f);
 			document.add(storeName);
 
-			// ... (rest of invoice logic preserved) ...
 			PdfPTable infoTable = new PdfPTable(2);
 			infoTable.setWidthPercentage(100);
 			infoTable.setWidths(new float[] { 1f, 1f });
 			PdfPCell orderCell = new PdfPCell();
 			orderCell.setBorder(Rectangle.NO_BORDER);
 			orderCell.addElement(new Phrase("ORDER ID: " + "ORD-" + order.getId(), FONT_INVOICE_BODY));
-			// Adding minimal for brevity in this response block, assuming existing logic is
-			// fine.
-			// In real replacement, full logic is here.
-			// For full correctness, I will paste the core parts.
 			orderCell.addElement(
 					new Phrase("DATE: " + order.getOrderDate().format(DateTimeFormatter.ofPattern("MMM dd, yyyy")),
 							FONT_INVOICE_BODY));
@@ -385,7 +365,6 @@ public class PdfServiceImpl implements PdfService {
 			infoTable.addCell(customerCell);
 			document.add(infoTable);
 
-			// Items table
 			PdfPTable itemsTable = new PdfPTable(4);
 			itemsTable.setWidthPercentage(100);
 			addTableHeader(itemsTable, "Item");
@@ -410,12 +389,43 @@ public class PdfServiceImpl implements PdfService {
 			String endDate) throws IOException {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
+
 		try (Document document = new Document(PageSize.A4.rotate())) {
 			PdfWriter.getInstance(document, out);
 			document.open();
+
 			Paragraph title = new Paragraph(settings.getWebsiteName() + " - Admin Activity Log", FONT_TITLE);
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
+
+			// --- ADDED: Timestamp & Filters ---
+			Paragraph genDate = new Paragraph("Generated on: " + LocalDateTime.now().format(genDateFmt), FONT_SUBTITLE);
+			genDate.setAlignment(Element.ALIGN_CENTER);
+			genDate.setSpacingAfter(5f);
+			document.add(genDate);
+
+			String filterDesc = "Filters: ";
+			if (StringUtils.hasText(keyword)) {
+				filterDesc += "Keyword='" + keyword + "' ";
+			}
+			if (StringUtils.hasText(startDate)) {
+				filterDesc += "From='" + startDate + "' ";
+			}
+			if (StringUtils.hasText(endDate)) {
+				filterDesc += "To='" + endDate + "' ";
+			}
+			if (!StringUtils.hasText(keyword) && !StringUtils.hasText(startDate) && !StringUtils.hasText(endDate)) {
+				filterDesc += "None (All Logs)";
+			}
+
+			Paragraph subtitle = new Paragraph(filterDesc, FONT_SUBTITLE);
+			subtitle.setAlignment(Element.ALIGN_CENTER);
+			subtitle.setSpacingAfter(15f);
+			document.add(subtitle);
+			// --- END ADDED ---
+
 			PdfPTable detailTable = new PdfPTable(4);
 			detailTable.setWidthPercentage(100);
 			detailTable.setWidths(new float[] { 1.5f, 1f, 1.5f, 4f });
@@ -442,31 +452,108 @@ public class PdfServiceImpl implements PdfService {
 			String reasonCategory, String wasteType, String startDate, String endDate) throws IOException {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+		DateTimeFormatter genDateFmt = DateTimeFormatter.ofPattern("MMM dd, yyyy h:mm a");
+
 		try (Document document = new Document(PageSize.A4.rotate())) {
 			PdfWriter.getInstance(document, out);
 			document.open();
-			Paragraph title = new Paragraph(settings.getWebsiteName() + " - Waste Log", FONT_TITLE);
+			Paragraph title = new Paragraph(settings.getWebsiteName() + " - Waste & Spoilage Log", FONT_TITLE);
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
-			PdfPTable detailTable = new PdfPTable(6);
+
+			// --- ADDED: Timestamp & Filters ---
+			Paragraph genDate = new Paragraph("Generated on: " + LocalDateTime.now().format(genDateFmt), FONT_SUBTITLE);
+			genDate.setAlignment(Element.ALIGN_CENTER);
+			genDate.setSpacingAfter(5f);
+			document.add(genDate);
+
+			String filterDesc = "Filters: ";
+			if (StringUtils.hasText(keyword)) {
+				filterDesc += "Item Name='" + keyword + "' ";
+			}
+			if (StringUtils.hasText(reasonCategory)) {
+				filterDesc += "Reason='" + reasonCategory + "' ";
+			}
+			if (StringUtils.hasText(wasteType)) {
+				filterDesc += "Type='" + wasteType + "' ";
+			}
+			if (StringUtils.hasText(startDate)) {
+				filterDesc += "From='" + startDate + "' ";
+			}
+			if (StringUtils.hasText(endDate)) {
+				filterDesc += "To='" + endDate + "' ";
+			}
+			if (filterDesc.equals("Filters: ")) {
+				filterDesc += "None (All Waste Records)";
+			}
+
+			Paragraph subtitle = new Paragraph(filterDesc, FONT_SUBTITLE);
+			subtitle.setAlignment(Element.ALIGN_CENTER);
+			subtitle.setSpacingAfter(15f);
+			document.add(subtitle);
+			// --- END ADDED ---
+
+			// Updated to 7 Columns to match user preference/image
+			PdfPTable detailTable = new PdfPTable(7);
 			detailTable.setWidthPercentage(100);
-			addTableHeader(detailTable, "Date");
-			addTableHeader(detailTable, "User");
-			addTableHeader(detailTable, "Reason");
-			addTableHeader(detailTable, "Item");
-			addTableHeader(detailTable, "Value");
+			// Widths: Timestamp, User, Reason, Item, Cost, Total, Details
+			detailTable.setWidths(new float[] { 1.2f, 1.0f, 1.0f, 1.5f, 1.0f, 1.0f, 2.0f });
+
+			addTableHeader(detailTable, "Timestamp");
+			addTableHeader(detailTable, "Admin User");
+			// Removed Type
+			addTableHeader(detailTable, "Reason Category"); // Renamed from Reason
+			addTableHeader(detailTable, "Item Name");
+			addTableHeader(detailTable, "Cost/Unit");
+			addTableHeader(detailTable, "Total Value");
 			addTableHeader(detailTable, "Details");
-			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+			DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			BigDecimal grandTotalWaste = BigDecimal.ZERO;
+
 			for (ActivityLogEntry logEntry : logPage.getContent()) {
+				// 1. Timestamp
 				addTableCell(detailTable, logEntry.getTimestamp().format(dtf), FONT_TABLE_CELL, Element.ALIGN_LEFT);
+
+				// 2. User
 				addTableCell(detailTable, logEntry.getUsername(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
-				addTableCell(detailTable, logEntry.getAction(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
-				addTableCell(detailTable, logEntry.getItemName(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
-				addTableCell(detailTable,
-						formatCurrency(logEntry.getTotalValue() != null ? logEntry.getTotalValue() : BigDecimal.ZERO),
-						FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+
+				// Reason (Derived from action, replaces Type & Reason columns)
+				String reason = logEntry.getAction().replace("STOCK_WASTE_", "").replace("PRODUCT_WASTE_", "");
+				addTableCell(detailTable, reason, FONT_TABLE_CELL, Element.ALIGN_CENTER);
+
+				// 4. Item Name
+				addTableCell(detailTable, logEntry.getItemName() != null ? logEntry.getItemName() : "N/A",
+						FONT_TABLE_CELL, Element.ALIGN_LEFT);
+
+				// 5. Cost/Unit
+				if (logEntry.getCostPerUnit() != null) {
+					createCurrencyCell(detailTable, logEntry.getCostPerUnit(), FONT_TABLE_CELL);
+				} else {
+					addTableCell(detailTable, "N/A", FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+				}
+
+				// 6. Total Value
+				if (logEntry.getTotalValue() != null) {
+					createCurrencyCell(detailTable, logEntry.getTotalValue(), FONT_TABLE_CELL);
+					grandTotalWaste = grandTotalWaste.add(logEntry.getTotalValue());
+				} else {
+					addTableCell(detailTable, "N/A", FONT_TABLE_CELL, Element.ALIGN_RIGHT);
+				}
+
+				// 7. Details
 				addTableCell(detailTable, logEntry.getDetails(), FONT_TABLE_CELL, Element.ALIGN_LEFT);
 			}
+
+			// Add Total Row
+			// Label spans 5 columns (Timestamp, User, Reason, Item, Cost)
+			addTableFooterCell(detailTable, "Total Waste Value:", FONT_TOTAL_HEADER, Element.ALIGN_RIGHT, 5);
+			// Value in col 6
+			addTableFooterCell(detailTable, formatCurrency(grandTotalWaste), FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
+			// Empty details col 7
+			addTableFooterCell(detailTable, "", FONT_TOTAL_CELL, Element.ALIGN_RIGHT, 1);
+
 			document.add(detailTable);
 		} catch (DocumentException e) {
 			throw new IOException("Error creating PDF document", e);
@@ -474,7 +561,6 @@ public class PdfServiceImpl implements PdfService {
 		return new ByteArrayInputStream(out.toByteArray());
 	}
 
-	// --- NEW IMPLEMENTATION: Dashboard PDF ---
 	@Override
 	public ByteArrayInputStream generateDashboardPdf(Map<String, Object> data) throws IOException {
 		SiteSettings settings = siteSettingsService.getSiteSettings();
@@ -485,7 +571,6 @@ public class PdfServiceImpl implements PdfService {
 			PdfWriter.getInstance(document, out);
 			document.open();
 
-			// Title
 			Paragraph title = new Paragraph("Admin Dashboard Report", FONT_TITLE);
 			title.setAlignment(Element.ALIGN_CENTER);
 			document.add(title);
@@ -499,7 +584,6 @@ public class PdfServiceImpl implements PdfService {
 			date.setSpacingAfter(20f);
 			document.add(date);
 
-			// 1. Financial Summary
 			addSectionHeader(document, "Financial Summary");
 			PdfPTable finTable = new PdfPTable(2);
 			finTable.setWidthPercentage(100);
@@ -520,7 +604,6 @@ public class PdfServiceImpl implements PdfService {
 
 			document.add(finTable);
 
-			// 2. Order Summary
 			addSectionHeader(document, "Order Summary");
 			PdfPTable orderTable = new PdfPTable(4);
 			orderTable.setWidthPercentage(100);
@@ -537,7 +620,6 @@ public class PdfServiceImpl implements PdfService {
 
 			document.add(orderTable);
 
-			// 3. Inventory & Products
 			addSectionHeader(document, "Inventory & Products");
 			PdfPTable invTable = new PdfPTable(4);
 			invTable.setWidthPercentage(100);
@@ -554,7 +636,6 @@ public class PdfServiceImpl implements PdfService {
 
 			document.add(invTable);
 
-			// 4. Waste Summary
 			addSectionHeader(document, "Waste & Spoilage");
 			PdfPTable wasteTable = new PdfPTable(2);
 			wasteTable.setWidthPercentage(100);
@@ -566,7 +647,6 @@ public class PdfServiceImpl implements PdfService {
 
 			document.add(wasteTable);
 
-			// 5. User Summary
 			addSectionHeader(document, "User Summary");
 			PdfPTable userTable = new PdfPTable(4);
 			userTable.setWidthPercentage(100);
@@ -612,7 +692,6 @@ public class PdfServiceImpl implements PdfService {
 		table.addCell(cell);
 	}
 
-	// ... (keep helpers)
 	private void addTableHeader(PdfPTable table, String headerTitle) {
 		PdfPCell cell = new PdfPCell(new Phrase(headerTitle, FONT_TABLE_HEADER));
 		cell.setBackgroundColor(COLOR_TABLE_HEADER_BG);
@@ -646,6 +725,17 @@ public class PdfServiceImpl implements PdfService {
 		cell.setBorder(Rectangle.NO_BORDER);
 		cell.setHorizontalAlignment(alignment);
 		cell.setPadding(4);
+		table.addCell(cell);
+	}
+
+	// Helper specifically for appending currency cells to existing tables
+	private void createCurrencyCell(PdfPTable table, BigDecimal value, Font font) {
+		PdfPCell cell = new PdfPCell(new Phrase(formatCurrency(value), font));
+		cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+		cell.setVerticalAlignment(Element.ALIGN_TOP);
+		cell.setPadding(4);
+		cell.setBorderWidth(0.5f);
+		cell.setBorderColor(Color.LIGHT_GRAY);
 		table.addCell(cell);
 	}
 

@@ -9,7 +9,7 @@ import com.toastedsiopao.model.Product;
 import com.toastedsiopao.repository.OrderItemRepository;
 import com.toastedsiopao.repository.ProductRepository;
 import com.toastedsiopao.service.ActivityLogService;
-import com.toastedsiopao.service.AdminService; 
+import com.toastedsiopao.service.AdminService;
 import com.toastedsiopao.service.CategoryService;
 import com.toastedsiopao.service.FileStorageService;
 import com.toastedsiopao.service.InventoryItemService;
@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException; 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError; 
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -58,14 +58,14 @@ public class AdminProductController {
 	private ObjectMapper objectMapper;
 	@Autowired
 	private ProductRepository productRepository;
-	
-	@Autowired 
+
+	@Autowired
 	private OrderItemRepository orderItemRepository;
 
 	@Autowired
 	private FileStorageService fileStorageService;
-	
-	@Autowired 
+
+	@Autowired
 	private AdminService adminService;
 
 	private void addCommonAttributesForRedirect(RedirectAttributes redirectAttributes) {
@@ -92,14 +92,12 @@ public class AdminProductController {
 		model.addAttribute("keyword", keyword);
 		model.addAttribute("selectedCategoryId", categoryId);
 
-		// --- MODIFIED: Use Dynamic Metrics ---
 		Map<String, Object> metrics = productService.getProductMetrics(keyword, categoryId);
-		
+
 		model.addAttribute("totalProducts", metrics.get("totalProducts"));
 		model.addAttribute("lowStockProducts", metrics.get("lowStock"));
 		model.addAttribute("outOfStockProducts", metrics.get("outOfStock"));
 		model.addAttribute("criticalStockProducts", metrics.get("criticalStock"));
-		// --- END MODIFIED ---
 
 		model.addAttribute("productPage", productPage);
 		model.addAttribute("products", productPage.getContent());
@@ -111,7 +109,7 @@ public class AdminProductController {
 
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", productPage.getTotalPages());
-		model.addAttribute("totalItems", productPage.getTotalElements()); 
+		model.addAttribute("totalItems", productPage.getTotalElements());
 		model.addAttribute("size", size);
 
 		if (!model.containsAttribute("productDto")) {
@@ -173,21 +171,21 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error adding product: {}", e.getMessage(), e);
-			
+
 			String errorMessage = e.getMessage();
 			String toastMessage = null;
 
 			if (errorMessage.contains("Product name")) {
-				result.rejectValue("name", "productDto.name", "• " + errorMessage); 
+				result.rejectValue("name", "productDto.name", "• " + errorMessage);
 				toastMessage = errorMessage;
 			} else if (errorMessage.contains("threshold")) {
-				result.reject("global", "• " + errorMessage); 
+				result.reject("global", "• " + errorMessage);
 				toastMessage = errorMessage;
 			} else {
 				result.reject("global", "• Error adding product: " + errorMessage);
 				toastMessage = "Error adding product: " + errorMessage;
 			}
-			
+
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productDto", result);
 			redirectAttributes.addFlashAttribute("productDto", productDto);
@@ -240,7 +238,7 @@ public class AdminProductController {
 					}
 				} catch (Exception e) {
 					log.error("Error storing new image file during update: {}", e.getMessage());
-					result.reject("global", "• Could not save new image: " + e.getMessage()); // Added bullet
+					result.reject("global", "• Could not save new image: " + e.getMessage());
 					redirectAttributes.addFlashAttribute("globalError", "Error updating product: " + e.getMessage());
 					redirectAttributes
 							.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto", result);
@@ -262,16 +260,17 @@ public class AdminProductController {
 
 		} catch (RuntimeException e) {
 			log.warn("Error updating product: {}", e.getMessage(), e);
-			
+
 			String errorMessage = e.getMessage();
 			String toastMessage = null;
 
 			if (errorMessage.startsWith("status.hasStock:")) {
 				String fieldSpecificError = errorMessage.substring(errorMessage.indexOf(':') + 1);
-				result.addError(new FieldError("productUpdateDto", "productStatus", productDto.getProductStatus(), false, null, null, fieldSpecificError));
+				result.addError(new FieldError("productUpdateDto", "productStatus", productDto.getProductStatus(),
+						false, null, null, fieldSpecificError));
 				toastMessage = fieldSpecificError.replaceFirst("• ", "");
 			} else if (errorMessage.contains("Product name")) {
-				result.rejectValue("name", "productUpdateDto.name", "• " + errorMessage); 
+				result.rejectValue("name", "productUpdateDto.name", "• " + errorMessage);
 				toastMessage = errorMessage;
 			} else if (errorMessage.contains("threshold")) {
 				result.reject("global", "• " + errorMessage);
@@ -280,7 +279,7 @@ public class AdminProductController {
 				result.reject("global", "• Error updating product: " + errorMessage);
 				toastMessage = "Error updating product: " + errorMessage;
 			}
-			
+
 			redirectAttributes.addFlashAttribute("globalError", toastMessage);
 			redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.productUpdateDto",
 					result);
@@ -296,16 +295,13 @@ public class AdminProductController {
 
 	@PostMapping("/stock/adjust")
 	@PreAuthorize("hasAuthority('ADJUST_PRODUCT_STOCK')")
-	public String adjustProductStock(
-			@RequestParam("productId") Long productId, 
-			@RequestParam("quantity") int quantity,
-			@RequestParam("action") String action, 
-			@RequestParam(value = "reasonCategory", required = false) String reasonCategory, 
+	public String adjustProductStock(@RequestParam("productId") Long productId, @RequestParam("quantity") int quantity,
+			@RequestParam("action") String action,
+			@RequestParam(value = "reasonCategory", required = false) String reasonCategory,
 			@RequestParam(value = "reasonNote", required = false) String reasonNote,
 			@RequestParam(value = "receivedDate", required = false) LocalDate receivedDate,
 			@RequestParam(value = "expirationDays", required = false) Integer expirationDays,
-			RedirectAttributes redirectAttributes, Principal principal,
-			UriComponentsBuilder uriBuilder) {
+			RedirectAttributes redirectAttributes, Principal principal, UriComponentsBuilder uriBuilder) {
 
 		if (quantity <= 0) {
 			redirectAttributes.addFlashAttribute("stockError", "Quantity must be a positive number.");
@@ -316,10 +312,10 @@ public class AdminProductController {
 
 		int quantityChange = action.equals("deduct") ? -quantity : quantity;
 		String derivedReason = action.equals("add") ? "Production" : "Adjustment/Wastage";
-		
-		boolean isWasteAction = action.equals("deduct") && 
-			List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
-		
+
+		boolean isWasteAction = action.equals("deduct")
+				&& List.of("Expired", "Damaged", "Waste").contains(reasonCategory);
+
 		String finalReason = derivedReason;
 		if (StringUtils.hasText(reasonCategory)) {
 			finalReason = reasonCategory;
@@ -329,44 +325,34 @@ public class AdminProductController {
 		}
 
 		try {
-			LocalDate dateToSet = null;
-			Integer expDaysToSet = null;
-			
-			if (action.equals("add")) {
-				dateToSet = LocalDate.now(); 
-				expDaysToSet = expirationDays;
-			}
+			// --- FIX: Pass receivedDate (likely null from modal) directly ---
+			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, receivedDate,
+					expirationDays);
 
-			Product updatedProduct = productService.adjustStock(productId, quantityChange, finalReason, dateToSet, expDaysToSet);
-			
 			String actionText = action.equals("add") ? "Added" : "Deducted";
-			if ("Production".equals(reasonCategory)) actionText = "Produced";
-			else if (isWasteAction) actionText = "Wasted"; 
-			
+			if ("Production".equals(reasonCategory))
+				actionText = "Produced";
+			else if (isWasteAction)
+				actionText = "Wasted";
+
 			String details = actionText + " " + quantity + " unit(s) of " + updatedProduct.getName() + " (ID: "
 					+ productId + "). Reason: " + finalReason;
 
 			if (isWasteAction) {
 				BigDecimal unitValue = updatedProduct.getPrice();
 				BigDecimal quantityDecimal = BigDecimal.valueOf(quantity);
-				
+
 				String logAction = "PRODUCT_WASTE_" + reasonCategory.toUpperCase();
-				activityLogService.logWasteAction(
-						principal.getName(), 
-						logAction, 
-						details,
-						updatedProduct.getName(),
-						quantityDecimal,
-						unitValue
-				);
+				activityLogService.logWasteAction(principal.getName(), logAction, details, updatedProduct.getName(),
+						quantityDecimal, unitValue);
 			} else {
 				activityLogService.logAdminAction(principal.getName(), "ADJUST_PRODUCT_STOCK", details);
 			}
 
 			redirectAttributes.addFlashAttribute("stockSuccess", actionText + " " + quantity + " unit(s) of '"
 					+ updatedProduct.getName() + "'. New stock: " + updatedProduct.getCurrentStock());
-			
-		} catch (RuntimeException e) { 
+
+		} catch (RuntimeException e) {
 			log.warn("Stock adjustment failed: {}", e.getMessage());
 			redirectAttributes.addFlashAttribute("stockError", "Error adjusting stock: " + e.getMessage());
 			String redirectUrl = uriBuilder.path("/admin/products").queryParam("showModal", "manageStockModal").build()
@@ -375,12 +361,12 @@ public class AdminProductController {
 		}
 		return "redirect:/admin/products";
 	}
-	
+
 	@PostMapping("/delete/{id}")
 	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
 	public String deleteOrDeactivateProduct(@PathVariable("id") Long id,
-			@RequestParam(value = "password", required = false) String password,
-			RedirectAttributes redirectAttributes, Principal principal) {
+			@RequestParam(value = "password", required = false) String password, RedirectAttributes redirectAttributes,
+			Principal principal) {
 
 		if (!adminService.validateOwnerPassword(password)) {
 			redirectAttributes.addFlashAttribute("globalError", "Incorrect Owner Password. Action cancelled.");
@@ -392,13 +378,16 @@ public class AdminProductController {
 			redirectAttributes.addFlashAttribute("productError", "Product not found.");
 			return "redirect:/admin/products";
 		}
-		
+
 		Product product = productOpt.get();
 		String productName = product.getName();
-		
+
 		if (product.getCurrentStock() > 0) {
-			log.warn("Admin {} attempted to delete/deactivate product '{}' (ID: {}) with stock > 0. Blocked.", principal.getName(), productName, id);
-			redirectAttributes.addFlashAttribute("globalError", "Cannot delete or deactivate '" + productName + "'. Product still has " + product.getCurrentStock() + " items in stock. Please adjust stock to 0 first.");
+			log.warn("Admin {} attempted to delete/deactivate product '{}' (ID: {}) with stock > 0. Blocked.",
+					principal.getName(), productName, id);
+			redirectAttributes.addFlashAttribute("globalError",
+					"Cannot delete or deactivate '" + productName + "'. Product still has " + product.getCurrentStock()
+							+ " items in stock. Please adjust stock to 0 first.");
 			return "redirect:/admin/products";
 		}
 
@@ -422,19 +411,20 @@ public class AdminProductController {
 			}
 		} catch (DataIntegrityViolationException e) {
 			log.warn("Data integrity violation on delete/deactivate for product {}: {}", id, e.getMessage());
-			redirectAttributes.addFlashAttribute("globalError", "Operation failed. Product has order history and cannot be deleted.");
-		} catch (IllegalArgumentException e) { 
+			redirectAttributes.addFlashAttribute("globalError",
+					"Operation failed. Product has order history and cannot be deleted.");
+		} catch (IllegalArgumentException e) {
 			log.warn("Failed to delete/deactivate product {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 		}
-		
+
 		return "redirect:/admin/products";
 	}
-	
+
 	@PostMapping("/activate/{id}")
-	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')") 
-	public String activateProduct(@PathVariable("id") Long id,
-			RedirectAttributes redirectAttributes, Principal principal) {
+	@PreAuthorize("hasAuthority('DELETE_PRODUCTS')")
+	public String activateProduct(@PathVariable("id") Long id, RedirectAttributes redirectAttributes,
+			Principal principal) {
 
 		try {
 			Optional<Product> productOpt = productService.findById(id);
@@ -455,7 +445,7 @@ public class AdminProductController {
 			log.warn("Failed to activate product {}: {}", id, e.getMessage());
 			redirectAttributes.addFlashAttribute("globalError", e.getMessage());
 		}
-		
+
 		return "redirect:/admin/products";
 	}
 

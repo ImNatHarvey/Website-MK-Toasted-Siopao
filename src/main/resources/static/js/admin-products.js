@@ -62,11 +62,11 @@ document.addEventListener('DOMContentLoaded', function() {
 				form.querySelector('#editProductDescriptionModal').value = dataset.description || '';
 				form.querySelector('#editLowThresholdInput').value = dataset.lowStockThreshold || '0';
 				form.querySelector('#editCriticalThresholdInput').value = dataset.criticalStockThreshold || '0';
-				
+
 				// Populate Date Fields
 				form.querySelector('#editCreatedDate').value = dataset.createdDate || '';
 				form.querySelector('#editExpirationDays').value = dataset.expirationDays || '0';
-				
+
 				const productStatusSelect = form.querySelector('#editProductStatus');
 				if (productStatusSelect) {
 					productStatusSelect.value = dataset.productStatus || 'ACTIVE';
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			}
 		});
 	}
-	
+
 	function formatDate(dateString) {
 		if (!dateString) return 'N/A';
 		try {
@@ -167,20 +167,20 @@ document.addEventListener('DOMContentLoaded', function() {
 			return 'N/A';
 		}
 	}
-	
+
 	function calculateExpirationDate(createdDateString, expirationDays) {
 		if (!createdDateString || !expirationDays || parseInt(expirationDays) <= 0) return 'No Expiration';
 		try {
 			const createdDate = new Date(createdDateString);
 			if (isNaN(createdDate)) return 'N/A';
-			
+
 			const expDays = parseInt(expirationDays);
 			// Use setDate to add days, handling month/year rollovers
 			const expirationDate = new Date(createdDate);
 			expirationDate.setDate(createdDate.getDate() + expDays);
-			
+
 			return formatDate(expirationDate.toISOString().split('T')[0]);
-			
+
 		} catch (e) {
 			return 'N/A';
 		}
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			viewProductModal.querySelector('#viewProductCurrentStock').textContent = dataset.currentStock || '0';
 			viewProductModal.querySelector('#viewProductLowThreshold').textContent = dataset.lowStockThreshold || '0';
 			viewProductModal.querySelector('#viewProductCriticalThreshold').textContent = dataset.criticalStockThreshold || '0';
-			
+
 			// --- MODIFIED DATE FIELDS LOGIC ---
 			const lastUpdated = dataset.stockLastUpdated || 'N/A';
 			const lastUpdatedEl = viewProductModal.querySelector('#viewProductStockLastUpdated');
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 			const createdDate = dataset.createdDate ? formatDate(dataset.createdDate) : 'N/A';
 			const expirationDays = dataset.expirationDays || '0';
-			
+
 			// Prefer the pre-calculated expiration date from server if available
 			let expirationDateText = 'No Expiration';
 			if (dataset.expirationDate) {
@@ -228,30 +228,32 @@ document.addEventListener('DOMContentLoaded', function() {
 				// Fallback to calculation
 				expirationDateText = calculateExpirationDate(dataset.createdDate, dataset.expirationDays);
 			}
-			
+
 			viewProductModal.querySelector('#viewProductCreatedDate').textContent = createdDate;
 			viewProductModal.querySelector('#viewProductExpirationDate').textContent = expirationDateText;
-			
-			const expDaysText = parseInt(expirationDays) > 0 ? `(${expirationDays} days)` : '';
+
+			// --- FIX: Removed parentheses from expiration days display ---
+			const expDaysText = parseInt(expirationDays) > 0 ? `${expirationDays} days` : '';
 			viewProductModal.querySelector('#viewProductExpirationDays').textContent = expDaysText;
-			
+			// --- END FIX ---
+
 			const expDateEl = viewProductModal.querySelector('#viewProductExpirationDate');
 			if (expDateEl) {
 				if (expirationDateText !== 'N/A' && expirationDateText !== 'No Expiration') {
 					// Check if actually expired against today
 					const now = new Date();
-					now.setHours(0,0,0,0);
-					
+					now.setHours(0, 0, 0, 0);
+
 					let expDateObj = null;
-					if(dataset.expirationDate) {
+					if (dataset.expirationDate) {
 						expDateObj = new Date(dataset.expirationDate);
 					} else if (dataset.createdDate && parseInt(expirationDays) > 0) {
 						expDateObj = new Date(dataset.createdDate);
 						expDateObj.setDate(expDateObj.getDate() + parseInt(expirationDays));
 					}
-					
+
 					if (expDateObj) {
-						expDateObj.setHours(0,0,0,0);
+						expDateObj.setHours(0, 0, 0, 0);
 						if (expDateObj < now) {
 							expDateEl.className = 'fw-bold text-danger';
 						} else {
@@ -335,10 +337,10 @@ document.addEventListener('DOMContentLoaded', function() {
 				if (form) form.reset();
 				if (ingredientsContainer) ingredientsContainer.innerHTML = '';
 				if (addImageUploader) addImageUploader.resetUploader();
-				
+
 				const dateInput = form.querySelector('#addCreatedDate');
 				if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
-				
+
 				initThresholdSliders(addProductModal);
 			} else {
 				initThresholdSliders(addProductModal);
@@ -470,33 +472,33 @@ document.addEventListener('DOMContentLoaded', function() {
 				maxBtn.textContent = 'Max';
 			});
 	});
-	
+
 	const manageStockModal = document.getElementById('manageStockModal');
 	if (manageStockModal) {
-		
+
 		manageStockModal.addEventListener('change', function(e) {
 			if (e.target && e.target.classList.contains('reason-category-select')) {
 				const reason = e.target.value;
-				const row = e.target.closest('tr'); 
-				
+				const row = e.target.closest('tr');
+
 				const addBtn = row.querySelector('.add-stock-btn');
 				const deductBtn = row.querySelector('.deduct-stock-btn');
 				const maxBtn = row.querySelector('.max-quantity-btn');
-				
+
 				// Default state (e.g. for Manual Adjust)
 				addBtn.disabled = false;
 				addBtn.classList.remove('disabled');
 				addBtn.title = "Add stock (Production/Adjustment/Restock)";
-				
+
 				deductBtn.disabled = false;
 				deductBtn.classList.remove('disabled');
 				deductBtn.title = "Deduct stock (Waste/Adjustment)";
-				
+
 				if (maxBtn) {
 					maxBtn.disabled = false;
 					maxBtn.title = "Calculate max producible";
 				}
-				
+
 				// Handle Logic based on updated Reason List
 				if (reason === 'Production') {
 					deductBtn.disabled = true;
@@ -515,7 +517,7 @@ document.addEventListener('DOMContentLoaded', function() {
 					if (maxBtn) {
 						maxBtn.disabled = true;
 					}
-				} 
+				}
 				// 'Manual' allows both
 			}
 		});

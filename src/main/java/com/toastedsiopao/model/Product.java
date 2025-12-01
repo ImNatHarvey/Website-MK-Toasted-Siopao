@@ -74,16 +74,20 @@ public class Product {
 
 	@Column(nullable = false)
 	private boolean recipeLocked = false;
-	
+
 	@Column(nullable = false, length = 20)
-	private String productStatus = "ACTIVE"; 
-	
+	private String productStatus = "ACTIVE";
+
 	// --- ADDED: Date Tracking Fields ---
 	@Column(nullable = true)
 	private LocalDate createdDate; // Date produced/stocked
 
 	@Column(nullable = true)
 	private LocalDate expirationDate; // Date it expires
+
+	// --- ADDED: Store shelf life setting ---
+	@Column(nullable = true)
+	private Integer expirationDays;
 	// --- END ADDED ---
 
 	@PrePersist
@@ -124,17 +128,17 @@ public class Product {
 	@Transient
 	public String getPublicStockStatusClass() {
 		if (currentStock <= 0) {
-			return "no_stock"; 
+			return "no_stock";
 		} else {
-			return "normal"; 
+			return "normal";
 		}
 	}
-	
-	// --- ADDED: Helper to calculate days for display ---
+
+	// --- FIX: Return stored expiration days preference directly ---
 	@Transient
 	public Integer getExpirationDays() {
-		if (createdDate != null && expirationDate != null) {
-			return (int) ChronoUnit.DAYS.between(createdDate, expirationDate);
+		if (expirationDays != null) {
+			return expirationDays;
 		}
 		return 0;
 	}

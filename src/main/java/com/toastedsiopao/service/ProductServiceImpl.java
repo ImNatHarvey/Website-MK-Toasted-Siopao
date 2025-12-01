@@ -11,9 +11,9 @@ import com.toastedsiopao.service.InventoryItemService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException; 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl; 
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map; 
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,24 +67,22 @@ public class ProductServiceImpl implements ProductService {
 			}
 		}
 	}
-	
+
 	private Page<Product> getPaginatedProducts(Page<Long> idPage, Pageable pageable) {
 		List<Long> ids = idPage.getContent();
 		if (ids.isEmpty()) {
 			return new PageImpl<>(Collections.emptyList(), pageable, idPage.getTotalElements());
 		}
-		
+
 		List<Product> products = productRepository.findWithDetailsByIds(ids);
-		
+
 		Map<Long, Product> productMap = products.stream().collect(Collectors.toMap(Product::getId, p -> p));
-		List<Product> sortedProducts = ids.stream()
-				.map(id -> productMap.get(id))
-				.filter(p -> p != null) 
+		List<Product> sortedProducts = ids.stream().map(id -> productMap.get(id)).filter(p -> p != null)
 				.collect(Collectors.toList());
-		
+
 		return new PageImpl<>(sortedProducts, pageable, idPage.getTotalElements());
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findAll(Pageable pageable) {
@@ -103,35 +101,48 @@ public class ProductServiceImpl implements ProductService {
 		if (productDto == null) {
 			throw new IllegalArgumentException("Product data cannot be null.");
 		}
-		if (!StringUtils.hasText(productDto.getName())) throw new IllegalArgumentException("Name required");
-		if (productDto.getCategoryId() == null) throw new IllegalArgumentException("Category required");
-		if (productDto.getPrice() == null) throw new IllegalArgumentException("Price required");
+		if (!StringUtils.hasText(productDto.getName()))
+			throw new IllegalArgumentException("Name required");
+		if (productDto.getCategoryId() == null)
+			throw new IllegalArgumentException("Category required");
+		if (productDto.getPrice() == null)
+			throw new IllegalArgumentException("Price required");
 
 		validateThresholds(productDto.getLowStockThreshold(), productDto.getCriticalStockThreshold());
-		validateNameUniqueness(productDto.getName(), productDto.getId()); 
+		validateNameUniqueness(productDto.getName(), productDto.getId());
 
 		Category category = categoryRepository.findById(productDto.getCategoryId())
 				.orElseThrow(() -> new RuntimeException("Category not found with id: " + productDto.getCategoryId()));
 
 		Product product;
+		LocalDate anchorDateForExpiration = LocalDate.now();
+		Integer oldExpirationDays = null;
+
 		boolean isNew = productDto.getId() == null;
 
 		if (!isNew) {
 			product = productRepository.findById(productDto.getId())
 					.orElseThrow(() -> new RuntimeException("Product not found with id: " + productDto.getId()));
-			
+
+			// Capture state before update for logic check
+			oldExpirationDays = product.getExpirationDays();
+			if (product.getStockLastUpdated() != null) {
+				anchorDateForExpiration = product.getStockLastUpdated().toLocalDate();
+			}
+
 			if ("INACTIVE".equals(productDto.getProductStatus()) && "ACTIVE".equals(product.getProductStatus())) {
 				if (product.getCurrentStock() > 0) {
-					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + product.getName() + "'. Product still has " + product.getCurrentStock() + " items in stock.");
+					throw new IllegalArgumentException("status.hasStock:• Cannot deactivate '" + product.getName()
+							+ "'. Product still has " + product.getCurrentStock() + " items in stock.");
 				}
 			}
-			
+
 		} else {
 			product = new Product();
 			product.setCurrentStock(0);
 			product.setRecipeLocked(true);
 		}
-		
+
 		product.setProductStatus(productDto.getProductStatus());
 
 		if (!product.isRecipeLocked() || isNew) {
@@ -147,8 +158,8 @@ public class ProductServiceImpl implements ProductService {
 					if (ingredientDto.getInventoryItemId() != null && ingredientDto.getQuantityNeeded() != null
 							&& ingredientDto.getQuantityNeeded().compareTo(BigDecimal.ZERO) > 0) {
 						InventoryItem inventoryItem = inventoryItemRepository
-								.findById(ingredientDto.getInventoryItemId()).orElseThrow(() -> new RuntimeException(
-										"Inventory Item not found"));
+								.findById(ingredientDto.getInventoryItemId())
+								.orElseThrow(() -> new RuntimeException("Inventory Item not found"));
 						Optional<RecipeIngredient> existingIngredient = product.getIngredients().stream()
 								.filter(ing -> ing.getInventoryItem() != null
 										&& ing.getInventoryItem().getId().equals(ingredientDto.getInventoryItemId()))
@@ -172,32 +183,34 @@ public class ProductServiceImpl implements ProductService {
 
 		product.setLowStockThreshold(productDto.getLowStockThreshold());
 		product.setCriticalStockThreshold(productDto.getCriticalStockThreshold());
-		
-		LocalDate effectiveDate = productDto.getCreatedDate();
-		if (effectiveDate == null) {
-			if (isNew) {
-				effectiveDate = LocalDate.now();
-			} else {
-				effectiveDate = product.getCreatedDate(); 
-				if (effectiveDate == null) effectiveDate = LocalDate.now();
-			}
-		}
-		product.setCreatedDate(effectiveDate);
 
-		if (isNew) {
-			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
-				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
+		// Update Expiration Days setting
+		Integer newExpirationDays = productDto.getExpirationDays();
+		product.setExpirationDays(newExpirationDays);
+
+		// --- DATE LOGIC ---
+		// 1. Update Created Date (Independent)
+		if (productDto.getCreatedDate() != null) {
+			product.setCreatedDate(productDto.getCreatedDate());
+		} else if (isNew) {
+			product.setCreatedDate(LocalDate.now());
+		} else if (product.getCreatedDate() == null) {
+			product.setCreatedDate(LocalDate.now());
+		}
+
+		// 2. Update Expiration Date
+		// Anchor: Use 'Stock Last Updated' date, NOT 'Created Date'.
+		boolean daysChanged = (newExpirationDays != null && !newExpirationDays.equals(oldExpirationDays))
+				|| (newExpirationDays == null && oldExpirationDays != null);
+
+		if (daysChanged || isNew) {
+			if (newExpirationDays != null && newExpirationDays > 0) {
+				product.setExpirationDate(anchorDateForExpiration.plusDays(newExpirationDays));
 			} else {
 				product.setExpirationDate(null);
 			}
-		} else {
-			if (product.getExpirationDate() == null && productDto.getExpirationDays() != null && productDto.getExpirationDays() > 0) {
-				product.setExpirationDate(effectiveDate.plusDays(productDto.getExpirationDays()));
-			}
-			if (productDto.getExpirationDays() != null && productDto.getExpirationDays() == 0) {
-				product.setExpirationDate(null);
-			}
 		}
+		// --- END DATE LOGIC ---
 
 		try {
 			return productRepository.save(product);
@@ -210,7 +223,8 @@ public class ProductServiceImpl implements ProductService {
 	@Override
 	public void deactivateProduct(Long id) {
 		Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-		if (product.getCurrentStock() > 0) throw new IllegalArgumentException("Has stock");
+		if (product.getCurrentStock() > 0)
+			throw new IllegalArgumentException("Has stock");
 		product.setProductStatus("INACTIVE");
 		productRepository.save(product);
 	}
@@ -221,15 +235,17 @@ public class ProductServiceImpl implements ProductService {
 		product.setProductStatus("ACTIVE");
 		productRepository.save(product);
 	}
-	
+
 	@Override
 	public void deleteProduct(Long id) {
 		Product product = productRepository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
-		if (product.getCurrentStock() > 0) throw new IllegalArgumentException("Has stock");
-		if (orderItemRepository.countByProduct(product) > 0) throw new DataIntegrityViolationException("History");
+		if (product.getCurrentStock() > 0)
+			throw new IllegalArgumentException("Has stock");
+		if (orderItemRepository.countByProduct(product) > 0)
+			throw new DataIntegrityViolationException("History");
 		productRepository.delete(product);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> findByCategory(Long categoryId, Pageable pageable) {
@@ -257,7 +273,8 @@ public class ProductServiceImpl implements ProductService {
 		Page<Long> idPage;
 		if (hasKeyword && hasCategory) {
 			Category category = categoryRepository.findById(categoryId).orElseThrow();
-			idPage = productRepository.findIdsActiveByNameContainingIgnoreCaseAndCategory(keyword.trim(), category, pageable);
+			idPage = productRepository.findIdsActiveByNameContainingIgnoreCaseAndCategory(keyword.trim(), category,
+					pageable);
 		} else if (hasKeyword) {
 			idPage = productRepository.findIdsActiveByNameContainingIgnoreCase(keyword.trim(), pageable);
 		} else if (hasCategory) {
@@ -268,7 +285,7 @@ public class ProductServiceImpl implements ProductService {
 		}
 		return getPaginatedProducts(idPage, pageable);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Product> searchAdminProducts(String keyword, Long categoryId, Pageable pageable) {
@@ -288,26 +305,36 @@ public class ProductServiceImpl implements ProductService {
 		}
 		return getPaginatedProducts(idPage, pageable);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
-	public long countAllProducts() { return productRepository.count(); }
+	public long countAllProducts() {
+		return productRepository.count();
+	}
+
 	@Override
 	@Transactional(readOnly = true)
-	public long countLowStockProducts() { return productRepository.countLowStockProducts(); }
+	public long countLowStockProducts() {
+		return productRepository.countLowStockProducts();
+	}
+
 	@Override
 	@Transactional(readOnly = true)
-	public long countCriticalStockProducts() { return productRepository.countCriticalStockProducts(); }
+	public long countCriticalStockProducts() {
+		return productRepository.countCriticalStockProducts();
+	}
+
 	@Override
 	@Transactional(readOnly = true)
-	public long countOutOfStockProducts() { return productRepository.countOutOfStockProducts(); }
-	
-	// --- ADDED: Dynamic Metrics Implementation ---
+	public long countOutOfStockProducts() {
+		return productRepository.countOutOfStockProducts();
+	}
+
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Object> getProductMetrics(String keyword, Long categoryId) {
 		Map<String, Object> metrics = new HashMap<>();
-		
+
 		Category category = null;
 		if (categoryId != null) {
 			category = categoryRepository.findById(categoryId).orElse(null);
@@ -318,36 +345,40 @@ public class ProductServiceImpl implements ProductService {
 		long lowStock = productRepository.countFilteredLowStock(parsedKeyword, category);
 		long criticalStock = productRepository.countFilteredCriticalStock(parsedKeyword, category);
 		long outOfStock = productRepository.countFilteredOutOfStock(parsedKeyword, category);
-		
+
 		metrics.put("totalProducts", totalProducts);
 		metrics.put("lowStock", lowStock);
 		metrics.put("criticalStock", criticalStock);
 		metrics.put("outOfStock", outOfStock);
-		
+
 		return metrics;
 	}
-	// --- END ADDED ---
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public int calculateMaxProducible(Long productId) {
 		Optional<Product> productOpt = productRepository.findById(productId);
-		if (productOpt.isEmpty() || productOpt.get().getIngredients().isEmpty()) return 0;
+		if (productOpt.isEmpty() || productOpt.get().getIngredients().isEmpty())
+			return 0;
 		List<RecipeIngredient> ingredients = productOpt.get().getIngredients();
 		int maxPossible = Integer.MAX_VALUE;
 		for (RecipeIngredient ingredient : ingredients) {
 			Optional<InventoryItem> itemOpt = inventoryItemService.findById(ingredient.getInventoryItem().getId());
-			if (itemOpt.isEmpty()) return 0;
+			if (itemOpt.isEmpty())
+				return 0;
 			BigDecimal availableStock = itemOpt.get().getCurrentStock();
 			BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
-			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0) continue;
-			if (availableStock.compareTo(quantityNeeded) < 0) return 0;
+			if (quantityNeeded == null || quantityNeeded.compareTo(BigDecimal.ZERO) <= 0)
+				continue;
+			if (availableStock.compareTo(quantityNeeded) < 0)
+				return 0;
 			int possibleUnits = availableStock.divide(quantityNeeded, 0, RoundingMode.FLOOR).intValue();
-			if (possibleUnits < maxPossible) maxPossible = possibleUnits;
+			if (possibleUnits < maxPossible)
+				maxPossible = possibleUnits;
 		}
 		return (maxPossible == Integer.MAX_VALUE) ? 0 : maxPossible;
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<Product> findAllForReport(String keyword, Long categoryId) {
@@ -367,7 +398,8 @@ public class ProductServiceImpl implements ProductService {
 	}
 
 	@Override
-	public Product adjustStock(Long productId, int quantityChange, String reason, LocalDate createdDate, Integer expirationDays) {
+	public Product adjustStock(Long productId, int quantityChange, String reason, LocalDate createdDate,
+			Integer expirationDays) {
 		Product product = productRepository.findByIdForUpdate(productId)
 				.orElseThrow(() -> new RuntimeException("Product not found with id: " + productId));
 
@@ -375,40 +407,53 @@ public class ProductServiceImpl implements ProductService {
 			List<RecipeIngredient> ingredients = product.getIngredients();
 			if (ingredients != null && !ingredients.isEmpty()) {
 				BigDecimal productionAmount = new BigDecimal(quantityChange);
-				
+
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
-					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) continue;
+					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0)
+						continue;
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
-					InventoryItem currentItemState = inventoryItemRepository.findByIdForUpdate(item.getId()).orElseThrow();
+					InventoryItem currentItemState = inventoryItemRepository.findByIdForUpdate(item.getId())
+							.orElseThrow();
 					if (currentItemState.getCurrentStock().compareTo(amountToDecrease) < 0) {
 						throw new IllegalArgumentException("Insufficient inventory for '" + item.getName() + "'...");
 					}
 				}
-				
+
 				for (RecipeIngredient ingredient : ingredients) {
 					InventoryItem item = ingredient.getInventoryItem();
 					BigDecimal requiredQuantity = ingredient.getQuantityNeeded();
-					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0) continue;
+					if (requiredQuantity == null || requiredQuantity.compareTo(BigDecimal.ZERO) <= 0)
+						continue;
 					BigDecimal amountToDecrease = requiredQuantity.multiply(productionAmount);
 					String deductionReason = "Production of " + quantityChange + "x " + product.getName();
 					inventoryItemService.adjustStock(item.getId(), amountToDecrease.negate(), deductionReason);
 				}
 			}
 		}
-		
-		if (quantityChange > 0 && createdDate != null) {
+
+		if (quantityChange > 0) {
+			// 1. Calculate new Expiration Date relative to TODAY (Date of stock
+			// arrival/production)
 			if (expirationDays != null && expirationDays > 0) {
-				product.setExpirationDate(createdDate.plusDays(expirationDays));
+				product.setExpirationDate(LocalDate.now().plusDays(expirationDays));
 			} else {
-				product.setExpirationDate(null);
+				if (expirationDays != null)
+					product.setExpirationDate(null);
+			}
+
+			// 2. Only update Created Date if explicitly provided (manual override),
+			// otherwise keep original
+			if (createdDate != null) {
+				product.setCreatedDate(createdDate);
 			}
 		}
 
 		int currentStock = product.getCurrentStock();
 		int newStock = currentStock + quantityChange;
-		if (newStock < 0) throw new IllegalArgumentException("Product stock cannot go below zero.");
+		if (newStock < 0)
+			throw new IllegalArgumentException("Product stock cannot go below zero.");
 
 		product.setCurrentStock(newStock);
 		return productRepository.save(product);

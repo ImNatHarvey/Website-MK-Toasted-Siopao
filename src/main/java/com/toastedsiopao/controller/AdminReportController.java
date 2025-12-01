@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -296,7 +297,9 @@ public class AdminReportController {
 			ByteArrayInputStream bis = reportService.generateOrderDocumentPdf(order, documentType);
 
 			HttpHeaders headers = new HttpHeaders();
-			String fileName = String.format("MK-Toasted-Siopao_%s_ORD-%d.pdf", documentType.toUpperCase(), orderId);
+			String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+			String fileName = String.format("MK-Toasted-Siopao_%s_ORD-%d_%s.pdf", documentType.toUpperCase(), orderId,
+					timestamp);
 			headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
 
 			return ResponseEntity.ok().headers(headers).contentType(MediaType.APPLICATION_PDF)
@@ -348,7 +351,7 @@ public class AdminReportController {
 		}
 	}
 
-	// --- NEW: Dashboard PDF Report ---
+// --- NEW: Dashboard PDF Report ---
 	@GetMapping("/dashboard/pdf")
 	@PreAuthorize("hasAuthority('VIEW_DASHBOARD')")
 	public ResponseEntity<InputStreamResource> downloadDashboardReportPdf() {

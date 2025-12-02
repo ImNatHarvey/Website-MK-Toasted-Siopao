@@ -874,3 +874,82 @@ select.form-control-readonly {
 	background-color: var(--dark);
 	color: var(--accent);
 }
+
+/* --- Guidebook Carousel Styles (Consistent Height) --- */
+#adminGuideCarousel {
+	height: 100%;
+}
+
+.guide-slide-content {
+	height: 600px;
+	/* Increased height for larger modal to allow more content */
+	overflow-y: auto; /* Allow internal scrolling if text is long */
+	padding-right: 10px; /* Space for scrollbar */
+}
+
+.guide-slide-content::-webkit-scrollbar {
+	width: 8px;
+}
+
+.guide-slide-content::-webkit-scrollbar-track {
+	background: #f1f1f1;
+}
+
+.guide-slide-content::-webkit-scrollbar-thumb {
+	background: #888;
+	border-radius: 4px;
+}
+
+.guide-slide-content::-webkit-scrollbar-thumb:hover {
+	background: #555;
+}
+
+/* Indicators (Dots) positioned at the bottom of the content */
+.custom-indicators {
+	position: absolute;
+	bottom: 0;
+	margin-bottom: 0;
+}
+
+.custom-indicators button {
+	background-color: var(--primary) !important;
+	width: 10px !important;
+	height: 10px !important;
+	border-radius: 50%;
+	margin: 0 4px !important;
+	opacity: 0.5;
+	border: none;
+}
+
+.custom-indicators button.active {
+	opacity: 1;
+	transform: scale(1.2);
+}
+
+/* --- Guidebook Navigation Buttons (Equal Size) --- */
+.guide-nav-btn {
+	width: 140px; /* Fixed width for equal size */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Ensure footer positioning context */
+#guidebookModal .modal-footer {
+	position: relative;
+	/* Needed for absolute positioning of page count/close btn */
+	min-height: 60px; /* Prevent collapse */
+}
+
+/* Responsive adjustment for footer absolute items */
+@media ( max-width : 768px) {
+	#guidebookModal .position-absolute {
+		position: relative !important;
+		text-align: center;
+		margin-top: 0.5rem;
+	}
+	#guidebookModal .modal-footer {
+		flex-direction: column;
+		gap: 1rem;
+	}
+}

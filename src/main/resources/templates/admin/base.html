@@ -24,7 +24,7 @@
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
-<link rel="stylesheet" th:href="@{/css/style-admin.css(v=2.0)}">
+<link rel="stylesheet" th:href="@{/css/style-admin.css(v=2.1)}">
 <link rel="stylesheet" th:href="@{/css/loader.css(v=1.9)}">
 </head>
 <body id="admin-body">
@@ -134,18 +134,18 @@
 						class="nav-link-text">Transaction History</span>
 					</a>
 				</div>
-				<div sec:authorize="hasAuthority('VIEW_ADMINS')">
-					<a class="nav-link" th:href="@{/admin/admins}"
-						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
-						class="fa-solid fa-user-shield fa-fw"></i> <span
-						class="nav-link-text">Admin Management</span>
-					</a>
-				</div>
 				<div sec:authorize="hasAuthority('VIEW_CUSTOMERS')">
 					<a class="nav-link" th:href="@{/admin/customers}"
 						th:classappend="${activePage == 'customers' ? 'active' : ''}">
 						<i class="fa-solid fa-users fa-fw"></i> <span
 						class="nav-link-text">Customer Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_ADMINS')">
+					<a class="nav-link" th:href="@{/admin/admins}"
+						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
+						class="fa-solid fa-user-shield fa-fw"></i> <span
+						class="nav-link-text">Admin Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
@@ -367,7 +367,10 @@
 	<script th:src="@{/js/admin-global.js}"></script>
 	<script th:src="@{/js/notification-handler.js}"></script>
 	<script th:src="@{/js/loader.js(v=1.9)}"></script>
+
 	<script th:src="@{/js/admin-guidebook.js}"></script>
+	<script th:src="@{/js/guidebook/guidebook-dashboard.js}"></script>
+	<script th:src="@{/js/guidebook/guidebook-orders.js}"></script>
 
 	<div th:replace="${pageScript}"></div>
 </body>

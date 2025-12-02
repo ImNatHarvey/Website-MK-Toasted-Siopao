@@ -851,7 +851,8 @@ select.form-control-readonly {
 /* --- Guidebook Floating Button --- */
 .admin-help-btn {
 	position: fixed;
-	bottom: 30px;
+	/* Changed from 30px to 90px to clear the footer */
+	bottom: 90px;
 	right: 30px;
 	width: 50px;
 	height: 50px;

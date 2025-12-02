@@ -727,7 +727,6 @@ select.form-control-readonly {
 /* ======================================================================== */
 /* == START: MOBILE VIEW INTERFACE == */
 /* ======================================================================== */
-
 @media ( max-width : 991.98px) {
 	.admin-mobile-nav {
 		display: flex;
@@ -736,23 +735,22 @@ select.form-control-readonly {
 		display: none;
 	}
 	.admin-sidebar {
-		width: var(--sidebar-width); 
-		left: calc(var(--sidebar-width)* -1); 
+		width: var(--sidebar-width);
+		left: calc(var(--sidebar-width)* -1);
 		z-index: 1040;
-		transition: left 0.3s ease-in-out; 
+		transition: left 0.3s ease-in-out;
 		box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 	}
 	.admin-sidebar .nav {
-		padding-top: 1rem; 
+		padding-top: 1rem;
 	}
 	.sidebar-header {
-		display: none; 
+		display: none;
 	}
-
 	.admin-content {
-		margin-left: 0 !important; 
+		margin-left: 0 !important;
 		width: 100%;
-		transition: none; 
+		transition: none;
 	}
 	.admin-content-page {
 		padding-top: calc(var(--top-nav-height)+ 15px);
@@ -762,18 +760,16 @@ select.form-control-readonly {
 	.admin-footer {
 		margin-left: 0;
 	}
-
 	body.sidebar-toggled .admin-sidebar {
 		width: var(--sidebar-width);
-		left: 0; 
+		left: 0;
 	}
 	body.sidebar-toggled .sidebar-overlay {
-		display: block; 
+		display: block;
 	}
 	body.sidebar-toggled .admin-content {
-		margin-left: 0 !important; 
+		margin-left: 0 !important;
 	}
-
 	body.sidebar-toggled .sidebar-brand-text {
 		display: inline;
 	}
@@ -796,37 +792,40 @@ select.form-control-readonly {
 	#carousel3Uploader .image-preview, #carousel3Uploader .image-drop-zone
 	{
 	height: 150px;
-	min-height: 150px; 
+	min-height: 150px;
 }
 
 #aboutUploader .image-preview, #aboutUploader .image-drop-zone {
-	height: 400px; 
+	height: 400px;
 	min-height: 400px;
 }
 
 #gcashQrUploader {
-	width: 250px; 
-	height: 250px; 
-	margin: 0; 
+	width: 250px;
+	height: 250px;
+	margin: 0;
 }
 
 #gcashQrUploader .image-preview, #gcashQrUploader .image-drop-zone {
 	height: 100%;
-	width: 100%; 
+	width: 100%;
 	object-fit: contain;
-	background-color: #f0f0f0; 
+	background-color: #f0f0f0;
 }
 
 #websiteLogoUploader {
 	width: 250px;
-	height: 250px; 
+	height: 250px;
 }
-#websiteLogoUploader .image-preview, #websiteLogoUploader .image-drop-zone {
-    height: 100%;
-    min-height: 0;
-    width: 100%;
-    padding: 0.5rem;
+
+#websiteLogoUploader .image-preview, #websiteLogoUploader .image-drop-zone
+	{
+	height: 100%;
+	min-height: 0;
+	width: 100%;
+	padding: 0.5rem;
 }
+
 #websiteLogoUploader .image-preview {
 	object-fit: contain;
 	background-color: #f0f0f0;
@@ -836,12 +835,42 @@ select.form-control-readonly {
 	width: 150px;
 	height: 150px;
 }
-#websiteFaviconUploader .image-preview, #websiteFaviconUploader .image-drop-zone {
+
+#websiteFaviconUploader .image-preview, #websiteFaviconUploader .image-drop-zone
+	{
 	height: 100%;
 	min-height: 0;
 	padding: 0.5rem;
 }
- #websiteFaviconUploader .image-preview {
+
+#websiteFaviconUploader .image-preview {
 	object-fit: contain;
-    background-color: #f0f0f0;
+	background-color: #f0f0f0;
+}
+
+/* --- Guidebook Floating Button --- */
+.admin-help-btn {
+	position: fixed;
+	bottom: 30px;
+	right: 30px;
+	width: 50px;
+	height: 50px;
+	background-color: var(--primary);
+	color: var(--light);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 1.5rem;
+	border-radius: 8px; /* Square with rounded corners */
+	cursor: pointer;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+	z-index: 1050;
+	transition: transform 0.2s ease, background-color 0.2s ease;
+	border: none;
+}
+
+.admin-help-btn:hover {
+	transform: scale(1.1);
+	background-color: var(--dark);
+	color: var(--accent);
 }

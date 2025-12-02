@@ -24,7 +24,7 @@
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
-<link rel="stylesheet" th:href="@{/css/style-admin.css(v=1.9)}">
+<link rel="stylesheet" th:href="@{/css/style-admin.css(v=2.0)}">
 <link rel="stylesheet" th:href="@{/css/loader.css(v=1.9)}">
 </head>
 <body id="admin-body">
@@ -106,32 +106,11 @@
 						class="nav-link-text">Dashboard</span>
 					</a>
 				</div>
-				<div sec:authorize="hasAuthority('VIEW_CUSTOMERS')">
-					<a class="nav-link" th:href="@{/admin/customers}"
-						th:classappend="${activePage == 'customers' ? 'active' : ''}">
-						<i class="fa-solid fa-users fa-fw"></i> <span
-						class="nav-link-text">Customer Management</span>
-					</a>
-				</div>
-				<div sec:authorize="hasAuthority('VIEW_ADMINS')">
-					<a class="nav-link" th:href="@{/admin/admins}"
-						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
-						class="fa-solid fa-user-shield fa-fw"></i> <span
-						class="nav-link-text">Admin Management</span>
-					</a>
-				</div>
 				<div sec:authorize="hasAuthority('VIEW_ORDERS')">
 					<a class="nav-link" th:href="@{/admin/orders}"
 						th:classappend="${activePage == 'orders' ? 'active' : ''}"> <i
 						class="fa-solid fa-box fa-fw"></i> <span class="nav-link-text">Order
 							Management</span>
-					</a>
-				</div>
-				<div sec:authorize="hasAuthority('VIEW_PRODUCTS')">
-					<a class="nav-link" th:href="@{/admin/products}"
-						th:classappend="${activePage == 'products' ? 'active' : ''}">
-						<i class="fa-solid fa-burger fa-fw"></i> <span
-						class="nav-link-text">Product Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_INVENTORY')">
@@ -141,11 +120,39 @@
 						class="nav-link-text">Inventory Management</span>
 					</a>
 				</div>
+				<div sec:authorize="hasAuthority('VIEW_PRODUCTS')">
+					<a class="nav-link" th:href="@{/admin/products}"
+						th:classappend="${activePage == 'products' ? 'active' : ''}">
+						<i class="fa-solid fa-burger fa-fw"></i> <span
+						class="nav-link-text">Product Management</span>
+					</a>
+				</div>
 				<div sec:authorize="hasAuthority('VIEW_TRANSACTIONS')">
 					<a class="nav-link" th:href="@{/admin/transactions}"
 						th:classappend="${activePage == 'transactions' ? 'active' : ''}">
 						<i class="fa-solid fa-money-bill-wave fa-fw"></i> <span
 						class="nav-link-text">Transaction History</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_ADMINS')">
+					<a class="nav-link" th:href="@{/admin/admins}"
+						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
+						class="fa-solid fa-user-shield fa-fw"></i> <span
+						class="nav-link-text">Admin Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_CUSTOMERS')">
+					<a class="nav-link" th:href="@{/admin/customers}"
+						th:classappend="${activePage == 'customers' ? 'active' : ''}">
+						<i class="fa-solid fa-users fa-fw"></i> <span
+						class="nav-link-text">Customer Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
+					<a class="nav-link" th:href="@{/admin/settings}"
+						th:classappend="${activePage == 'settings' ? 'active' : ''}">
+						<i class="fa-solid fa-sliders fa-fw"></i> <span
+						class="nav-link-text">Site Management</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('VIEW_ACTIVITY_LOG')">
@@ -347,6 +354,9 @@
 
 	<div
 		th:replace="~{admin/fragments/admin-issue-modal :: admin-issue-modal}"></div>
+
+	<div th:replace="~{admin/fragments/guidebook :: guidebook-modal}"></div>
+
 	<script
 		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 		integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
@@ -357,6 +367,8 @@
 	<script th:src="@{/js/admin-global.js}"></script>
 	<script th:src="@{/js/notification-handler.js}"></script>
 	<script th:src="@{/js/loader.js(v=1.9)}"></script>
+	<script th:src="@{/js/admin-guidebook.js}"></script>
+
 	<div th:replace="${pageScript}"></div>
 </body>
 </html>

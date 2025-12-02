@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+	<div th:fragment="guidebook-modal">
+		<button type="button" class="admin-help-btn" data-bs-toggle="modal"
+			data-bs-target="#guidebookModal" title="Page Guide">
+			<i class="fa-solid fa-question"></i>
+		</button>
+
+		<div class="modal fade" id="guidebookModal" tabindex="-1"
+			aria-labelledby="guidebookModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-lg modal-dialog-scrollable">
+				<div class="modal-content">
+					<div class="modal-header"
+						style="background-color: var(--primary); color: var(--light);">
+						<h5 class="modal-title" id="guidebookModalLabel">
+							<i class="fa-solid fa-book-open me-2"></i> <span
+								id="guidebookTitle">Admin Guide</span>
+						</h5>
+						<button type="button" class="btn-close btn-close-white"
+							data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body" id="guidebookContent">
+						<div class="text-center text-muted py-5">
+							<i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i>
+							<p>Loading guide...</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-custom-secondary"
+							data-bs-dismiss="modal">Close</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

@@ -24,7 +24,7 @@
 	crossorigin="anonymous" referrerpolicy="no-referrer" />
 
 <link rel="stylesheet" th:href="@{/css/base.css(v=1.9)}">
-<link rel="stylesheet" th:href="@{/css/style-admin.css(v=2.1)}">
+<link rel="stylesheet" th:href="@{/css/style-admin.css(v=2.2)}">
 <link rel="stylesheet" th:href="@{/css/loader.css(v=1.9)}">
 </head>
 <body id="admin-body">
@@ -106,34 +106,6 @@
 						class="nav-link-text">Dashboard</span>
 					</a>
 				</div>
-				<div sec:authorize="hasAuthority('VIEW_ORDERS')">
-					<a class="nav-link" th:href="@{/admin/orders}"
-						th:classappend="${activePage == 'orders' ? 'active' : ''}"> <i
-						class="fa-solid fa-box fa-fw"></i> <span class="nav-link-text">Order
-							Management</span>
-					</a>
-				</div>
-				<div sec:authorize="hasAuthority('VIEW_INVENTORY')">
-					<a class="nav-link" th:href="@{/admin/inventory}"
-						th:classappend="${activePage == 'inventory' ? 'active' : ''}">
-						<i class="fa-solid fa-boxes-stacked fa-fw"></i> <span
-						class="nav-link-text">Inventory Management</span>
-					</a>
-				</div>
-				<div sec:authorize="hasAuthority('VIEW_PRODUCTS')">
-					<a class="nav-link" th:href="@{/admin/products}"
-						th:classappend="${activePage == 'products' ? 'active' : ''}">
-						<i class="fa-solid fa-burger fa-fw"></i> <span
-						class="nav-link-text">Product Management</span>
-					</a>
-				</div>
-				<div sec:authorize="hasAuthority('VIEW_TRANSACTIONS')">
-					<a class="nav-link" th:href="@{/admin/transactions}"
-						th:classappend="${activePage == 'transactions' ? 'active' : ''}">
-						<i class="fa-solid fa-money-bill-wave fa-fw"></i> <span
-						class="nav-link-text">Transaction History</span>
-					</a>
-				</div>
 				<div sec:authorize="hasAuthority('VIEW_CUSTOMERS')">
 					<a class="nav-link" th:href="@{/admin/customers}"
 						th:classappend="${activePage == 'customers' ? 'active' : ''}">
@@ -146,6 +118,34 @@
 						th:classappend="${activePage == 'admins' ? 'active' : ''}"> <i
 						class="fa-solid fa-user-shield fa-fw"></i> <span
 						class="nav-link-text">Admin Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_ORDERS')">
+					<a class="nav-link" th:href="@{/admin/orders}"
+						th:classappend="${activePage == 'orders' ? 'active' : ''}"> <i
+						class="fa-solid fa-box fa-fw"></i> <span class="nav-link-text">Order
+							Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_PRODUCTS')">
+					<a class="nav-link" th:href="@{/admin/products}"
+						th:classappend="${activePage == 'products' ? 'active' : ''}">
+						<i class="fa-solid fa-burger fa-fw"></i> <span
+						class="nav-link-text">Product Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_INVENTORY')">
+					<a class="nav-link" th:href="@{/admin/inventory}"
+						th:classappend="${activePage == 'inventory' ? 'active' : ''}">
+						<i class="fa-solid fa-boxes-stacked fa-fw"></i> <span
+						class="nav-link-text">Inventory Management</span>
+					</a>
+				</div>
+				<div sec:authorize="hasAuthority('VIEW_TRANSACTIONS')">
+					<a class="nav-link" th:href="@{/admin/transactions}"
+						th:classappend="${activePage == 'transactions' ? 'active' : ''}">
+						<i class="fa-solid fa-money-bill-wave fa-fw"></i> <span
+						class="nav-link-text">Transaction History</span>
 					</a>
 				</div>
 				<div sec:authorize="hasAuthority('EDIT_SITE_SETTINGS')">
@@ -371,6 +371,7 @@
 	<script th:src="@{/js/admin-guidebook.js}"></script>
 	<script th:src="@{/js/guidebook/guidebook-dashboard.js}"></script>
 	<script th:src="@{/js/guidebook/guidebook-orders.js}"></script>
+	<script th:src="@{/js/guidebook/guidebook-inventory.js}"></script>
 
 	<div th:replace="${pageScript}"></div>
 </body>

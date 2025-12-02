@@ -91,7 +91,7 @@
                 
                 <div class="alert alert-info small">
                     <i class="fa-solid fa-lightbulb me-1"></i> <strong>Tip:</strong> 
-                    Use the <strong>Max</strong> button on an item row to see how many product units you can make with that specific ingredient!
+                    Keep your inventory accurate! Perform a physical stock count weekly and use the <strong>Manual Adjust</strong> reason to correct any discrepancies in the system.
                 </div>
             </div>
         `

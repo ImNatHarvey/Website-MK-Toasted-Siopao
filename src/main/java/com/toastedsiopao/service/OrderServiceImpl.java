@@ -3,7 +3,7 @@ package com.toastedsiopao.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.toastedsiopao.dto.OrderSubmitDto;
-import com.toastedsiopao.model.CartItem; 
+import com.toastedsiopao.model.CartItem;
 import com.toastedsiopao.model.InventoryItem;
 import com.toastedsiopao.model.Order;
 import com.toastedsiopao.model.OrderItem;
@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl; 
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,8 +34,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList; 
-import java.util.Collections; 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Autowired
 	private OrderRepository orderRepository;
-	
+
 	@Autowired
 	private ProductRepository productRepository;
 
@@ -61,19 +61,17 @@ public class OrderServiceImpl implements OrderService {
 	private ObjectMapper objectMapper;
 
 	@Autowired
-	private Clock clock; 
-	
+	private Clock clock;
+
 	@Autowired
 	private EmailService emailService;
-	
+
 	@Autowired
 	private NotificationService notificationService;
-	
-	// --- ADDED ---
+
 	@Autowired
 	private CartService cartService;
-	// --- END ADDED ---
-	
+
 	private static class CartItemDto {
 		public String name;
 		public double price;
@@ -84,7 +82,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public Order createOrder(User user, OrderSubmitDto orderDto, String receiptImagePath) {
 		log.info("Attempting to create order for user: {}", user.getUsername());
-		
+
 		List<CartItem> dbCart = cartService.getCartForUser(user);
 		if (dbCart.isEmpty()) {
 			throw new IllegalArgumentException("Cannot create order with an empty cart.");
@@ -92,42 +90,42 @@ public class OrderServiceImpl implements OrderService {
 
 		BigDecimal calculatedTotal = BigDecimal.ZERO;
 		List<OrderItem> orderItems = new ArrayList<>();
-		
+
 		for (CartItem cartItem : dbCart) {
 			int quantityToOrder = cartItem.getQuantity();
-			Product product = cartItem.getProduct(); 
+			Product product = cartItem.getProduct();
 			if (quantityToOrder <= 0) {
 				throw new IllegalArgumentException("Cart contains item with invalid quantity: " + product.getName());
 			}
 
 			if (!"ACTIVE".equals(product.getProductStatus()) || product.getCurrentStock() < quantityToOrder) {
-				throw new IllegalArgumentException("Insufficient stock for: " + product.getName() + 
-												   ". Requested: " + quantityToOrder + ", Available: " + product.getCurrentStock());
+				throw new IllegalArgumentException("Insufficient stock for: " + product.getName() + ". Requested: "
+						+ quantityToOrder + ", Available: " + product.getCurrentStock());
 			}
-			
+
 			BigDecimal itemPrice = product.getPrice();
 			BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(quantityToOrder));
 			calculatedTotal = calculatedTotal.add(itemTotal);
-			
+
 			orderItems.add(new OrderItem(product, quantityToOrder, itemPrice));
 		}
-		
+
 		log.info("Stock validated for {} items. Total: ₱{}", orderItems.size(), calculatedTotal);
-		
+
 		Order newOrder = new Order();
 		newOrder.setUser(user);
 		newOrder.setTotalAmount(calculatedTotal);
 		newOrder.setPaymentMethod(orderDto.getPaymentMethod());
-		
+
 		if ("cod".equalsIgnoreCase(orderDto.getPaymentMethod())) {
 			newOrder.setStatus(Order.STATUS_PENDING);
 			newOrder.setPaymentStatus(Order.PAYMENT_PENDING);
 		} else {
 			newOrder.setStatus(Order.STATUS_PENDING_VERIFICATION);
 			newOrder.setPaymentStatus(Order.PAYMENT_FOR_VERIFICATION);
-			newOrder.setTransactionId(orderDto.getTransactionId()); 
+			newOrder.setTransactionId(orderDto.getTransactionId());
 		}
-		
+
 		newOrder.setPaymentReceiptImageUrl(receiptImagePath);
 		newOrder.setNotes(orderDto.getNotes());
 
@@ -135,7 +133,7 @@ public class OrderServiceImpl implements OrderService {
 		newOrder.setShippingLastName(orderDto.getLastName());
 		newOrder.setShippingPhone(orderDto.getPhone());
 		newOrder.setShippingEmail(orderDto.getEmail());
-		
+
 		List<String> unitParts = new ArrayList<>();
 		if (StringUtils.hasText(orderDto.getHouseNo())) {
 			unitParts.add("House No. " + orderDto.getHouseNo().trim());
@@ -166,32 +164,35 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		String fullAddress = String.join(", ", addressParts);
-		
+
 		newOrder.setShippingAddress(fullAddress);
-		
+
 		Order savedOrder = orderRepository.save(newOrder);
-		
+
 		for (OrderItem item : orderItems) {
 			item.setOrder(savedOrder);
 			savedOrder.addItem(item);
-			
+
 			try {
-				productService.adjustStock(item.getProduct().getId(), -item.getQuantity(), "Order #" + savedOrder.getId());
+				productService.adjustStock(item.getProduct().getId(), -item.getQuantity(),
+						"Order #" + savedOrder.getId());
 			} catch (Exception e) {
-				log.error("CRITICAL: Stock deduction failed AFTER validation for product ID {}. Rolling back.", item.getProduct().getId());
+				log.error("CRITICAL: Stock deduction failed AFTER validation for product ID {}. Rolling back.",
+						item.getProduct().getId());
 				throw new RuntimeException("Stock deduction failed for " + item.getProduct().getName(), e);
 			}
 		}
 
 		log.info("Successfully created Order #{} for user {}", savedOrder.getId(), user.getUsername());
-		
-		String notifMessage = "New " + savedOrder.getPaymentMethod().toUpperCase() + " order (#" + savedOrder.getId() + ") placed by " + user.getUsername() + ".";
+
+		String notifMessage = "New " + savedOrder.getPaymentMethod().toUpperCase() + " order (#" + savedOrder.getId()
+				+ ") placed by " + user.getUsername() + ".";
 		String notifLink = "/admin/orders?status=" + savedOrder.getStatus();
 		notificationService.createAdminNotification(notifMessage, notifLink);
-		
+
 		cartService.clearCart(user);
 		log.info("Cleared cart for user {}.", user.getUsername());
-		
+
 		return savedOrder;
 	}
 
@@ -203,40 +204,41 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findOrdersByUser(User user, Pageable pageable) { 
+	public Page<Order> findOrdersByUser(User user, Pageable pageable) {
 		Page<Long> orderIdPage = orderRepository.findIdsByUserOrderByOrderDateDesc(user, pageable);
 		List<Long> orderIds = orderIdPage.getContent();
-		
+
 		if (orderIds.isEmpty()) {
 			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
 		}
-		
+
 		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
-		
+
 		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
 		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
 
 		return new PageImpl<>(sortedOrders, pageable, orderIdPage.getTotalElements());
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> findOrdersByUserAndStatus(User user, String status, Pageable pageable) {
 		if (!StringUtils.hasText(status)) {
 			log.debug("Fetching all orders for user: {}", user.getUsername());
-			return findOrdersByUser(user, pageable); 
+			return findOrdersByUser(user, pageable);
 		}
 		log.debug("Fetching orders for user: {} with status: {}", user.getUsername(), status);
-		
-		Page<Long> orderIdPage = orderRepository.findIdsByUserAndStatusOrderByOrderDateDesc(user, status.toUpperCase(), pageable);
+
+		Page<Long> orderIdPage = orderRepository.findIdsByUserAndStatusOrderByOrderDateDesc(user, status.toUpperCase(),
+				pageable);
 		List<Long> orderIds = orderIdPage.getContent();
-		
+
 		if (orderIds.isEmpty()) {
 			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
 		}
-		
+
 		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
-		
+
 		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
 		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
 
@@ -245,23 +247,23 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findAllOrders(Pageable pageable) { 
-		return orderRepository.findAll(pageable); 
+	public Page<Order> findAllOrders(Pageable pageable) {
+		return orderRepository.findAll(pageable);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> findOrdersByStatus(String status, Pageable pageable) { 
+	public Page<Order> findOrdersByStatus(String status, Pageable pageable) {
 		if (!StringUtils.hasText(status)) {
-			return searchOrders(null, null, null, null, pageable); 
+			return searchOrders(null, null, null, null, pageable);
 		}
 		return searchOrders(null, status.toUpperCase(), null, null, pageable);
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Order> searchOrders(String keyword, String status, String startDate, String endDate,
-			Pageable pageable) { 
+			Pageable pageable) {
 		boolean hasKeyword = StringUtils.hasText(keyword);
 		boolean hasStatus = StringUtils.hasText(status);
 		boolean hasStartDate = StringUtils.hasText(startDate);
@@ -287,28 +289,28 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		String upperStatus = hasStatus ? status.toUpperCase() : null;
-		
+
 		Page<Long> orderIdPage;
 
 		if (hasKeyword && hasStatus) {
 			orderIdPage = orderRepository.findIdsByKeywordAndStatus(keyword.trim(), upperStatus, startDateTime,
-					endDateTime, pageable); 
+					endDateTime, pageable);
 		} else if (hasKeyword) {
 			orderIdPage = orderRepository.findIdsByKeyword(keyword.trim(), startDateTime, endDateTime, pageable);
 		} else if (hasStatus) {
-			orderIdPage = orderRepository.findIdsByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable); 
+			orderIdPage = orderRepository.findIdsByStatusAndDate(upperStatus, startDateTime, endDateTime, pageable);
 		} else {
-			orderIdPage = orderRepository.findIdsByDate(startDateTime, endDateTime, pageable); 
+			orderIdPage = orderRepository.findIdsByDate(startDateTime, endDateTime, pageable);
 		}
-		
+
 		List<Long> orderIds = orderIdPage.getContent();
-		
+
 		if (orderIds.isEmpty()) {
 			return new PageImpl<>(Collections.emptyList(), pageable, orderIdPage.getTotalElements());
 		}
-		
+
 		List<Order> orders = orderRepository.findWithDetailsByIds(orderIds);
-		
+
 		Map<Long, Order> orderMap = orders.stream().collect(Collectors.toMap(Order::getId, o -> o));
 		List<Order> sortedOrders = orderIds.stream().map(orderMap::get).collect(Collectors.toList());
 
@@ -320,40 +322,44 @@ public class OrderServiceImpl implements OrderService {
 		for (OrderItem item : order.getItems()) {
 			try {
 				productService.adjustStock(item.getProduct().getId(), item.getQuantity(), reason);
-				log.info("Restored {} unit(s) of {} (ID: {})", 
-						item.getQuantity(), item.getProduct().getName(), item.getProduct().getId());
+				log.info("Restored {} unit(s) of {} (ID: {})", item.getQuantity(), item.getProduct().getName(),
+						item.getProduct().getId());
 			} catch (Exception e) {
-				log.error("CRITICAL: Failed to reverse stock for product ID {} during order cancellation/rejection. " +
-						  "Order ID: {}, Product: {}, Qty: {}. Error: {}",
-						  item.getProduct().getId(), order.getId(), item.getProduct().getName(), item.getQuantity(), e.getMessage(), e);
+				log.error(
+						"CRITICAL: Failed to reverse stock for product ID {} during order cancellation/rejection. "
+								+ "Order ID: {}, Product: {}, Qty: {}. Error: {}",
+						item.getProduct().getId(), order.getId(), item.getProduct().getName(), item.getQuantity(),
+						e.getMessage(), e);
 			}
 		}
 	}
-	
+
 	@Override
 	public Order cancelOrder(Long orderId, User customer) {
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
 
 		if (!order.getUser().getId().equals(customer.getId())) {
-			log.warn("Security violation: User {} attempted to cancel order #{} owned by user {}", 
+			log.warn("Security violation: User {} attempted to cancel order #{} owned by user {}",
 					customer.getUsername(), orderId, order.getUser().getUsername());
 			throw new IllegalArgumentException("You do not have permission to cancel this order.");
 		}
 
-		if (!order.getStatus().equals(Order.STATUS_PENDING) && !order.getStatus().equals(Order.STATUS_PENDING_VERIFICATION)) {
-			throw new IllegalArgumentException("This order can no longer be cancelled as it is already " + order.getStatus());
+		if (!order.getStatus().equals(Order.STATUS_PENDING)
+				&& !order.getStatus().equals(Order.STATUS_PENDING_VERIFICATION)) {
+			throw new IllegalArgumentException(
+					"This order can no longer be cancelled as it is already " + order.getStatus());
 		}
 
 		order.setStatus(Order.STATUS_CANCELLED);
 		order.setPaymentStatus(Order.PAYMENT_CANCELLED);
-		
+
 		reverseStockForOrder(order, "Order #" + order.getId() + " Cancelled by Customer");
-		
+
 		String notifMessage = "Customer " + customer.getUsername() + " cancelled order #" + order.getId() + ".";
 		String notifLink = "/admin/orders?status=CANCELLED";
 		notificationService.createAdminNotification(notifMessage, notifLink);
-		
+
 		return orderRepository.save(order);
 	}
 
@@ -367,25 +373,26 @@ public class OrderServiceImpl implements OrderService {
 			throw new IllegalArgumentException("Order cannot be accepted. Current status: " + currentStatus);
 		}
 
-		if (currentStatus.equals(Order.STATUS_PENDING)) { 
+		if (currentStatus.equals(Order.STATUS_PENDING)) {
 			order.setStatus(Order.STATUS_PROCESSING);
-		} else { 
+		} else {
 			order.setStatus(Order.STATUS_PROCESSING);
 			order.setPaymentStatus(Order.PAYMENT_PAID);
 		}
 
 		log.info("Order #{} accepted. Status set to PROCESSING.", orderId);
 		Order savedOrder = orderRepository.save(order);
-		
+
 		String subject = "Your Order has been Accepted!";
-		String message = "We're happy to let you know that your order (#" + savedOrder.getId() + ") has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
-		
+		String message = "We're happy to let you know that your order (#" + savedOrder.getId()
+				+ ") has been accepted and is now being processed. We'll send you another update once it's out for delivery.";
+
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
 		} catch (MessagingException e) {
 			log.error("Failed to send 'Order Accepted' email for Order #{}", savedOrder.getId(), e);
 		}
-		
+
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
 
 		return savedOrder;
@@ -395,7 +402,7 @@ public class OrderServiceImpl implements OrderService {
 	public Order rejectOrder(Long orderId) {
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(() -> new IllegalArgumentException("Order not found."));
-		
+
 		String currentStatus = order.getStatus();
 		if (!currentStatus.equals(Order.STATUS_PENDING) && !currentStatus.equals(Order.STATUS_PENDING_VERIFICATION)) {
 			throw new IllegalArgumentException("Order cannot be rejected. Current status: " + currentStatus);
@@ -403,18 +410,19 @@ public class OrderServiceImpl implements OrderService {
 
 		order.setStatus(Order.STATUS_REJECTED);
 		order.setPaymentStatus(Order.PAYMENT_REJECTED);
-		
+
 		reverseStockForOrder(order, "Order #" + order.getId() + " Rejected by Admin");
 
 		log.info("Order #{} rejected. Status set to REJECTED.", orderId);
 		Order savedOrder = orderRepository.save(order);
-		
-		String message = "Unfortunately, your order (#" + savedOrder.getId() + ") has been rejected. Stock has been reversed. If this was a GCash order, please contact us for a refund.";
+
+		String message = "Unfortunately, your order (#" + savedOrder.getId()
+				+ ") has been rejected. Stock has been reversed. If this was a GCash order, please contact us for a refund.";
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		
+
 		return savedOrder;
 	}
-	
+
 	@Override
 	public Order shipOrder(Long orderId) {
 		Order order = orderRepository.findById(orderId)
@@ -423,15 +431,16 @@ public class OrderServiceImpl implements OrderService {
 		if (!order.getStatus().equals(Order.STATUS_PROCESSING)) {
 			throw new IllegalArgumentException("Only orders in 'Processing' status can be shipped.");
 		}
-		
+
 		order.setStatus(Order.STATUS_OUT_FOR_DELIVERY);
-		
+
 		log.info("Order #{} status set to OUT_FOR_DELIVERY.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
 		String subject = "Your Order is Out for Delivery!";
-		String message = "Get ready! Your order (#" + savedOrder.getId() + ") is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of " +
-						 "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
+		String message = "Get ready! Your order (#" + savedOrder.getId()
+				+ ") is now with our rider and on its way to you. If you chose Cash on Delivery, please prepare the exact amount of "
+				+ "₱" + savedOrder.getTotalAmount().setScale(2, RoundingMode.HALF_UP) + ".";
 
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
@@ -440,7 +449,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		
+
 		return savedOrder;
 	}
 
@@ -452,19 +461,20 @@ public class OrderServiceImpl implements OrderService {
 		if (!order.getStatus().equals(Order.STATUS_OUT_FOR_DELIVERY)) {
 			throw new IllegalArgumentException("Only orders 'Out for Delivery' can be marked as completed.");
 		}
-		
+
 		if (!order.getPaymentMethod().equalsIgnoreCase("cod")) {
 			throw new IllegalArgumentException("This action is only for 'Cash on Delivery' orders.");
 		}
-		
+
 		order.setStatus(Order.STATUS_DELIVERED);
-		order.setPaymentStatus(Order.PAYMENT_PAID); 
-		
+		order.setPaymentStatus(Order.PAYMENT_PAID);
+
 		log.info("COD Order #{} status set to DELIVERED and PAID.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
 		String subject = "Your Order is Complete!";
-		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
+		String message = "Your order (#" + savedOrder.getId()
+				+ ") has been successfully delivered and paid for. Thank you for choosing us! We hope to serve you again soon.";
 
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
@@ -473,10 +483,10 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		
+
 		return savedOrder;
 	}
-	
+
 	@Override
 	public Order completeDeliveredOrder(Long orderId) {
 		Order order = orderRepository.findById(orderId)
@@ -485,22 +495,25 @@ public class OrderServiceImpl implements OrderService {
 		if (!order.getStatus().equals(Order.STATUS_OUT_FOR_DELIVERY)) {
 			throw new IllegalArgumentException("Only orders 'Out for Delivery' can be marked as delivered.");
 		}
-		
+
 		if (order.getPaymentMethod().equalsIgnoreCase("cod")) {
-			throw new IllegalArgumentException("This action is for pre-paid (non-COD) orders. Use 'Complete COD' action instead.");
+			throw new IllegalArgumentException(
+					"This action is for pre-paid (non-COD) orders. Use 'Complete COD' action instead.");
 		}
-		
+
 		if (!order.getPaymentStatus().equals(Order.PAYMENT_PAID)) {
-			log.warn("Admin is completing an order (ID: {}) that is not marked as PAID. Current payment status: {}", orderId, order.getPaymentStatus());
+			log.warn("Admin is completing an order (ID: {}) that is not marked as PAID. Current payment status: {}",
+					orderId, order.getPaymentStatus());
 		}
-		
+
 		order.setStatus(Order.STATUS_DELIVERED);
-		
+
 		log.info("Pre-Paid Order #{} status set to DELIVERED.", orderId);
 		Order savedOrder = orderRepository.save(order);
 
 		String subject = "Your Order has been Delivered!";
-		String message = "Your order (#" + savedOrder.getId() + ") has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
+		String message = "Your order (#" + savedOrder.getId()
+				+ ") has been successfully delivered. Thank you for choosing us! We hope to serve you again soon.";
 
 		try {
 			emailService.sendOrderStatusUpdateEmail(savedOrder, subject, message);
@@ -509,55 +522,55 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		notificationService.createUserNotification(savedOrder.getUser(), message, "/u/history");
-		
+
 		return savedOrder;
 	}
-	
+
 	private BigDecimal calculateOrderCogs(Order order) {
 		BigDecimal totalCogs = BigDecimal.ZERO;
-		
+
 		for (OrderItem orderItem : order.getItems()) {
 			Product product = orderItem.getProduct();
 			int orderedQuantity = orderItem.getQuantity();
 
 			if (product.getIngredients() == null || product.getIngredients().isEmpty()) {
-				log.warn("Product '{}' in order #{} has no ingredients defined. Skipping COGS.", product.getName(), order.getId());
+				log.warn("Product '{}' in order #{} has no ingredients defined. Skipping COGS.", product.getName(),
+						order.getId());
 				continue;
 			}
-			
+
 			for (RecipeIngredient ingredient : product.getIngredients()) {
 				BigDecimal quantityNeeded = ingredient.getQuantityNeeded();
 				InventoryItem item = ingredient.getInventoryItem();
-				
+
 				if (item == null || item.getCostPerUnit() == null || quantityNeeded == null) {
 					log.warn("Invalid ingredient data for product '{}'. Skipping ingredient COGS.", product.getName());
 					continue;
 				}
-				
-				BigDecimal itemCogs = quantityNeeded
-						.multiply(item.getCostPerUnit())
+
+				BigDecimal itemCogs = quantityNeeded.multiply(item.getCostPerUnit())
 						.multiply(new BigDecimal(orderedQuantity));
 
 				totalCogs = totalCogs.add(itemCogs);
 			}
 		}
-		
+
 		return totalCogs;
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getEstimatedCogsBetweenDates(LocalDateTime start, LocalDateTime end) {
 		List<Order> deliveredOrders = orderRepository.findDeliveredOrdersWithCogsDetails(null, start, end);
-		
+
 		BigDecimal totalCogs = BigDecimal.ZERO;
 		for (Order order : deliveredOrders) {
 			totalCogs = totalCogs.add(calculateOrderCogs(order));
 		}
-		
+
 		return totalCogs;
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal getCogsToday() {
@@ -609,9 +622,8 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, Long> getOrderStatusCounts() {
-		return orderRepository.countOrdersByStatus().stream().collect(Collectors.toMap(row -> (String) row[0],
-				row -> (Long) row[1] 
-		));
+		return orderRepository.countOrdersByStatus().stream()
+				.collect(Collectors.toMap(row -> (String) row[0], row -> (Long) row[1]));
 	}
 
 	@Override
@@ -625,17 +637,42 @@ public class OrderServiceImpl implements OrderService {
 				.collect(Collectors.toList());
 	}
 
+// --- MODIFIED: Pre-fill missing dates with 0 ---
 	@Override
 	@Transactional(readOnly = true)
 	public Map<String, BigDecimal> getSalesDataForChart(LocalDateTime start, LocalDateTime end) {
+		// 1. Initialize map with all dates in range set to 0 (LinkedHashMap keeps
+		// insertion order)
+		Map<String, BigDecimal> salesMap = new LinkedHashMap<>();
+		LocalDate current = start.toLocalDate();
+		LocalDate endDate = end.toLocalDate();
+
+		while (!current.isAfter(endDate)) {
+			salesMap.put(current.toString(), BigDecimal.ZERO);
+			current = current.plusDays(1);
+		}
+
+		// 2. Fetch actual data from DB
 		List<Object[]> results = orderRepository.findSalesDataBetweenDates(start, end);
 
-		return results.stream()
-				.collect(Collectors.toMap(row -> ((Date) row[0]).toLocalDate().format(DateTimeFormatter.ISO_LOCAL_DATE),
-						row -> (BigDecimal) row[1], 
-						(oldValue, newValue) -> oldValue.add(newValue),
-						LinkedHashMap::new));
+		// 3. Overlay actual data onto the map
+		for (Object[] row : results) {
+			// row[0] is the date (might be java.sql.Date or String depending on driver),
+			// row[1] is total amount
+			if (row[0] != null && row[1] != null) {
+				String dateStr = row[0].toString(); // Safely convert date to string "yyyy-MM-dd"
+				BigDecimal amount = (BigDecimal) row[1];
+
+				// Only update if the date is within our generated range (it should be)
+				if (salesMap.containsKey(dateStr)) {
+					salesMap.put(dateStr, amount);
+				}
+			}
+		}
+
+		return salesMap;
 	}
+// --- END MODIFIED ---
 
 	@Override
 	@Transactional(readOnly = true)
@@ -659,14 +696,13 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end) { // --- MODIFIED ---
-		return orderRepository.findDeliveredOrdersWithCogsDetails(keyword, start, end); // --- MODIFIED ---
+	public List<Order> findDeliveredOrdersForReport(String keyword, LocalDateTime start, LocalDateTime end) {
+		return orderRepository.findDeliveredOrdersWithCogsDetails(keyword, start, end);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public BigDecimal calculateCogsForOrder(Order order) {
-		// This public method just wraps the private one
 		return calculateOrderCogs(order);
 	}
 

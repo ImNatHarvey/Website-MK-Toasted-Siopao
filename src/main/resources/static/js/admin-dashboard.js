@@ -105,8 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			console.warn("Missing data for Order Status Chart.");
 			return;
 		}
-		
-		// --- MODIFICATION: Aligned colors with dashboard card colors ---
+
 		const themeColors = [
 			'rgba(17, 63, 103, 0.8)',   // PENDING (GCASH) - Primary Blue
 			'rgba(250, 173, 20, 0.8)',  // PENDING (COD) - Warning Yellow
@@ -116,16 +115,27 @@ document.addEventListener('DOMContentLoaded', function() {
 			'rgba(245, 34, 45, 0.8)',  // CANCELLED - Danger Red
 			'rgba(245, 34, 45, 0.8)'   // REJECTED - Danger Red
 		];
-		// --- END MODIFICATION ---
+
+		// --- NEW: Handle Empty Data Gracefully ---
+		const totalCount = data.reduce((a, b) => a + b, 0);
+		let chartData = data;
+		let backgroundColors = themeColors;
+		let chartLabels = labels;
+
+		if (totalCount === 0) {
+			chartData = [1]; // Dummy value to render a ring
+			backgroundColors = ['#e0e0e0']; // Light Gray
+			chartLabels = ['No Data'];
+		}
 
 		new Chart(ctx, {
 			type: 'doughnut',
 			data: {
-				labels: labels,
+				labels: chartLabels,
 				datasets: [{
 					label: 'Order Status',
-					data: data,
-					backgroundColor: themeColors, // --- MODIFIED ---
+					data: chartData,
+					backgroundColor: backgroundColors,
 					borderColor: '#fff',
 					borderWidth: 2
 				}]
@@ -136,6 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
 				plugins: {
 					legend: {
 						position: 'bottom',
+						display: totalCount > 0 // Hide legend if no data
+					},
+					tooltip: {
+						enabled: totalCount > 0 // Disable tooltip if no data
 					}
 				}
 			}
@@ -155,6 +169,13 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (!labels || !data) {
 			console.warn("Missing data for Top Products Chart.");
 			return;
+		}
+
+		// --- NEW: Handle Empty Data ---
+		if (labels.length === 0) {
+			// Render an empty state message on the canvas if possible, or just leave it blank but initialized
+			// A simple bar chart with no data renders an empty grid, which is better than a broken white box.
+			console.log("No top products data available.");
 		}
 
 		new Chart(ctx, {
